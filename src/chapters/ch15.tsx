@@ -265,7 +265,7 @@ const ch15: Chapter = {
           />
           <p>
             すでにトランザクションが開いていて、<code>requires_new</code> を指定していなければ、新しいトランザクションを作らずに今のトランザクションに参加します。そうでなければ{' '}
-            <code>within_new_transaction</code> で新しいトランザクションを始めます。ブロックの中で <code>ActiveRecord::Rollback</code> が投げられると、ここで握りつぶされます
+            <code>within_new_transaction</code> で新しいトランザクションを始めます。ブロックの中で <code>ActiveRecord::Rollback</code> が投げられると、ここで捕捉され、呼び出し元には伝わりません
             <Ref n={1} />。
           </p>
           <p>
@@ -361,7 +361,7 @@ end
           />
           <p>
             <code>requires_new</code> を付けない内側の transaction は外側に参加しているだけなので、内側の <code>ActiveRecord::Rollback</code>{' '}
-            は握りつぶされ、何も取り消されずに外側が COMMIT しました。内側だけを取り消したい場合は <code>requires_new: true</code> を付け、SAVEPOINT を使います。
+            は内側で捕捉され、何も取り消されずに外側が COMMIT しました。内側だけを取り消したい場合は <code>requires_new: true</code> を付け、SAVEPOINT を使います。
             <code>ActiveRecord::Rollback</code> 以外の例外はブロックの外まで伝わり、外側のトランザクション全体がロールバックされます
             <Ref n={1} />。
           </p>
@@ -737,14 +737,14 @@ pool.stat => {size: 2, connections: 2, busy: 2, dead: 0, idle: 0, waiting: 1, ch
           <li>requires_new なしの内側の transaction は外側に参加するだけで、内側の ActiveRecord::Rollback では何も取り消されません。</li>
           <li>InnoDB の既定の REPEATABLE READ では、トランザクションの中の通常の読み取りは最初の読み取りの時点の値を返します。</li>
           <li>楽観的ロックは lock_version を WHERE に入れて衝突を StaleObjectError で検出し、悲観的ロックは FOR UPDATE で他のトランザクションを待たせます。</li>
-          <li>ロックは走査した索引のレコードに掛かるので、索引が無いと無関係な行まで待たされます。ロック待ちのタイムアウトとデッドロックは専用の例外になります。</li>
+          <li>ロックは走査した索引のレコードに掛かるので、索引が無いと無関係な行の更新まで待たされます。ロック待ちのタイムアウトとデッドロックは専用の例外になります。</li>
           <li>接続プールは max_connections まで接続を貸し出し、空きが無ければ checkout_timeout まで待ちます。Puma のスレッド数以上の値にします。</li>
         </ul>
       ),
     },
   ],
   sources: [
-    { title: 'activerecord/lib/active_record/connection_adapters/abstract/database_statements.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/connection_adapters/abstract/database_statements.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'transaction の requires_new と参加、ActiveRecord::Rollback の握りつぶし、分離レベルの指定の条件。' },
+    { title: 'activerecord/lib/active_record/connection_adapters/abstract/database_statements.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/connection_adapters/abstract/database_statements.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'transaction の requires_new と参加、ActiveRecord::Rollback を捕捉して呼び出し元に伝えない処理、分離レベルの指定の条件。' },
     { title: 'activerecord/lib/active_record/connection_adapters/abstract/transaction.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/connection_adapters/abstract/transaction.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'TransactionManager の begin_transaction、RealTransaction と SavepointTransaction の materialize!、遅延した BEGIN。' },
     { title: 'Transaction Isolation Levels', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html', accessed: '2026-11-11', version: 'MySQL 8.4', note: 'InnoDB の既定の分離レベルが REPEATABLE READ で、同じトランザクションの一貫性のある読み取りは最初の読み取りのスナップショットを読むこと。' },
     { title: 'activerecord/lib/active_record/locking/optimistic.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/locking/optimistic.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'lock_version を WHERE に入れて1増やし、変更行数が1でなければ StaleObjectError にする _update_row。' },

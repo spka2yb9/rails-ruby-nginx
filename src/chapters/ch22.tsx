@@ -24,7 +24,7 @@ function BreakdownFigure() {
       id="22-1"
       w={780}
       h={rows.length * rowH + 80}
-      label="GET /articles/1 の処理をイベントの開始時刻と長さで並べた。リクエスト全体が約6.9ms、そのうちコントローラーの処理が約5.4ms。記事を読む SQL が0.5ms、レイアウトの描画が3.1ms で、その中のテンプレートの描画が2.6ms、テンプレートの中で関連のコメントを読む SQL が0.6ms、コメントのパーシャルの描画が0.08ms だった。SQL がテンプレートの描画の中で実行されている。ログの Views は描画の時間からこの SQL の時間を引いた値になる"
+      label="GET /articles/1 の処理をイベントの開始時刻と処理時間で並べた。リクエスト全体が約6.9ms、そのうちコントローラーの処理が約5.4ms。記事を読む SQL が0.5ms、レイアウトの描画が3.1ms で、その中のテンプレートの描画が2.6ms、テンプレートの中で関連のコメントを読む SQL が0.6ms、コメントのパーシャルの描画が0.08ms だった。SQL がテンプレートの描画の中で実行されている。ログの Views は描画の時間からこの SQL の時間を引いた値になる"
     >
       {[0, 1, 2, 3, 4, 5, 6, 7].map((ms) => (
         <g key={ms}>
@@ -118,7 +118,7 @@ Completed 200 OK in 5ms (Views: 2.9ms | ActiveRecord: 1.1ms (2 queries, 0 cached
 `}
           />
           <p>
-            この値は、処理の各段が発行する <Term>ActiveSupport::Notifications</Term> のイベントから計算されます。同じリクエストの間に発行されたイベントをすべて購読し、開始時刻と長さを並べました（
+            この値は処理の各段が発行する <Term>ActiveSupport::Notifications</Term> のイベントから計算されます。同じリクエストの間に発行されたイベントをすべて購読し、開始時刻と処理時間を並べました（
             <code>!</code> で始まる内部用のイベントは除外）。
           </p>
           <Code
@@ -162,7 +162,7 @@ Completed 200 OK in 5ms (Views: 2.9ms | ActiveRecord: 1.1ms (2 queries, 0 cached
       body: (
         <>
           <p>
-            Notifications は、処理を <code>instrument</code> で包んで名前付きのイベントを発行し、<code>subscribe</code> したブロックに、名前・開始と終了の時刻・ペイロード（SQL の文字列やテンプレートのパスなど）を渡す仕組みです
+            Notifications は処理を <code>instrument</code> で包んで名前付きのイベントを発行し、<code>subscribe</code> したブロックに、名前・開始と終了の時刻・ペイロード（SQL の文字列やテンプレートのパスなど）を渡す仕組みです
             <Ref n={2} />。ログの出力（LogSubscriber）、Server-Timing、<ChapterLink n={16} section="compile" />
             で使った描画の記録も、すべてこの購読で作られています。自分のコードの処理を計測するには、次のように書きます。
           </p>
@@ -203,7 +203,7 @@ end
               ）。関連の遅延読み込みは strict_loading でも検出できますが、count などの集計や直接の find は SQL ログでも確認します
             </li>
             <li>
-              SQL の1回の時間：長い SQL は EXPLAIN で索引が使われているかを確かめます（<ChapterLink n={12} section="explain" />
+              SQL の1回の実行時間：実行時間の長い SQL は EXPLAIN で索引が使われているかを確かめます（<ChapterLink n={12} section="explain" />
               ）
             </li>
             <li>
@@ -344,7 +344,7 @@ end
           </ul>
           <p>
             ログの Read fragment にはバージョン（<code>-20261111…</code>）付きの名前が出ていますが、キャッシュストアのキー自体はバージョンを含みません。<code>touch</code>{' '}
-            で updated_at が変わると、同じキーで読んでもバージョンが一致しないので外れ（hit=false）になり、新しい内容で上書きされます。キーの数が増え続けないようにするための仕組みです（cache versioning）
+            で updated_at が変わると、同じキーで読んでもバージョンが一致しないのでキャッシュミス（hit=false）になり、新しい内容で上書きされます。キーの数が増え続けないようにするための仕組みです（cache versioning）
             <Ref n={5} />。
           </p>
           <p>

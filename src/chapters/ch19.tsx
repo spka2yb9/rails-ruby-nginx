@@ -305,7 +305,7 @@ subject=記事「変更後のタイトル」を公開しました mime=multipart
       body: (
         <>
           <p>
-            ActiveStorage は、ファイルの情報をデータベースの3つのテーブルに、ファイルの本体をストレージのサービス（ローカルのディスク、S3 など）に保存します。<code>bin/rails active_storage:install</code>{' '}
+            ActiveStorage はファイルの情報をデータベースの3つのテーブルに、ファイルの本体をストレージのサービス（ローカルのディスク、S3 など）に保存します。<code>bin/rails active_storage:install</code>{' '}
             がテーブルを作るマイグレーションをコピーします。Article に表紙の画像を付けられるようにしました。
           </p>
           <Code

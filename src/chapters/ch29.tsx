@@ -96,7 +96,7 @@ function UpgradeFigure() {
         各段階でくり返すこと
       </T>
       <T x={334} y={140} fs={11}>
-        1. Gemfile の版を変えて bundle update rails、テストを通す
+        1. Gemfile のバージョン指定を変えて bundle update rails、テストを通す
       </T>
       <T x={334} y={158} fs={11}>
         2. new_framework_defaults_X_Y.rb の設定を1つずつ有効にしてデプロイ
@@ -116,10 +116,10 @@ const ch29: Chapter = {
     'Rails 7.2・8.0・8.1 のサポート期間と、2026年11月11日時点の状況を公式の情報から整理します。load_defaults 8.0・8.1 で変わる設定、rails new の既定の変化（Propshaft、Solid Queue・Cache・Cable、Kamal、Thruster、認証のジェネレーター）、本書の各章で見た 7.2 との違い、アップグレードの手順をまとめます。',
   goals: [
     'Rails のサポートの方針と、7.2・8.0・8.1 のサポート期間を説明できる',
-    'Rails の版と load_defaults の値の違いを説明し、load_defaults 8.0・8.1 で変わる設定を挙げられる',
+    'Rails のバージョンと load_defaults の値の違いを説明し、load_defaults 8.0・8.1 で変わる設定を挙げられる',
     'rails new の既定の変化が既存のアプリケーションには自動で入らないことを説明できる',
     'Kamal と Thruster が、ALB と Nginx の構成とどう関係するかを説明できる',
-    '1つずつ版を上げるアップグレードの手順を説明できる',
+    '1つずつバージョンを上げるアップグレードの手順を説明できる',
   ],
   prerequisites: [],
   sections: [
@@ -137,8 +137,8 @@ $ grep -n "load_defaults" config/application.rb  # 既定値の世代
 `}
           />
           <p>
-            Rails の版を上げても、<code>config.load_defaults</code> の値を変えなければ、設定の既定値は古い版のままです（<ChapterLink n={7} section="app-class" />
-            ）。たとえば Rails 8.1 で <code>load_defaults 7.0</code> のアプリケーションは、7.0 までの既定値で動きます。この付録では、版そのものの違い（コードの変更）と、load_defaults
+            Rails のバージョンを上げても、<code>config.load_defaults</code> の値を変えなければ、設定の既定値は古いバージョンのままです（<ChapterLink n={7} section="app-class" />
+            ）。たとえば Rails 8.1 で <code>load_defaults 7.0</code> のアプリケーションは、7.0 までの既定値で動きます。この付録では、バージョンそのものの違い（コードの変更）と、load_defaults
             で選べる既定値の違いを分けて書きます。
           </p>
         </>
@@ -151,16 +151,16 @@ $ grep -n "load_defaults" config/application.rb  # 既定値の世代
         <>
           <p>Rails のメンテナンスの方針は次のとおりです<Ref n={1} />。</p>
           <ul>
-            <li>バグ修正：各マイナー版（7.2、8.0 など）の最初のリリースから1年</li>
-            <li>セキュリティ修正：最初のリリースから2年。期間が終わると end-of-life（EOL）で、新しい版は出ない</li>
-            <li>新機能の版はおよそ半年ごとを目指し、1年間新しい版が出なかった場合は、前の版のサポート期間を次の版が出るまで延長する</li>
+            <li>バグ修正：各マイナーバージョン（7.2、8.0 など）の最初のリリースから1年</li>
+            <li>セキュリティ修正：最初のリリースから2年。期間が終わると end-of-life（EOL）で、新しいバージョンは出ない</li>
+            <li>新機能を含むバージョンはおよそ半年ごとの公開を目指し、1年間新しいバージョンが出なかった場合は、前のバージョンのサポート期間を次のバージョンが出るまで延長する</li>
           </ul>
           <p>2026年11月11日に、rubygems.org の公開日と公式のメンテナンスのページを確かめました。</p>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>版</th>
+                  <th>バージョン</th>
                   <th>最初の公開（rubygems.org）</th>
                   <th>最新のパッチ</th>
                   <th>バグ修正</th>
@@ -198,14 +198,14 @@ $ grep -n "load_defaults" config/application.rb  # 既定値の世代
           </div>
           <p>
             公式のメンテナンスのページに載っている「サポート中の版」は 8.1 と 8.0 だけで、7.2 は載っていません
-            <Ref n={2} />。必要な Ruby の版は gem の情報とアップグレードのガイドによります
+            <Ref n={2} />。必要な Ruby のバージョンは gem の情報とアップグレードのガイドによります
             <Ref n={3} />。表と図 A-1 から、次のことがわかります。
           </p>
           <ul>
             <li>2026年11月11日の時点で、セキュリティ修正の期間内にあるのは 8.1 だけです。8.0 はページの記載では4日前（11月7日）に終わっています。</li>
             <li>
               7.2 は方針どおりなら 2026年8月9日でセキュリティ修正も終わっていますが、その後の 2026年9月24日に 7.2.4 が公開されています。GitHub のリリースの説明を見ると、内容はバグ修正だけで、期間外に公開された理由は書かれていません
-              <Ref n={4} />。今後も 7.2 の版が出ると期待はできません。
+              <Ref n={4} />。今後も 7.2 の新しいバージョンが出ると期待はできません。
             </li>
             <li>
               8.1 の期限は、ページでは10月10日起点になっていますが、gem の公開は10月22日でした。また、8.1 のバグ修正の期限（2026年10月10日）は過ぎていますが、8.2 はまだ公開されていません。方針の「1年間新しい版が出なければ延長する」が当てはまる状況ですが、延長後の期限はページに書かれていません。
@@ -227,7 +227,7 @@ $ grep -n "load_defaults" config/application.rb  # 既定値の世代
       title: 'load_defaults 8.0・8.1 で変わる設定',
       body: (
         <>
-          <p>railties の configuration.rb の <code>load_defaults</code> には、版ごとに変わる設定が並んでいます。8.0 と 8.1 の部分は次のとおりです。</p>
+          <p>railties の configuration.rb の <code>load_defaults</code> には、バージョンごとに変わる設定が並んでいます。8.0 と 8.1 の部分は次のとおりです。</p>
           <Code
             lang="ruby"
             title="railties/lib/rails/application/configuration.rb（335〜367行目）"
@@ -273,7 +273,7 @@ $ grep -n "load_defaults" config/application.rb  # 既定値の世代
             <table>
               <thead>
                 <tr>
-                  <th>版</th>
+                  <th>バージョン</th>
                   <th>設定</th>
                   <th>変わること</th>
                   <th>関係する章</th>
@@ -537,7 +537,7 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
               <thead>
                 <tr>
                   <th>違い</th>
-                  <th>版</th>
+                  <th>バージョン</th>
                   <th>影響</th>
                   <th>章</th>
                 </tr>
@@ -562,7 +562,7 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
                 <tr>
                   <td>Rails 本体の sidekiq のアダプターが非推奨（Sidekiq 7.3.3 以上の gem のアダプターを使う）</td>
                   <td>8.1</td>
-                  <td>Sidekiq の版によっては警告が出る</td>
+                  <td>Sidekiq のバージョンによっては警告が出る</td>
                   <td>
                     <ChapterLink n={18} section="sidekiq" />
                   </td>
@@ -627,8 +627,8 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
           <ol>
             <li>テストを用意して通す（テストの範囲が狭ければ、変わった部分を手で確かめる必要がある）</li>
             <li>Ruby と Rails は別々に上げる。先に Ruby を上げられるところまで上げる</li>
-            <li>今の版の最新のパッチ版に上げ、テストと非推奨の警告を直す</li>
-            <li>次のマイナー版の最新のパッチ版に上げる。これを1つずつくり返す</li>
+            <li>今のバージョンの最新のパッチ版に上げ、テストと非推奨の警告を直す</li>
+            <li>次のマイナーバージョンの最新のパッチ版に上げる。これを1つずつくり返す</li>
             <li>
               各段階で <code>bin/rails app:update</code> を実行し、作られた <code>config/initializers/new_framework_defaults_X_Y.rb</code> の設定を1つずつ有効にする。すべて有効にしたら{' '}
               <code>config.load_defaults</code> を X.Y にしてファイルを消す
@@ -642,7 +642,7 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
             <UpgradeFigure />
           </Figure>
           <p>
-            第5部の構成（Puma・Nginx・ALB）は Rails の版とは独立しています。Puma と Nginx は、それぞれの gem・パッケージの版の説明書に従って確かめます（<ChapterLink n={23} />・
+            第5部の構成（Puma・Nginx・ALB）は Rails のバージョンとは独立しています。Puma と Nginx は、それぞれの gem・パッケージのバージョンに対応する説明書に従って確かめます（<ChapterLink n={23} />・
             <ChapterLink n={24} section="upstream" />
             ）。
           </p>
@@ -655,8 +655,8 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
       body: (
         <ul>
           <li>Rails はバグ修正が1年、セキュリティ修正が2年です。2026年11月11日の時点で、セキュリティ修正の期間内にあるのは 8.1 だけです。</li>
-          <li>7.2 は公式のページのサポート中の一覧に無く、2026年9月の 7.2.4 はバグ修正だけの版です。今後の版は期待できません。</li>
-          <li>版を上げても、load_defaults を上げなければ既定値は変わりません。8.0 と 8.1 の load_defaults で変わる設定は合わせて9つで、render json: のエスケープや相対の URL へのリダイレクトなどが含まれます。</li>
+          <li>7.2 は公式のページのサポート中の一覧に無く、2026年9月の 7.2.4 はバグ修正だけのバージョンです。今後の新しいバージョンは期待できません。</li>
+          <li>バージョンを上げても、load_defaults を上げなければ既定値は変わりません。8.0 と 8.1 の load_defaults で変わる設定は合わせて9つで、render json: のエスケープや相対の URL へのリダイレクトなどが含まれます。</li>
           <li>Propshaft、Solid Queue・Cache・Cable、Kamal、Thruster は新しく作るアプリケーションの既定で、既存のアプリケーションには自動で入りません。</li>
           <li>アップグレードは Ruby を先に上げ、Rails は最新のパッチ版を経由して1つずつ上げ、new_framework_defaults のファイルで既定値を1つずつ切り替えます。</li>
         </ul>
@@ -664,11 +664,11 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
     },
   ],
   sources: [
-    { title: 'Maintenance Policy for Ruby on Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/maintenance_policy.html', accessed: '2026-11-11', version: '—', note: 'バグ修正1年・セキュリティ修正2年、EOL、1年間新しい版が出なければ延長すること。' },
-    { title: 'Ruby on Rails Maintenance Policy', publisher: 'rubyonrails.org', url: 'https://rubyonrails.org/maintenance', accessed: '2026-11-11', version: '—', note: 'サポート中の版の一覧（8.1・8.0）と期限。' },
-    { title: 'Upgrading Ruby on Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/upgrading_ruby_on_rails.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '必要な Ruby の版、1つずつ上げる手順、app:update と new_framework_defaults、8.0→8.1 の schema.rb の列の並び。' },
+    { title: 'Maintenance Policy for Ruby on Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/maintenance_policy.html', accessed: '2026-11-11', version: '—', note: 'バグ修正1年・セキュリティ修正2年、EOL、1年間新しいバージョンが出なければ延長すること。' },
+    { title: 'Ruby on Rails Maintenance Policy', publisher: 'rubyonrails.org', url: 'https://rubyonrails.org/maintenance', accessed: '2026-11-11', version: '—', note: 'サポート中のバージョンの一覧（8.1・8.0）と期限。' },
+    { title: 'Upgrading Ruby on Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/upgrading_ruby_on_rails.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '必要な Ruby のバージョン、1つずつ上げる手順、app:update と new_framework_defaults、8.0→8.1 の schema.rb の列の並び。' },
     { title: 'Release 7.2.4', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/releases/tag/v7.2.4', accessed: '2026-11-11', version: 'Rails 7.2.4', note: '2026-09-24 公開、内容はバグ修正。' },
-    { title: 'Configuring Rails Applications', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/configuring.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'load_defaults の版ごとの既定値と、各設定の説明。' },
+    { title: 'Configuring Rails Applications', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/configuring.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'load_defaults のバージョンごとの既定値と、各設定の説明。' },
     { title: 'railties/lib/rails/generators/rails/app/templates/config/initializers/new_framework_defaults_8_1.rb.tt', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/app/templates/config/initializers/new_framework_defaults_8_1.rb.tt`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '8.1 の新しい既定値の説明と例。' },
     { title: 'Ruby on Rails 8.0 Release Notes', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/8_0_release_notes.html', accessed: '2026-11-11', version: 'Rails 8.0', note: 'Kamal 2、Thruster、Solid Cable・Cache・Queue、Propshaft の既定化、認証のジェネレーター。' },
     { title: 'Kamal README', publisher: 'basecamp/kamal（GitHub）', url: 'https://github.com/basecamp/kamal/blob/v2.12.0/README.md', accessed: '2026-11-11', version: 'Kamal 2.12.0', note: 'コンテナのアプリケーションを SSH でサーバーに配置し、kamal-proxy で停止時間なしに切り替えること。' },

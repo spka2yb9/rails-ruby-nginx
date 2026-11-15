@@ -217,7 +217,7 @@ function FormFlowFigure() {
       id="16-4"
       w={760}
       h={460}
-      label="ブラウザーが GET /articles/new を送ると、new アクションが Article.new を作り、フォームの HTML を 200 で返す。フォームを送信すると POST /articles が create アクションに届き、Article.new(article_params).save を呼ぶ。保存に成功すると INSERT が実行され、302 で /articles/10009 へのリダイレクトを返し、ブラウザーは GET /articles/10009 を送って記事の画面を 200 で受け取る。検証に失敗すると SQL は実行されず、422 でフォームとエラーを描画し直して返す"
+      label="ブラウザーが GET /articles/new を送ると、new アクションが Article.new でオブジェクトを作り、フォームの HTML を 200 で返す。フォームを送信すると POST /articles が create アクションに届き、Article.new(article_params).save を呼ぶ。保存に成功すると INSERT が実行され、302 で /articles/10009 へのリダイレクトを返し、ブラウザーは GET /articles/10009 を送って記事の画面を 200 で受け取る。検証に失敗すると SQL は実行されず、422 でフォームとエラーを描画し直して返す"
     >
       <Box x={B - 70} y={16} w={140} h={36} lines="ブラウザー" bold fill="box4" />
       <Box x={C - 90} y={16} w={180} h={36} lines="ArticlesController" mono bold />
@@ -564,7 +564,7 @@ Searched in:
 `}
           />
           <p>
-            メソッド名は、ファイルのパスから作った名前に、パスのハッシュ値とオブジェクトの ID を付けたものです。ローカル変数（<code>article</code>、<code>article_counter</code>）は、
+            メソッド名はファイルのパスから作った名前に、パスのハッシュ値とオブジェクトの ID を付けたものです。ローカル変数（<code>article</code>、<code>article_counter</code>）は、
             <code>local_assigns</code> から取り出す代入文としてメソッドの先頭に入ります。このため、同じテンプレートでも渡すローカル変数の組が違えば、別のメソッドとしてコンパイルされます。定義は次のように行います
             <Ref n={3} />。
           </p>
@@ -892,7 +892,7 @@ end
           <p>
             ブラウザーは <code>article[title]=フォームの例&amp;article[body]=本文</code> の形で値を送り、Rails は角かっこの名前を入れ子の Hash に組み立てます。
             <code>params.expect(article: [:title, :body])</code> は、<code>"article"</code> の中から <code>title</code> と <code>body</code> だけを取り出して許可します（
-            <ChapterLink n={10} section="params" />）。その値で <code>Article.new</code> を作り、<code>save</code> を呼びます。
+            <ChapterLink n={10} section="params" />）。その値を <code>Article.new</code> に渡してオブジェクトを作り、<code>save</code> を呼びます。
           </p>
           <h3>成功したとき：リダイレクト</h3>
           <Code
@@ -1009,7 +1009,7 @@ flash[:notice] => "記事を作成しました"
           />
           <p>
             普通の String の <code>html_safe?</code> は false です。<code>html_safe</code> を呼ぶと、String を継承した <Term en="SafeBuffer">ActiveSupport::SafeBuffer</Term>{' '}
-            が返り、こちらの <code>html_safe?</code> は true です。SafeBuffer に普通の文字列を足すと、足す側がエスケープされます。実際に確かめました。
+            が返り、こちらの <code>html_safe?</code> は true です。SafeBuffer に普通の文字列を足すと、追加する文字列がエスケープされます。実際に確かめました。
           </p>
           <Code
             lang="text"
@@ -1046,7 +1046,7 @@ raw                         <script>alert(1)</script>
       body: (
         <>
           <p>
-            CSS・JavaScript・画像などのファイル（<Term en="assets">アセット</Term>）について、Rails 8 の新規アプリケーションは Propshaft を使います。Propshaft がするのは、読み込みパスにあるファイルに内容のダイジェストを付けた名前で配信することと、CSS
+            CSS・JavaScript・画像などのファイル（<Term en="assets">アセット</Term>）について、Rails 8 の新規アプリケーションは Propshaft を使います。Propshaft がするのは、読み込みパスにあるファイルを、内容のダイジェストを付けた名前で配信することと、CSS
             の中の <code>url()</code> をダイジェスト付きのパスに書き換えることだけで、変換・結合・圧縮はしません
             <Ref n={6} />。ダイジェストは内容の SHA1 の先頭8文字です。
           </p>
@@ -1210,7 +1210,7 @@ $ head -c 120 public/assets/.manifest.json
     { title: 'Getting Started with Rails（Creating Products・Editing Products）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/getting_started.html', accessed: '2026-11-13', version: 'Rails 8.1', note: 'save に成功したら redirect_to でモデルの show のパスへ移動し、失敗したら render :new で入力値を残したフォームを 422 で返す書き方。' },
     { title: 'Action View Form Helpers（Forms with PATCH, PUT, or DELETE Methods）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/form_helpers.html', accessed: '2026-11-13', version: 'Rails 8.1', note: 'form_with model: の送信先と入力欄の名前、authenticity_token の hidden 項目、_method による PATCH の表現。' },
     { title: 'actionview/lib/action_view/base.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionview/lib/action_view/base.rb#L162`, accessed: '2026-11-13', version: 'Rails 8.1.4.1', note: 'field_error_proc の既定値が field_with_errors の div で囲む処理であること。' },
-    { title: 'actionpack/lib/action_dispatch/http/response.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_dispatch/http/response.rb#L51-L59`, accessed: '2026-11-13', version: 'Rails 8.1.4.1', note: ':unprocessable_entity と :unprocessable_content を、Rack の版に合わせて同じ 422 に変換する rack_status_code。' },
+    { title: 'actionpack/lib/action_dispatch/http/response.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_dispatch/http/response.rb#L51-L59`, accessed: '2026-11-13', version: 'Rails 8.1.4.1', note: ':unprocessable_entity と :unprocessable_content を、Rack のバージョンに合わせて同じ 422 に変換する rack_status_code。' },
   ],
 }
 

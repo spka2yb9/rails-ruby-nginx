@@ -316,7 +316,7 @@ Product.instance_methods(false).sort # => [:archived?, :draft?, :published?]
               できあがるメソッドは、<code>def</code> で書いたものと同じ通常のメソッドです。ブロックではないので、定義したときのローカル変数を参照し続けることはありません。
             </li>
             <li>
-              第2・第3引数の <code>__FILE__, __LINE__ + 1</code> は、評価する文字列が「どのファイルの何行目にあるものとして扱うか」の指定です。第1章で <code>comments</code> の{' '}
+              第2・第3引数の <code>__FILE__, __LINE__ + 1</code> は、評価する文字列を「どのファイルの何行目にあるものとして扱うか」の指定です。第1章で <code>comments</code> の{' '}
               <code>source_location</code> が <code>builder/association.rb</code> の104行目を指していたのは、この指定によるものです。例外が起きたときのバックトレースにも、この位置が表示されます。
             </li>
           </ul>
@@ -337,7 +337,7 @@ Product.instance_methods(false).sort # => [:archived?, :draft?, :published?]
             の結果と実際の動作が食い違います。
           </p>
           <p>
-            このため Rails では、<code>method_missing</code> を使う場合でも、最初の呼び出しで本物のメソッドを定義し、2回目以降はメソッド探索で見つかるようにする実装がとられています。第2章で見た{' '}
+            このため Rails では、<code>method_missing</code> を使う場合でも、最初の呼び出しで通常のメソッドを定義し、2回目以降はメソッド探索で見つかるようにする実装がとられています。第2章で見た{' '}
             <code>find_by_title</code> がその例でした。
           </p>
           <div className="table-wrap">
@@ -424,7 +424,7 @@ Admin.presence_attributes  # => nil
     },
     {
       id: 'class-attribute',
-      title: 'class_attribute：親の値を引き継ぎ、子で上書きできる設定',
+      title: 'class_attribute：親の値を引き継ぎ子で上書きできる設定',
       body: (
         <>
           <p>
@@ -511,7 +511,7 @@ Base.singleton_class.private_method_defined?(:__class_attr_settings, false)  # =
 Child.singleton_class.private_method_defined?(:__class_attr_settings, false) # => true（代入したので追加された）
 `}
           />
-          <h3>注意：値そのものを変更すると親にも影響する</h3>
+          <h3>注意：値そのものの変更が親クラスに与える影響</h3>
           <p>
             <code>class_attribute</code> が子クラスごとに分けるのは「どのオブジェクトを指すか」だけで、指しているハッシュや配列は共有されています。代入せずに中身を変更すると、親クラスの値も変わります。
           </p>
@@ -690,7 +690,7 @@ Commentable.instance_variable_get(:@_dependencies) # => [Taggable]
         <>
           <p>
             <code>before_action</code> や <code>before_save</code> は、どちらも <code>ActiveSupport::Callbacks</code> を使って実装されています。コントローラーとモデルで別々に作られているのではなく、同じ仕組みを使っています
-            <Ref n={5} />。使い方は3つのメソッドで構成されます。
+            <Ref n={5} />。使うのは次の3つのメソッドです。
           </p>
           <ul>
             <li>

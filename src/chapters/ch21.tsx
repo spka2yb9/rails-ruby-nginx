@@ -40,7 +40,7 @@ function CsrfFigure() {
   )
 }
 
-/* ---------- 図 21-1 対策が効く場所 ---------- */
+/* ---------- 図 21-1 セキュリティ対策の適用箇所 ---------- */
 function WhereFigure() {
   const rows = [
     { t: 'ミドルウェア', items: 'HostAuthorization（Host ヘッダー）、SSL（HTTPS への転送・HSTS・secure 属性）', fill: 'box' as const },
@@ -55,7 +55,7 @@ function WhereFigure() {
       id="21-1"
       w={780}
       h={rows.length * 48 + 30}
-      label="要求が通る順に、対策が効く場所を並べた。ミドルウェアでは HostAuthorization が Host ヘッダーを、SSL が HTTPS への転送と HSTS と Cookie の secure 属性を受け持つ。セッションと Cookie は secret_key_base から作った鍵で署名・暗号化される。コントローラーでは CSRF の検証と Strong Parameters、モデルではプレースホルダーと order の列名の検査、ビューでは自動エスケープ、応答ヘッダーでは Content-Security-Policy が効く。CSP は既定では設定されていない"
+      label="要求が通る順に、セキュリティ対策の適用箇所を並べた。ミドルウェアでは HostAuthorization が Host ヘッダーを、SSL が HTTPS への転送と HSTS と Cookie の secure 属性を受け持つ。セッションと Cookie は secret_key_base から作った鍵で署名・暗号化される。コントローラーでは CSRF の検証と Strong Parameters、モデルではプレースホルダーと order の列名の検査、ビューでは自動エスケープ、応答ヘッダーでは Content-Security-Policy を使う。CSP は既定では設定されていない"
     >
       {rows.map((r, i) => {
         const y = 14 + i * 48
@@ -78,20 +78,20 @@ const ch21: Chapter = {
   part: 4,
   title: 'セキュリティ',
   summary:
-    'CSRF・XSS・SQL インジェクション・一括代入などへの Rails の対策が、要求の処理のどこで効いているかを、デモアプリケーションでの実測とソースで確かめます。secret_key_base と credentials、Host Authorization・force_ssl・CSP、Brakeman などの検査ツールも扱います。',
+    'CSRF・XSS・SQL インジェクション・一括代入などへの Rails の対策が、要求を処理するどの段階で適用されるかを、デモアプリケーションでの実測とソースで確かめます。secret_key_base と credentials、Host Authorization・force_ssl・CSP、Brakeman などの検査ツールも扱います。',
   goals: [
     'CSRF トークンの発行・マスク・検証の流れと、Origin の検査を説明できる',
     'link_to の href や to_json など、自動エスケープの外側で XSS を防ぐ方法を説明できる',
     'プレースホルダーと文字列への埋め込みの違い、order に生の文字列を渡したときの例外を説明できる',
     'secret_key_base から Cookie などの鍵が作られることと、credentials の仕組みを説明できる',
-    'Host Authorization・force_ssl・CSP がどのミドルウェアや設定で効くかを説明できる',
+    'Host Authorization・force_ssl・CSP がどのミドルウェアや設定で有効になるかを説明できる',
     'Brakeman と bundler-audit で検出できるものを説明できる',
   ],
   prerequisites: [6, 10, 12, 16],
   sections: [
     {
       id: 'overview',
-      title: '対策が効く場所',
+      title: 'セキュリティ対策の適用箇所',
       body: (
         <>
           <p>
@@ -99,7 +99,7 @@ const ch21: Chapter = {
             <Ref n={1} />
             にまとめられています。
           </p>
-          <Figure n="21-1" title="対策が効く場所" caption="Rails 8.1.4.1 の default_middleware_stack.rb・request_forgery_protection.rb などと Securing Rails Applications（ガイド）をもとにまとめた図。">
+          <Figure n="21-1" title="セキュリティ対策の適用箇所" caption="Rails 8.1.4.1 の default_middleware_stack.rb・request_forgery_protection.rb などと Securing Rails Applications（ガイド）をもとにまとめた図。">
             <WhereFigure />
           </Figure>
           <div className="table-wrap">
@@ -211,11 +211,11 @@ const ch21: Chapter = {
           <Figure n="21-2" title="CSRF トークンの発行と検証" caption="Rails 8.1.4.1 の request_forgery_protection.rb を読み、デモでの実測で確かめてまとめた模式図。">
             <CsrfFigure />
           </Figure>
-          <Callout kind="note" title="開発中の版の Sec-Fetch-Site の検査">
+          <Callout kind="note" title="開発中のバージョンでの Sec-Fetch-Site の検査">
             <p>
               Rails の開発中のブランチ（未リリース）の request_forgery_protection.rb には、ブラウザーが送る <code>Sec-Fetch-Site</code> ヘッダー（same-origin・same-site・cross-site
               など）で要求の出どころを確かめ、トークンを使わない検証方法が追加されています
-              <Ref n={3} />。8.1.4.1 には無く、まだリリースされていない内容なので、今後の版で変わる可能性があります。
+              <Ref n={3} />。8.1.4.1 には無く、まだリリースされていない内容なので、今後のバージョンで変わる可能性があります。
             </p>
           </Callout>
         </>
@@ -282,7 +282,7 @@ x = "' OR '1'='1"
           </p>
           <p>
             一括代入については、<ChapterLink n={10} section="params" />
-            の Strong Parameters が対策です。<code>params.expect(comment: [:body])</code> のように受け取る属性を列挙し、管理者の印のような列を利用者が変えられないようにします。
+            の Strong Parameters が対策です。<code>params.expect(comment: [:body])</code> のように受け取る属性を列挙し、管理者かどうかを表す列などを利用者が変えられないようにします。
           </p>
         </>
       ),
@@ -371,7 +371,7 @@ x = "' OR '1'='1"
       body: (
         <>
           <p>
-            Brakeman は、ソースを解析してセキュリティ上の問題を探すツールです<Ref n={5} />。デモのアプリケーションでは警告はありませんでした。検査のために、危険な書き方のコントローラーとビューを一時的に追加して実行しました（確認後に削除）。
+            Brakeman はソースを解析してセキュリティ上の問題を探すツールです<Ref n={5} />。デモのアプリケーションでは警告はありませんでした。検査のために、危険な書き方のコントローラーとビューを一時的に追加して実行しました（確認後に削除）。
           </p>
           <Code
             lang="ruby"
@@ -406,8 +406,8 @@ Confidence: Weak   Check: Redirect            Message: Possible unprotected redi
 `}
           />
           <p>
-            Brakeman は、追加した4か所をすべて検出しました。bundler-audit は、Gemfile.lock
-            の gem の版を、既知の脆弱性の一覧と照らし合わせます。
+            Brakeman は追加した4か所をすべて検出しました。bundler-audit は Gemfile.lock
+            の gem のバージョンを、既知の脆弱性の一覧と照らし合わせます。
           </p>
           <Callout kind="v72">
             <p>

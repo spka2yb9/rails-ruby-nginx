@@ -159,7 +159,7 @@ const ch24: Chapter = {
       body: (
         <>
           <p>
-            Nginx は、1つのマスターのプロセスと複数のワーカーのプロセスで動きます。マスターは設定を読んでワーカーを管理し、要求を処理するのはワーカーです
+            Nginx は1つのマスターのプロセスと複数のワーカーのプロセスで動きます。マスターは設定を読んでワーカーを管理し、要求を処理するのはワーカーです
             <Ref n={1} />。Puma と違い、1つのワーカーがイベント駆動で多数の接続を同時に扱います。Docker の公式イメージ（nginx:1.30.6）で起動して、プロセスを確かめました。
           </p>
           <Code
@@ -352,7 +352,7 @@ SERVER_PROTOCOL="HTTP/1.1"
           <Callout kind="warn" title="Nginx 1.29.7 より前の場合">
             <p>
               1.29.7 より前の Nginx では、既定のまま設定すると HTTP/1.0 で接続し、要求ごとに接続を作って閉じます。接続を使い回すには、upstream に <code>keepalive 32;</code>、location に{' '}
-              <code>proxy_http_version 1.1;</code> と <code>proxy_set_header Connection "";</code> を書きます。業務の環境では <code>nginx -v</code> で版を確かめ、その版の説明書の既定値で判断します。
+              <code>proxy_http_version 1.1;</code> と <code>proxy_set_header Connection "";</code> を書きます。業務の環境では <code>nginx -v</code> でバージョンを確かめ、そのバージョンの説明書の既定値で判断します。
             </p>
           </Callout>
         </>
@@ -364,7 +364,7 @@ SERVER_PROTOCOL="HTTP/1.1"
       body: (
         <>
           <p>
-            Nginx は、元の要求の Host ヘッダーをそのまま転送しません。既定では <code>proxy_set_header Host $proxy_host;</code>、つまり proxy_pass に書いた名前（ここでは <code>app</code>
+            Nginx は元の要求の Host ヘッダーをそのまま転送しません。既定では <code>proxy_set_header Host $proxy_host;</code>、つまり proxy_pass に書いた名前（ここでは <code>app</code>
             ）を送ります
             <Ref n={2} />。Rails の側で受け取った値を、Puma のアクションで表示しました。
           </p>
@@ -385,7 +385,7 @@ HTTP_HOST="127.0.0.1:3200"
             ）。<code>$host</code> は要求の Host ヘッダーからポート番号を除いた値で、<code>$http_host</code> は Host ヘッダーそのままです。デモはポート 8080 で受けているので、$host
             ではポート番号が落ちました。通常の 80・443 番で公開する場合は、どちらでも同じになります。後で見る WebSocket では、この違いが問題になります。
           </p>
-          <p>その他のヘッダーは、Rails の次の部分に使われます。</p>
+          <p>その他のヘッダーは Rails の次の部分に使われます。</p>
           <div className="table-wrap">
             <table>
               <thead>
@@ -539,7 +539,7 @@ $ curl -X POST --data-binary @2mb.bin http://127.0.0.1:8080/lab/headers
       body: (
         <>
           <p>
-            WebSocket は、HTTP/1.1 の Upgrade の仕組みで接続を切り替えます。Upgrade と Connection は隣の相手との間だけで意味を持つヘッダー（<Term en="hop-by-hop header">ホップバイホップのヘッダー</Term>）なので、Nginx はクライアントから受け取っても Puma
+            WebSocket は HTTP/1.1 の Upgrade の仕組みで接続を切り替えます。Upgrade と Connection は隣の相手との間だけで意味を持つヘッダー（<Term en="hop-by-hop header">ホップバイホップのヘッダー</Term>）なので、Nginx はクライアントから受け取っても Puma
             に転送しません。説明書は、次のように明示的に設定するよう書いています
             <Ref n={7} />。
           </p>
@@ -586,7 +586,7 @@ socketerror Error during WebSocket handshake: Unexpected response code: 404
             <p>
               この章の Rails 側の挙動（RemoteIp、ActionCable の Origin の検査、Propshaft が .gz を作らないこと）は Rails 7.2.4 でも同じです。7.2 で Sprockets
               を使っているアプリケーションでは、既定で .gz も作られるので gzip_static が効きます（<ChapterLink n={16} section="assets" />
-              ）。Nginx の既定値は、Rails ではなく Nginx の版で決まります（上の注意を参照）。
+              ）。Nginx の既定値は、Rails ではなく Nginx のバージョンで決まります（上の注意を参照）。
             </p>
           </Callout>
         </>
@@ -600,9 +600,9 @@ socketerror Error during WebSocket handshake: Unexpected response code: 404
           <li>Nginx はマスターと複数のワーカーで動き、設定は main・events・http・server・location の階層です。proxy_set_header と add_header は、その階層に1つでも書くと上の値を引き継ぎません。</li>
           <li>location は最も長く一致する接頭辞で選ばれ、try_files で public のファイルと Rails（@app）に振り分けます。アセットは Rails に渡さず 404 にします。</li>
           <li>Host を指定しないと proxy_pass の名前が Rails に届きます。$host はポート番号を含まず、$http_host は含みます。</li>
-          <li>Nginx 1.29.7 以降は、upstream に HTTP/1.1 で接続を使い回すのが既定です。それより前の版では明示的に設定します。</li>
+          <li>Nginx 1.29.7 以降は、upstream に HTTP/1.1 で接続を使い回すのが既定です。それより前のバージョンでは明示的に設定します。</li>
           <li>Propshaft は .gz を作らないので、gzip_static を効かせるには自分で圧縮するか、gzip on を使います。</li>
-          <li>proxy_buffering（既定で on）は、遅いクライアントの間 Puma のスレッドがふさがるのを防ぎます。</li>
+          <li>proxy_buffering（既定で on）は、遅いクライアントに応答を送る間、Puma のスレッドがふさがるのを防ぎます。</li>
           <li>client_max_body_size（既定 1MB）を超えると Nginx が 413 を返し、Rails にはログが残りません。</li>
           <li>WebSocket には Upgrade と Connection の転送が必要です。Origin の検査のために、Host の扱いか allowed_request_origins を合わせます。</li>
         </ul>

@@ -291,7 +291,7 @@ end
 `}
           />
           <p>
-            <code>bundler/setup</code> は Gemfile.lock に書かれた版の gem だけが <code>require</code> できるように読み込みパス（<code>$LOAD_PATH</code>）を設定し、<code>bootsnap/setup</code>{' '}
+            <code>bundler/setup</code> は Gemfile.lock に書かれたバージョンの gem だけが <code>require</code> できるように読み込みパス（<code>$LOAD_PATH</code>）を設定し、<code>bootsnap/setup</code>{' '}
             はファイルの検索結果やコンパイル結果をキャッシュして起動を速くします。rails new の既定の application.rb には <code>require "rails/all"</code> と書かれ、ActiveRecord・ActiveStorage・ActionController・ActionView・ActionMailer・ActiveJob・ActionCable
             などの Railtie や Engine を定義するファイルを順に <code>require</code> します
             <Ref n={2} />。デモのアプリケーションは ActionMailbox・ActionText・Minitest を外して作ったので（<ChapterLink n={1} section="versions" />
@@ -355,7 +355,7 @@ end
             の順でした。
           </p>
           <p>
-            各 Railtie の <code>config</code> は Railtie::Configuration のインスタンスで、知らない名前の代入と参照を <code>method_missing</code>（<ChapterLink n={2} />
+            各 Railtie の <code>config</code> は Railtie::Configuration のインスタンスで、メソッドが定義されていない名前の代入と参照を <code>method_missing</code>（<ChapterLink n={2} />
             ）で受け取ります。
           </p>
           <Code
@@ -416,7 +416,7 @@ end
             の 44〜46 行目）。
           </p>
           <p>
-            クラス本体の <code>config.load_defaults 8.1</code> は、Rails の各版で変わった設定の既定値をまとめて設定するメソッドです。版ごとの <code>when</code> 節が1つ前の版の{' '}
+            クラス本体の <code>config.load_defaults 8.1</code> は、Rails の各バージョンで変わった設定の既定値をまとめて設定するメソッドです。バージョンごとの <code>when</code> 節が1つ前のバージョンの{' '}
             <code>load_defaults</code> を呼ぶので、8.1 を指定すると 5.0 から 8.1 までの既定値が古い順に適用されます。
           </p>
           <Code
@@ -458,7 +458,7 @@ end
           </p>
           <Callout kind="note">
             <p>
-              業務のアプリケーションの <code>load_defaults</code> の値が Rails 本体の版より古いことがあります。その場合は、新しい版で変わった既定値が適用されていません。Rails ガイドの設定の章には、版ごとに{' '}
+              業務のアプリケーションの <code>load_defaults</code> の値が Rails 本体のバージョンより古いことがあります。その場合は、新しいバージョンで変わった既定値が適用されていません。Rails ガイドの設定の章には、バージョンごとに{' '}
               <code>load_defaults</code> で変わる値の一覧があります
               <Ref n={7} />。
             </p>
@@ -490,7 +490,7 @@ end
 `}
           />
           <p>
-            各初期化処理は、名前、ブロック、<code>before</code>・<code>after</code> を持ちます。<code>after</code> を指定しなければ、同じクラスで直前に登録した初期化処理の名前が入ります。つまり、1つのクラスの中では書いた順に実行され、別のクラスの初期化処理との前後関係は{' '}
+            各初期化処理は名前、ブロック、<code>before</code>・<code>after</code> を持ちます。<code>after</code> を指定しなければ、同じクラスで直前に登録した初期化処理の名前が入ります。つまり、1つのクラスの中では書いた順に実行され、別のクラスの初期化処理との前後関係は{' '}
             <code>before:</code>・<code>after:</code> で指定します
             <Ref n={8} />。
           </p>
@@ -841,8 +841,8 @@ Rails.application.config.active_record.table_name_prefix = "app_"
     { title: 'railties/lib/rails/railtie.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/railtie.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'Railtie の instance、inherited による並び順、subclasses。' },
     { title: 'railties/lib/rails/railtie/configuration.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/railtie/configuration.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'config の値をクラス変数 @@options に保存する method_missing。' },
     { title: 'railties/lib/rails/application.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/application.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'Application の inherited、initialize!、initializers（Bootstrap・railties・Finisher）。' },
-    { title: 'railties/lib/rails/application/configuration.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/application/configuration.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'load_defaults の版ごとの分岐。' },
-    { title: 'Configuring Rails Applications', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/configuring.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '版ごとの既定値、初期化ファイルの読み込み順と依存の扱い、5つの初期化イベント、初期化中にクラスをオートロードせず lazy load hook を使うこと。' },
+    { title: 'railties/lib/rails/application/configuration.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/application/configuration.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'load_defaults のバージョンごとの分岐。' },
+    { title: 'Configuring Rails Applications', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/configuring.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'バージョンごとの既定値、初期化ファイルの読み込み順と依存の扱い、5つの初期化イベント、初期化中にクラスをオートロードせず lazy load hook を使うこと。' },
     { title: 'railties/lib/rails/initializable.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/initializable.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'initializer の登録、after の既定値、Collection と tsort による並べ替え、run_initializers。' },
     { title: 'railties/lib/rails/initializable.rb', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.4/railties/lib/rails/initializable.rb', accessed: '2026-11-11', version: 'Rails 7.2.4', note: '7.2 の Collection が Array のサブクラスで、依存先を select で探す実装（8.1.4.1 との差分で確認）。' },
     { title: 'railties/lib/rails/engine.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/engine.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'load_environment_config と load_config_initializers。' },

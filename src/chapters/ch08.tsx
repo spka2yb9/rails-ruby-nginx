@@ -351,7 +351,7 @@ app/models/concerns
       body: (
         <>
           <p>
-            Zeitwerk は、Ruby に組み込まれた <code>Module#autoload</code> を使います。<code>Object.autoload(:Article, "/path/article.rb")</code>{' '}
+            Zeitwerk は Ruby に組み込まれた <code>Module#autoload</code> を使います。<code>Object.autoload(:Article, "/path/article.rb")</code>{' '}
             を実行しておくと、<code>Article</code> が初めて参照されたときに Ruby がそのパスで <code>require</code> を呼び、ファイルを読み込みます
             <Ref n={3} />。
           </p>
@@ -425,7 +425,7 @@ Zeitwerk@rails.main: autoload set for Shop, to be loaded from app/models/shop.rb
       body: (
         <>
           <p>
-            autoload が発火すると、Ruby は <code>Kernel#require</code> を呼びます。Zeitwerk はこの <code>require</code> を自分のメソッドで置き換えています。
+            オートロードが始まると、Ruby は <code>Kernel#require</code> を呼びます。Zeitwerk はこの <code>require</code> を独自のメソッドで置き換えています。
           </p>
           <Code
             lang="ruby"
@@ -492,7 +492,7 @@ Zeitwerk@rails.main: constant Admin::Report loaded from file app/models/admin/re
           </p>
           <Callout kind="warn">
             <p>
-              Zeitwerk の <code>require</code> の置き換えは <code>require_relative</code> には効きません（kernel.rb のコメントに理由が書かれています）。オートロードパスの中のファイルを{' '}
+              Zeitwerk による <code>require</code> の置き換えは <code>require_relative</code> には適用されません（kernel.rb のコメントに理由が書かれています）。オートロードパスの中のファイルを{' '}
               <code>require</code> や <code>require_relative</code> で読み込むと、Zeitwerk の管理とずれるので、オートロードの対象のファイルは定数の参照だけで読み込みます
               <Ref n={1} />。
             </p>
@@ -593,12 +593,12 @@ expected file /work/demo/lib/middleware/timing.rb to define constant Middleware:
 `}
           />
           <p>
-            development では lib/middleware/timing.rb を誰も定数で参照しないので、この誤りでは例外が起きません。開発環境で確かめるには <code>bin/rails zeitwerk:check</code>{' '}
+            development では lib/middleware/timing.rb に対応する定数を参照するコードがないので、この誤りによる例外は起きません。開発環境で確かめるには <code>bin/rails zeitwerk:check</code>{' '}
             を使います。このタスクはアプリケーションを一括読み込みし、問題が無ければ <code>All is good!</code> と表示します
             <Ref n={1} />。上の構成では <code>expected file lib/middleware/timing.rb to define constant Middleware::Timing, but didn't</code> が表示され、<code>ignore</code> に{' '}
             <code>middleware</code> を加えると <code>All is good!</code> になりました。CI でこのタスクを実行すると、本番の起動時に初めて気付く事態を防げます。
           </p>
-          <p>Zeitwerk には、ディレクトリと名前空間の対応を変える設定もあります。</p>
+          <p>Zeitwerk にはディレクトリと名前空間の対応を変える設定もあります。</p>
           <ul>
             <li>
               <code>ignore</code>：そのファイル・ディレクトリを管理しない。自分で <code>require</code> するコードや、.rb 以外のファイルを置くディレクトリに使う。
@@ -619,7 +619,7 @@ expected file /work/demo/lib/middleware/timing.rb to define constant Middleware:
       body: (
         <>
           <p>
-            development では、ファイルを保存すると次のリクエストから変更が反映されます。これは Ruby のクラスを書き換えているのではなく、読み込み済みの定数を取り除いて、あらためてオートロードさせています
+            development ではファイルを保存すると次のリクエストから変更が反映されます。Ruby のクラスを書き換えるのではなく、読み込み済みの定数を取り除いて、あらためてオートロードさせる仕組みです
             <Ref n={1} />。
           </p>
           <p>
@@ -837,7 +837,7 @@ a.class.name                         # => "Article"
     { title: 'railties/lib/rails/autoloaders/inflector.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/autoloaders/inflector.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'ファイル名を String#camelize で定数名に変換し、上書き設定を優先する実装。' },
     { title: 'Module#autoload', publisher: 'Ruby 4.0 Documentation', url: 'https://docs.ruby-lang.org/en/4.0/Module.html#method-i-autoload', accessed: '2026-11-11', version: 'Ruby 4.0', note: '定数が初めて参照されたときに指定したファイルを require する仕様。' },
     { title: 'lib/zeitwerk/loader.rb・lib/zeitwerk/cref.rb', publisher: 'fxn/zeitwerk（GitHub）', url: `${ZW}/lib/zeitwerk/loader.rb`, accessed: '2026-11-11', version: 'Zeitwerk 2.8.3', note: 'setup と define_autoloads_for_dir、visit_subdir。Cref#autoload が Module#autoload を呼ぶこと（cref.rb）。' },
-    { title: 'lib/zeitwerk/core_ext/kernel.rb', publisher: 'fxn/zeitwerk（GitHub）', url: `${ZW}/lib/zeitwerk/core_ext/kernel.rb`, accessed: '2026-11-11', version: 'Zeitwerk 2.8.3', note: 'Kernel#require の置き換えと、require_relative には効かないことの説明。' },
+    { title: 'lib/zeitwerk/core_ext/kernel.rb', publisher: 'fxn/zeitwerk（GitHub）', url: `${ZW}/lib/zeitwerk/core_ext/kernel.rb`, accessed: '2026-11-11', version: 'Zeitwerk 2.8.3', note: 'Kernel#require の置き換えと、その処理が require_relative には適用されないことの説明。' },
     { title: 'lib/zeitwerk/loader/callbacks.rb', publisher: 'fxn/zeitwerk（GitHub）', url: `${ZW}/lib/zeitwerk/loader/callbacks.rb`, accessed: '2026-11-11', version: 'Zeitwerk 2.8.3', note: 'on_file_autoloaded の定数の確認と Zeitwerk::NameError、on_dir_autoloaded のモジュール作成。' },
     { title: 'lib/zeitwerk/core_ext/module.rb', publisher: 'fxn/zeitwerk（GitHub）', url: `${ZW}/lib/zeitwerk/core_ext/module.rb`, accessed: '2026-11-11', version: 'Zeitwerk 2.8.3', note: 'Module#const_added による明示的な名前空間の検出。' },
     { title: 'CHANGELOG.md', publisher: 'fxn/zeitwerk（GitHub）', url: `${ZW}/CHANGELOG.md`, accessed: '2026-11-11', version: 'Zeitwerk 2.8.3', note: '2.7.0（2024-10-11）で TracePoint をやめ Ruby 3.2 以上が必要になったこと、2.8.0 の nsfile、2.6.0 のディレクトリの処理順。' },

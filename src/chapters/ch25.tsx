@@ -418,7 +418,7 @@ location: https://127.0.0.1:8080/up        ← 200 でないので、ALB は異�
 `}
           />
           <p>
-            301 が返るので、ALB はターゲットを異常と判断します。説明書によると、異常なターゲットには要求が送られなくなりますが、ターゲットグループのすべてが異常になった場合は、ALB は健康状態にかかわらずすべてのターゲットに要求を送ります（fail open）
+            301 が返るので、ALB はターゲットを異常と判断します。説明書によると、異常なターゲットには要求が送られなくなりますが、ターゲットグループのすべてが異常になった場合は、ALB は正常・異常の判定にかかわらずすべてのターゲットに要求を送ります（fail open）
             <Ref n={4} />。いずれにしても、デプロイのときの入れ替えなどで、ヘルスチェックの結果が判断に使えなくなります。assume_ssl を有効にするか、production.rb のコメントにある{' '}
             <code>config.ssl_options = &#123; redirect: &#123; exclude: -&gt;(request) &#123; request.path == "/up" &#125; &#125; &#125;</code> で /up をリダイレクトの対象から外します。
           </p>
@@ -467,7 +467,7 @@ upstream timed out (110: Connection timed out) while reading response header fro
             がログに記録するコードで、HTTP の標準のコードではありません。Rails のログだけを見ると成功に見えるので、利用者が見たエラーとログが食い違います（図 25-2）。前段がタイムアウトしても、DB の更新などは最後まで実行されるので、利用者が再送すると二重に実行されることもあります。
           </p>
           <p>
-            keep-alive の接続にも順序があります。ALB の説明書は、アプリケーション側のアイドルタイムアウトを ALB のものより長くするよう勧めています。アプリケーションが先に接続を閉じると、ALB
+            keep-alive の接続を閉じるタイミングにも順序があります。ALB の説明書は、アプリケーション側のアイドルタイムアウトを ALB のものより長くするよう勧めています。アプリケーションが先に接続を閉じると、ALB
             がそれに気づく前に要求を送り、502 になることがあるからです
             <Ref n={5} />。ALB の次が Nginx なら Nginx の <code>keepalive_timeout</code>（公式イメージの設定では65秒）、Nginx を置かずに Puma なら <code>persistent_timeout</code>（既定 65 秒）が、ALB の60秒より長くなっています。ALB
             のアイドルタイムアウトを延ばすときは、これらも合わせて延ばします。
@@ -606,7 +606,7 @@ upstream timed out (110: Connection timed out) while reading response header fro
         <ul>
           <li>ALB が TLS を終端する構成では、後段の Nginx が X-Forwarded-Proto を $scheme で上書きすると、force_ssl が同じ URL へのリダイレクトを繰り返します。このリダイレクトは Rails のログに出ません。</li>
           <li>ALB の値をそのまま渡すか、assume_ssl を有効にします。assume_ssl は、外から直接届かない構成が前提です。</li>
-          <li>RemoteIp は X-Forwarded-For から信頼するプロキシ（既定ではプライベートな IP）を除いてクライアントの IP を求めます。プライベートな IP の利用者は偽れるので、必要なら trusted_proxies を絞ります。</li>
+          <li>RemoteIp は X-Forwarded-For から信頼するプロキシ（既定ではプライベートな IP）を除いてクライアントの IP を求めます。プライベートな IP から来る利用者はクライアントの IP を偽れるので、必要なら trusted_proxies を絞ります。</li>
           <li>/up は何も確かめずに 200 を返します。force_ssl のリダイレクトでヘルスチェックが失敗しないよう、assume_ssl か ssl_options の exclude を使います。</li>
           <li>ALB と Nginx の既定のタイムアウトは60秒で、Puma には上限がありません。前段が 504 を返しても Rails の処理は続き、ログには 200 が残ります。</li>
           <li>502・504 は、ALB の target_status_code、Nginx のアクセスログと error.log、Rails のログの順に、どの層が応答を作ったかを確かめて切り分けます。</li>

@@ -190,7 +190,7 @@ const ch23: Chapter = {
       body: (
         <>
           <p>
-            Puma には、1つのプロセスで動くシングルモードと、マスターのプロセスが複数のワーカーのプロセスを作るクラスタモードがあります。<code>workers</code> が1以上ならクラスタモードです。デモのアプリケーションを本番環境の設定で、ワーカー2・スレッド3
+            Puma には1つのプロセスで動くシングルモードと、マスターのプロセスが複数のワーカーのプロセスを作るクラスタモードがあります。<code>workers</code> が1以上ならクラスタモードです。デモのアプリケーションを本番環境の設定で、ワーカー2・スレッド3
             にして起動し、プロセスとスレッドの名前を Linux の /proc から読みました。
           </p>
           <Code
@@ -365,7 +365,7 @@ puma: cluster worker 1             Rss=114MB Pss=100MB Shared=22MB Private=92MB
             なしでは各ワーカーが自分でアプリケーションを読み込むので、Private が約 93MB になり、合計は約 223MB でした。ワーカーが多いほど差が大きくなります。
           </p>
           <p>
-            fork の前にマスターで開いた DB の接続を、ワーカーがそのまま使うと、複数のプロセスが1本の接続を共有して壊れます。ActiveRecord は fork を検知して、ワーカーの側で接続プールを捨てて作り直します
+            fork の前にマスターで開いた DB の接続をワーカーがそのまま使うと、複数のプロセスが1本の接続を共有し、正常に使えなくなります。ActiveRecord は fork を検知して、ワーカーの側で接続プールを捨てて作り直します
             <Ref n={5} />。Redis などの接続を自分で開いている場合は、<code>before_worker_boot</code> で開き直します。デモの設定ファイルにも、このフックで PID を出力する行を書きました。
           </p>
           <p>起動時の表示の <code>Restarts: (✖) phased</code> のとおり、preload_app! は次節の phased restart と両立しません。</p>
@@ -510,13 +510,13 @@ u=carol class_var=carol current=carol
           />
           <p>
             クラスのレベルで <code>@cache ||= …</code> のようにメモ化する書き方も、初回に複数のスレッドが同時に計算する可能性があります。結果が同じなら害はありませんが、配列や Hash
-            を少しずつ書き換える場合は Mutex で守るか、起動時に作っておきます。DB の接続はスレッドごとにプールから借りるので（<ChapterLink n={15} section="pool" />
+            を少しずつ書き換える場合は Mutex で同時の書き換えを防ぐか、起動時に作っておきます。DB の接続はスレッドごとにプールから借りるので（<ChapterLink n={15} section="pool" />
             ）、ActiveRecord を普通に使う範囲では、スレッドの間で接続が混ざることはありません。
           </p>
           <Callout kind="v72">
             <p>
               Rails 7.2.4 の rails new が作る config/puma.rb も同じ内容（スレッド3、ワーカーは WEB_CONCURRENCY）です。Puma は Rails とは別の gem なので、この章の Puma の挙動は Puma
-              の版で決まります。業務のアプリケーションでは Gemfile.lock の puma の版を確かめ、その版の説明書を読みます。
+              のバージョンで決まります。業務のアプリケーションでは Gemfile.lock の puma のバージョンを確かめ、そのバージョンの説明書を読みます。
             </p>
           </Callout>
         </>

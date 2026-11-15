@@ -244,7 +244,7 @@ Finished in 0.0648 seconds (files took 1.03 seconds to load)
           </p>
           <h3>失敗したときの表示を読む</h3>
           <p>
-            テストが本当に検証を確かめているかを知るには、わざと壊して失敗させてみます。モデルから <code>validates :title, presence: true</code> を消して実行しました。
+            テストが本当に検証を確かめているかを知るには、意図的にコードを変更して期待した動作をしない状態にし、テストを失敗させてみます。モデルから <code>validates :title, presence: true</code> を消して実行しました。
           </p>
           <Code
             lang="text"
@@ -461,7 +461,7 @@ end
       body: (
         <>
           <p>
-            rspec-rails は、spec の <code>type:</code>（model・request・system など）に応じて、Rails のテスト用のモジュールを include します。どのモジュールを include するかで、テストがアプリケーションのどこから呼び出すかが決まります（図
+            rspec-rails は、spec の <code>type:</code>（model・request・system など）に応じて、Rails のテスト用のモジュールを include します。どのモジュールを include するかで、テストがアプリケーションのどの層から処理を呼び出すかが決まります（図
             20-2）。
           </p>
           <ul>
@@ -597,7 +597,7 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
           <Figure n="20-3" title="テストのトランザクション" caption="Rails 8.1.4.1 の test_fixtures.rb・connection_pool.rb・transaction.rb を読み、デモのテストのログで確かめてまとめた模式図。">
             <RollbackFigure />
           </Figure>
-          <p>巻き戻しが届かない、または期待どおりに動かない場合があります。</p>
+          <p>トランザクションによる巻き戻しが適用されない、または期待どおりに動かない場合があります。</p>
           <ul>
             <li>
               別のプロセス：Sidekiq のプロセスや、別に起動したサーバーは別の接続を使うので、COMMIT されていない行は見えません（<ChapterLink n={18} section="transaction" />
@@ -798,7 +798,7 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
       body: (
         <ul>
           <li>
-            spec は describe（グループ）・it（1つの例）・expect とマッチャー（確認）で書きます。成功する入力だけでなく、失敗するはずの入力の例も書き、わざと壊して失敗することを確かめます。
+            spec は describe（グループ）・it（1つの例）・expect とマッチャー（確認）で書きます。成功する入力だけでなく、失敗するはずの入力の例も書き、コードに意図的な誤りを加えてテストが失敗することを確かめます。
           </li>
           <li>describe は ExampleGroup の子クラスを作り、it は例ごとに作られるそのインスタンスを self として実行されます。let は LetDefinitions モジュールのメソッドで、例の中でメモ化されます。</li>
           <li>request spec は Rails.application をミドルウェアから呼び、system spec はブラウザーと Puma を通ります。</li>

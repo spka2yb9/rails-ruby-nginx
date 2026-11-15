@@ -469,7 +469,7 @@ end
             <RecognizeFigure />
           </Figure>
           <p>
-            応答の <code>x-cascade</code> ヘッダーが <code>pass</code> の場合、ルーティングはその応答を捨てて次の候補を試します。候補がすべて尽きると、<code>x-cascade: pass</code>{' '}
+            応答の <code>x-cascade</code> ヘッダーが <code>pass</code> の場合、ルーティングはその応答を捨てて次の候補を試します。候補が尽きると、<code>x-cascade: pass</code>{' '}
             付きの 404 を返します。ミドルウェアの DebugExceptions はこの応答を見つけると <code>ActionController::RoutingError</code>（<code>No route matches [GET] "/..."</code>）を投げ、外側の ShowExceptions がそれを 404 の応答に変えます（<code>debug_exceptions.rb</code> の 31〜36 行目。<ChapterLink n={10} />）。
           </p>
         </>
@@ -711,10 +711,10 @@ res = Rack::MockRequest.new(t3).get("/nothing")
         <ul>
           <li>routes.rb のブロックは Mapper を self として実行され、resources などは個々のルートに展開されて、Mapper#add_route から RouteSet#add_route に渡されます。</li>
           <li>Journey::Route は、パターン、HTTP メソッドなどの条件、defaults（controller と action）、登録順の precedence、呼び出し先の app を持ちます。</li>
-          <li>リクエストは、全ルートをまとめた状態遷移表で候補を絞り、条件を確かめ、precedence の順に試されます。x-cascade: pass なら次の候補へ進みます。</li>
+          <li>ルーティングでは、全ルートをまとめた状態遷移表でリクエストに合う候補を絞り、条件を確かめ、precedence の順に試します。x-cascade: pass なら次の候補へ進みます。</li>
           <li>ルートは定義した順に照合されるので、広いパターンのルートを先に書くと後のルートが選ばれなくなります。</li>
           <li>Dispatcher は controller の名前からクラスを constantize し、クラスメソッドの dispatch を呼びます。</li>
-          <li>名前付きルートは、無名のモジュールに _path と _url のメソッドを define_method で定義します。</li>
+          <li>名前付きルートを登録すると、無名のモジュールに _path と _url のメソッドが define_method で定義されます。</li>
           <li>mount した Rack アプリには、一致した部分が SCRIPT_NAME、残りが PATH_INFO として渡されます。</li>
         </ul>
       ),

@@ -296,8 +296,8 @@ const ch06: Chapter = {
           </p>
           <ul>
             <li>
-              Rack アプリケーションは <code>call</code> メソッドを持つオブジェクトです。<code>call</code> は引数を1つだけ受け取ります。この引数を <Term en="environment">env</Term>{' '}
-              と呼び、HTTP リクエストの内容を表すハッシュです。
+              Rack アプリケーションは <code>call</code> メソッドを持つオブジェクトです。<code>call</code> は引数を1つだけ受け取ります。この引数は <Term en="environment">env</Term>{' '}
+              と呼ばれ、HTTP リクエストの内容を表すハッシュです。
             </li>
             <li>
               <code>call</code> は、ステータス・ヘッダー・本文（body）の3要素からなる配列を返します。この配列は凍結（freeze）されていてはいけません。
@@ -315,7 +315,7 @@ run ->(env) {
 }
 `}
           />
-          <p>env には、CGI の仕様に由来する大文字のキーと、Rack が定めた rack. で始まるキーが入ります。主なものを表にまとめます。</p>
+          <p>env には CGI の仕様に由来する大文字のキーと、Rack が定めた rack. で始まるキーが入ります。主なものを表にまとめます。</p>
           <div className="table-wrap">
             <table>
               <thead>
@@ -676,7 +676,7 @@ run Demo::Application.routes
               AssumeSSL・SSL・SilenceRequest は入らない。エンドポイントは <code>Rails::Engine::LazyRouteSet</code>（routes.rb を最初に必要になったときに読み込む RouteSet のサブクラス）になる。
             </li>
           </ul>
-          <p>本書の各章とは、次のように対応します。</p>
+          <p>本書の各章とは次のように対応します。</p>
           <ul>
             <li>Executor・Reloader：<ChapterLink n={8} /></li>
             <li>エンドポイントの RouteSet：<ChapterLink n={9} /></li>
@@ -792,7 +792,7 @@ puts chain.last(3).join(" -> ")
           />
           <p>
             <code>new</code> が受け取った内側のアプリケーションをそのまま返すので、build の <code>inject</code> では Flash の段が消えます
-            <Ref n={8} />。Flash の機能は、リクエストのオブジェクトから必要になったときに読み込まれます。一覧に表示されることと、呼び出しの連鎖に入ることは別だという例です。
+            <Ref n={8} />。Flash の機能はリクエストのオブジェクトから必要になったときに読み込まれます。一覧に表示されることと、呼び出しの連鎖に入ることは別だという例です。
           </p>
           <Callout kind="note">
             <p>
@@ -913,7 +913,7 @@ puts chain.last(3).join(" -> ")
 `}
           />
           <p>
-            ためた lambda は、前節の Engine#app の <code>build_middleware.merge_into(stack)</code> で既定のスタックに順に適用されます
+            ためた lambda は前節の Engine#app の <code>build_middleware.merge_into(stack)</code> で既定のスタックに順に適用されます
             <Ref n={7} />。<ChapterLink n={4} />で見た「lambda を保存して後で呼ぶ」使い方です。この実装から、次の2点が分かります。
           </p>
           <ul>

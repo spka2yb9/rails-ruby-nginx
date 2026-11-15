@@ -219,7 +219,7 @@ ActionController::Base::MODULES.size  # => 36
           <p>3つの基底クラスは、次のように役割が分かれています。</p>
           <ul>
             <li>
-              <code>AbstractController::Base</code>：HTTP を知らない、アクションの呼び出しの仕組み（<code>process</code>、<code>action_methods</code> など）。ActionMailer もこのクラスを使います。
+              <code>AbstractController::Base</code>：HTTP の処理を含まない、アクションの呼び出しの仕組み（<code>process</code>、<code>action_methods</code> など）。ActionMailer もこのクラスを使います。
             </li>
             <li>
               <code>ActionController::Metal</code>：リクエストと応答のオブジェクトを持ち、Rack の応答の配列を返す最小限のコントローラー。
@@ -232,7 +232,7 @@ ActionController::Base::MODULES.size  # => 36
             <HierarchyFigure />
           </Figure>
           <p>
-            祖先の72個の大半はこれらのモジュールです。<ChapterLink n={1} />の図 1-3 で見た <code>process_action</code> の7つの定義は、このうち ParamsWrapper、Instrumentation、Rescue、Callbacks
+            祖先に並ぶ72個のクラスとモジュールの大半は、これらのモジュールです。<ChapterLink n={1} />の図 1-3 で見た <code>process_action</code> の7つの定義は、このうち ParamsWrapper、Instrumentation、Rescue、Callbacks
             などのモジュールにあります。
           </p>
         </>
@@ -492,7 +492,7 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
       body: (
         <>
           <p>
-            アクションの中で起きた例外は、まず <code>process_action</code> の連鎖にある ActionController::Rescue で捕まります。
+            アクションの中で起きた例外は、まず <code>process_action</code> の連鎖にある ActionController::Rescue で捕捉されます。
           </p>
           <Code
             lang="ruby"
@@ -688,7 +688,7 @@ set-cookie: _demo_session=oKbhi2j91UHJi9RL01Jh…; path=/; secure; httponly; sam
           <li>dispatch はリクエストごとにインスタンスを作り、process → process_action の連鎖 → send_action でアクションを呼び、to_a で Rack の配列を返します。</li>
           <li>params は本文、クエリ文字列、パスパラメーターの順に上書きで合成されます。許可していないパラメーターをモデルに渡すと ForbiddenAttributesError になります。</li>
           <li>render を書かないアクションは、テンプレートがあれば描画し、無ければ 406 か 204 になります。</li>
-          <li>例外は rescue_from で処理されなければミドルウェアに上がり、ShowExceptions が rescue_responses でステータスを決めて public の HTML を返します。</li>
+          <li>例外は rescue_from で処理されなければミドルウェアに伝わり、ShowExceptions が rescue_responses でステータスを決めて public の HTML を返します。</li>
           <li>Cookie は Cookies ミドルウェアが応答の時点で書き出し、セッションは既定で暗号化された Cookie に保存されます。上限は 4096 バイトです。</li>
         </ul>
       ),
@@ -701,7 +701,7 @@ set-cookie: _demo_session=oKbhi2j91UHJi9RL01Jh…; path=/; secure; httponly; sam
     { title: 'Action Controller Overview', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/action_controller_overview.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'JSON パラメーターの包み直し（wrap_parameters）、Strong Parameters と expect、署名付き・暗号化された Cookie。' },
     { title: 'actionpack/lib/action_controller/metal/strong_parameters.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_controller/metal/strong_parameters.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'params、expect と expect!、ParameterMissing。7.2.4 の同じファイルには expect が無いことを差分で確認。' },
     { title: 'actionpack/lib/action_controller/metal/implicit_render.rb・basic_implicit_render.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_controller/metal/implicit_render.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '暗黙の描画と、テンプレートが無い場合の 406・204。' },
-    { title: 'actionpack/lib/action_controller/metal/rescue.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_controller/metal/rescue.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'process_action で例外を捕まえ、rescue_with_handler に渡す実装。' },
+    { title: 'actionpack/lib/action_controller/metal/rescue.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_controller/metal/rescue.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'process_action で例外を捕捉し、rescue_with_handler に渡す実装。' },
     { title: 'actionpack/lib/action_dispatch/middleware/exception_wrapper.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_dispatch/middleware/exception_wrapper.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'rescue_responses の表と show?（show_exceptions の設定）。RecordNotFound の追加は activerecord/lib/active_record/railtie.rb。' },
     { title: 'actionpack/lib/action_dispatch/middleware/show_exceptions.rb・public_exceptions.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_dispatch/middleware/show_exceptions.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'ShowExceptions が exceptions_app を呼ぶ処理と、PublicExceptions が public/404.html などを返す処理。' },
     { title: 'actionpack/lib/action_dispatch/middleware/cookies.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_dispatch/middleware/cookies.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'Cookies ミドルウェアの call、MAX_COOKIE_SIZE と CookieOverflow、暗号化の既定（aes-256-gcm）。セッションの保存は session/cookie_store.rb。' },

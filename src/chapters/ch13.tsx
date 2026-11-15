@@ -583,7 +583,7 @@ a.comments.to_sql  # => "SELECT \`comments\`.* FROM \`comments\` WHERE \`comment
 `}
           />
           <p>
-            <ChapterLink n={12} />の <code>find</code> と同じく、関連ごとに文キャッシュを作り、owner の外部キーなどの値を当てはめて実行します。読み込んだ各レコードには、逆向きの関連（
+            <ChapterLink n={12} />の <code>find</code> と同じく、関連ごとにステートメントキャッシュを作り、owner の外部キーなどの値を当てはめて実行します。読み込んだ各レコードには、逆向きの関連（
             <code>set_inverse_instance</code>）と strict_loading の設定を引き継ぎます
             <Ref n={1} />。
           </p>
@@ -623,7 +623,7 @@ Article.where(status: :published).limit(5).each { |x| x.author&.name }   # SQL 6
             これは仕組みから求めた回数で、新たな実測値ではありません。クエリキャッシュや取得対象によって実際の回数は変わりますが、「一覧の件数に応じて追加の問い合わせが増える」点に注目します。
             <Ref n={8} />
           </p>
-          <h3>一覧画面では、取得する側で関連を指定する</h3>
+          <h3>一覧画面に必要な関連の指定</h3>
           <p>
             次のコードは、記事のタイトルと著者名を並べる画面の例です。ビューは HTML を作るテンプレートで、詳しい仕組みは<ChapterLink n={16} />で扱います。
             著者名を表示する行で SQL が実行されるため、コントローラーだけを見ると N+1 を見落とします。
@@ -876,7 +876,7 @@ a.tags.to_a
     },
     {
       id: 'n-plus-one-check',
-      title: 'N+1 の見つけ方と、先読みしても残る問い合わせ',
+      title: 'N+1 の見つけ方と先読みしても残る問い合わせ',
       body: (
         <>
           <p>BulletでN+1の候補を通知する設定とテストでの利用は、<ChapterLink n={28} section="bullet" />で説明します。</p>
@@ -897,7 +897,7 @@ a.tags.to_a
             ログの CACHE 表示を区別し、著者が異なる場合も確かめます。コンソールで同じ記事オブジェクトを使い回すと、その関連が読み込み済みになっている場合もあるので、比較ごとに記事の取得からやり直します。
             計測の仕組みは<ChapterLink n={22} />で説明します。
           </p>
-          <h3>count は、関連を先読みしても SQL を実行する</h3>
+          <h3>関連の先読み後の count</h3>
           <Code lang="ruby" title="コメントを先読みしても、記事ごとの COUNT が残る例" code={`
 articles = Article.order(:id).limit(20).preload(:comments)
 articles.each do |article|
@@ -921,7 +921,7 @@ end
             group(:article_id).count は、記事の id をキー、コメント数を値とするハッシュを返します。コメントがない記事は集計結果に含まれないので、fetch の第2引数で 0 を使います。
             コメント本文のレコードを作らず、一覧全体の件数をまとめて取得できます。
           </p>
-          <h3>先読みした関連と、実際に使う関連を一致させる</h3>
+          <h3>先読みする関連と実際に使う関連の一致</h3>
           <Code lang="ruby" title="並び順を後から加えると、別の問い合わせになる例" code={`
 Article.preload(:comments).limit(20).each do |article|
   article.comments.order(:created_at).each { |comment| puts comment.id }
@@ -1031,7 +1031,7 @@ Article.strict_loading.first.author
     },
   ],
   sources: [
-    { title: 'activerecord/lib/active_record/associations.rb・associations/association.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/associations/association.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'association による Association の作成とキャッシュ、find_target（文キャッシュ、逆向きの関連、strict_loading）。' },
+    { title: 'activerecord/lib/active_record/associations.rb・associations/association.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/associations/association.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'association による Association の作成とキャッシュ、find_target（ステートメントキャッシュ、逆向きの関連、strict_loading）。' },
     { title: 'activerecord/lib/active_record/associations/preloader/association.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/associations/preloader/association.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'Preloader が外部キーの値を集めて where(... => keys) で読み込む処理。呼び出し元は relation.rb の preload_associations。' },
     { title: 'activerecord/lib/active_record/relation.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/relation.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'eager_loading? と references_eager_loaded_tables? による includes の判定。' },
     { title: 'activerecord/lib/active_record/associations/collection_association.rb・has_many_association.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/associations/has_many_association.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'size の分岐と、counter_cache の列を使う count_records。' },

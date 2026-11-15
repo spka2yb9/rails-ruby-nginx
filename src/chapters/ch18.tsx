@@ -111,7 +111,7 @@ const ch18: Chapter = {
   part: 4,
   title: '非同期処理（ActiveJob・Sidekiq）',
   summary:
-    'perform_later で投入したジョブが、どんな JSON になって Redis に入り、Sidekiq のスレッドで実行されるまでを、Redis の中身とログで追います。再試行と Dead、ActiveJob 経由と Sidekiq 直接の違い、トランザクションと投入の時刻、Solid Queue との違い、冪等性も扱います。',
+    'perform_later で投入したジョブがどんな JSON になり、Redis を経て Sidekiq のスレッドで実行されるかを、Redis の中身とログで追います。再試行と Dead、ActiveJob 経由と Sidekiq 直接の違い、トランザクションと投入の時刻、Solid Queue との違い、冪等性も扱います。',
   goals: [
     'ActiveJob が引数を JSON に変換する方法（GlobalID・シリアライザー）と、レコードが消えたときの例外を説明できる',
     'Sidekiq が Redis のどのキーを使い、どのスレッドがジョブを取り出して実行するかを説明できる',
@@ -128,7 +128,7 @@ const ch18: Chapter = {
       body: (
         <>
           <p>
-            ActiveJob は、ジョブの書き方（<code>perform</code>・<code>perform_later</code>・<code>retry_on</code> など）を共通にする仕組みです。ジョブを保存して実行する仕組み（キューのバックエンド）は、それぞれの仕組みに合わせて呼び出しを変換する部品（アダプター）で切り替えます。この章のデモでは、開発環境の設定に{' '}
+            ActiveJob はジョブの書き方（<code>perform</code>・<code>perform_later</code>・<code>retry_on</code> など）を共通にする仕組みです。ジョブを保存して実行する仕組み（キューのバックエンド）は、それぞれの仕組みに合わせて呼び出しを変換する部品（アダプター）で切り替えます。この章のデモでは、開発環境の設定に{' '}
             <code>config.active_job.queue_adapter = :sidekiq</code> を書き、Redis 8.10 と Sidekiq 8.1.7 を Docker で動かしました。
           </p>
           <Code
@@ -158,7 +158,7 @@ end
       title: '引数のシリアライズと GlobalID',
       body: (
         <>
-          <p>ジョブのクラス名や引数などを、保存・転送できるデータに変換することをシリアライズと呼びます。ActiveJob は、次の Hash に変換して保存先の処理に渡します。</p>
+          <p>ジョブのクラス名や引数などを、保存・転送できるデータに変換することをシリアライズと呼びます。ActiveJob は次の Hash に変換して保存先の処理に渡します。</p>
           <Code
             lang="ruby"
             title="activejob/lib/active_job/core.rb（117〜132行目）"
@@ -214,7 +214,7 @@ ActiveJob::DeserializationError (Error while trying to deserialize arguments: Co
 `}
           />
           <p>
-            この例外は何度再試行しても成功しません。削除が起こりうるジョブでは、<code>discard_on ActiveJob::DeserializationError</code> でジョブを捨てるようにします
+            この例外が起きたジョブは何度再試行しても成功しません。削除が起こりうるジョブでは、<code>discard_on ActiveJob::DeserializationError</code> でジョブを捨てるようにします
             <Ref n={2} />。
           </p>
         </>
@@ -585,7 +585,7 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
           </p>
           <p>このため、ジョブは次のように書きます。</p>
           <ul>
-            <li>2回実行されても結果が同じになるようにする（冪等にする）。例：状態を確かめてから処理する、送信済みの印を同じトランザクションで記録する、一意の索引で二重登録を防ぐ</li>
+            <li>2回実行されても結果が同じになるようにする（冪等にする）。例：状態を確かめてから処理する、送信済みであることを同じトランザクションで記録する、一意の索引で二重登録を防ぐ</li>
             <li>外部の API への送信など、取り消せない処理は、ジョブを小さく分けて、送信の前後で状態を保存する</li>
             <li>処理時間の長いジョブは、Sidekiq の停止のタイムアウト（既定 25 秒）と、デプロイの手順の待ち時間を合わせる</li>
           </ul>
@@ -597,7 +597,7 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
       title: 'まとめ',
       body: (
         <ul>
-          <li>ActiveJob は引数を JSON に変換し、ActiveRecord は GlobalID で保存します。実行時に読み直すので、削除されていれば DeserializationError になります。</li>
+          <li>ActiveJob は引数を JSON に変換し、ActiveRecord のオブジェクトは GlobalID で保存します。実行時にレコードを読み直すので、削除されていれば DeserializationError になります。</li>
           <li>Sidekiq のアダプターは ActiveJob の Hash を Wrapper のジョブに包み、Redis のリストに入れます。Sidekiq のスレッドが BRPOP で取り出し、Executor の中で perform を呼びます。</li>
           <li>待ち時間付きのジョブと再試行は ZSET に入り、ポーラーが平均5秒ごとにキューへ戻します。</li>
           <li>Sidekiq の再試行は25回（約3週間）で、使い切ると dead に入ります。retry_on と併用すると、retry_on の回数を使い切った後に Sidekiq の再試行が続きます。</li>

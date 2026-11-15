@@ -326,7 +326,7 @@ A url=/articles/1 marker=same-document h1=変更後のタイトル
 `}
           />
           <p>
-            要求には <code>Turbo-Frame: comment_form</code> が付きます。turbo-rails は、このヘッダーがあるときに軽いレイアウトを使うよう、コントローラーに設定を加えています。
+            要求には <code>Turbo-Frame: comment_form</code> が付きます。turbo-rails は、このヘッダーがあるときに簡略化したレイアウトを使うよう、コントローラーに設定を加えています。
           </p>
           <Code
             lang="ruby"
@@ -695,7 +695,7 @@ _action_cable_internal
           <Callout kind="v72">
             <p>
               ここまでの ActionCable の処理は Rails 7.2.4 でも同じです。Rails 8.0 から、新規のアプリケーションは本番環境のアダプターに Solid Cable を使うようになりました
-              <Ref n={8} />。7.2 で作ったアプリケーションの本番環境は Redis のアダプターです。turbo-rails と stimulus-rails は Rails とは別の gem なので、7.2 でも同じ版を使えます。
+              <Ref n={8} />。7.2 で作ったアプリケーションの本番環境は Redis のアダプターです。turbo-rails と stimulus-rails は Rails とは別の gem なので、7.2 でも同じバージョンを使えます。
             </p>
           </Callout>
         </>
@@ -707,7 +707,7 @@ _action_cable_internal
       body: (
         <ul>
           <li>Turbo Drive は普通の GET と POST を送ります。フォームの送信には 303 のリダイレクトか、入力の誤りなら 422 を返します。</li>
-          <li>Turbo Frames の要求には Turbo-Frame ヘッダーが付き、turbo-rails は軽いレイアウトを使います。応答のうち同じ id のフレームだけが使われます。</li>
+          <li>Turbo Frames の要求には Turbo-Frame ヘッダーが付き、turbo-rails は簡略化したレイアウトを使います。応答のうち同じ id のフレームだけが使われます。</li>
           <li>Turbo Streams は Accept の text/vnd.turbo-stream.html で選ばれ、*.turbo_stream.erb の turbo-stream 要素でページの一部を変更します。</li>
           <li>Stimulus は data-controller 属性に JavaScript のクラスを結び付けます。サーバーは属性を出力するだけです。</li>
           <li>ActionCable は WebSocket を hijack で Puma から引き取り、イベントループとワーカープールで処理します。WebSocket の接続は Puma のスレッドを占有しません。</li>

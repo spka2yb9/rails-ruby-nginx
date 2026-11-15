@@ -201,7 +201,7 @@ const ch12: Chapter = {
   part: 3,
   title: 'Relation と Arel による SQL 生成',
   summary:
-    'where や order が SQL をすぐに実行せずに Relation へ条件をためる仕組みと、Arel の構文木から MySQL の SQL が作られ、実行されてレコードになるまでを追います。スコープとクラスメソッドの委譲、find の文キャッシュ、クエリキャッシュ、EXPLAIN による実行計画の読み方も扱います。',
+    'where や order が SQL をすぐに実行せずに Relation へ条件をためる仕組みと、Arel の構文木から MySQL の SQL が作られ、実行されてレコードになるまでを追います。スコープとクラスメソッドの委譲、find のステートメントキャッシュ、クエリキャッシュ、EXPLAIN による実行計画の読み方も扱います。',
   goals: [
     'Relation が条件を保存するだけで、必要になったときに SQL を実行することを説明できる',
     'メソッドチェーンのたびに Relation が複製される仕組みを説明できる',
@@ -632,7 +632,7 @@ where(author_id: 3).limit(3).pluck(:id, :title)
           />
           <ul>
             <li>
-              <code>first</code> は主キーの順に並べますが、<code>take</code> は並べません。順序が要らないなら <code>take</code> のほうが軽い SQL です。
+              <code>first</code> は主キーの順に並べますが、<code>take</code> は並べません。順序が要らないなら <code>take</code> のほうが負荷の小さい SQL です。
             </li>
             <li>
               <code>count</code> は常に COUNT の SQL を実行します。<code>size</code> は、読み込み前なら COUNT を、読み込み後なら <code>@records</code> の数を返します。デモでは、読み込み前の{' '}
@@ -795,7 +795,7 @@ type=ALL  key=NULL  rows=9838  filtered=33.33  Extra=Using where; Using filesort
           <li>チェーンのたびに Relation は複製され、元の Relation は変わりません。読み込み済みの Relation は変更できません。</li>
           <li>Relation の値は build_arel で Arel の構文木になり、MySQL 用の visitor が SQL の文字列にします。enum などの値は列の型で変換されます。</li>
           <li>Relation からモデルのクラスメソッドを呼ぶと、scoping の中で実行されるので、Relation の条件が引き継がれます。</li>
-          <li>count は常に COUNT、size は読み込み状態で切り替わり、find は文キャッシュを使います。同じ SELECT はリクエストの中でクエリキャッシュされます。</li>
+          <li>count は常に COUNT、size は読み込み状態で切り替わり、find はステートメントキャッシュを使います。同じ SELECT はリクエストの中でクエリキャッシュされます。</li>
           <li>EXPLAIN の type・key・rows・Extra で索引の使われ方を確かめます。複合索引は先頭の列から順に使われます。</li>
         </ul>
       ),

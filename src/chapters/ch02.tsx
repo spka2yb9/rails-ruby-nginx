@@ -240,7 +240,7 @@ end
           />
           <h3>括弧とレシーバの省略</h3>
           <p>
-            Ruby では、メソッド呼び出しの括弧を省略できます。レシーバ（<code>obj.foo</code> の <code>obj</code>）を省略すると、<code>self</code>（いま処理の対象になっているオブジェクト）に対する呼び出しになります
+            Ruby ではメソッド呼び出しの括弧を省略できます。レシーバ（<code>obj.foo</code> の <code>obj</code>）を省略すると、<code>self</code>（いま処理の対象になっているオブジェクト）に対する呼び出しになります
             <Ref n={1} />。クラスの本体では <code>self</code> はそのクラスなので、<code>has_many :comments</code> は <code>Article.has_many(:comments)</code> と同じです（
             <code>self</code> の決まり方は、この章の後の節で説明します）。上の例を、省略しない形に書き直すと次のようになります。
           </p>
@@ -313,7 +313,7 @@ Article.method(:validates).owner  # => ActiveModel::Validations::ClassMethods
           </p>
           <h3>シンボル</h3>
           <p>
-            <code>:title</code> のようにコロンで始まる値は <Term en="Symbol">シンボル</Term> で、名前を表すオブジェクトです。同じ名前のシンボルは、プログラムの実行中ずっと同じ1つのオブジェクトです
+            <code>:title</code> のようにコロンで始まる値は <Term en="Symbol">シンボル</Term> で、名前を表すオブジェクトです。同じ名前のシンボルはプログラムの実行中ずっと同じ1つのオブジェクトです
             <Ref n={10} />。文字列は、書くたびに別のオブジェクトが作られます。Rails では、列名・関連名・メソッド名・アクション名をシンボルで渡します。
           </p>
           <Code
@@ -331,9 +331,9 @@ Article.method(:validates).owner  # => ActiveModel::Validations::ClassMethods
             <code>%i[...]</code> はシンボルの配列を、<code>%w[...]</code> は文字列の配列を作る書き方です
             <Ref n={12} />。<code>only: %i[show edit]</code> は <code>only: [:show, :edit]</code> と同じです。
           </p>
-          <h3>Hash と、最後の引数の {'{}'} の省略</h3>
+          <h3>Hash と最後の引数の {'{}'} の省略</h3>
           <p>
-            Hash は、キーと値の組を集めたオブジェクトです。<code>{'{'} title: "Rails入門" {'}'}</code> の <code>title:</code> は、キーがシンボル <code>:title</code>{' '}
+            Hash はキーと値の組を集めたオブジェクトです。<code>{'{'} title: "Rails入門" {'}'}</code> の <code>title:</code> は、キーがシンボル <code>:title</code>{' '}
             であることを表します。シンボルのキーと文字列のキーは別のキーとして扱われます。
           </p>
           <Code
@@ -566,7 +566,7 @@ a.method(:title).owner           # => Article
               オブジェクト <code>a</code> と <code>b</code> は、それぞれ自分の<Term en="instance variable">インスタンス変数</Term>（<code>@title</code>）を持っています。値はオブジェクトごとに異なります。
             </li>
             <li>
-              各オブジェクトは、自分がどのクラスから作られたか（<code>a.class</code>）への参照を持っています。
+              各オブジェクトは、自分が作られたクラス（<code>a.class</code>）への参照を持っています。
             </li>
             <li>
               メソッド <code>title</code> はオブジェクトではなく <code>Article</code> クラスが持っています。<code>a.method(:title).owner</code> が <code>Article</code> を返すのはこのためです。
@@ -595,7 +595,7 @@ a.method(:title).owner           # => Article
       body: (
         <>
           <p>
-            Ruby では、クラスもオブジェクトです。<code>Article</code> という定数には、クラスを表すオブジェクトが入っています。そのオブジェクトのクラスは <code>Class</code> です。
+            Ruby ではクラスもオブジェクトです。<code>Article</code> という定数には、クラスを表すオブジェクトが入っています。そのオブジェクトのクラスは <code>Class</code> です。
           </p>
           <Code
             lang="ruby"
@@ -916,7 +916,7 @@ s.port
 `}
           />
           <p>
-            名前が <code>find_by_〜</code> の形で、<code>〜</code> の部分が実在するカラムであれば、<code>match.define</code> でそのクラスに本物のクラスメソッドを定義してから、<code>send</code>{' '}
+            名前が <code>find_by_〜</code> の形で、<code>〜</code> の部分が実在するカラムであれば、<code>match.define</code> でそのクラスに通常のクラスメソッドを定義してから、<code>send</code>{' '}
             で呼び直します。一度定義されると、2回目以降の呼び出しはメソッド探索で見つかるため、<code>method_missing</code> を通りません。実際に確かめると次のようになります。
           </p>
           <Code
@@ -941,7 +941,7 @@ Article.singleton_class.method_defined?(:find_by_title) # => true
       body: (
         <>
           <p>
-            Ruby では、すでに定義されているクラスに対して、もう一度 <code>class</code> 文を書くと、そのクラスにメソッドを追加できます。新しいクラスが作られるのではなく、既存のクラスが開き直されます。これを
+            Ruby ではすでに定義されているクラスに対して、もう一度 <code>class</code> 文を書くと、そのクラスにメソッドを追加できます。新しいクラスが作られるのではなく、既存のクラスが開き直されます。これを
             <Term en="open class">クラスの再オープン</Term>と呼びます。<code>String</code> のような組み込みクラスも例外ではありません。
           </p>
           <Code
@@ -1059,7 +1059,7 @@ a.last(6)
             メソッド探索は ancestors の順に進み、最初に見つかった定義を実行します。見つからなければ <code>method_missing</code> が呼ばれます。
           </li>
           <li>
-            <code>method_missing</code> を定義するときは <code>respond_to_missing?</code> も定義します。ActiveRecord の <code>find_by_〜</code> は、初回呼び出し時に本物のメソッドを定義します。
+            <code>method_missing</code> を定義するときは <code>respond_to_missing?</code> も定義します。ActiveRecord の <code>find_by_〜</code> は初回の呼び出し時に通常のメソッドを定義します。
           </li>
           <li>ActiveSupport のコア拡張（<code>blank?</code> など）は、クラスの再オープンで組み込みクラスにメソッドを追加しています。</li>
         </ul>

@@ -473,7 +473,7 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
       body: (
         <>
           <p>
-            モデルの情報は、クラスとインスタンスに分かれて保存されています。クラスは、テーブルの列の情報（<code>columns_hash</code>）、属性ごとの型（<code>attribute_types</code>
+            モデルの情報はクラスとインスタンスに分かれて保存されています。クラスはテーブルの列の情報（<code>columns_hash</code>）、属性ごとの型（<code>attribute_types</code>
             ）、新しいレコードの初期値（<code>_default_attributes</code>）を持ち、祖先には <code>title</code> などのメソッドを定義したモジュールがあります。インスタンスは、属性の値の集合（<Term en="attribute set">AttributeSet</Term>）である{' '}
             <code>@attributes</code> と、保存済みかどうかなどの状態を持ちます。
           </p>
@@ -515,7 +515,7 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
 `}
           />
           <p>
-            列の情報は、接続プールごとのスキーマキャッシュ（<code>schema_cache</code>）から取り出します。キャッシュに無ければ、MySQL では <code>SHOW FULL FIELDS</code>{' '}
+            列の情報は接続プールごとのスキーマキャッシュ（<code>schema_cache</code>）から取り出します。キャッシュに無ければ、MySQL では <code>SHOW FULL FIELDS</code>{' '}
             で問い合わせます。<code>ignored_columns</code> や <code>only_columns</code> で指定した列は、ここで取り除かれます
             <Ref n={1} />。<code>load_schema</code> は Monitor で排他しており（同じファイルの 550〜562 行目）、複数のスレッドから同時に呼ばれても読み込みは1回です。
           </p>
@@ -639,7 +639,7 @@ Article.method_defined?(:title)   # => true
           />
           <p>
             属性が読まれたときに初めて、その列の型の <code>deserialize</code> で Ruby の値に変換し、<code>@casted_values</code> に保存します
-            <Ref n={5} />。1万件のレコードを読み込んでも、表示に使う数列しか読まなければ、残りの列の変換は行われません。
+            <Ref n={5} />。1万件のレコードを読み込んでも、表示に使ういくつかの列しか読まなければ、残りの列の変換は行われません。
           </p>
           <Figure n="11-3" title="行から値を読むまで" caption="Rails 8.1.4.1 の persistence.rb・core.rb・attribute_set/builder.rb を読んでまとめた図。">
             <LazyFigure />
@@ -704,7 +704,7 @@ Article.ancestors.index(m.owner)  # => 3
       body: (
         <>
           <p>
-            属性の型は、列の <code>sql_type</code> から接続アダプターの型の対応表で決まります。デモのアプリケーションでの結果は次のとおりです。
+            属性の型は列の <code>sql_type</code> から接続アダプターの型の対応表で決まります。デモのアプリケーションでの結果は次のとおりです。
           </p>
           <div className="table-wrap">
             <table>
@@ -851,7 +851,7 @@ status      = "unknown"           -> ArgumentError: 'unknown' is not a valid sta
       body: (
         <>
           <p>
-            列の型は、モデルの <code>attribute</code> で上書きしたり、列の無い属性を追加したりできます。<code>attribute :name, :type, default: ...</code>{' '}
+            モデルの <code>attribute</code> を使うと、列の型を上書きしたり、列の無い属性を追加したりできます。<code>attribute :name, :type, default: ...</code>{' '}
             は、最終的に次のメソッドで型と既定値を登録します。
           </p>
           <Code
@@ -890,7 +890,7 @@ status      = "unknown"           -> ArgumentError: 'unknown' is not a valid sta
       body: (
         <>
           <p>
-            代入は、元の Attribute を書き換えずに新しい Attribute を作ります。<code>write_from_user</code> は <code>with_value_from_user</code> を呼び、元の属性を{' '}
+            属性に値を代入すると、元の Attribute を書き換えずに新しい Attribute が作られます。<code>write_from_user</code> は <code>with_value_from_user</code> を呼び、元の属性を{' '}
             <code>original_attribute</code> として持つ FromUser の属性に置き換えます。
           </p>
           <Code
@@ -1005,7 +1005,7 @@ a.changes.keys        # => ["body"]（その場での書き換えも検出され
           <li>データベースの行は allocate と init_with_attributes でレコードになり、LazyAttributeSet が値を読まれたときに型変換します。</li>
           <li>MySQL の tinyint(1) は Boolean 型になります。代入した値は型の cast で変換され、"abc" が 0 に、"no" が true になるなどの規則があります。</li>
           <li>attribute と enum は、列から作った型の上に別の型を重ねます。</li>
-          <li>代入は元の属性を残した新しい属性を作り、changes で変更を、saved_changes で保存した変更を確認できます。UPDATE には変更した列だけが入ります。</li>
+          <li>属性に値を代入すると、元の属性を残した新しい属性が作られます。changes で変更を、saved_changes で保存した変更を確認できます。UPDATE には変更した列だけが入ります。</li>
         </ul>
       ),
     },

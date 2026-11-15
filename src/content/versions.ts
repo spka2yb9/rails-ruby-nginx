@@ -4,7 +4,7 @@ export const VERSIONS = {
   items: [
     { name: 'Ruby on Rails', version: '8.1.4.1', note: '2026-11-04 リリース。Rails 7.2 との違いは各章の「Rails 7.2 との違い」と付録Aに記載' },
     { name: 'Ruby', version: '4.0.9', note: '2026-10-23 リリース（CRuby）' },
-    { name: 'Puma', version: '8.0.2', note: 'Rails 8.1.4.1 の rails new で Gemfile.lock に入る版' },
+    { name: 'Puma', version: '8.0.2', note: 'Rails 8.1.4.1 の rails new で Gemfile.lock に記録されるバージョン' },
     { name: 'Rack', version: '3.2.8', note: '' },
     { name: 'Zeitwerk', version: '2.8.3', note: '' },
     { name: 'debug', version: '1.11.1', note: 'Rails の標準 Gemfile に含まれるデバッガ' },

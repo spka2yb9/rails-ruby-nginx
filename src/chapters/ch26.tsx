@@ -346,7 +346,7 @@ X-Served-By: lb                                           ← デモのロード
                 </tr>
                 <tr>
                   <td>Rails の Completed</td>
-                  <td>process_action の長さ（コールバック・アクション・描画）</td>
+                  <td>process_action の処理時間（コールバック・アクション・描画）</td>
                   <td>5ms</td>
                 </tr>
                 <tr>

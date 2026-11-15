@@ -194,7 +194,7 @@ const ch04: Chapter = {
       body: (
         <>
           <p>
-            ブロックは、メソッド呼び出しに付けて渡すコードのまとまりです。<code>do ... end</code> または <code>{'{ ... }'}</code>{' '}
+            ブロックはメソッド呼び出しに付けて渡すコードのまとまりです。<code>do ... end</code> または <code>{'{ ... }'}</code>{' '}
             で書きます。メソッドの中では <code>yield</code> でブロックを実行でき、<code>yield</code> に渡した値がブロックの引数になり、ブロックの最後の式の値が <code>yield</code>{' '}
             の戻り値になります
             <Ref n={1} />。
@@ -243,7 +243,7 @@ def apply_twice(x, &block) = block.call(block.call(x))
 apply_twice(1) { |n| n * 10 } # => 100
 `}
           />
-          <h3>Proc に保存した処理を、map のブロックとして渡す</h3>
+          <h3>Proc に保存した処理を map のブロックとして渡す</h3>
           <p>
             配列の <code>map</code> は、各要素をブロックに渡し、その結果を集めた新しい配列を返します。
             次の例では、<code>word</code> に順に <code>"a"</code> と <code>"b"</code> が入り、<code>upcase</code> で大文字にします。
@@ -344,13 +344,13 @@ double_lambda.call(3) # => 6
           <p>
             lambda も Proc クラスのオブジェクトです。この節では、<code>proc {'{ ... }'}</code> で作るものを「通常の Proc」、
             <code>lambda {'{ ... }'}</code> で作るものを「lambda」と呼び分けます。
-            主な違いは、<strong>渡す引数の数が合わないときの動作</strong>と、<strong>中で return を書いたときに終了する範囲</strong>の2つです<Ref n={2} />。
+            主な違いは<strong>渡す引数の数が合わないときの動作</strong>と、<strong>中で return を書いたときに終了する範囲</strong>の2つです<Ref n={2} />。
           </p>
 
           <h3>違い①：引数の数が合わないとき</h3>
           <p>
             次の処理は、<code>|name|</code> と書いているので、名前を1つ受け取るつもりで作っています。
-            通常の Proc は、値が渡されなければ <code>name</code> を <code>nil</code> にし、余分な値があれば使わずに処理を続けます。
+            通常の Proc は値が渡されなければ <code>name</code> を <code>nil</code> にし、余分な値があれば使わずに処理を続けます。
           </p>
           <Code
             lang="ruby"
@@ -364,7 +364,7 @@ read_name.call("田中", "佐藤") # => "田中"
 `}
           />
           <p>
-            lambda は、必要な引数が足りないと処理の中身を実行せず、<code>ArgumentError</code>（引数の渡し方が不正なことを示す例外）になります。
+            lambda は必要な引数が足りないと処理の中身を実行せず、<code>ArgumentError</code>（引数の渡し方が不正なことを示す例外）になります。
             次の例では、必要な名前を渡し忘れた時点で分かります。
           </p>
           <Code
@@ -384,7 +384,7 @@ read_name.call()
             通常の Proc は引数が不足しても呼び出せますが、その後の処理が <code>nil</code> を扱えずに失敗することはあります。
           </p>
 
-          <h3>違い②：return で、どこまで終了するか</h3>
+          <h3>違い②：return で終了する範囲</h3>
           <p>
             普通のメソッドに書く <code>return</code> は、そのメソッドを途中で終了し、呼び出し元へ値を返します。
             通常の Proc の中に書いた <code>return</code> も、<strong>その Proc を作ったメソッドを終了します</strong>。
@@ -472,7 +472,7 @@ short_form.call(3) # => 6
             ライブラリや Rails に処理を渡すときは、その機能が求める引数と書き方に合わせます。
           </p>
 
-          <h3>補足：Proc を作ったメソッドが、すでに終了している場合</h3>
+          <h3>補足：Proc を作ったメソッドの終了後に実行する場合</h3>
           <p>
             通常の Proc の return が、作ったメソッドを終了することは説明しました。
             では、そのメソッドが終わった後に Proc を実行するとどうなるでしょうか。次の例では、Proc を作る時点と、実行する時点を分けています。
@@ -512,7 +512,7 @@ task.call # => "完了"
             明示的な return を使わず、最後の式の値を call の結果として返せます。
           </p>
 
-          <h3>補足：配列1つと、引数2つはどう扱われるか</h3>
+          <h3>補足：配列1つと引数2つの扱い</h3>
           <p>
             <code>call(10, 20)</code> は値を2つ渡しています。一方、<code>call([10, 20])</code> は、2つの値が入った配列を1つ渡しています。
             引数を2つ受け取る次の通常の Proc では、配列の中身を分けて <code>left</code> と <code>right</code> に入れます。
@@ -528,7 +528,7 @@ pair.call([10, 20]) # => [10, 20]
 `}
           />
           <p>
-            同じ引数の書き方をした lambda は、この配列を自動では分けません。
+            同じ引数の書き方をした lambda はこの配列を自動では分けません。
             必要な引数は2つなのに配列を1つだけ渡しているので、引数が足りないエラーになります<Ref n={2} />。
           </p>
           <Code
@@ -551,7 +551,7 @@ pair.call([10, 20])
       body: (
         <>
           <p>
-            ブロック・Proc・lambda は、作られた場所のローカル変数を参照できます。値をコピーするのではなく、変数そのものを参照します。このような性質を持つ関数を<Term en="closure">クロージャ</Term>
+            ブロック・Proc・lambda は作られた場所のローカル変数を参照できます。値をコピーするのではなく、変数そのものを参照します。このような性質を持つ関数を<Term en="closure">クロージャ</Term>
             と呼びます
             <Ref n={2} />
             <Ref n={4} />。
@@ -686,7 +686,7 @@ Widget.build                     # => :class_method
             では Widget 自身に定義されるのでインスタンスメソッドになります。
           </p>
           <p>
-            これらのメソッドは、ブロックの代わりに文字列を受け取ることもできます（<code>class_eval "def foo; end"</code>）。Rails はメソッドを生成するときに文字列版の{' '}
+            これらのメソッドはブロックの代わりに文字列を受け取ることもできます（<code>class_eval "def foo; end"</code>）。Rails はメソッドを生成するときに文字列版の{' '}
             <code>class_eval</code> をよく使います。その理由は<ChapterLink n={5} />で説明します。
           </p>
         </>
@@ -703,7 +703,7 @@ Widget.build                     # => :class_method
           <h3>routes.rb：Mapper を self としてブロックを実行する</h3>
           <p>
             <code>config/routes.rb</code> の <code>Rails.application.routes.draw do ... end</code> に渡したブロックの中では、<code>get</code> や <code>resources</code>{' '}
-            をレシーバなしで呼べます。これは、Rails がブロックを <code>Mapper</code> オブジェクトを self として <code>instance_exec</code> しているからです。
+            をレシーバなしで呼べます。これは、Rails が <code>Mapper</code> オブジェクトを self として、そのブロックを <code>instance_exec</code> で実行しているからです。
           </p>
           <Code
             lang="ruby"
@@ -864,7 +864,7 @@ Page.new.build2 # => ["GET /Page のタイトル → x#y"]
           <li>
             ブロックは <code>yield</code> で実行します。<code>&block</code> で受けると Proc オブジェクトになり、保存して後で呼べます。
           </li>
-          <li>通常の Proc と lambda は、どちらも処理を保存して call で実行できます。lambda は引数の数を検査し、中の return は lambda の実行だけを終了します。通常の Proc の return は、その Proc を作ったメソッドを終了します。</li>
+          <li>通常の Proc と lambda はどちらも処理を保存して call で実行できます。lambda は引数の数を検査し、中の return は lambda の実行だけを終了します。通常の Proc の return はその Proc を作ったメソッドを終了します。</li>
           <li>ブロックはクロージャで、作られた場所のローカル変数そのものを参照します。class・module・def は新しいスコープを作り、外側のローカル変数を見えなくします。</li>
           <li>instance_eval・instance_exec はレシーバを self にしてブロックを実行し、class_eval はレシーバ（クラス）自身にメソッドを定義する状態でブロックを実行します。</li>
           <li>

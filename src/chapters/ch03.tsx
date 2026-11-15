@@ -236,7 +236,7 @@ Post.ancestors.take(4) # => [Post, Searchable, Publishable, Object]
 `}
           />
           <p>
-            <code>Post.new.publish</code> では、まず <code>Post</code> を探し、無いので次の <code>Searchable</code> で見つかります。<code>Searchable#publish</code> の中の{' '}
+            <code>Post.new.publish</code> では、まず <code>Post</code> で <code>publish</code> を探します。定義が無いので次の <code>Searchable</code> を探すと見つかります。<code>Searchable#publish</code> の中の{' '}
             <code>super</code> は、ancestors で次にある <code>Publishable</code> の <code>publish</code> を呼びます。
           </p>
           <p>
@@ -399,7 +399,7 @@ end
       body: (
         <>
           <p>
-            Ruby では、特定の1つのオブジェクトだけにメソッドを定義できます。これを<Term en="singleton method">特異メソッド</Term>と呼びます。
+            Ruby では特定の1つのオブジェクトだけにメソッドを定義できます。これを<Term en="singleton method">特異メソッド</Term>と呼びます。
           </p>
           <Code
             lang="ruby"
@@ -429,7 +429,7 @@ obj.singleton_class.ancestors.take(3)
 `}
           />
           <p>
-            特異クラスは、そのオブジェクトのメソッド探索で最初に探される場所です。<code>obj.class</code> は <code>Object</code> のままですが、探索は特異クラスから始まり、その後に{' '}
+            特異クラスはそのオブジェクトのメソッド探索で最初に探される場所です。<code>obj.class</code> は <code>Object</code> のままですが、探索は特異クラスから始まり、その後に{' '}
             <code>Object</code> へ進みます。<code>#&lt;Class:...&gt;</code> は特異クラスを表す表記です。
           </p>
           <Figure n="3-3" title="オブジェクトの特異クラス" caption="青の矢印が obj のメソッド探索の始まり。other には特異クラスに定義されたメソッドが無いので、Object から探索する。">
