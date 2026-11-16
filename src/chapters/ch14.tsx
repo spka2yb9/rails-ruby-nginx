@@ -6,7 +6,102 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 14-1 save の入れ子 ---------- */
+/* ---------- 図 14-1 検証の結果と save ---------- */
+function ValidateFlowFigure() {
+  return (
+    <Svg
+      id="14-1"
+      w={760}
+      h={250}
+      label="save または save! を呼ぶと、まず valid? で検証する。検証に通れば BEGIN・INSERT・COMMIT を送り、save は true を返す。通らなければ、見つかった問題を errors に記録し、SQL を送らずに、save は false を返し、save! は ActiveRecord::RecordInvalid を投げる"
+    >
+      <Box x={20} y={98} w={110} h={44} lines="save / save!" mono fs={12.5} />
+      <Arrow x1={130} y1={120} x2={168} y2={120} />
+      <Box x={170} y={92} w={150} h={56} lines={['valid?', '検証の規則を確かめる']} fs={12} fill="box5" subTone="muted" />
+      <Arrow d="M320,108 L360,108 L360,52 L398,52" />
+      <T x={330} y={36} fs={11.5} tone="acc">
+        通る
+      </T>
+      <Box x={400} y={30} w={190} h={44} lines="BEGIN → INSERT → COMMIT" mono fs={11.5} fill="box4" />
+      <Arrow x1={590} y1={52} x2={628} y2={52} />
+      <Box x={630} y={30} w={110} h={44} lines="save は true" fs={12} />
+      <Arrow d="M320,132 L360,132 L360,188 L398,188" />
+      <T x={296} y={168} fs={11.5} tone="danger">
+        通らない
+      </T>
+      <Box x={400} y={160} w={190} h={56} lines={['errors に問題を記録', 'SQL は送らない']} fs={12} fill="bg" subTone="danger" />
+      <Arrow x1={590} y1={188} x2={628} y2={188} />
+      <Box x={630} y={160} w={110} h={56} lines={['save は false', 'save! は例外']} fs={12} subTone="muted" />
+      <T x={20} y={238} fs={11} tone="muted" mono>
+        例：errors.full_messages =&gt; ["Title can't be blank"]　save! =&gt; ActiveRecord::RecordInvalid
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 14-2 コールバックが呼ばれた位置 ---------- */
+function CallbackFlowFigure() {
+  type Step = { t: string; kind: 'cb' | 'sql' | 'val' }
+  const row = (y: number, steps: Step[]) =>
+    steps.map((s, i) => {
+      const x = 20 + i * 124
+      return (
+        <g key={`${y}-${i}`}>
+          <Box x={x} y={y} w={114} h={44} lines={s.t.split('\n')} fs={10.5} mono={s.kind !== 'val'} fill={s.kind === 'cb' ? 'box5' : s.kind === 'sql' ? 'box4' : 'box'} />
+          {i < steps.length - 1 && <Arrow x1={x + 114} y1={y + 22} x2={x + 123} y2={y + 22} />}
+        </g>
+      )
+    })
+  return (
+    <Svg
+      id="14-2"
+      w={760}
+      h={240}
+      label="create! では、before_validation の strip_title、検証、BEGIN、INSERT、after_create の log_created、COMMIT の順に実行された。update! では、before_validation の strip_title、検証、BEGIN、UPDATE、COMMIT の順で、after_create は呼ばれなかった"
+    >
+      <T x={20} y={20} bold fs={12.5}>
+        {'Article.create!(title: "\u00a0\u00a0前後に空白\u00a0\u00a0")'}
+      </T>
+      {row(34, [
+        { t: 'before_validation\nstrip_title', kind: 'cb' },
+        { t: '検証', kind: 'val' },
+        { t: 'BEGIN', kind: 'sql' },
+        { t: 'INSERT', kind: 'sql' },
+        { t: 'after_create\nlog_created', kind: 'cb' },
+        { t: 'COMMIT', kind: 'sql' },
+      ])}
+      <T x={20} y={114} bold fs={12.5}>
+        a.update!(views_count: 1)
+      </T>
+      {row(128, [
+        { t: 'before_validation\nstrip_title', kind: 'cb' },
+        { t: '検証', kind: 'val' },
+        { t: 'BEGIN', kind: 'sql' },
+        { t: 'UPDATE', kind: 'sql' },
+        { t: 'COMMIT', kind: 'sql' },
+      ])}
+      <T x={640} y={150} fs={11} tone="muted">
+        after_create は
+      </T>
+      <T x={640} y={168} fs={11} tone="muted">
+        呼ばれない
+      </T>
+      <rect x={20} y={200} width={14} height={12} fill="var(--fig-box5)" stroke="var(--fig-line)" />
+      <T x={40} y={206} fs={11}>
+        登録したコールバック
+      </T>
+      <rect x={200} y={200} width={14} height={12} fill="var(--fig-box4)" stroke="var(--fig-line)" />
+      <T x={220} y={206} fs={11}>
+        MySQL に送った SQL
+      </T>
+      <T x={20} y={230} fs={11} tone="muted">
+        before_validation は新規作成でも更新でも呼ばれ、after_create は新規作成のときだけ呼ばれる
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 14-3 save の入れ子 ---------- */
 function NestFigure() {
   const layers = [
     { t: 'Transactions#save', s: 'トランザクションを開始（with_transaction_returning_status）', fill: 'box4' as const },
@@ -17,7 +112,7 @@ function NestFigure() {
   ]
   return (
     <Svg
-      id="14-1"
+      id="14-3"
       w={760}
       h={300}
       label="save は5層の入れ子になっている。一番外側の Transactions#save がトランザクションを開始し、その内側の Validations#save が valid? を実行する。検証に通ると、Callbacks#create_or_update が save のコールバックの中で、Callbacks#_create_record が create のコールバックの中で内側を呼び、一番内側の Persistence#_create_record が INSERT を実行する"
@@ -43,7 +138,7 @@ function NestFigure() {
   )
 }
 
-/* ---------- 図 14-2 create! のコールバックと SQL ---------- */
+/* ---------- 図 14-4 create! のコールバックと SQL ---------- */
 function TimelineFigure() {
   const items: { t: string; sql?: boolean; acc?: boolean }[] = [
     { t: 'before_validation' },
@@ -64,7 +159,7 @@ function TimelineFigure() {
   const rowH = 24
   return (
     <Svg
-      id="14-2"
+      id="14-4"
       w={760}
       h={items.length * rowH + 40}
       label="Article.create! で実際に記録した順。before_validation、after_validation、before_save、around_save の前半、before_create、around_create の前半の後に、BEGIN と INSERT が送られる。その後 around_create の後半、after_create、around_save の後半、after_save が実行され、COMMIT の後に after_commit が実行される。BEGIN はトランザクションの開始時ではなく、最初の SQL を送る直前に送られている"
@@ -97,11 +192,11 @@ function TimelineFigure() {
   )
 }
 
-/* ---------- 図 14-3 一意性の検証の競合 ---------- */
+/* ---------- 図 14-5 一意性の検証の競合 ---------- */
 function RaceFigure() {
   return (
     <Svg
-      id="14-3"
+      id="14-5"
       w={760}
       h={300}
       label="2つのスレッドが同じメールアドレスの著者を作る。T1 と T2 はどちらも SELECT 1 で同じメールアドレスの行が無いことを確かめ、検証に通る。T1 が INSERT して COMMIT する。T2 も INSERT するが、データベースの一意の索引に違反して Duplicate entry のエラーになり、ActiveRecord::RecordNotUnique が発生してロールバックされる"
@@ -131,11 +226,11 @@ function RaceFigure() {
   )
 }
 
-/* ---------- 図 14-4 外側のトランザクションと after_commit ---------- */
+/* ---------- 図 14-6 外側のトランザクションと after_commit ---------- */
 function OuterTxFigure() {
   return (
     <Svg
-      id="14-4"
+      id="14-6"
       w={760}
       h={210}
       label="ActiveRecord::Base.transaction のブロックの中で update! を呼ぶと、update! の after_save はブロックの途中で実行される。after_commit は、ブロックが終わって外側のトランザクションが COMMIT された後に実行される。ブロックの中で例外が起きてロールバックされた場合、after_commit は実行されない"
@@ -165,8 +260,10 @@ const ch14: Chapter = {
   part: 3,
   title: '保存処理：バリデーションとコールバック',
   summary:
-    'save が Transactions・Validations・Callbacks・Persistence の各モジュールをどの順に通り、いつ SQL を送るかを、コールバックの実行順の実測とともに説明します。一意性の検証の競合、保存の中断、検証やコールバックを通らないメソッド、after_save と after_commit の使い分けも扱います。',
+    '利用者の入力を保存の前に確かめるバリデーションと、保存の前後に処理を足すコールバックの使い方を確かめます。続いて、save が Transactions・Validations・Callbacks・Persistence の各モジュールをどの順に通り、いつ SQL を送るかを、コールバックの実行順の実測とともに説明します。一意性の検証の競合、保存の中断、検証やコールバックを通らないメソッド、after_save と after_commit の使い分けも扱います。',
   goals: [
+    'validates で検証の規則を書き、valid?・errors・save の戻り値で検証の結果を扱える',
+    'before_validation や after_create などのコールバックが、保存のどの時点で呼ばれるかを説明できる',
     'save が通るモジュールの順と、トランザクション・検証・コールバックの入れ子を説明できる',
     'create と update のコールバックの実行順と、BEGIN・COMMIT との前後関係を説明できる',
     '検証の失敗、belongs_to の存在確認、一意性の検証が実行する SQL を説明できる',
@@ -176,6 +273,232 @@ const ch14: Chapter = {
   ],
   prerequisites: [5, 11],
   sections: [
+    {
+      id: 'validation-basics',
+      title: '保存する前に値を検証する',
+      body: (
+        <>
+          <p>
+            Web アプリケーションでは、利用者がフォームに入力した値から記事などのレコードを作り、データベースに保存します。入力は空のことも、範囲外の数値のこともあります。デモの articles テーブルの title
+            列は空の文字列も NULL も受け付けるので、何も確かめずに保存すると、タイトルの無い記事ができます。
+          </p>
+          <Code
+            lang="ruby"
+            title="検証の規則が無い Article（デモでの実行結果。INSERT の列は一部を省略）"
+            code={`
+a = Article.new(title: "")
+a.save   # => true
+#   BEGIN
+#   INSERT INTO \`articles\` (\`title\`, \`body\`, ...) VALUES ('', NULL, ...)
+#   COMMIT
+`}
+          />
+          <p>
+            保存する前に値が正しいかを確かめること（検証）を<Term en="validation">バリデーション</Term>と呼びます。Rails ではモデルに <code>validates</code>{' '}
+            で検証の規則を書きます。<code>presence: true</code> は値が空でないこと、<code>numericality</code> は値が数値であることを確かめる規則です。ほかに、長さ（length）、形式（format）、一意性（uniqueness）などの規則があります
+            <Ref n={5} />。デモの Article に次の2行を加えて試しました。
+          </p>
+          <Code
+            lang="ruby"
+            code={`
+class Article < ApplicationRecord
+  validates :title, presence: true
+  validates :views_count, numericality: { greater_than_or_equal_to: 0 }
+end
+`}
+          />
+          <Code
+            lang="ruby"
+            title="デモでの実行結果（INSERT の列は一部を省略）"
+            code={`
+b = Article.new(title: "")
+b.valid?                 # => false
+b.errors.full_messages   # => ["Title can't be blank"]
+b.errors[:title]         # => ["can't be blank"]
+b.save                   # => false（SQL は1つも送られない）
+b.persisted?             # => false
+b.save!                  # => ActiveRecord::RecordInvalid: Validation failed: Title can't be blank
+
+c = Article.new(title: "", views_count: -1)
+c.valid?                 # => false
+c.errors.full_messages   # => ["Title can't be blank", "Views count must be greater than or equal to 0"]
+
+b.title = "検証の例"
+b.save                   # => true
+#   BEGIN
+#   INSERT INTO \`articles\` (\`title\`, \`body\`, ...) VALUES ('検証の例', NULL, ...)
+#   COMMIT
+b.persisted?             # => true
+`}
+          />
+          <p>
+            <code>valid?</code> は規則を順に確かめ、問題が無ければ true を返します。見つかった問題は <code>errors</code> に属性ごとに記録され、<code>full_messages</code>{' '}
+            は属性の名前を付けた文の配列を返します。タイトルも閲覧数も規則に合わない c では、2つの問題がまとめて記録されました。
+          </p>
+          <p>
+            <code>save</code> は保存の前に検証を行い、通らなければ SQL を1つも送らずに false を返します。<code>persisted?</code>（保存済みかどうか）も false のままです。<code>save!</code>{' '}
+            は、同じ場合に ActiveRecord::RecordInvalid の例外を投げます。タイトルを入れ直すと検証に通り、INSERT が送られました（図 14-1）
+            <Ref n={5} />。
+          </p>
+          <Figure n="14-1" title="検証の結果と save" caption="上の実行結果をまとめた図。">
+            <ValidateFlowFigure />
+          </Figure>
+          <p>
+            コントローラーでは save の戻り値で処理を分けます。Rails のジェネレーター（ひな形のファイルを作るコマンド）で Article の scaffold_controller を作ると、create アクションとフォームのテンプレートは次のようになりました
+            <Ref n={9} />。
+          </p>
+          <Code
+            lang="ruby"
+            title="app/controllers/articles_controller.rb（生成されたファイルの create）"
+            code={`
+  def create
+    @article = Article.new(article_params)
+
+    if @article.save
+      redirect_to @article, notice: "Article was successfully created."
+    else
+      render :new, status: :unprocessable_content
+    end
+  end
+`}
+          />
+          <Code
+            lang="erb"
+            title="app/views/articles/_form.html.erb（生成されたファイルの先頭）"
+            code={`
+<%= form_with(model: article) do |form| %>
+  <% if article.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(article.errors.count, "error") %> prohibited this article from being saved:</h2>
+
+      <ul>
+        <% article.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+`}
+          />
+          <p>
+            保存できれば記事のページへ移動し（redirect_to）、保存できなければ入力フォーム（new）を 422 Unprocessable Content の状態で表示し直します。フォームは <code>article.errors</code>{' '}
+            の問題を1件ずつ <code>full_message</code> で並べるので、利用者はどの入力を直せばよいかが分かります。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'callback-basics',
+      title: '保存の前後に処理を足すコールバック',
+      body: (
+        <>
+          <p>
+            保存するたびに必ず行いたい処理があります。たとえば、タイトルの前後の空白を取り除く、記事を作ったことをログに残す、コメントが付いたら記事を開いている画面に知らせる、などです。これらを保存するアクションごとに書くと、書き忘れる場所が出ます。Rails
+            では保存の決まった時点で呼ぶメソッドをモデルに登録できます。このメソッドを<Term en="callback">コールバック</Term>と呼びます
+            <Ref n={4} />。
+          </p>
+          <Code
+            lang="ruby"
+            code={`
+class Article < ApplicationRecord
+  before_validation :strip_title
+  after_create :log_created
+
+  private
+
+  def strip_title
+    puts "  before_validation: strip_title"
+    self.title = title.strip if title
+  end
+
+  def log_created
+    puts "  after_create: 記事 #{id} を作成しました"
+  end
+end
+`}
+          />
+          <Code
+            lang="ruby"
+            title="デモでの実行結果（INSERT・UPDATE の列は一部を省略）"
+            code={`
+a = Article.create!(title: "  前後に空白  ")
+#   before_validation: strip_title
+#   BEGIN
+#   INSERT INTO \`articles\` (\`title\`, \`body\`, ...) VALUES ('前後に空白', NULL, ...)
+#   after_create: 記事 10016 を作成しました
+#   COMMIT
+a.title   # => "前後に空白"
+
+a.update!(views_count: 1)
+#   before_validation: strip_title
+#   BEGIN
+#   UPDATE \`articles\` SET \`articles\`.\`updated_at\` = ..., \`articles\`.\`views_count\` = 1, ...
+#   COMMIT
+`}
+          />
+          <p>
+            before_validation に登録した strip_title は検証の前に呼ばれ、INSERT の値は空白を除いた「前後に空白」になりました。after_create に登録した log_created は INSERT の後に呼ばれ、MySQL
+            が割り当てた id（10016）を使えています。update! でも strip_title は呼ばれましたが、送られたのは UPDATE で、after_create は呼ばれませんでした（図 14-2）。
+          </p>
+          <Figure n="14-2" title="コールバックが呼ばれた位置" caption="上の実行結果を図にしたもの。">
+            <CallbackFlowFigure />
+          </Figure>
+          <p>コールバックの名前は before_（前）か after_（後）と、どの処理の前後かを組み合わせたものです。主なものを挙げます。</p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>コールバック</th>
+                  <th>呼ばれる時点</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <code>before_validation</code>・<code>after_validation</code>
+                  </td>
+                  <td>検証の前・後</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>before_save</code>・<code>after_save</code>
+                  </td>
+                  <td>新規作成と更新の両方で、INSERT・UPDATE の前・後</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>before_create</code>・<code>after_create</code>
+                  </td>
+                  <td>新規作成の INSERT の前・後</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>before_update</code>・<code>after_update</code>
+                  </td>
+                  <td>更新の UPDATE の前・後</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>after_commit</code>
+                  </td>
+                  <td>COMMIT の後</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            デモの Comment には <code>{'after_create_commit -> { broadcast_append_to article, target: "comments" }'}</code> が書かれています。after_create_commit
+            は、新しいコメントの INSERT が COMMIT された後に呼ばれるコールバックです
+            <Ref n={4} />。この処理は記事を開いているブラウザーに新しいコメントを送ります（<ChapterLink n={17} section="broadcast" />
+            ）。
+          </p>
+          <p>
+            検証とコールバックは、どちらも save の中で決まった順に実行されます。上の出力でも、log_created は INSERT の後、COMMIT の前に呼ばれていました。次の節からは、save を呼んだときに Rails
+            の中で検証・コールバック・SQL がどの順に実行されるかを、Rails のコードと実測で確かめます。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'call-chain',
       title: 'save が通るモジュール',
@@ -187,7 +510,7 @@ const ch14: Chapter = {
           </p>
           <p>
             <code>save</code> は1つのメソッドではなく、ActiveRecord::Base に include された複数のモジュールが同じ名前で定義し、<code>super</code> でつないでいます（<ChapterLink n={3} />
-            ）。デモのアプリケーションで、Article の <code>save</code> などを <code>super_method</code> でたどりました。
+            ）。デモのアプリケーションで、Article の <code>save</code> などを <code>super_method</code>（super で次に呼ばれるメソッドを返す Ruby のメソッド）でたどりました。
           </p>
           <Code
             lang="text"
@@ -242,7 +565,7 @@ _create_record:
 `}
           />
           <p>
-            内側が false を返すと <code>ActiveRecord::Rollback</code> を投げてトランザクションを取り消します。<code>add_to_transaction</code> は、このレコードを現在のトランザクションに登録する処理で、COMMIT
+            内側が false を返すと <code>ActiveRecord::Rollback</code>（トランザクションを取り消すための Rails の例外）を投げてトランザクションを取り消します。<code>add_to_transaction</code> は、このレコードを現在のトランザクションに登録する処理で、COMMIT
             の後に after_commit（<Term en="transaction callbacks">トランザクションのコールバック</Term>）を呼ぶために使われます
             <Ref n={1} />。その内側の Validations と Persistence は次のとおりです。
           </p>
@@ -290,9 +613,9 @@ _create_record:
           />
           <p>
             <code>_run_save_callbacks</code> は、<ChapterLink n={5} />で見た ActiveSupport::Callbacks が <code>define_model_callbacks :save</code> から生成したメソッドです
-            <Ref n={3} />。ここまでをまとめると図 14-1 のようになります。
+            <Ref n={3} />。ここまでをまとめると図 14-3 のようになります。
           </p>
-          <Figure n="14-1" title="save の入れ子" caption="新規作成の場合。Rails 8.1.4.1 の transactions.rb・validations.rb・callbacks.rb・persistence.rb を読んでまとめた模式図。Timestamp や Dirty などの層は省略している。">
+          <Figure n="14-3" title="save の入れ子" caption="新規作成の場合。Rails 8.1.4.1 の transactions.rb・validations.rb・callbacks.rb・persistence.rb を読んでまとめた模式図。Timestamp や Dirty などの層は省略している。">
             <NestFigure />
           </Figure>
         </>
@@ -339,7 +662,7 @@ _create_record:
   after_commit
 `}
           />
-          <Figure n="14-2" title="create! のコールバックと SQL" caption="上の実行結果を図にしたもの（Rails 8.1.4.1、MySQL 8.4.13）。">
+          <Figure n="14-4" title="create! のコールバックと SQL" caption="上の実行結果を図にしたもの（Rails 8.1.4.1、MySQL 8.4.13）。">
             <TimelineFigure />
           </Figure>
           <p>この結果から、次のことが分かります。</p>
@@ -403,7 +726,7 @@ Author.new(name: "x", email: "author1@example.com").valid?   # => false ["Email 
 `}
           />
           <p>
-            この確認と INSERT の間には時間の差があるので、同時に同じ値を保存すると、両方が確認に通ることがあります。デモでは、検証の後に 0.3 秒待つコールバックを入れ、2つのスレッドから同じメールアドレスで{' '}
+            この確認と INSERT の間には時間の差があるので、同時に同じ値を保存すると、両方が確認に通ることがあります。デモでは、検証の後に 0.3 秒待つコールバックを入れ、2つのスレッド（1つのプロセスの中で並行して進む処理の流れ。<ChapterLink n={23} section="thread" />）から同じメールアドレスで{' '}
             <code>Author.create!</code> を実行しました。
           </p>
           <Code
@@ -421,7 +744,7 @@ Author.new(name: "x", email: "author1@example.com").valid?   # => false ["Email 
   T2: ROLLBACK
 `}
           />
-          <Figure n="14-3" title="一意性の検証の競合" caption="上の実行結果を図にしたもの。ログはスレッドごとに並べ替えている。">
+          <Figure n="14-5" title="一意性の検証の競合" caption="上の実行結果を図にしたもの。ログはスレッドごとに並べ替えている。">
             <RaceFigure />
           </Figure>
           <p>
@@ -501,9 +824,9 @@ c.save!   # => ActiveRecord::RecordNotSaved: Failed to save the record
 `}
           />
           <p>
-            デモの INSERT には、値を代入していない列も含めてすべての列が入っていました。<code>load_defaults 7.0</code> 以降は <code>partial_inserts</code>{' '}
+            デモの INSERT には、値を代入していない列も含めてすべての列が入っていました。<code>load_defaults 7.0</code>（どのバージョンの Rails の既定の設定を使うかを決める config/application.rb の指定）以降は <code>partial_inserts</code>{' '}
             が false で、新規作成では列を絞らないためです（デモでも <code>Article.partial_inserts?</code> は false、<code>partial_updates?</code> は true）
-            <Ref n={6} />。MySQL は INSERT の RETURNING に対応していないので（Rails の MySQL アダプターでは MariaDB 10.5 以上だけが対応）、主キーの値は接続が返す最後の挿入 ID から設定されます。
+            <Ref n={6} />。MySQL は INSERT の RETURNING（INSERT した行の列の値を結果として返す SQL の指定）に対応していないので（Rails の MySQL アダプターでは MariaDB 10.5 以上だけが対応）、主キーの値は接続が返す最後の挿入 ID（AUTO_INCREMENT の列に MySQL が割り当てた値）から設定されます。
             <code>created_at</code>・<code>updated_at</code> は、Timestamp モジュールの <code>_create_record</code> がこの前に設定しています。UPDATE で変更した列だけが送られる仕組みは
             <ChapterLink n={11} />で見たとおりです。
           </p>
@@ -533,7 +856,7 @@ Article.where(id: a.id).update_all(views_count: 5)
 `}
           />
           <p>
-            <code>update_column</code> は <code>updated_at</code> も更新しません。<code>update_all</code> には、楽観的ロックの列（<ChapterLink n={15} />
+            <code>update_column</code> は <code>updated_at</code> も更新しません。<code>update_all</code> には、楽観的ロックの列（更新のたびに1増やして、同時の更新を見つけるための番号の列。<ChapterLink n={15} section="optimistic" />
             ）があるモデルでは、指定していなくても <code>lock_version</code> を1増やす処理が入っています（<code>relation.rb</code> の 619〜625 行目）
             <Ref n={7} />。実際にデモでは、<code>update_all</code> の後に、それ以前に読み込んでいたレコードを <code>update!</code> すると <code>ActiveRecord::StaleObjectError</code>{' '}
             になりました。<code>insert_all</code> や <code>delete_all</code> はコールバックを通らないので、counter_cache の列（<ChapterLink n={13} />
@@ -567,11 +890,11 @@ end
   after_commit
 `}
           />
-          <Figure n="14-4" title="外側のトランザクションと after_commit" caption="上の実行結果を図にしたもの。">
+          <Figure n="14-6" title="外側のトランザクションと after_commit" caption="上の実行結果を図にしたもの。">
             <OuterTxFigure />
           </Figure>
           <p>
-            メールの送信、外部 API の呼び出し、ジョブの登録のように、データベースの外に影響する処理を after_save に書くと、その後にトランザクションがロールバックされても取り消せません。また、別のプロセスで動くジョブが、まだ
+            メールの送信、外部 API の呼び出し、ジョブ（後から別のプロセスで実行する処理）の登録のように、データベースの外に影響する処理を after_save に書くと、その後にトランザクションがロールバックされても取り消せません。また、別のプロセスで動くジョブが、まだ
             COMMIT されていないレコードを読もうとして見つからないことがあります。Rails ガイドも、外部のシステムとやり取りする処理には after_commit を使うよう説明しています
             <Ref n={4} />。ジョブの登録を COMMIT の後に遅らせる ActiveJob の設定は<ChapterLink n={18} />で扱います。
           </p>
@@ -590,6 +913,8 @@ end
       title: 'まとめ',
       body: (
         <ul>
+          <li>validates で書いた規則は valid? と save で確かめられ、問題は errors に記録されます。検証に通らなければ save は SQL を送らずに false を返し、save! は RecordInvalid を投げます。</li>
+          <li>コールバックは保存の決まった時点で呼ばれるメソッドです。before_validation は検証の前、after_create は INSERT の後、after_commit は COMMIT の後に呼ばれます。</li>
           <li>save は Transactions → Validations → Callbacks → Persistence の順の入れ子で、検証とコールバックはトランザクションの中で実行されます。BEGIN は最初の SQL の直前に送られます。</li>
           <li>コールバックは、検証、save、create（update）の順に内側へ入り、after_save は COMMIT の前、after_commit は COMMIT の後に実行されます。</li>
           <li>belongs_to の存在確認と uniqueness の検証は SELECT を実行します。uniqueness だけでは同時の保存で重複が起きるので、一意の索引が必要です。</li>
@@ -610,6 +935,7 @@ end
     { title: 'railties/lib/rails/application/configuration.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/application/configuration.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'load_defaults 7.0 で active_record.partial_inserts = false になること。' },
     { title: 'activerecord/lib/active_record/relation.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/relation.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'update_all が楽観的ロックの列を自動で1増やす処理。' },
     { title: 'railties/lib/rails/application/configuration.rb', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.4/railties/lib/rails/application/configuration.rb', accessed: '2026-11-11', version: 'Rails 7.2.4', note: 'load_defaults 7.2 で active_job.enqueue_after_transaction_commit = :default が入ること。8.1 での削除は activejob/CHANGELOG.md（8.1.0）。' },
+    { title: 'railties の scaffold_controller と erb の scaffold のテンプレート', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/scaffold_controller/templates/controller.rb.tt`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'create アクションが save の戻り値で redirect_to と render :new（422）を分けること。フォームのテンプレート（erb/scaffold/templates/_form.html.erb.tt）が errors を full_message で並べること。生成されたファイルはデモで確かめた。' },
   ],
 }
 

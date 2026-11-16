@@ -6,11 +6,216 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 15-1 トランザクションのスタック ---------- */
-function StackFigure() {
+/* ---------- 図 15-1 アプリケーションと MySQL の接続 ---------- */
+function ConnectionFigure() {
+  const pairs = [
+    { left: 'スレッド0', id: '260', y: 64 },
+    { left: 'スレッド1', id: '259', y: 114 },
+    { left: 'メインのスレッド', id: '262', y: 164 },
+  ]
   return (
     <Svg
       id="15-1"
+      w={760}
+      h={320}
+      label="rails runner のプロセスの3つのスレッドが、それぞれ別の接続（260・259・262）で MySQL のサーバーにつながっている。開発サーバーの Puma も接続 11 でつながっている。MySQL のサーバーは接続ごとに専用のスレッドで SQL を処理する。接続を作って閉じる処理は1回あたり約 4.19 ms、作った接続で SELECT 1 を送る処理は約 0.27 ms だった"
+    >
+      <rect x={20} y={20} width={240} height={190} rx={8} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      <T x={32} y={40} bold fs={12.5}>
+        rails runner のプロセス
+      </T>
+      <rect x={500} y={20} width={240} height={260} rx={8} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      <T x={512} y={40} bold fs={12.5}>
+        MySQL のサーバー
+      </T>
+      {pairs.map((p) => (
+        <g key={p.id}>
+          <Box x={40} y={p.y} w={200} h={36} lines={p.left} fs={12} fill="box5" />
+          <Arrow x1={242} y1={p.y + 18} x2={518} y2={p.y + 18} both />
+          <T x={380} y={p.y + 8} anchor="middle" fs={11} tone="muted">
+            {`接続 ${p.id}`}
+          </T>
+          <Box x={520} y={p.y} w={200} h={36} lines={`接続 ${p.id} を処理するスレッド`} fs={11.5} fill="box4" />
+        </g>
+      ))}
+      <Box x={20} y={226} w={240} h={40} lines="Puma（開発サーバー）" fs={12} />
+      <Arrow x1={262} y1={246} x2={518} y2={246} both />
+      <T x={380} y={236} anchor="middle" fs={11} tone="muted">
+        接続 11
+      </T>
+      <Box x={520} y={228} w={200} h={36} lines="接続 11 を処理するスレッド" fs={11.5} fill="box4" />
+      <T x={20} y={300} fs={11.5} tone="muted">
+        接続を作って SELECT 1 を送り閉じる：1回あたり 4.19 ms　作った接続で SELECT 1：1回あたり 0.27 ms
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 15-2 振替とトランザクション ---------- */
+function TransferFigure() {
+  const col = (x: number, title: string, steps: { t: string; fill: 'box' | 'box4' | 'bg' | 'box5'; danger?: boolean }[], result: string[], resultTone: 'danger' | 'acc') => (
+    <g>
+      <T x={x} y={22} bold fs={12.5}>
+        {title}
+      </T>
+      {steps.map((s, i) => (
+        <g key={i}>
+          <Box x={x} y={36 + i * 50} w={220} h={36} lines={s.t} mono fs={11.5} fill={s.fill} dashed={s.danger} />
+          {i < steps.length - 1 && <Arrow x1={x + 110} y1={72 + i * 50} x2={x + 110} y2={84 + i * 50} />}
+        </g>
+      ))}
+      <Box x={x} y={250} w={220} h={50} lines={result} fs={12} fill="bg" subTone={resultTone} />
+    </g>
+  )
+  return (
+    <Svg
+      id="15-2"
+      w={760}
+      h={340}
+      label="トランザクションなしでは、alice の残高を 300 減らす UPDATE がすぐに確定し、2つ目の UPDATE が失敗すると、alice 700・bob 0 になって 300 が消えた。BEGIN の後で2つ目が失敗して ROLLBACK すると、1つ目も取り消され alice 1000・bob 0 に戻った。2つの UPDATE が成功して COMMIT すると、alice 700・bob 300 になった。COMMIT までの変更は、ほかの接続からは見えない"
+    >
+      {col(
+        20,
+        'トランザクションなし',
+        [
+          { t: 'UPDATE alice −300', fill: 'box4' },
+          { t: '（すぐに確定）', fill: 'bg' },
+          { t: '2つ目の UPDATE が失敗', fill: 'bg', danger: true },
+        ],
+        ['alice 700・bob 0', '300 が消えた'],
+        'danger',
+      )}
+      {col(
+        270,
+        'BEGIN … ROLLBACK',
+        [
+          { t: 'BEGIN', fill: 'box' },
+          { t: 'UPDATE alice −300', fill: 'box4' },
+          { t: '2つ目の UPDATE が失敗', fill: 'bg', danger: true },
+          { t: 'ROLLBACK', fill: 'box5' },
+        ],
+        ['alice 1000・bob 0', '1つ目も取り消された'],
+        'acc',
+      )}
+      {col(
+        520,
+        'BEGIN … COMMIT',
+        [
+          { t: 'BEGIN', fill: 'box' },
+          { t: 'UPDATE alice −300', fill: 'box4' },
+          { t: 'UPDATE bob +300', fill: 'box4' },
+          { t: 'COMMIT', fill: 'box5' },
+        ],
+        ['alice 700・bob 300', '2つとも確定した'],
+        'acc',
+      )}
+      <T x={20} y={326} fs={11.5} tone="muted">
+        COMMIT するまでの変更は、ほかの接続からは見えない（ほかの接続には alice 1000 が見える）
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 15-3 後の更新が前の更新を上書きする ---------- */
+function LostUpdateFigure() {
+  const ev = (x: number, y: number, t: string, sub: string, fill: 'box' | 'box4' | 'box5' = 'box') => (
+    <Box x={x} y={y} w={200} h={40} lines={[t, sub]} fs={11.5} fill={fill} subTone="muted" />
+  )
+  return (
+    <Svg
+      id="15-3"
+      w={760}
+      h={300}
+      label="T1 が 0.00 秒に残高 1000 を読み、T2 が 0.10 秒に同じ 1000 を読む。T1 は 0.32 秒に 1000+100 の 1100 を書き、T2 は 0.42 秒に 1000+200 の 1200 を書く。DB の残高は 1000、1100、1200 と変わり、最後は 1200 になった。両方の入金が入れば 1300 になるはずだが、T1 の 100 が消えた"
+    >
+      <T x={150} y={20} anchor="middle" bold>
+        T1（100 を入金）
+      </T>
+      <T x={390} y={20} anchor="middle" bold>
+        T2（200 を入金）
+      </T>
+      <T x={640} y={20} anchor="middle" bold>
+        DB の残高
+      </T>
+      <line x1={150} y1={30} x2={150} y2={240} stroke="var(--fig-line)" strokeDasharray="3 4" />
+      <line x1={390} y1={30} x2={390} y2={240} stroke="var(--fig-line)" strokeDasharray="3 4" />
+      {ev(50, 40, '0.00s 残高を読む → 1000', 'SELECT')}
+      {ev(290, 84, '0.10s 残高を読む → 1000', 'SELECT')}
+      {ev(50, 130, '0.32s 1100 を書く', 'SET balance = 1100', 'box4')}
+      {ev(290, 176, '0.42s 1200 を書く', 'SET balance = 1200', 'box4')}
+      <Box x={570} y={45} w={140} h={30} lines="1000" mono fs={12} fill="bg" />
+      <Box x={570} y={128} w={140} h={30} lines="1100" mono fs={12} fill="bg" />
+      <Box x={570} y={186} w={140} h={30} lines="1200" mono fs={12} fill="box5" accent />
+      <Arrow x1={640} y1={77} x2={640} y2={126} />
+      <Arrow x1={640} y1={160} x2={640} y2={184} />
+      <T x={20} y={266} fs={12} tone="danger">
+        最後の残高は 1200。両方の入金が入れば 1300 のはずが、T1 の 100 が消えた
+      </T>
+      <T x={20} y={288} fs={11} tone="muted">
+        どちらも相手が書く前の 1000 を読み、Ruby で計算した値をそのまま書いたため、後の書き込みが前の書き込みを上書きした
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 15-4 行のロックと待ち ---------- */
+function RowLockFigure() {
+  const x = (t: number) => 130 + t * 540
+  return (
+    <Svg
+      id="15-4"
+      w={760}
+      h={270}
+      label="接続 A は 0.00 秒に BEGIN して alice の行（id=1）を UPDATE し、1.03 秒に COMMIT するまでその行のロックを持つ。接続 B は 0.21 秒に同じ行を UPDATE しようとしてロックを待ち、A の COMMIT の直後の 1.04 秒に終わる。接続 C は 0.51 秒に bob の行（id=2）を UPDATE し、待たずに 0.52 秒に終わる。最後の残高は alice 1300、bob 50"
+    >
+      <T x={20} y={52} bold>
+        接続 A
+      </T>
+      <T x={20} y={112} bold>
+        接続 B
+      </T>
+      <T x={20} y={172} bold>
+        接続 C
+      </T>
+      <rect x={x(0)} y={38} width={x(1.03) - x(0)} height={28} rx={4} fill="var(--fig-box2)" stroke="var(--fig-line)" />
+      <T x={x(0) + 10} y={52} fs={11.5}>
+        BEGIN・UPDATE id=1（行ロックを持つ）
+      </T>
+      <T x={x(1.03) + 6} y={52} fs={11.5} mono>
+        COMMIT
+      </T>
+      <rect x={x(0.21)} y={98} width={x(1.04) - x(0.21)} height={28} rx={4} fill="none" stroke="var(--fig-line)" strokeDasharray="4 3" />
+      <T x={x(0.21) + 10} y={112} fs={11.5}>
+        UPDATE id=1 を送る → ロックを待つ（WAITING）
+      </T>
+      <T x={x(1.04) + 6} y={112} fs={11.5}>
+        終わる
+      </T>
+      <rect x={x(0.51)} y={158} width={10} height={28} rx={2} fill="var(--fig-box4)" stroke="var(--fig-line)" />
+      <T x={x(0.51) + 16} y={172} fs={11.5}>
+        UPDATE id=2（別の行なので待たない）
+      </T>
+      <line x1={x(0)} y1={206} x2={x(1.1)} y2={206} stroke="var(--fig-line)" />
+      {[0, 0.21, 0.51, 1.03].map((t) => (
+        <g key={t}>
+          <line x1={x(t)} y1={202} x2={x(t)} y2={210} stroke="var(--fig-line)" />
+          <T x={x(t)} y={222} anchor="middle" fs={10.5} tone="muted" mono>
+            {`${t.toFixed(2)}s`}
+          </T>
+        </g>
+      ))}
+      <T x={20} y={254} fs={11.5}>
+        最後の残高：alice 1300（1000 + 100 + 200）、bob 50。B は A の COMMIT の後の値に 200 を足した
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 15-5 トランザクションのスタック ---------- */
+function StackFigure() {
+  return (
+    <Svg
+      id="15-5"
       w={760}
       h={290}
       label="接続ごとに TransactionManager があり、開いているトランザクションをスタックで管理する。一番下の RealTransaction は BEGIN と COMMIT に対応する。requires_new: true の内側のトランザクションは SavepointTransaction になり、SAVEPOINT と ROLLBACK TO SAVEPOINT に対応する。requires_new を指定しない内側の transaction は、新しいトランザクションを作らず、今のトランザクションにそのまま参加する。どちらのトランザクションも、最初の SQL を送るときまで BEGIN や SAVEPOINT を送らない"
@@ -64,11 +269,11 @@ function StackFigure() {
   )
 }
 
-/* ---------- 図 15-2 一貫性のある読み取り ---------- */
+/* ---------- 図 15-6 一貫性のある読み取り ---------- */
 function SnapshotFigure() {
   return (
     <Svg
-      id="15-2"
+      id="15-6"
       w={760}
       h={270}
       label="REPEATABLE READ では、T1 がトランザクションの中で最初に views_count を読んだ時点のスナップショットが、そのトランザクションの終わりまで使われる。途中で T2 が views_count を 50 に更新して確定しても、T1 の2回目の読み取りは 0 のまま。T1 が COMMIT した後に読むと 50 になる。READ COMMITTED では、T1 の2回目の読み取りで T2 が確定した値 60 が見える"
@@ -115,14 +320,14 @@ function SnapshotFigure() {
   )
 }
 
-/* ---------- 図 15-3 ロックの範囲と索引 ---------- */
+/* ---------- 図 15-7 ロックの範囲と索引 ---------- */
 function LockRangeFigure() {
   const row = (x: number, y: number, label: string, locked: boolean, hit = false) => (
     <Box x={x} y={y} w={140} h={26} lines={label} mono fs={11} rx={0} fill={hit ? 'box5' : locked ? 'box2' : 'bg'} />
   )
   return (
     <Svg
-      id="15-3"
+      id="15-7"
       w={760}
       h={290}
       label="T1 が FOR UPDATE で行をロックしている間に、T2 が別の行を UPDATE した結果。title には索引が無いので、WHERE title = 記事100 の FOR UPDATE は表全体を走査し、走査したすべての行をロックする。そのため T2 の id=9000 の UPDATE は、T1 が COMMIT するまで約0.8秒待たされた。author_id には索引があるので、WHERE author_id = 13 の FOR UPDATE は索引で読んだ行だけをロックし、別の著者の行を更新する T2 は待たずに終わった"
@@ -185,11 +390,11 @@ function LockRangeFigure() {
   )
 }
 
-/* ---------- 図 15-4 スレッドと接続プール ---------- */
+/* ---------- 図 15-8 スレッドと接続プール ---------- */
 function PoolFigure() {
   return (
     <Svg
-      id="15-4"
+      id="15-8"
       w={760}
       h={250}
       label="max_connections が 2 の接続プールに対して、3つのスレッドが同時に接続を求めた結果。T1 と T2 は接続を借りて SELECT SLEEP(2) を実行した。T3 は空いた接続を checkout_timeout の1秒待ったが得られず、ConnectionTimeoutError になった。プールの状態は size 2、busy 2、waiting 1 だった。T1 と T2 は2秒後に接続を返した"
@@ -228,8 +433,11 @@ const ch15: Chapter = {
   part: 3,
   title: 'トランザクション・ロック・接続プール',
   summary:
-    'ActiveRecord のトランザクションの入れ子と SAVEPOINT、MySQL の分離レベル、楽観的ロックと悲観的ロック、ロックの範囲と索引、ロック待ちとデッドロック、接続プールの貸し出しを、2つのスレッドを使った実測とともに説明します。',
+    'アプリケーションと MySQL の接続、BEGIN・COMMIT・ROLLBACK によるトランザクション、同時の更新で起きる更新の消失、行のロックによる待ちを、MySQL と Rails で確かめます。続いて、ActiveRecord のトランザクションの入れ子と SAVEPOINT、MySQL の分離レベル、楽観的ロックと悲観的ロック、ロックの範囲と索引、ロック待ちとデッドロック、接続プールの貸し出しを、2つのスレッドを使った実測とともに説明します。',
   goals: [
+    'アプリケーションが MySQL に接続してから SQL を送ることと、接続を使い回す理由を説明できる',
+    'トランザクションが複数の変更をまとめて確定・取り消しすることと、COMMIT 前の変更がほかの接続から見えないことを説明できる',
+    '同時の更新で先の更新が失われる理由と、行のロックがほかの更新を COMMIT まで待たせることを説明できる',
     'TransactionManager がトランザクションを積む仕組みと、BEGIN を遅らせる理由を説明できる',
     '入れ子の transaction で内側だけを取り消すには requires_new が必要なことを説明できる',
     'InnoDB の REPEATABLE READ と READ COMMITTED の読み取りの違いを説明できる',
@@ -239,6 +447,325 @@ const ch15: Chapter = {
   ],
   prerequisites: [8, 14],
   sections: [
+    {
+      id: 'db-connection',
+      title: 'データベースとの接続',
+      body: (
+        <>
+          <p>
+            Rails のアプリケーションと MySQL は別々のプログラムです。デモでは、MySQL は Rails とは別のコンテナ（rbdemo-mysql）で動いています。SQL を送るには、まずアプリケーションが MySQL
+            のサーバーにネットワークでつなぎ、ユーザー名とパスワードで認証を受けます。その後は、このつながりを通して SQL を送り、結果を受け取ります。このつながりを<Term en="connection">接続</Term>
+            と呼びます。デモの Rails は mysql2 という gem（MySQL と通信するライブラリ）で接続を作ります。
+          </p>
+          <p>
+            MySQL は接続ごとに番号を付け、接続ごとに専用のスレッドで認証と SQL の処理を行います
+            <Ref n={12} />。デモで、2つのスレッドがそれぞれ接続を借りて待っている間に、メインのスレッドから MySQL の PROCESSLIST（MySQL が受け付けている接続の一覧）を読みました。
+            <code>CONNECTION_ID()</code> は今使っている接続の番号を返す MySQL の関数です。
+          </p>
+          <Code
+            lang="ruby"
+            title="conn.rb（bin/rails runner で実行。PROCESSLIST を表示する部分は省略）"
+            code={`
+threads = 2.times.map do |i|
+  Thread.new do
+    ActiveRecord::Base.with_connection do |c|
+      puts "スレッド#{i}: CONNECTION_ID() = #{c.select_value("SELECT CONNECTION_ID()")}"
+      sleep 1.5
+    end
+  end
+end
+sleep 0.5
+ActiveRecord::Base.with_connection do |c|
+  puts "メインのスレッド: CONNECTION_ID() = #{c.select_value("SELECT CONNECTION_ID()")}"
+  # information_schema.PROCESSLIST から、このコンテナ（172.29.0.4）からの接続を表示する
+end
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Rails 8.1.4.1・MySQL 8.4.13。最後の行の SQL は一部を省略）"
+            code={`
+スレッド1: CONNECTION_ID() = 259
+スレッド0: CONNECTION_ID() = 260
+メインのスレッド: CONNECTION_ID() = 262
+MySQL の PROCESSLIST（このコンテナからの接続）:
+  11 | 172.29.0.4:47660 | demo_development | Sleep | 
+  259 | 172.29.0.4:56514 | demo_development | Sleep | 
+  260 | 172.29.0.4:56516 | demo_development | Sleep | 
+  262 | 172.29.0.4:56524 | demo_development | Query | SELECT ID, HOST, DB, COMMAND, INFO FROM information_schema.PROCESSLIST ...
+`}
+          />
+          <p>
+            PROCESSLIST の各行は左から接続の番号、接続元のアドレスとポート、データベース、状態、実行中の SQL です。2つのスレッドとメインのスレッドは、それぞれ別の接続（259・260・262）を使っていました。11 は同じコンテナで動いている開発サーバー（Puma）の接続です。COMMAND が Sleep
+            の接続は、つながったまま次の SQL を待っています（図 15-1）。<code>with_connection</code> はブロックの間だけ接続を借りるメソッドで、「接続プール」の節で詳しく扱います。
+          </p>
+          <p>
+            接続を作るには時間がかかります。mysql2 で、接続を作って <code>SELECT 1</code> を送ってから閉じる処理と、作っておいた接続で <code>SELECT 1</code> を送る処理を、200
+            回ずつ実行して比べました。
+          </p>
+          <Code
+            lang="text"
+            title="conntime.rb の実行結果（デモの Rails のコンテナから MySQL のコンテナへ接続）"
+            code={`
+接続を作って SELECT 1 を送り、閉じる: 1回あたり 4.19 ms
+作った接続で SELECT 1 を送る:         1回あたり 0.27 ms
+`}
+          />
+          <p>
+            接続を作る処理は、SQL を1つ送る処理の約15倍の時間がかかりました。そのため Rails は作った接続を閉じずに残しておき、後の SQL でも使います。この仕組みが接続プールです。
+          </p>
+          <p>
+            接続には、その接続だけの状態があります。次の節で見るトランザクションも接続ごとにあり、ある接続で始めたトランザクションに、別の接続から送った SQL は入りません。上の例のように、Rails
+            では同時に動くスレッドがそれぞれ別の接続を使うので、あるスレッドのトランザクションに、別のスレッドの SQL が入ることはありません。
+          </p>
+          <Figure n="15-1" title="アプリケーションと MySQL の接続" caption="上の2つの実行結果をもとにした図。">
+            <ConnectionFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'transaction-basics',
+      title: 'トランザクションで変更をまとめる',
+      body: (
+        <>
+          <p>
+            銀行の口座から別の口座へお金を移す振替は、送金元の残高を減らす UPDATE と、送金先の残高を増やす UPDATE の2つの変更でできています。1つ目の後で2つ目が失敗すると、減らしたお金がどこにも無くなります。デモの
+            MySQL に別のデータベース ch15_demo を作り、口座を表す accounts テーブル（id・name・balance）に alice（残高 1000）と bob（残高 0）を入れて試しました。2つ目の UPDATE
+            はテーブルの名前をわざと書き間違えて失敗させています。
+          </p>
+          <Code
+            lang="text"
+            title="トランザクションなし（MySQL 8.4.13）"
+            code={`
+UPDATE accounts SET balance = balance - 300 WHERE id = 1;
+Query OK, 1 row affected
+UPDATE acounts SET balance = balance + 300 WHERE id = 2;
+ERROR 1146 (42S02) at line 5: Table 'ch15_demo.acounts' doesn't exist
+SELECT id, name, balance FROM accounts;
++----+-------+---------+
+| id | name  | balance |
++----+-------+---------+
+|  1 | alice |     700 |
+|  2 | bob   |       0 |
++----+-------+---------+
+`}
+          />
+          <p>
+            alice の残高は 700 に減ったのに、bob は 0 のままで、300 が消えました。MySQL は何も指定しなければ、SQL の文を1つ実行するたびにその変更をすぐに確定します（autocommit）
+            <Ref n={13} />。1つ目の UPDATE は、2つ目が失敗する前に確定していました。
+          </p>
+          <p>
+            複数の変更を1つのまとまりとして扱うのが<Term en="transaction">トランザクション</Term>です。BEGIN でトランザクションを始めると、その後の変更は COMMIT を送るまで確定しません。COMMIT
+            はまとまりの中の変更をすべて確定し、ROLLBACK はすべて取り消します
+            <Ref n={13} />。残高を 1000 と 0 に戻してから、同じ失敗を BEGIN と ROLLBACK で囲み、続けて成功する振替を COMMIT しました。
+          </p>
+          <Code
+            lang="text"
+            title="BEGIN・ROLLBACK と BEGIN・COMMIT（MySQL 8.4.13。表の枠線は一部を省略）"
+            code={`
+BEGIN;
+UPDATE accounts SET balance = balance - 300 WHERE id = 1;
+Query OK, 1 row affected
+SELECT id, name, balance FROM accounts;
+|  1 | alice |     700 |
+|  2 | bob   |       0 |
+UPDATE acounts SET balance = balance + 300 WHERE id = 2;
+ERROR 1146 (42S02) at line 6: Table 'ch15_demo.acounts' doesn't exist
+ROLLBACK;
+SELECT id, name, balance FROM accounts;
+|  1 | alice |    1000 |
+|  2 | bob   |       0 |
+
+BEGIN;
+UPDATE accounts SET balance = balance - 300 WHERE id = 1;
+UPDATE accounts SET balance = balance + 300 WHERE id = 2;
+COMMIT;
+SELECT id, name, balance FROM accounts;
+|  1 | alice |     700 |
+|  2 | bob   |     300 |
+`}
+          />
+          <p>
+            トランザクションの中の SELECT では、自分の UPDATE の結果（700）が見えています。2つ目の UPDATE が失敗した後に ROLLBACK を送ると、1つ目の UPDATE も取り消され、残高は 1000 と 0
+            に戻りました。2つの UPDATE が両方成功してから COMMIT すると、両方の変更が確定しました（図 15-2）。
+          </p>
+          <p>COMMIT するまでの変更はほかの接続からは見えません。mysql2 で2つの接続 A・B を作り、A のトランザクションの途中で B から読みました。</p>
+          <Code
+            lang="text"
+            title="visible.rb の実行結果（alice の残高を 1000 に戻してから実行。時刻は省略）"
+            code={`
+接続A  BEGIN
+接続A  UPDATE accounts SET balance = balance - 300 WHERE id = 1
+接続A  SELECT balance FROM accounts WHERE id = 1 → 700
+接続B  SELECT balance FROM accounts WHERE id = 1 → 1000
+接続A  COMMIT
+接続B  SELECT balance FROM accounts WHERE id = 1 → 700
+`}
+          />
+          <p>
+            A が UPDATE した後でも B には変更前の 1000 が見え、A が COMMIT した後には 700 が見えました
+            <Ref n={14} />。alice だけが減って bob が増えていない途中の状態を、ほかの接続が読むことはありません。
+          </p>
+          <Figure n="15-2" title="振替とトランザクション" caption="上の MySQL での実行結果をまとめた図。">
+            <TransferFigure />
+          </Figure>
+          <p>
+            Rails では <code>transaction</code> のブロックでトランザクションの範囲を決めます。ch15_demo の accounts テーブルを使う Account モデルを用意し、ブロックの中で2つの口座を{' '}
+            <code>update!</code> しました。
+          </p>
+          <Code
+            lang="ruby"
+            title="デモでの実行結果（alice は 1000、bob は 0 から始めた。ログは一部を省略）"
+            code={`
+Account.transaction do
+  alice.update!(balance: alice.balance - 300)
+  bob.update!(balance: bob.balance + 300)
+end
+#   BEGIN
+#   UPDATE \`accounts\` SET \`accounts\`.\`balance\` = 700 WHERE \`accounts\`.\`id\` = 1
+#   UPDATE \`accounts\` SET \`accounts\`.\`balance\` = 300 WHERE \`accounts\`.\`id\` = 2
+#   COMMIT
+
+Account.transaction do
+  alice.update!(balance: alice.balance - 300)
+  raise "送金先の処理で失敗"
+  bob.update!(balance: bob.balance + 300)
+end
+#   BEGIN
+#   UPDATE \`accounts\` SET \`accounts\`.\`balance\` = 400 WHERE \`accounts\`.\`id\` = 1
+#   ROLLBACK
+# => RuntimeError: 送金先の処理で失敗
+
+Account.order(:id).pluck(:name, :balance)   # => [["alice", 700], ["bob", 300]]
+alice.balance                                # => 400（Ruby のオブジェクトの値）
+`}
+          />
+          <p>
+            ブロックが最後まで進むと COMMIT が送られ、ブロックの中で例外が起きると ROLLBACK が送られました。例外はブロックの外へそのまま伝わります
+            <Ref n={17} />。取り消されるのはデータベースの変更だけで、Ruby のオブジェクトの <code>alice.balance</code> は、UPDATE のときに代入した 400 のままでした。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'lost-update',
+      title: '同時に更新すると起きること',
+      body: (
+        <>
+          <p>
+            Web アプリケーションは複数の要求を同時に処理します。Puma は1つのプロセスの中の複数のスレッドで要求を処理し、プロセスを複数動かすこともあります（<ChapterLink n={23} section="app-server" />
+            ）。同じ口座への2つの入金がほぼ同時に届いた場合を、2つのスレッドで再現しました。deposit は口座を読み、残高に入金額を足して保存するメソッドです。<code>sleep 0.3</code>{' '}
+            はその間にほかの処理をしている時間の代わりです。
+          </p>
+          <Code
+            lang="ruby"
+            title="lost.rb（bin/rails runner で実行。時刻と SQL を出す部分は省略）"
+            code={`
+def deposit(name, amount)
+  account = Account.find(1)
+  sleep 0.3 # 画面の表示や別の処理をしている間
+  account.update!(balance: account.balance + amount)
+end
+
+t1 = Thread.new { deposit("T1", 100) }
+t2 = Thread.new { sleep 0.1; deposit("T2", 200) }
+[t1, t2].each(&:join)
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（alice の残高を 1000 にしてから実行）"
+            code={`
+ 0.00s T1   SQL: SELECT \`accounts\`.* FROM \`accounts\` WHERE \`accounts\`.\`id\` = 1 LIMIT 1
+ 0.01s T1 残高を読む → 1000
+ 0.10s T2   SQL: SELECT \`accounts\`.* FROM \`accounts\` WHERE \`accounts\`.\`id\` = 1 LIMIT 1
+ 0.11s T2 残高を読む → 1000
+ 0.32s T1   SQL: UPDATE \`accounts\` SET \`accounts\`.\`balance\` = 1100 WHERE \`accounts\`.\`id\` = 1
+ 0.34s T1 1000 + 100 = 1100 を保存
+ 0.42s T2   SQL: UPDATE \`accounts\` SET \`accounts\`.\`balance\` = 1200 WHERE \`accounts\`.\`id\` = 1
+ 0.44s T2 1000 + 200 = 1200 を保存
+ 0.45s 最後の残高: 1200
+`}
+          />
+          <p>
+            T1 も T2 も、相手が保存する前に残高 1000 を読みました。Rails の UPDATE は Ruby で計算した値（1100、1200）をそのまま書き込みます。そのため、後から書いた T2 の 1200 が先に書いた T1
+            の 1100 を上書きし、T1 の入金の 100 が消えました（図 15-3）。同じ行を読んで書き戻す処理が重なり、先の更新が失われるこの現象を、更新の消失（lost update）と呼びます。
+          </p>
+          <p>
+            deposit の中身を <code>Account.transaction</code> で囲んで同じ実験をしても、最後の残高は 1200 でした。トランザクションは自分の変更をまとめるもので、ほかの接続が同じ行を読むことは止めません。MySQL
+            の通常の SELECT は読んだ行にロック（次の節で扱います）を掛けないので、ほかの接続も同じ行を同時に読んだり更新したりできます
+            <Ref n={14} />。
+          </p>
+          <Figure n="15-3" title="後の更新が前の更新を上書きする" caption="上の実行結果を図にしたもの。">
+            <LostUpdateFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'lock-basics',
+      title: 'ロックで更新の順番を待たせる',
+      body: (
+        <>
+          <p>
+            同じものを同時に変更すると困るときに使うのが<Term en="lock">ロック</Term>です。ロックを持っている処理だけがその対象を変更でき、ほかの処理はロックが手放されるまで待ちます。MySQL
+            の標準のストレージエンジン（テーブルのデータを保存して読み書きする部分）である InnoDB は、行の単位でロックを掛けます。UPDATE は変更する行に排他ロック（ほかのトランザクションが同じ行のロックを取れないロック）を掛け、トランザクションが持つロックは
+            COMMIT か ROLLBACK のときに手放されます
+            <Ref n={15} />
+            <Ref n={7} />。
+          </p>
+          <p>
+            mysql2 で4つの接続を作りました。接続 A は BEGIN の後に alice の行（id=1）を UPDATE し、COMMIT せずに約1秒待ちます。その間に、接続 B が同じ行を、接続 C が bob
+            の行（id=2）を UPDATE しました。途中で、MySQL がロックの状態を見せる performance_schema.data_locks を、4つ目の接続から2回読んでいます
+            <Ref n={16} />。
+          </p>
+          <Code
+            lang="text"
+            title="lock.rb の実行結果（alice は 1000、bob は 0 から始めた。data_locks は行のロックだけを表示）"
+            code={`
+ 0.00s 接続A  BEGIN を送る
+ 0.00s 接続A  終わり
+ 0.00s 接続A  UPDATE accounts SET balance = balance + 100 WHERE id = 1 を送る
+ 0.00s 接続A  終わり
+      （data_locks）
+        接続A | accounts | PRIMARY | 1 | X,REC_NOT_GAP | GRANTED
+ 0.21s 接続B  UPDATE accounts SET balance = balance + 200 WHERE id = 1 を送る
+      （data_locks）
+        接続A | accounts | PRIMARY | 1 | X,REC_NOT_GAP | GRANTED
+        接続B | accounts | PRIMARY | 1 | X,REC_NOT_GAP | WAITING
+ 0.51s 接続C  UPDATE accounts SET balance = balance + 50 WHERE id = 2 を送る
+ 0.52s 接続C  終わり
+ 1.02s 接続A  COMMIT を送る
+ 1.03s 接続A  終わり
+ 1.04s 接続B  終わり
+ 1.04s 残高: alice 1300, bob 50
+`}
+          />
+          <p>
+            data_locks の各行は左からロックを持つ（または待つ）接続、テーブル、索引、行の主キーの値、ロックの種類、状態です。1回目には、A が主キー（PRIMARY）の値が 1 の行に排他ロック（X）を持っている（GRANTED）ことが出ています。2回目には、B
+            が同じ行のロックを待っている（WAITING）ことが出ています。B の UPDATE は 0.21 秒に送られ、A が COMMIT した直後の 1.04 秒に終わりました。別の行を更新した C は待ちませんでした（図 15-4）。
+          </p>
+          <p>
+            B の UPDATE は <code>balance = balance + 200</code> なので、A が COMMIT した後の値（1100）に 200 を足しました。最後の残高は 1300 で、前の節のような更新の消失は起きていません。Rails でも{' '}
+            <code>Account.where(id: 1).update_all("balance = balance + 200")</code> と書けば、<code>UPDATE `accounts` SET balance = balance + 200 WHERE `accounts`.`id` = 1</code>{' '}
+            が送られます（検証とコールバックは通りません。<ChapterLink n={14} section="skip" />
+            ）。
+          </p>
+          <Figure n="15-4" title="行のロックと待ち" caption="上の実行結果を図にしたもの。横軸は経過時間。">
+            <RowLockFigure />
+          </Figure>
+          <p>
+            前の節の deposit のように、読んでから Ruby で計算して書き戻す処理には、Rails の2つの方法を使います。楽観的ロックは保存するときに、読んだ後でほかの更新が無かったかを確かめ、あれば例外にする方法です。悲観的ロックは読む時点で{' '}
+            <code>SELECT ... FOR UPDATE</code> を使って行にロックを掛け、ほかのトランザクションを待たせる方法です。どちらもこの章の後の節で扱います。ロックを持つ時間が長いほど、ほかの処理の待ち時間も延びます。2つのトランザクションが互いに相手のロックを待つと、どちらも進めなくなります。これをデッドロックと呼び、「ロック待ちのタイムアウトとデッドロック」の節で扱います。
+          </p>
+          <p>
+            ロックは COMMIT か ROLLBACK まで持ち続けるので、トランザクションをどこで始めてどこで終えるかが、ほかの処理の待ち時間に関わります。Rails でこの範囲を決めるのが{' '}
+            <code>ActiveRecord::Base.transaction</code> です。次の節では、このメソッドが接続に BEGIN を送る仕組みから見ていきます。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'transaction',
       title: 'トランザクションの開始と終了',
@@ -321,7 +848,7 @@ const ch15: Chapter = {
             <Ref n={2} />。デモで中身の無い <code>ActiveRecord::Base.transaction {'{ }'}</code> を実行すると、SQL は1つも送られませんでした。<ChapterLink n={14} />で、BEGIN が INSERT
             の直前に送られていたのはこのためです。
           </p>
-          <Figure n="15-1" title="トランザクションのスタック" caption="Rails 8.1.4.1 の transaction.rb・database_statements.rb を読んでまとめた模式図。">
+          <Figure n="15-5" title="トランザクションのスタック" caption="Rails 8.1.4.1 の transaction.rb・database_statements.rb を読んでまとめた模式図。">
             <StackFigure />
           </Figure>
         </>
@@ -392,7 +919,7 @@ end
 `}
           />
           <p>
-            T1 のトランザクションの中の2回目の読み取りは、T2 が確定した後でも 0 のままでした（同じ SELECT がクエリキャッシュから返らないよう、<code>uncached</code>{' '}
+            T1 のトランザクションの中の2回目の読み取りは、T2 が確定した後でも 0 のままでした（同じ SELECT がクエリキャッシュ（同じ SELECT の結果を Rails が覚えておき、SQL を送らずに返す仕組み。<ChapterLink n={12} section="query-cache" />）から返らないよう、<code>uncached</code>{' '}
             で囲んでいます）。トランザクションの分離レベルは <code>transaction(isolation: :read_committed)</code> のように指定できます。
           </p>
           <Code
@@ -411,7 +938,7 @@ end
             を呼ぶ）、READ COMMITTED では2回目の読み取りで確定済みの値が見えました。分離レベルは入れ子のトランザクション（SAVEPOINT）や、すでに開いているトランザクションに参加するときには指定できません
             <Ref n={2} />。
           </p>
-          <Figure n="15-2" title="一貫性のある読み取り" caption="上の実行結果を図にしたもの（MySQL 8.4.13）。">
+          <Figure n="15-6" title="一貫性のある読み取り" caption="上の実行結果を図にしたもの（MySQL 8.4.13）。">
             <SnapshotFigure />
           </Figure>
           <Callout kind="warn">
@@ -485,7 +1012,7 @@ a2.update!(title: "B さんの変更")
 `}
           />
           <p>
-            フォームを開いてから保存するまでの間に他の人が更新した場合を検出できます。フォームに <code>lock_version</code> を隠し項目として入れて送り返すと、画面を開いた時点の値で比べられます。
+            フォームを開いてから保存するまでの間に他の人が更新した場合を検出できます。フォームに <code>lock_version</code> を隠し項目（画面には表示せずに、フォームと一緒に送る値）として入れて送り返すと、画面を開いた時点の値で比べられます。
             <code>StaleObjectError</code> を rescue して、最新の内容を読み直すよう利用者に伝えるのが一般的です。
           </p>
         </>
@@ -551,7 +1078,7 @@ Article.where(id: 6..8).lock("FOR UPDATE SKIP LOCKED").pluck(:id)
 `}
           />
           <p>
-            SKIP LOCKED は、複数のワーカーが処理待ちの行を重ならないように取り出す処理に使えます。
+            SKIP LOCKED は、複数のワーカー（処理待ちの仕事を取り出して実行するプロセスやスレッド）が処理待ちの行を重ならないように取り出す処理に使えます。
           </p>
         </>
       ),
@@ -580,7 +1107,7 @@ Article.where(id: 6..8).lock("FOR UPDATE SKIP LOCKED").pluck(:id)
  1.01s T1  COMMIT
 `}
           />
-          <Figure n="15-3" title="ロックの範囲と索引" caption="上の実行結果を図にしたもの。ロックの種類（レコードロック、ギャップロック、ネクストキーロック）の区別は省略している。">
+          <Figure n="15-7" title="ロックの範囲と索引" caption="上の実行結果を図にしたもの。ロックの種類（レコードロック、ギャップロック、ネクストキーロック）の区別は省略している。">
             <LockRangeFigure />
           </Figure>
           <p>
@@ -597,7 +1124,7 @@ Article.where(id: 6..8).lock("FOR UPDATE SKIP LOCKED").pluck(:id)
         <>
           <p>
             ロックを待つ時間の上限は <code>innodb_lock_wait_timeout</code> で、既定は 50 秒です。超えると、待っていた文がロールバックされてエラーになります
-            <Ref n={8} />。デモでは T2 の接続で <code>SET SESSION innodb_lock_wait_timeout = 1</code> を実行してから、T1 がロックしている行を要求しました。
+            <Ref n={8} />。デモでは T2 の接続で <code>SET SESSION innodb_lock_wait_timeout = 1</code>（SET SESSION は、その接続の中だけで設定を変える）を実行してから、T1 がロックしている行を要求しました。
           </p>
           <Code
             lang="text"
@@ -639,7 +1166,7 @@ Article.where(id: 6..8).lock("FOR UPDATE SKIP LOCKED").pluck(:id)
       body: (
         <>
           <p>
-            ActiveRecord の<Term en="connection pool">接続プール</Term>が貸し出せる接続数は、database.yml で設定します。Rails 8.1 の新規アプリケーションには次の行があります。
+            ActiveRecord の<Term en="connection pool">接続プール</Term>が貸し出せる接続数は、database.yml（データベースへの接続の設定を書く config/database.yml）で設定します。Rails 8.1 の新規アプリケーションには次の行があります。
           </p>
           <Code
             lang="yaml"
@@ -668,7 +1195,7 @@ pool.stat => {size: 2, connections: 2, busy: 2, dead: 0, idle: 0, waiting: 1, ch
  2.06s T2  接続を返す
 `}
           />
-          <Figure n="15-4" title="スレッドと接続プール" caption="上の実行結果を図にしたもの。">
+          <Figure n="15-8" title="スレッドと接続プール" caption="上の実行結果を図にしたもの。">
             <PoolFigure />
           </Figure>
           <p>接続の借り方には2つあります。</p>
@@ -707,7 +1234,7 @@ pool.stat => {size: 2, connections: 2, busy: 2, dead: 0, idle: 0, waiting: 1, ch
 `}
           />
           <p>
-            貸し出しは、スレッド（またはファイバー）ごとの <code>connection_lease</code> に記録されます。<code>with_connection</code> はブロックを抜けると接続を返し、
+            貸し出しは、スレッド（またはファイバー。ファイバーは、1つのスレッドの中で切り替えながら実行できる、さらに小さな処理の単位）ごとの <code>connection_lease</code> に記録されます。<code>with_connection</code> はブロックを抜けると接続を返し、
             <code>lease_connection</code> は借りたままにします。借りたままの接続は、<ChapterLink n={8} />で見た Executor の complete で、トランザクションの途中でなければ返されます
             <Ref n={10} />。<code>ActiveRecord::Base.connection</code> は、7.2 以降「ソフトな非推奨」となり、<code>with_connection</code> か <code>lease_connection</code>{' '}
             を使うよう求められています（<code>connection_handling.rb</code> のコメント）。
@@ -733,6 +1260,9 @@ pool.stat => {size: 2, connections: 2, busy: 2, dead: 0, idle: 0, waiting: 1, ch
       title: 'まとめ',
       body: (
         <ul>
+          <li>アプリケーションは MySQL に接続してから SQL を送ります。MySQL は接続ごとに専用のスレッドで処理し、接続を作るには SQL を1つ送るより長い時間がかかるので、Rails は接続を使い回します。</li>
+          <li>トランザクションは BEGIN から COMMIT までの変更をまとめて確定し、ROLLBACK でまとめて取り消します。COMMIT 前の変更は、ほかの接続からは見えません。</li>
+          <li>同じ行を読んで Ruby で計算し書き戻す処理が重なると、後の書き込みが先の書き込みを上書きします。UPDATE は変更する行にロックを掛け、同じ行を変更するほかのトランザクションを COMMIT まで待たせます。</li>
           <li>DBの列や索引を変更するときのロックとデプロイの順序は、<ChapterLink n={27} />で扱います。</li>
           <li>トランザクションは接続ごとの TransactionManager がスタックで管理し、BEGIN や SAVEPOINT は最初の SQL を送るときまで遅らせます。</li>
           <li>requires_new なしの内側の transaction は外側に参加するだけで、内側の ActiveRecord::Rollback では何も取り消されません。</li>
@@ -756,6 +1286,12 @@ pool.stat => {size: 2, connections: 2, busy: 2, dead: 0, idle: 0, waiting: 1, ch
     { title: 'Deadlocks in InnoDB', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html', accessed: '2026-11-11', version: 'MySQL 8.4', note: 'デッドロックの検出と、一方のトランザクションのロールバック、やり直しに備えること（同じ節の How to Minimize and Handle Deadlocks）。' },
     { title: 'activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'max_connections・checkout_timeout・idle_timeout などの設定、lease_connection と with_connection、checkout。既定値は database_configurations/hash_config.rb。' },
     { title: 'activerecord/CHANGELOG.md', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/CHANGELOG.md`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '8.1 で keepalive・max_age・min_connections が追加され、pool が max_connections に改名されたこと。' },
+    { title: 'Connection Interfaces（Client Connection Thread Management）', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/connection-interfaces.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: '接続ごとに専用のスレッドを割り当て、そのスレッドが認証と要求の処理を行うこと。実行例は MySQL 8.4.13 で実測。' },
+    { title: 'autocommit, Commit, and Rollback', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/innodb-autocommit-commit-rollback.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: '新しい接続は autocommit が有効で、文ごとに確定すること。BEGIN で始めて COMMIT か ROLLBACK で終えると、複数の文を1つのトランザクションにできること。' },
+    { title: 'Consistent Nonlocking Reads', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/innodb-consistent-read.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: '一貫性のある読み取りは、確定済みの変更だけを見て、まだ確定していない変更を見ないこと。読み取りがロックを掛けないので、ほかのセッションが同時に変更できること。' },
+    { title: 'InnoDB Locking', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/innodb-locking.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'InnoDB が行の単位のロック（共有ロック S と排他ロック X）を使うこと。排他ロックを持つトランザクションがあると、ほかのトランザクションの同じ行のロックはすぐには得られないこと。' },
+    { title: 'The data_locks Table', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/performance-schema-data-locks-table.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'performance_schema.data_locks が、持っているロックと要求中のロックを表示すること（LOCK_MODE・LOCK_STATUS・LOCK_DATA）。' },
+    { title: 'ActiveRecord::Transactions::ClassMethods', publisher: 'Ruby on Rails API', url: 'https://api.rubyonrails.org/v8.1/classes/ActiveRecord/Transactions/ClassMethods.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'ブロックの中の例外は ROLLBACK の後に呼び出し元へ伝わること。オブジェクトの値はトランザクションの前の状態に戻らないこと。実行例は Rails 8.1.4.1 で実測。' },
   ],
 }
 

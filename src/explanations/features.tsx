@@ -1,257 +1,380 @@
-import { Code } from '../components/content'
+import { ChapterLink, Code } from '../components/content'
 import { guide, primarySource, type Explanations } from './shared'
 
 export const explanation16: Explanations = {
-  sources: [guide('action_view_overview', 'Action View Overview'), guide('form_helpers', 'Action View Form Helpers'), guide('layouts_and_rendering', 'Layouts and Rendering in Rails')],
+  sources: [
+    primarySource('class Object（instance_variables・instance_variable_get・instance_variable_set）', 'Ruby Documentation', 'https://docs.ruby-lang.org/en/4.0/Object.html', 'Ruby 4.0'),
+    primarySource('class Module（module_eval・include・ancestors）', 'Ruby Documentation', 'https://docs.ruby-lang.org/en/4.0/Module.html', 'Ruby 4.0'),
+    guide('form_helpers', 'Action View Form Helpers'),
+    primarySource('Cross-site scripting (XSS)', 'MDN Web Docs', 'https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS'),
+  ],
   sections: {
     flow: cite => <>
       <p>
-        ビューは取得したデータを使ってHTMLなどの出力を作る部分です。
-        HTMLはタグで見出しや段落を表し、ERBはその文章にRubyの処理を埋め込むテンプレートの形式です。
-        コントローラーが<code>@article</code>へ記事を代入した場合、ビューではその記事の属性を使えます。
-      </p>
-      <Code lang="erb" title="app/views/articles/show.html.erbの例" code={`<h1><%= @article.title %></h1>
-<% if @article.published %>
-  <p>公開中の記事です</p>
-<% end %>`} />
-      <p>
-        <code>&lt;%= ... %&gt;</code>は式の結果を出力し、<code>&lt;% ... %&gt;</code>は条件分岐などを実行します。
-        ブラウザーが受け取るのは、この処理を終えたHTMLです。RubyやERBをブラウザーで実行するわけではありません。
-        描画には、テンプレートの選択、Rubyの実行、結果を応答の本文へ設定する処理があります。
+        「HTML と ERB のテンプレート」の節では、コントローラーのアクションで <code>@article</code> に入れた記事を、テンプレートの中で同じ名前で使いました。
+        <code>@</code> で始まる変数（インスタンス変数）は、本来はそのオブジェクトの中でしか使えません。
+        テンプレートを実行するのはコントローラーとは別のオブジェクト（この章ではビューのインスタンスと呼びます）なので、Rails は描画のたびに、コントローラーのインスタンス変数の名前と値を集め、ビューのインスタンスに同じ名前で設定し直します。
       </p>
       <p>
-        コントローラーとビューは別のオブジェクトです。
-        そのため、コントローラーのインスタンス変数をビューでも使うには、描画の際に値を渡す必要があります。
-        <code>render_to_body</code>や<code>view_context</code>はこの出力の作成と、実行するビューのオブジェクトに関わります。{cite}
+        このコピーにはインスタンス変数を名前で扱う Ruby のメソッドを使います。
+        <code>instance_variables</code> は名前の一覧を返し、<code>instance_variable_get</code> は名前を指定して値を読み、<code>instance_variable_set</code> は名前を指定して値を設定します。
+      </p>
+      <Code lang="ruby" title="インスタンス変数を名前で読み書きする（Ruby 4.0.9 で実行）" code={`class ArticlesController
+  def show
+    @article = "記事1"
+    @count = 8
+  end
+end
+
+controller = ArticlesController.new
+controller.show
+controller.instance_variables               # => [:@article, :@count]
+controller.instance_variable_get(:@article) # => "記事1"
+
+view = Object.new
+view.instance_variable_set(:@article, controller.instance_variable_get(:@article))
+view.instance_variable_get(:@article)       # => "記事1"`} />
+      <p>
+        この節で読む <code>render_to_body</code>・<code>view_context</code>・<code>view_assigns</code> は、Rails がこのコピーと描画を行うメソッドです。どれも Rails の内部のメソッドで、アプリケーションのコードから直接呼ぶことはありません。{cite}
       </p>
     </>,
-    lookup: cite => <>
+    lookup: () => <>
       <p>
-        showというアクションでも、HTMLとJSON、日本語と英語など、要求する形式や言語が異なる場合があります。
-        テンプレートの選択にはアクション名だけでなく、コントローラーのディレクトリ、形式、言語、テンプレート処理の種類などが必要です。
-        <code>show.html.erb</code>は、show用・HTML形式・ERBで処理するファイルという情報を名前に含めています。
+        同じ show アクションでも、/articles/1 には HTML を、/articles/1.json には JSON を返したい場合があります。
+        ブラウザーなどのクライアントは要求の Accept ヘッダーで受け取りたい形式を伝えます（<ChapterLink n={6} section="http-message" />）。
+        Rails は要求の形式（format）・言語（locale）・派生（variant。スマートフォン用など、同じ形式の別の版）を条件にして、テンプレートのファイルを選びます。
+        ファイル名の <code>show.html+phone.erb</code> は、アクションが show、形式が html、派生が phone、ERB で処理するファイル、という情報を名前に含めています。
       </p>
       <p>
-        LookupContextはこうした探索条件を保持するオブジェクトです。
-        「ファイルが置いてあるのに見つからない」場合も、名前だけでなく現在の探索条件と一致するかが関係します。
-        探す条件と、見つけたテンプレートを実行する処理を分けることで、同じ描画APIから複数の形式を選べます。{cite}
+        ファイル名をこれらの部分に分けるために、Rails は正規表現を使います。正規表現は文字列の形を表す書き方で、<code>{'(?<名前>…)'}</code> で囲んだ部分は、合った文字列から名前で取り出せます。
+        この節で読む正規表現を簡単にした例です。
+      </p>
+      <Code lang="ruby" title="名前付きの部分で文字列を分ける（Ruby 4.0.9 で実行）" code={`pattern = /\\A(?<action>.*?)\\.(?<format>html|text)(?:\\+(?<variant>phone))?\\.(?<handler>erb)\\z/
+
+m = "show.html+phone.erb".match(pattern)
+m[:action]  # => "show"
+m[:format]  # => "html"
+m[:variant] # => "phone"
+m[:handler] # => "erb"
+
+"show.text.erb".match(pattern)[:variant] # => nil（派生の部分が無い）`} />
+      <p>
+        <code>\A</code> は文字列の先頭、<code>\z</code> は末尾、<code>.*?</code> は任意の文字の並び、<code>(?:…)?</code> は省略できる部分を表します。
+        ファイルを置いたのにテンプレートが見つからないときは、ファイル名のどの部分が探索の条件と合っていないかを確かめます。
       </p>
     </>,
     compile: cite => <>
       <p>
-        ERBのファイルは、HTMLの文字列とRubyの式が混ざっています。
-        これを描画するには、通常の文字列を出力へ追加する処理と、Rubyの式を評価して追加する処理へ変換します。
-        こうして実行できるコードへ変える段階がコンパイルです。
+        「HTML と ERB のテンプレート」の節の出力は、テンプレートの HTML の部分をそのまま並べ、<code>{'<%= %>'}</code> の位置に式の結果を入れたものでした。
+        Rails はこれを描画のたびにテンプレートの文字を読み直して行うのではなく、最初の描画のときに、テンプレートを「HTML の文字列を足す」「式の結果を足す」を順に行う Ruby のメソッドに変換しておきます。
+        この変換をコンパイルと呼びます。
       </p>
       <p>
-        RailsはテンプレートをRubyのメソッドとして呼べるようにします。
-        変換済みのコードを使うことと、描画したHTMLの結果をキャッシュすることは別です。
-        同じテンプレートのメソッドを再利用しても、実行時のarticleが変われば出力は変わります。
-        初回の変換と、その後の描画の実行を区別すると、計測イベントの違いも説明できます。{cite}
+        Ruby では文字列に書いたコードから、実行中にメソッドを定義できます。<code>module_eval</code> は渡した文字列を Ruby のコードとしてそのクラスの中で実行するメソッドです。
+      </p>
+      <Code lang="ruby" title="文字列からメソッドを定義する（Ruby 4.0.9 で実行）" code={`klass = Class.new
+source = 'def greet(name) = "こんにちは、#{name}さん"'
+klass.module_eval(source)
+
+klass.instance_methods(false) # => [:greet]
+klass.new.greet("Rails")      # => "こんにちは、Railsさん"`} />
+      <p>
+        この節では ERB から作ったコードの文字列を、Rails が同じ方法でメソッドにするところを確かめます。
+        定義したメソッドを使い回しても、呼ぶたびに渡す値が違えば出力は変わります。コンパイルを1回で済ませることと、描画した HTML を保存して使い回すキャッシュ（<ChapterLink n={22} section="fragment" />）とは別のものです。
+      </p>
+      <p>
+        この節には次の用語も出てきます。Mutex は、ある処理を同時に1つのスレッドだけが実行できるようにする Ruby のクラスです（スレッドは<ChapterLink n={23} section="thread" />）。
+        ActiveSupport::Notifications は「テンプレートをコンパイルした」「描画した」などの出来事を、Rails が名前の付いたイベントとして知らせる仕組みで、イベントの名前を指定して記録できます（<ChapterLink n={22} section="notifications" />）。
+        バックトレースは、例外が起きたときに表示される、そこまでに呼ばれたメソッドとファイル名・行番号の一覧です。{cite}
       </p>
     </>,
-    'layout-partial': cite => <>
+    'layout-partial': () => <>
       <p>
-        各ページに共通するヘッダーや外枠はレイアウトに、記事カードやフォームのような部分はパーシャルに分けられます。
-        パーシャルのファイル名は<code>_article.html.erb</code>のようにアンダースコアで始めます。
-        表示に使う値をローカル変数として渡せば、同じ部分を複数の画面で使えます。
+        「レイアウトとパーシャルの書き方」の節で、レイアウトの yield の位置にテンプレートの出力が入り、<code>render @articles</code> が記事の数だけパーシャルを描画することを見ました。
+        この節ではその順番と、パーシャルに渡るローカル変数の決まり方を、Rails のコードで確かめます。
       </p>
       <p>
-        画面はアクション用のテンプレート、そこから呼ぶパーシャル、全体を囲むレイアウトを組み合わせて作ります。
-        レイアウト内のyieldはアクション用テンプレートの描画結果を配置する場所です。
-        Rubyのブロックのyieldと形は似ていますが、ここではRailsが用意した描画の文脈で、どの結果を差し込むかを扱っています。{cite}
+        <code>render @articles</code> の @articles は、<code>Article.order(:id).limit(3)</code> が返した ActiveRecord::Relation です。
+        Relation は SQL の条件を持ったオブジェクトで、each などで中身が必要になったときに初めて SQL を実行します（<ChapterLink n={12} section="lazy" />）。
+        そのため、「レイアウトとパーシャルの書き方」の節のログでは、index.html.erb の描画が始まった後に SELECT が出ていました。
+        <code>to_partial_path</code> は、モデルのオブジェクトが自分を描画するパーシャルのパスを返すメソッドで、Article なら <code>"articles/article"</code> を返します。
+      </p>
+    </>,
+    helpers: cite => <>
+      <p>
+        ヘルパーはモジュールに書いたメソッドです。モジュールはメソッドをまとめたもので、クラスに include すると、そのクラスのインスタンスからモジュールのメソッドを呼べます。
+        <code>ancestors</code> はメソッドを探す順にクラスとモジュールを並べた配列を返します（<ChapterLink n={3} section="include" />）。
+      </p>
+      <Code lang="ruby" title="モジュールを include する（Ruby 4.0.9 で実行）" code={`module Greeting
+  def hello = "こんにちは"
+end
+
+class View
+  include Greeting
+end
+
+View.new.hello          # => "こんにちは"
+View.ancestors.first(3) # => [View, Greeting, Object]`} />
+      <p>
+        Rails はビューのクラスに app/helpers のモジュールや、URL を作るヘルパーのモジュールを include します。この節で表示する祖先の一覧は、この仕組みで並んだものです。
+        <code>Class.new</code> は名前の無いクラスを作るメソッドで、一覧の <code>{'#<Class:0x…>'}</code> はこの名前の無いクラスです。{cite}
       </p>
     </>,
     form: cite => <>
       <p>
-        フォームには入力欄の名前と値があります。送信すると、その名前をキーとするデータがHTTPの要求に含まれます。
-        <code>article[title]</code>という入力欄なら、Railsのparamsではarticleの中のtitleとして扱えます。
-        画面の見た目が文字入力欄でも、入力値の検証や保存はサーバー側で行います。
+        HTML のフォームは <code>{'<form>'}</code> 要素で、action 属性に送信先の URL を、method 属性に HTTP のメソッドを書きます。
+        中の入力欄（<code>{'<input>'}</code> や <code>{'<textarea>'}</code>）は name 属性を持ち、送信するとブラウザーは「name=入力した値」を <code>&amp;</code> でつないで要求の本文に入れます。
+        name が <code>article[title]</code> の入力欄なら、Rails の params では <code>params[:article][:title]</code> で取り出せます（<ChapterLink n={10} section="params" />）。
       </p>
       <p>
-        新規作成ではnewが未保存のモデルを用意してフォームを表示し、送信先のcreateが入力を受け取って保存します。
-        保存できれば詳細画面などへリダイレクトし、できなければ同じモデルに残る入力とerrorsを使ってフォームを再表示します。
-        エラー表示には失敗したモデルの状態が必要なため、新しいモデルを作り直す場合と区別します。
+        応答の状態コードは要求の結果を表す3桁の数字です（<ChapterLink n={6} section="http-message" />）。この節には次の3つが出てきます。
+        200 は成功です。302 は「別の URL を取得し直してください」という指示（リダイレクト）で、移動先の URL は Location ヘッダーに入ります。422 は送られた内容を処理できなかったことを表します。
       </p>
       <p>
-        form_withはモデルや送信先の指定からフォームと入力欄のHTMLを作るヘルパーです。
-        ヘルパーが作る入力欄の名前、ルートが選ぶアクション、paramsの構造、モデルへ渡す属性が、1つの保存処理としてつながります。{cite}
+        form_with はモデルのオブジェクトからフォームの HTML を作るヘルパーです。保存前の記事なら送信先を /articles に、保存済みなら /articles/記事の id にし、入力欄の name を <code>article[title]</code> の形にします。
+        ヘルパーが作る name、ルーティングが選ぶアクション、params の形、モデルに渡す属性が順につながって、1つの保存処理になります。{cite}
       </p>
     </>,
-    assets: cite => <>
+    escape: cite => <>
       <p>
-        CSSは見た目、JavaScriptはブラウザー上の動作を記述します。これらと画像などのファイルをアセットと呼びます。
-        HTMLの描画と、HTMLから参照するファイルの配信は別の処理です。
-        ブラウザーはHTMLを受け取った後、そこに書かれたURLからCSSやJavaScriptなども取得します。
+        「HTML と ERB のテンプレート」の節で、<code>{'<%= %>'}</code> が <code>{'<'}</code> と <code>{'>'}</code> を <code>{'&lt;'}</code> と <code>{'&gt;'}</code> に置き換えて出力することを見ました。
+        この置き換えをしないと何が起きるかの例です。コメントの本文に <code>{'<script>alert(1)</script>'}</code> と書いて投稿されたとします。
+        テンプレートがこの本文をそのまま HTML に入れると、コメントを表示した人のブラウザーで、投稿者が書いた JavaScript が実行されます。
+        このように、他人が入力した文字列を通じてページに JavaScript を入れられる攻撃を XSS（クロスサイトスクリプティング）と呼びます。
+        エスケープしていれば、本文は「{'<script>alert(1)</script>'}」という文字として表示されるだけです。
       </p>
       <p>
-        キャッシュされた古いファイルと新しいファイルを区別するため、内容から計算した識別値であるダイジェストをファイル名に入れる方法があります。
-        内容が変わればURLも変わるため、新しいファイルを取得させられます。
-        アセットパイプラインはこの名前の変換や配置・配信を扱う仕組みで、JavaScriptを1つにまとめるバンドル処理とは担当する範囲が異なります。{cite}
+        一方で、<code>link_to</code> が作る <code>{'<a>'}</code> タグのように、ヘルパーが組み立てた HTML はタグとして出力する必要があります。
+        Rails はエスケープしなくてよい文字列に印を付けて区別します。この節の <code>html_safe?</code> はその印を調べるメソッドで、SafeBuffer は印の付いた文字列のクラスです。{cite}
+      </p>
+    </>,
+    assets: () => <>
+      <p>
+        「CSS・JavaScript・画像を取りに来る要求」の節で、ブラウザーがアセットを HTML とは別の要求で取得し、2回目からはキャッシュから読むことを見ました。
+        この節ではファイル名のダイジェストの作り方と、開発環境と本番環境でのファイルの返し方を扱います。
+      </p>
+      <p>
+        ダイジェストの計算には SHA1 というハッシュ関数を使います。ハッシュ関数はどんな長さのデータからも決まった長さの値を計算する関数で、同じ内容からは同じ値が、少しでも違う内容からはまったく違う値が出ます。
+      </p>
+      <Code lang="ruby" title="内容が1語違うときの SHA1 の先頭8文字（Ruby 4.0.9 で実行）" code={`require "digest"
+Digest::SHA1.hexdigest("body { color: red; }")[0, 8]  # => "9c507b84"
+Digest::SHA1.hexdigest("body { color: blue; }")[0, 8] # => "a1d2ece7"`} />
+      <p>
+        この節には次の用語も出てきます。ミドルウェアは、要求がコントローラーに届く前に順に通る部品で、自分で応答を返すことも、次の部品に渡すこともできます（<ChapterLink n={6} section="middleware" />）。
+        JavaScript のファイルは <code>import "…"</code> と書いて別のファイルを読み込めます（ES モジュール）。
+        ファイルが多いと要求の数が増えるので、あらかじめ1つのファイルにまとめる（バンドルする）方法もあり、Node.js（ブラウザーの外で JavaScript を実行するプログラム）の上で動く esbuild などのツールを使います。
       </p>
     </>,
   },
 }
 
 export const explanation17: Explanations = {
-  sources: [primarySource('Turbo Handbook — Introduction', 'Hotwire', 'https://turbo.hotwired.dev/handbook/introduction'), guide('action_cable_overview', 'Action Cable Overview'), primarySource('Stimulus Handbook — Introduction', 'Hotwire', 'https://stimulus.hotwired.dev/handbook/introduction')],
+  sources: [
+    primarySource('Using custom elements', 'MDN Web Docs', 'https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements'),
+    primarySource('HTTP response status codes', 'MDN Web Docs', 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status'),
+    primarySource('Stimulus Reference: Lifecycle Callbacks', 'Hotwire', 'https://stimulus.hotwired.dev/reference/lifecycle-callbacks', 'Stimulus 3'),
+    primarySource('ActiveSupport::MessageVerifier', 'Ruby on Rails API', 'https://api.rubyonrails.org/classes/ActiveSupport/MessageVerifier.html', 'Rails 8.1'),
+    primarySource('Redis Pub/Sub', 'Redis', 'https://redis.io/docs/latest/develop/pubsub/', 'Redis 8'),
+  ],
   sections: {
     overview: cite => <>
       <p>
-        通常のリンク移動では、ブラウザーが移動先のHTMLを取得して新しいページとして表示します。
-        JavaScriptで通信し、現在の画面の一部や本文を変更すれば、ページ全体を読み込み直さずに表示を更新できます。
-        DOMは、ブラウザーがHTMLを要素の木として扱う仕組みです。画面の更新は対象の要素を追加したり置き換えたりする操作になります。
+        ここまでの3つの節で、Turbo が fetch で取得した HTML で画面を書き換えることと、WebSocket ではサーバーが要求を待たずに HTML を送れることを見ました。
+        この章の後の節はブラウザーで記録した通信をもとに進みます。記録は次の形で書いています。
       </p>
+      <Code lang="text" title="この章の通信の記録の読み方" code={`[A] → GET /articles  accept=text/html, …        ← ブラウザー A が送った要求と、そのヘッダー
+[A] ← 200 text/html; charset=utf-8  /articles   ← ブラウザー A が受け取った応答（状態コードと Content-Type）
+[A] ws→ {"command":"subscribe", …}              ← ブラウザー A が WebSocket で送ったメッセージ
+[B] ws← {"type":"welcome"}                      ← ブラウザー B が WebSocket で受け取ったメッセージ`} />
       <p>
-        Hotwireはサーバーから返すHTMLを使ってこの更新を行います。
-        Turboが通信やHTMLの反映を担当し、Stimulusが開閉やクリックへの反応などの動作を追加します。
-        記事の取得、入力の検証、権限の確認はサーバー側の処理として残るため、Railsのコントローラーやビューがそのまま関わります。{cite}
+        <code>{'<turbo-frame>'}</code> や <code>{'<turbo-stream>'}</code> は HTML にもともとある要素ではなく、Turbo が JavaScript で定義した要素（カスタム要素）です。
+        ブラウザーは知らない名前の要素も DOM に入れ、その要素の動きは定義した JavaScript が決めます。{cite}
       </p>
     </>,
     drive: cite => <>
       <p>
-        Turbo Driveはリンクやフォームの操作を受け取り、JavaScriptのfetchで移動先の応答を取得します。
-        fetchは画面を通常のページ遷移で置き換える代わりに、JavaScriptからHTTP通信を行うAPIです。
-        サーバーは通常のページ用HTMLを返し、Turboがその結果を現在のページへ反映します。
+        この節では、フォームを送信した後の応答の状態コードが問題になります。
+        リダイレクトは応答で別の URL を指示し、ブラウザーにその URL を取得し直させることです。302 Found と 303 See Other はどちらもリダイレクトで、移動先は Location ヘッダーに入ります。
+        303 は移動先を GET で取得すると決まっていて、フォームを POST で送った後の移動に使います。
+        422 Unprocessable Content は、送られた内容に誤りがあって処理できなかったことを表します。
       </p>
       <p>
-        ブラウザーのJavaScriptの実行環境を毎回すべて作り直さないため、通常のページ遷移と、変数やイベント処理の残り方が異なります。
-        HTMLの見た目だけを比べると同じでも、通信がどう始まり、どの範囲が置き換わったかを確かめると動作の違いを観測できます。{cite}
-      </p>
-    </>,
-    frames: cite => <>
-      <p>
-        Turbo Framesでは<code>turbo-frame</code>要素にIDを付け、その枠の中のリンクやフォームを部分更新にできます。
-        たとえばコメント欄にcomment_formという枠があり、応答にも同じIDの枠があれば、その内容だけを取り出して現在の枠を置き換えます。
-        行き先のURLだけでなく、応答からどの枠を選ぶかが更新結果を決めます。
-      </p>
-      <p>
-        要求に付くTurbo-Frameヘッダーは、どの枠からの操作かをサーバーへ伝える情報です。
-        1ページ全体を更新するDriveと、同名の枠を取り出すFramesでは、返すHTMLに求める形が異なります。
-        単にHTMLを返すだけでなく、枠のIDと応答の構造が対応する必要があります。{cite}
+        この節の記録にある console.error は、ブラウザーの開発者ツールのコンソール（ページの JavaScript が出したメッセージやエラーを表示する画面）に出たエラーです。{cite}
       </p>
     </>,
-    streams: cite => <>
+    frames: () => <>
       <p>
-        コメントの追加で「一覧へ1件足す」と「入力フォームを空にする」を同時に行いたい場合、1つの枠の置換だけでは表しにくいことがあります。
-        Turbo Streamsは追加・置換・削除などの操作と対象要素をHTMLに記述する形式です。
-        1つの応答に複数の操作を含め、複数箇所を更新できます。
+        Turbo Frames ではページの一部を <code>{'<turbo-frame id="comment_form">'}</code> のように id を付けた要素で囲みます。
+        この要素の中のリンクをクリックすると、Turbo はリンク先の HTML を取得し、その中から同じ id の <code>{'<turbo-frame>'}</code> を探して、中身だけを入れ替えます。ページのほかの部分と URL は変わりません。
       </p>
       <p>
-        Acceptヘッダーは、クライアントが受け取りたい応答の形式を伝えます。
-        Turbo Stream形式の応答では、通常のページHTMLとは別のContent-Typeを使い、ブラウザー側が更新の指示として処理します。
-        この形式はHTTPの応答でも使えるので、Streamsを使うこと自体がWebSocketの接続を必要にするわけではありません。{cite}
+        このとき Turbo は要求に Turbo-Frame ヘッダーを付けて、どのフレームからの要求かをサーバーに伝えます。サーバーはこのヘッダーを見て、フレームの中身だけで足りる応答を返せます。
+        応答に同じ id のフレームが無ければ、入れ替える中身が見つからないので、フレームの中身を表示できません。
       </p>
     </>,
-    actioncable: cite => <>
+    streams: () => <>
       <p>
-        HTTPの要求への応答だけで別の利用者による変更を表示中の画面へ届けるには、ブラウザーから繰り返し確認するなどの方法が必要になります。
-        WebSocketは接続を維持し、ブラウザーとサーバーの双方からメッセージを送る通信方式です。
-        ActionCableはRailsでその接続とメッセージを扱います。
+        コメントを投稿した後に、「一覧の末尾に1件足す」と「フォームを元のリンクに戻す」の2か所を同時に変えたい場合、1つのフレームの入れ替えでは足りません。
+        Turbo Streams では <code>{'<turbo-stream action="append" target="comments">'}</code> のように、操作（action）と対象の要素の id（target）を書いた HTML を使い、1つの応答に複数の操作を入れられます。
       </p>
       <p>
-        接続はブラウザーとサーバーをつなぐ通信、チャンネルはコメント更新などの機能ごとの論理的な送受信先、購読はその情報を受け取る登録です。
-        WebSocketの接続を1本作ることと、どの記事の更新を購読するかは別に管理します。
-        ブロードキャストは登録した接続先へ変更の情報を送る操作です。{cite}
+        MIME タイプは <code>text/html</code> のように、データの種類を「大分類/小分類」の形で表す名前です。要求の Accept ヘッダーには受け取れる種類を、応答の Content-Type ヘッダーには本文の種類を書きます。
+        Turbo Streams の応答は <code>text/vnd.turbo-stream.html</code> という種類で返し、Turbo はこの種類の本文を、表示するページではなく変更の指示として扱います。
+        同じ形式は WebSocket のメッセージでも使えます。逆に、Turbo Streams を使うのに WebSocket が必須なわけではありません。
+      </p>
+    </>,
+    stimulus: cite => <>
+      <p>
+        HTML の属性のうち、<code>data-</code> で始まるもの（<code>data-controller</code>、<code>data-turbo</code> など）は、ページの作者が自由に名前を付けて値を入れられる属性です。
+        ブラウザーは表示には使わず、JavaScript が読み取って使います。Stimulus は <code>data-controller</code> の値を見て、要素に結び付ける JavaScript のクラスを決めます。
+      </p>
+      <p>
+        JavaScript の class も、Ruby のクラスと同じように new でインスタンスを作れます。<code>export default</code> はこのファイルを import した側にクラスを渡す書き方です。
+        <code>connect</code> は要素がページの DOM に現れたときに Stimulus が呼ぶメソッドで、<code>this.element</code> は結び付いた要素です。{cite}
+      </p>
+    </>,
+    actioncable: () => <>
+      <p>
+        「HTTP の要求と応答と WebSocket」の節では、/cable に WebSocket の接続を開き、記事1の更新を購読してから、別のプロセスが送ったメッセージを受け取りました。
+        ActionCable では1本の WebSocket の接続の上で、チャネルとストリームを使ってメッセージの行き先を分けます。
+        チャネルは購読の受け付けやメッセージの処理を書くクラスで、Turbo が使うのは Turbo::StreamsChannel です。ストリームはメッセージを配る宛先の名前で、例では記事1のストリームを購読しました。
+        購読（subscribe）はあるストリームに送られたメッセージを受け取る登録で、ブロードキャストはあるストリームを購読しているすべての接続にメッセージを送ることです。
+      </p>
+      <p>
+        この節には次の用語も出てきます。Rack は Puma と Rails の間で要求と応答の受け渡し方を決めた取り決めです（<ChapterLink n={6} section="rack-contract" />）。
+        hijack はこの取り決めの中で、アプリケーションが Puma からソケット（ネットワークの接続を読み書きするために OS が用意するもの）を受け取り、自分で読み書きするための機能です。
+        ワーカープールはあらかじめ作っておいたスレッドの集まりで、処理が来ると空いているスレッドに渡します（スレッドは<ChapterLink n={23} section="thread" />）。
+      </p>
+    </>,
+    broadcast: cite => <>
+      <p>
+        この節では、ストリームの名前が Base64 と署名で作られていることを確かめます。
+        Base64 はどんなデータも英数字と <code>+</code>・<code>/</code>・<code>=</code> だけの文字列に変える変換で、元に戻せます。暗号ではないので、だれでも元の内容を読めます。
+        署名は内容と秘密の鍵から計算した値を内容に付けたもので、受け取った側は同じ鍵で計算し直して、内容が書き換えられていないかを確かめます。Rails の MessageVerifier で試しました。
+      </p>
+      <Code lang="ruby" title="Base64 と MessageVerifier（bin/rails runner で実行。Rails 8.1.4.1）" code={`Base64.strict_encode64("gid://demo/Article/1")         # => "Z2lkOi8vZGVtby9BcnRpY2xlLzE="
+Base64.strict_decode64("Z2lkOi8vZGVtby9BcnRpY2xlLzE=") # => "gid://demo/Article/1"
+
+verifier = ActiveSupport::MessageVerifier.new("secret")
+signed = verifier.generate("gid://demo/Article/1")
+# => "ImdpZDovL2RlbW8vQXJ0aWNsZS8xIg==--80cf00c3d45dffac1c47125e01a349106c4700a7"
+verifier.verified(signed)   # => "gid://demo/Article/1"
+
+# -- の前を Article/2 のものに書き換え、署名はそのままにする
+tampered = "ImdpZDovL2RlbW8vQXJ0aWNsZS8yIg==--80cf00c3d45dffac1c47125e01a349106c4700a7"
+verifier.verified(tampered) # => nil`} />
+      <p>
+        <code>--</code> の前が内容を（JSON の文字列にしてから）Base64 にしたもの、後ろが署名です。内容を書き換えると署名と合わなくなり、<code>verified</code> は nil を返しました。
+        秘密の鍵はサーバーにだけあるので、ブラウザーの側では合う署名を作れません。{cite}
       </p>
     </>,
     adapter: cite => <>
       <p>
-        ブラウザーの接続先が複数のPumaワーカーへ分かれていると、あるプロセスだけで更新情報を保持しても、別プロセスにつながった利用者には届きません。
-        メッセージをプロセス間へ渡す仕組みが必要です。サブスクリプションアダプターはActionCableをその受け渡しの仕組みへ接続します。
+        Puma のワーカーや Sidekiq は、それぞれ別のプロセスです（<ChapterLink n={23} section="process" />）。プロセスのメモリーは別々なので、あるプロセスが持っている購読の一覧に、別のプロセスからメッセージを入れることはできません。
+        プロセスの間でメッセージを配るには、どのプロセスからも接続できる別のプログラムを使います。Redis の Pub/Sub はその1つで、SUBSCRIBE でチャネルを購読した接続に、別の接続が PUBLISH で送ったメッセージが届きます。
       </p>
+      <Code lang="text" title="Redis の SUBSCRIBE と PUBLISH（redis-cli。Redis 8.10.3）" code={`（端末1）$ redis-cli SUBSCRIBE news
+subscribe
+news
+1
+message          ← 端末2の PUBLISH が届いた
+news
+hello
+
+（端末2）$ redis-cli PUBLISH news hello
+1                ← 届いた購読者の数
+（端末2）$ redis-cli PUBLISH nobody hello
+0                ← 購読者がいなければ、だれにも届かない`} />
       <p>
-        アプリのメソッドが同じでも、プロセス内だけで扱う保存先と、RedisやDBを介して共有する保存先では届く範囲が変わります。
-        通信の接続、購読の登録、プロセス間の通知を分けると、「自分の画面では更新するが、別の接続では更新しない」といった違いを調べられます。{cite}
+        PUBLISH したメッセージは、その時点で購読している接続にだけ届き、Redis には残りません。
+        サブスクリプションアダプターは ActionCable のブロードキャストと購読を、こうしたプロセスの外の仕組みにつなぐ部品です。{cite}
       </p>
     </>,
   },
 }
 
 export const explanation18: Explanations = {
-  sources: [guide('active_job_basics', 'Active Job Basics'), primarySource('Sidekiq — The Basics', 'Sidekiq', 'https://github.com/sidekiq/sidekiq/wiki/The-Basics')],
+  sources: [
+    primarySource('Sidekiq — The Basics', 'Sidekiq', 'https://github.com/sidekiq/sidekiq/wiki/The-Basics'),
+    primarySource('module JSON', 'Ruby Documentation', 'https://docs.ruby-lang.org/en/4.0/JSON.html', 'Ruby 4.0'),
+    primarySource('Redis sorted sets', 'Redis', 'https://redis.io/docs/latest/develop/data-types/sorted-sets/', 'Redis 8'),
+  ],
   sections: {
     overview: cite => <>
       <p>
-        同期処理は呼び出した仕事の完了を待ってから次へ進む形です。
-        記事を保存し、メール送信が終わるまで待ってから応答すると、利用者の待ち時間にメール送信の時間も含まれます。
-        保存後に実行する仕事を登録し、完了を待たずに応答できれば、その仕事を要求処理から分けられます。
+        ここまでの3つの節で、perform_later がジョブを Redis のキューに入れてすぐに戻り、別のプロセスの Sidekiq が取り出して perform を実行することを見ました。
+        ActiveJob が決めているのはジョブの書き方と投入の仕方で、ジョブを実際にどこに保存し、どのプロセスが実行するかは、アダプターで切り替えます。
+        デモの開発環境は <code>config.active_job.queue_adapter = :sidekiq</code> で Sidekiq と Redis を使い、Rails 8 の新規のアプリケーションの本番環境は Solid Queue（「Solid Queue との違い」の節）を使います。
       </p>
       <p>
-        後で実行する仕事の単位がジョブ、実行待ちを保持する仕組みがキューです。
-        キューへ登録する側と、取り出して実行する側を分けると、応答を返した後も仕事を進められます。
-        ActiveJobはジョブの書き方を共通にするRailsのAPIで、実際に保存・実行する仕組みはアダプターで選びます。
-      </p>
-      <Code lang="ruby" title="実行する処理と、実行を依頼する呼び出し" code={`class ArticleNoticeJob < ApplicationJob
-  def perform(article_id)
-    Rails.logger.info("article_id=#{article_id}")
-  end
-end
-
-ArticleNoticeJob.perform_later(1)`} />
-      <p>
-        performは実行する仕事の定義、perform_laterはその仕事の実行を依頼するメソッドです。
-        登録できたことと、実際の仕事が成功したことは別です。アダプターによって実行場所や保存先は変わるため、どこに登録し、どのプロセスが実行するかまで対応付けます。{cite}
+        Rails のプロセスと Sidekiq のプロセスはメモリーが別なので、Ruby のオブジェクトをそのまま渡せません。そこでジョブを JSON という文字列にして Redis に入れます。
+        JSON は文字列・数値・配列・Hash などを決まった形式の文字列で表す書き方で、Ruby 以外の言語からも読めます。{cite}
       </p>
     </>,
     serialize: cite => <>
       <p>
-        Webのプロセスとジョブを実行するプロセスは、同じRubyオブジェクトをそのまま共有しません。
-        仕事のクラス名や引数を、保存・転送できる形式へ変える必要があります。
-        この変換がシリアライズ、保存した形式から実行用の情報を取り出すのがデシリアライズです。
+        JSON で表せるのは、文字列・数値・true と false・null・配列・Hash（キーは文字列）だけです。Ruby の Symbol や Time のような値を JSON にして読み戻すと、別の型になります。
       </p>
+      <Code lang="ruby" title="JSON にして読み戻す（Ruby 4.0.9 で実行）" code={`require "json"
+data = { note: "メモ", tags: [:urgent], at: Time.utc(2026, 11, 16, 9, 0) }
+json = JSON.generate(data)
+# => {"note":"メモ","tags":["urgent"],"at":"2026-11-16 09:00:00 UTC"}
+JSON.parse(json)
+# => {"note" => "メモ", "tags" => ["urgent"], "at" => "2026-11-16 09:00:00 UTC"}`} />
       <p>
-        JSONは文字列・数値・配列・オブジェクトなどで構造化したデータを表す形式です。
-        記事のインスタンスを渡す場合も、メモリー上のすべての状態を同じまま転送するのではなく、GlobalIDなどの識別情報を使い、実行側でレコードを再取得します。
-        登録後に記事が更新・削除されていれば、実行時に見る状態も変わり得ます。{cite}
+        読み戻すと、Hash のキーの Symbol（<code>:note</code>）と配列の中の Symbol（<code>:urgent</code>）は文字列になり、Time は時刻を書いた文字列になりました。
+        perform に Symbol や Time や記事のオブジェクトを渡しても、実行する側で元の型に戻せるように、ActiveJob は JSON にする前に型の情報を書き足します。
+        値を保存・転送できる形に変えることをシリアライズ、元に戻すことをデシリアライズと呼びます。{cite}
       </p>
     </>,
     sidekiq: cite => <>
       <p>
-        SidekiqはRedisへ保存したジョブを取り出し、スレッドで実行する仕組みです。
-        Redisはデータの保存先であり、Rubyのperformを実行するのはSidekiqのプロセスです。
-        保存する側だけ起動していても、取り出すプロセスが動いていなければ仕事は進みません。
+        Redis は値をキー（名前）ごとに保存します。この節に出てくる <code>queue:default</code>・<code>schedule</code>・<code>retry</code> は、Sidekiq が使うキーの名前です。
+        値の種類には「キューとワーカー、Redis」の節で使ったリストのほかに、ZSET（ソート済みセット）があります。ZSET は値ごとにスコアという数値を持ち、スコアの小さい順に並びます。
       </p>
+      <Code lang="text" title="ZSET に入れて、スコアで取り出す（redis-cli。Redis 8.10.3）" code={`$ redis-cli ZADD demo18:at 1794813000 jobB 1794812800 jobA 1794813200 jobC
+(integer) 3
+$ redis-cli ZRANGE demo18:at 0 -1 WITHSCORES     # スコアの小さい順に並ぶ
+1) "jobA"
+2) "1794812800"
+3) "jobB"
+4) "1794813000"
+5) "jobC"
+6) "1794813200"
+$ redis-cli ZRANGEBYSCORE demo18:at -inf 1794812900   # スコアが 1794812900 以下のもの
+1) "jobA"`} />
       <p>
-        ActiveJob経由では、Sidekiqが実行できる形式のジョブの中に、ActiveJobのクラス名や引数などを保持します。
-        実行側はそれを読み、ActiveJobの処理を通じて対象のperformを呼びます。
-        2つのAPIが別々の仕事を実行するのではなく、1つの依頼を受け渡す層が増える関係です。{cite}
-      </p>
-    </>,
-    retry: cite => <>
-      <p>
-        外部サービスの一時的な失敗なら、少し待ってやり直すことで成功する場合があります。
-        再試行は失敗した仕事を再び実行する仕組みです。ただし、入力が不正なままなら、同じ仕事を何度実行しても成功しないことがあります。
-        最後まで成功しなかった仕事を確認・対処できるよう、失敗の記録も必要です。
-      </p>
-      <p>
-        再試行までの待ち時間を長くしていく方式では、すぐ実行するキューとは別に、予定時刻とジョブを保存します。
-        RedisのZSETは値とスコアを対応付け、スコア順に扱えるデータ構造です。
-        予定時刻をスコアに使えば、実行可能になった仕事を取り出してキューへ戻せます。{cite}
+        スコアに実行する時刻を入れておけば、「今の時刻以下のもの」を取り出すだけで、実行の時刻が来たジョブがわかります。
+        時刻は UNIX 時刻（1970年1月1日 0時（UTC）からの秒数）で表します。1794812800 は 2026年11月16日 7時6分40秒（UTC）です。{cite}
       </p>
     </>,
-    transaction: cite => <>
+    retry: () => <>
       <p>
-        新しい記事を作ったトランザクションの途中でジョブを登録すると、実行側が記事を読む時刻が問題になります。
-        ジョブを実行するプロセスは別のDB接続を使うため、Web側がまだコミットしていない行を読めないことがあります。
-        その後Web側がロールバックすれば、記事が存在しないまま仕事だけが登録されることもあります。
+        例外が起きたジョブを、時間をおいてもう一度実行することを再試行と呼びます。外部のサービスが一時的に応答しなかっただけなら、数秒後にやり直せば成功することがあります。
+        一方で、記事が削除されたために起きた例外は、何度やり直しても成功しません。再試行を使い切っても成功しなかったジョブは、原因を調べられるように Dead という置き場所に残します。
       </p>
       <p>
-        DBへの保存とジョブの登録が別の保存先なら、1つのDBトランザクションだけで両方を同時に確定できるとは限りません。
-        コミット後に登録する設定やコールバックを使う場合も、登録の失敗をどう扱うかは別に残ります。
-        登録時刻と実行時刻の間に、どの保存が確定している必要があるかを確認します。{cite}
+        この節の待ち時間には揺らぎ（jitter）が足されます。揺らぎは毎回変わる乱数の秒数で、同時に失敗したジョブでも、再実行の時刻がジョブごとにずれます。
+        <code>retry_on</code> と <code>discard_on</code> は、ジョブのクラスの中に書いて、例外の種類ごとに再試行するか捨てるかを決めるメソッドです（このような書き方は<ChapterLink n={5} section="class-macro" />）。
       </p>
     </>,
-    idempotency: cite => <>
+    transaction: () => <>
       <p>
-        仕事の途中で外部サービスへの依頼は成功し、その直後にプロセスが停止すると、実行完了の記録だけが残らないことがあります。
-        やり直した際に外部への依頼を重複させる可能性があります。再試行する仕組みでは、途中まで何が成功したかも考える必要があります。
+        トランザクションは複数の SQL をまとめて、全部を確定する（COMMIT）か全部を取り消す（ROLLBACK）かのどちらかにする仕組みです（<ChapterLink n={15} section="transaction" />）。
+        COMMIT する前の変更は、同じ接続からは見えますが、別の接続からは見えません。Sidekiq は Rails のプロセスとは別の接続でデータベースを読むので、Rails の側で COMMIT する前の記事を読めません。
       </p>
       <p>
-        冪等性は、同じ操作を繰り返しても結果が不正に重複しない性質です。
-        対象の状態を毎回同じ値へ更新する操作と、回数分だけ加算する操作では性質が違います。
-        業務上の依頼を識別するキーやDBの一意制約などで同じ仕事を識別できれば、重複実行への対処を設計できます。
-        単に「実行済みか確認してから実行する」だけでは、同時実行の競合も残り得ます。{cite}
+        また、Redis へのジョブの投入はデータベースのトランザクションとは別の処理なので、後で ROLLBACK しても、投入したジョブは取り消されません。記事が存在しないまま、ジョブだけが残ることになります。
+      </p>
+    </>,
+    idempotency: () => <>
+      <p>
+        同じ操作を何回行っても、1回行ったときと結果が同じになる性質を冪等（べきとう）と呼びます。
+        たとえば、記事の status を "published" にする更新は、2回実行しても結果は同じです。記事の送信回数の列に1を足す更新は、2回実行すると2増えます。メールの送信は2回実行すると2通届きます。
+        ジョブが2回実行されることがあるなら、後の2つのような処理には、2回目を防ぐ工夫が要ります。
+      </p>
+      <p>
+        この節の TERM と SIGKILL は、OS がプロセスに送る停止の合図（シグナル）です。TERM は後始末をしてから終わるよう求め、SIGKILL はその場で強制的に終わらせます（シグナルは<ChapterLink n={23} section="cluster" />）。
       </p>
     </>,
   },
@@ -262,55 +385,79 @@ export const explanation19: Explanations = {
   sections: {
     mailer: cite => <>
       <p>
-        メールには宛先・差出人・件名・本文などがあります。
-        ActionMailerではメーラーのアクションでこれらの値を用意し、テンプレートで本文を作ります。
-        記事の公開を知らせるなら、公開した記事を受け取り、そのタイトルやURLを本文に埋め込みます。
+        「メーラーでメールを作って送る」の節では、メーラーがアクションで値を用意し、テンプレートで本文を作ることを見ました。
+        この節では、メーラーのクラスがどのクラスを継承しているかをたどります。
+        <code>class ArticleMailer &lt; ApplicationMailer</code> のように書く継承では、親のクラスに定義したメソッドを子のクラスでも使えます。
+        コントローラーも <code>ArticlesController &lt; ApplicationController &lt; ActionController::Base</code> と親のクラスをたどれます（<ChapterLink n={10} section="hierarchy" />）。
       </p>
       <p>
-        コントローラーがHTMLレスポンスを作るのと同じように、メーラーも値をテンプレートへ渡します。
-        ただし、結果はメールのメッセージです。HTMLを表示できる受信環境向けの本文と、文字だけの本文を1通に含めることもできます。
-        複数の形式を含むメールをマルチパートと呼びます。
-      </p>
-      <p>
-        メールを開く時点ではWebの要求のホスト名が使えないため、リンクには完全なURLが必要です。
-        <code>article_url</code>がホストの設定を必要にするのは、<code>/articles/1</code>というパスだけでは、どのサイトを開くか決まらないためです。{cite}
+        メールの中のリンクには <code>http://localhost:3000/articles/1</code> のような、ホスト名から始まる完全な URL が必要です。
+        ブラウザーで開いたページなら、<code>/articles/1</code> のようなパスだけのリンクでも、ブラウザーが開いているサイトのホスト名を補います。
+        メールソフトで開いたメールにはそのようなサイトが無いので、パスだけではどのサイトを開くか決まりません。{cite}
       </p>
     </>,
     deliver: cite => <>
       <p>
-        メーラーの呼び出し、メッセージの生成、配送処理は別の段階です。
-        <code>ArticleMailer.with(article: article).published</code>は、記事を使って公開通知を作るためのオブジェクトを返します。
-        その時点で必ず外部へ送信しているわけではありません。
+        「メーラーでメールを作って送る」の節では、<code>deliver_now</code> がメールを作って SMTP サーバーに渡し終えるまで戻らないことを見ました。
+        Web の要求の処理の中でこれを呼ぶと、そのあいだ利用者は応答を待ちます。
+        <code>deliver_later</code> はメールを送る処理をジョブにして後で実行させます。
+        ジョブは後で実行する処理の単位で、引数と一緒に Redis などのキュー（実行を待つジョブを順に並べておく場所）に入れておき、Sidekiq などの別のプロセスが取り出して実行します（<ChapterLink n={18} section="overview" />）。
       </p>
       <p>
-        deliver_nowはその場でメーラーを実行して配送処理へ進みます。
-        deliver_laterは後で配送する仕事をActiveJobへ登録します。
-        後者では引数の保存やジョブ実行の段階を通るため、要求を処理したときと実際にメールを作るときでデータが変わる可能性があります。
-        配送処理の成功も、受信者がメールを読んだことを表すものではありません。{cite}
+        キューには文字列や数値のような値しか入れられないので、Article のオブジェクトはそのままでは入りません。
+        ActiveJob は ActiveRecord のオブジェクトを GlobalID という文字列に変えて保存し、ジョブを実行するときに、その文字列からデータベースの行を読み直します（<ChapterLink n={18} section="serialize" />）。
+      </p>
+      <Code lang="ruby" title="GlobalID の例（bin/rails runner で実行）" code={`gid = Article.find(1).to_global_id.to_s
+puts "to_global_id: #{gid}"
+a = GlobalID::Locator.locate(gid)
+puts "locate: #{a.class} id=#{a.id} title=#{a.title}"
+# => to_global_id: gid://demo/Article/1
+# => locate: Article id=1 title=変更後のタイトル`} />
+      <p>
+        この節のコードの <code>@mail_message ||= …</code> は、<code>@mail_message</code> が nil のときだけ右辺を実行して代入する書き方で、2回目からは代入済みの値を返します。
+        トランザクションは複数の SQL の変更をまとめて確定（COMMIT）するか取り消す仕組みで、COMMIT するまでは、ほかのデータベースの接続から変更が見えません（<ChapterLink n={15} section="transaction" />）。{cite}
       </p>
     </>,
     tables: cite => <>
       <p>
-        ファイルをモデルへ添付する場合、ファイル本体に加えて、名前・種類・サイズ、どのモデルに付いているかという情報が必要です。
-        ActiveStorageはその情報をDBで管理し、ファイル本体を設定したストレージへ保存します。
-        ストレージはローカルのディスクやS3など、データ本体を置く保存先です。
+        「ファイルのアップロードと保存先」の節で見たとおり、ActiveStorage はファイルの中身をストレージのサービスに保存し、どのファイルがどの記事のものかをデータベースに記録します。
+        記録には主に2つのテーブルを使います。active_storage_blobs の1行（blob）はファイル1つの情報で、保存先での名前、元のファイル名、種類、大きさなどを持ちます。
+        active_storage_attachments の1行（attachment）は、どのレコードにどの blob が付いているかを表します。
       </p>
       <p>
-        blobはファイルの情報、attachmentはモデルとblobの関連を表します。
-        この2つを分けることで、モデルのレコードとファイルを結び付けながら、ファイル本体の保存先を切り替えられます。
-        DBの行が存在することと、保存先にファイル本体が存在して取得できることは、別々に確認する対象です。{cite}
+        テーブルはマイグレーション（テーブルを作ったり変えたりする手順を書いた Ruby のファイル）を実行して作ります（<ChapterLink n={11} section="migration" />）。
+        モデルの <code>has_one_attached</code> は関連を定義します。関連は <code>article.comments</code> のように、あるレコードから関係するレコードをたどれるようにする定義です（<ChapterLink n={13} section="basics" />）。
+        添付したときの SQL の BEGIN から COMMIT までは1つのトランザクションで、COMMIT の後に実行するコールバック（after_create_commit）が解析のジョブを投入します（<ChapterLink n={14} section="after-commit" />）。{cite}
       </p>
     </>,
     serving: cite => <>
       <p>
-        ビューに添付画像のURLを書き込むだけでは、画像本体はHTMLに含まれません。
-        ブラウザーはそのURLへ別の要求を送り、画像を取得します。
-        Railsが受け取ってストレージのURLへリダイレクトする方式と、Railsがストレージから取得して代理で返す方式があります。
+        ビューに添付画像の URL を書いても、画像の中身は HTML に含まれません。ブラウザーは HTML を読んだ後、<code>img</code> タグの URL へ別の要求を送って画像を取得します。
+        ActiveStorage が出力する URL は Rails の URL で、Rails がその要求を受け取ってから、画像を返す方法を決めます。
       </p>
       <p>
-        前者ではブラウザーからストレージへの通信が発生し、後者ではファイルを返す経路にRailsが含まれます。
-        URLの期限やアクセスの確認、サーバーの転送量など、どこがファイルを返すかによって確認する点も変わります。
-        最初にHTMLへ出力したURLと、最終的に画像本体を返した接続先を分けて追えます。{cite}
+        リダイレクトは「別の URL を要求し直してほしい」と伝える応答です。状態コード 302 と、移動先の URL を入れた location ヘッダーを返すと、ブラウザーはその URL へ自動で要求を送り直します。
+        CDN は配信するファイルの複製を利用者に近い多数のサーバーに置いて返すサービスで、同じファイルへの要求を Rails まで届けずに返せます。
+        署名付きの ID の「署名」は、値が書き換えられていないことを確かめるための文字列です（<ChapterLink n={21} section="secrets" />）。{cite}
+      </p>
+    </>,
+    'direct-upload': cite => <>
+      <p>
+        「ファイルのアップロードと保存先」の節の方法では、ファイルの中身がいったん Rails に届き、Rails がそれを保存先へ送ります。
+        Nginx は Puma の前で要求を受け取るサーバーで、受け付ける要求の本文の大きさに上限があります（<ChapterLink n={24} section="body-size" />）。
+        直接アップロードでは、ブラウザーの JavaScript が保存先へファイルを送り、Rails には小さな JSON（データを文字列で表す形式）だけが届きます。PUT は URL の場所にデータを置く HTTP のメソッドです。
+      </p>
+      <p>
+        最初の要求の checksum はファイルの中身から計算した短い文字列です。中身が少しでも違えばほぼ確実に別の値になるので、受け取った側で同じ計算をして、ファイルが途中で壊れていないかを確かめられます。
+      </p>
+      <Code lang="ruby" title="ファイルの中身の checksum（Ruby 4.0.9 で実行）" code={`require "digest"
+data = File.binread("photo.png")
+puts Digest::MD5.base64digest(data)   # => MS9xedQxVkemMP9iRzm9RQ==
+data.setbyte(100, data.getbyte(100) ^ 1) # 100バイト目を1ビットだけ変える
+puts Digest::MD5.base64digest(data)   # => 8PX+MJaqDskOIzeHNUffAw==`} />
+      <p>
+        MD5 はこのような短い値を計算する方法の1つで、Base64 はバイト列を英数字と記号で表す形式です。
+        デモの cover.png の blob の checksum（It6Gda/qwhqLa3B3Vbi/Ow==）も、保存されたファイルの MD5 を Base64 で表した値と一致しました。{cite}
       </p>
     </>,
     variants: cite => <>
@@ -322,7 +469,7 @@ export const explanation19: Explanations = {
       <p>
         最初の取得時に変換する場合、その要求には画像の読み込みと加工の時間もかかります。
         2回目からは同じ変換済みの結果を利用できるため、初回と再利用時の動作を分けて見る必要があります。
-        変換用のライブラリや外部プログラムが必要なのも、DBに情報を保存するだけでは画像の加工自体を実行できないためです。{cite}
+        画像の加工そのものは、libvips や ImageMagick という画像を変換するためのライブラリやプログラムが行います。サーバーにそれらが入っていないと変換できません。{cite}
       </p>
     </>,
   },
@@ -331,70 +478,108 @@ export const explanation19: Explanations = {
 export const explanation20: Explanations = {
   sources: [primarySource('Equality matchers', 'RSpec', 'https://rspec.info/features/3-13/rspec-expectations/built-in-matchers/equality/', 'RSpec 3.13'), guide('testing', 'Testing Rails Applications')],
   sections: {
-    'first-spec': cite => <>
-      <p>
-        自動テストは用意した条件で処理を実行し、実際の結果を期待する条件と比較するコードです。
-        値の準備、対象の処理、結果の確認を分けると、何を検証しているかを追えます。
-        RSpecはRubyでテストを記述・実行するための道具です。DBを使わない小さな例なら、次の形になります。
-      </p>
-      <Code lang="ruby" title="入力・処理・結果の比較を分けたRSpec" code={`RSpec.describe "文字列の変換" do
-  it "英字を大文字にする" do
-    input = "rails"
-    actual = input.upcase
-    expect(actual).to eq("RAILS")
-  end
-end`} />
-      <p>
-        describeはテストのまとまり、itは1つの例です。expectへ実際の値を渡し、eqで期待する値と等しいかを調べます。
-        eqなど、期待する条件を表すものをマッチャーと呼びます。
-        Railsのモデルを検証する場合も同じ形で、モデルを準備し、valid?やsaveなどを呼び、その結果とerrorsなどを確認します。{cite}
-      </p>
-    </>,
     dsl: cite => <>
       <p>
-        RSpecはファイルを読んで例を登録する段階と、それぞれの例を実行する段階を分けています。
-        describeの本体にあるitは、すぐに対象の検証を終えるのではなく、後で実行する例を登録します。
-        beforeは各例の前の準備、letは名前を付けた値を必要になったときに用意する仕組みです。
+        Ruby のメソッドは引数のほかに <code>do … end</code> のブロックを受け取れます。<code>describe "…" do … end</code> や <code>it "…" do … end</code> も、文字列とブロックを受け取るメソッドの呼び出しです（<ChapterLink n={4} section="block-yield" />）。
+        RSpec はファイルを読む段階で、describe のブロックを実行して例を登録し、それぞれの例のブロックは後でまとめて実行します。
+        この節では、その登録で作られるものが、Ruby のクラスとメソッドであることを確かめます。
       </p>
       <p>
-        letで作る値は同じ例の中では初回の結果を再利用しますが、別の例では別に評価されます。
-        クラスを定義するようなDSLの登録時点と、テスト用のデータを作る実行時点を区別すると、どのputsが先に出るか、どの値が例の間で共有されないかを説明できます。{cite}
+        <code>let</code> は値を作るメソッドを定義します。作った値を覚えておき、2回目からは同じ値を返す書き方をメモ化と呼びます。Ruby では <code>@変数 ||= …</code> でよく書きます。
+      </p>
+      <Code lang="ruby" title="メモ化の例（Ruby 4.0.9 で実行）" code={`class Example
+  def article
+    @article ||= begin
+      puts "記事を作る"
+      "記事"
+    end
+  end
+end
+
+e = Example.new
+puts e.article
+puts e.article
+puts Example.new.article
+# => 記事を作る / 記事 / 記事 / 記事を作る / 記事`} />
+      <p>
+        同じインスタンスで2回呼ぶと「記事を作る」は1回だけ表示され、別のインスタンスではもう一度表示されました。let の値も1つの例の中では最初に作った値を返し、別の例では作り直されます。
+        出力の ancestors は、クラスが継承している親のクラスと include したモジュールを、メソッドを探す順に並べた配列です。{cite}
       </p>
     </>,
     types: cite => <>
       <p>
-        model specは主にモデルの振る舞い、request specはHTTP要求から応答まで、system specはブラウザーを使う画面操作を対象にします。
-        モデルのvalid?を直接呼ぶ場合と、フォームを送信して保存結果の画面まで確かめる場合では、通る層が異なります。
-        同じモデルを使っていても、すべてが同じ種類のテストではありません。
+        「テスト用の環境とデータベース」の節の例は、モデルのメソッドを直接呼んで確かめるテストでした。テストには、アプリケーションをどこから呼び出して確かめるかによっていくつかの種類があります。
+        Rails のアプリケーションは、Puma のような HTTP サーバーが受け取った要求を、Rack という決まった形のメソッドの呼び出し（<code>call(env)</code>）で受け取ります。
+        要求はまずミドルウェア（Cookie やセッションの処理など、要求の前後に処理を挟む部品）を順に通り、ルーティングでコントローラーのアクションに渡されます（<ChapterLink n={6} section="middleware" />）。
       </p>
       <p>
-        typeはその呼び出し方に必要な機能をRSpecへ組み込む指定です。
-        request specなら要求を送るヘルパー、system specならブラウザー操作の仕組みが必要です。
-        指定によってテストの文法が増えるだけでなく、モデルを直接操作するかHTTP要求を送るかといった、アプリの呼び出し方も変わります。{cite}
+        request spec は HTTP サーバーを使わずに、この Rack の呼び出しをテストの中から直接行います。
+        system spec は Capybara という道具でブラウザーを操作し、テストの中で起動した Puma に要求を送ります。既定のブラウザーは headless の Chrome（画面に表示せずに動く Chrome）です。
+        <code>type:</code> の指定で、それぞれの呼び出し方に必要なメソッドを持つモジュールが include されます。{cite}
       </p>
     </>,
     transaction: cite => <>
       <p>
-        あるテストで記事を作り、その記事が次のテストにも残ると、テストの実行順によって結果が変わる場合があります。
-        テスト用DBを開発・本番と分けたうえで、各例が残す変更も管理します。
-        トランザクションで例を囲み、最後にロールバックすれば、対象のDB変更を次の例へ残さずに済みます。
+        「テスト用の環境とデータベース」の節では、1つ目の例で作った記事が、2つ目の例では0件に戻っていました。これはデータベースのトランザクションを使っています。
+        トランザクションは複数の SQL の変更をまとめて扱う仕組みで、BEGIN で始め、COMMIT で変更を確定し、ROLLBACK で BEGIN からの変更をすべて取り消します（<ChapterLink n={15} section="transaction" />）。
+        テスト環境で、記事を作った後に ROLLBACK しました。
       </p>
+      <Code lang="ruby" title="RAILS_ENV=test bin/rails runner で実行（SQL のログを表示）" code={`puts "記事の数: #{Article.count}"
+ActiveRecord::Base.transaction do
+  Article.create!(title: "取り消す記事")
+  puts "トランザクションの中: #{Article.count}"
+  raise ActiveRecord::Rollback
+end
+puts "ROLLBACK の後: #{Article.count}"`} />
+      <Code lang="text" title="出力（INSERT の列を省略）" code={`記事の数: 0
+  TRANSACTION (0.3ms)  BEGIN
+  Article Create (0.9ms)  INSERT INTO \`articles\` (\`title\`, …) VALUES ('取り消す記事', …)
+トランザクションの中: 1
+  TRANSACTION (5.0ms)  ROLLBACK
+ROLLBACK の後: 0`} />
       <p>
-        ただし、この取り消しはDBのトランザクションの範囲です。
-        外部へ送信したメール、ファイル、別プロセスの仕事なども同じように戻るとは限りません。
-        例を囲むトランザクションの確定がない場合は、コミット後の処理を実運用と同じ条件で検証しているかも確認します。{cite}
+        SAVEPOINT はトランザクションの途中に付ける印で、ROLLBACK TO SAVEPOINT でその印まで戻せます（<ChapterLink n={15} section="nested" />）。
+        after_commit は COMMIT の後に自動で呼ばれるコールバックです（<ChapterLink n={14} section="after-commit" />）。
+        接続は Rails と MySQL の間の通信路で、ActiveRecord は接続プールから1本ずつスレッドに貸し出します（<ChapterLink n={15} section="pool" />）。{cite}
+      </p>
+    </>,
+    data: cite => <>
+      <p>
+        テストで使うデータを用意する方法には、fixtures と FactoryBot があります。
+        fixtures はテーブルの行を名前付きで YAML（字下げで階層を表すデータの書き方）のファイルに並べます。
+        FactoryBot はレコードの作り方（ファクトリー）を Ruby で定義しておき、例の中で <code>create</code> を呼んで作ります。
+      </p>
+      <Code lang="yaml" title="spec/fixtures/authors.yml（デモ）" code={`alice:
+  name: Alice
+  email: alice@example.com
+bob:
+  name: Bob
+  email: bob@example.com`} />
+      <Code lang="ruby" title="spec/factories/authors.rb（デモ）" code={`FactoryBot.define do
+  factory :author do
+    sequence(:name) { |n| "著者#{n}" }
+    sequence(:email) { |n| "author#{n}@example.com" }
+  end
+
+  factory :article do
+    title { "FactoryBot の記事" }
+    author
+  end
+end`} />
+      <p>
+        fixtures の alice は authors テーブルの1行になり、例の中では <code>authors(:alice)</code> で読めます。
+        ファクトリーの <code>sequence</code> は作るたびに番号を変えた値（著者1、著者2…）を作ります。article のファクトリーの <code>author</code> の行は、記事を作るときに著者も作ることを表します。{cite}
       </p>
     </>,
     'jobs-mail': cite => <>
       <p>
-        「ジョブを登録した」と「ジョブの仕事が成功した」は別の条件です。
-        テスト用アダプターは登録されたジョブを記録して、実行を分けて確認できるようにします。
-        まず登録するクラスや引数を確かめ、必要なら実行する仕事自体の結果も確認します。
+        ジョブは後で実行する処理の単位で、キューに入れておき、Sidekiq などの別のプロセスが取り出して実行します（<ChapterLink n={18} section="overview" />）。
+        ジョブをキューに入れる部品をアダプターと呼び、テスト環境ではジョブを実行せずに記録するだけのテスト用のアダプターを使います。
+        「ジョブを登録した」ことと「ジョブの処理が成功した」ことは別なので、登録したクラスと引数を確かめ、必要ならジョブを実行して結果も確かめます。
       </p>
       <p>
-        メールでも、送信予定を登録したこと、生成した宛先や本文、配送処理の結果を分けられます。
-        実際の外部送信に頼らず、テスト用の記録を確認することで、同じ条件を繰り返し実行できます。
-        どの段階まで進めるヘルパーを使ったかが、期待値の意味を決めます。{cite}
+        メールは「テスト用の環境とデータベース」の節で見た <code>delivery_method = :test</code> により、送らずに <code>ActionMailer::Base.deliveries</code> の配列に入ります。
+        <code>deliver_later</code> はメールを送るジョブを登録するだけなので（<ChapterLink n={19} section="deliver" />）、登録したことと、ジョブを実行して配列にメールが入ったことを分けて確かめます。{cite}
       </p>
     </>,
   },
@@ -405,136 +590,163 @@ export const explanation21: Explanations = {
   sections: {
     overview: cite => <>
       <p>
-        リクエストのパスやフォームの値、ヘッダーは、利用者が直接作って送ることができます。
-        画面に管理者用の選択肢がなくても、同じ名前のパラメーターを要求へ追加することは可能です。
-        アプリは、画面が作ったとおりの値だけが来るという前提で入力を扱えません。
-      </p>
-      <p>
-        認証は誰かを確かめる処理、認可はその人にその操作を許可するかを確かめる処理です。
-        ログインできた利用者でも、ほかの人の記事を更新してよいとは限りません。
-        また、入力項目の選択、SQLの安全な組み立て、HTMLの出力はそれぞれ別の場面で異なる問題に対処します。
-      </p>
-      <p>
-        Railsの対策を確認するには、データがどこから入り、どんな用途で使われるかを分けます。
-        Cookieから利用者を識別する段階、入力をモデルへ渡す段階、DBへ問い合わせる段階、画面へ出力する段階では、守る条件が違います。
-        ある対策が有効でも、別の段階の確認が不要になるわけではありません。{cite}
+        Rails のアプリケーションが要求を受け取ると、要求はまずミドルウェアを順に通ります。ミドルウェアは要求の前後に処理を挟む部品で、Cookie やセッションの読み書きもここで行います（<ChapterLink n={6} section="middleware" />）。
+        その後、ルーティングがコントローラーのアクションを呼び、アクションがモデルで SQL を実行し、ビューで HTML を作ります。
+        前の3つの節で見た攻撃は、それぞれ別の段階で起きます。CSRF はコントローラーが要求を受け付けるとき、一括代入はモデルに値を渡すとき、SQL インジェクションは SQL を作るとき、XSS はビューで HTML を作るときです。{cite}
       </p>
     </>,
     csrf: cite => <>
       <p>
-        Cookieはブラウザーが後の要求へ送る仕組みなので、Cookieが付いていることだけでは、利用者がその操作を意図したかまでは分かりません。
-        CSRFでは別のサイトのページから、ログイン済みの利用者のブラウザーに意図しない操作の要求を送らせます。
-        認証できることと、要求が意図した画面操作から来たと確認することは別です。
+        「Cookie・セッション・ログイン状態」の節で見たとおり、別のサイトのページから送らせた要求にも Cookie が付く場合があるので、Cookie だけでは利用者が自分で操作したかを判断できません。
+        CSRF のトークンはこのサイトのページにだけ埋め込んでおく値です。フォームの隠しフィールド（画面に表示されないが一緒に送られる <code>input type="hidden"</code> の欄）と、ページの先頭の meta タグに入れます。
+        別のサイトのページはこのサイトのページの中身を読めないので、正しいトークンを送れません。
+        オリジンは「通信方式・ホスト名・ポート番号」の組で、<code>http://localhost:3300</code> と <code>https://evil.example</code> は別のオリジンです。Origin ヘッダーは、要求を送ったページのオリジンをブラウザーが入れるヘッダーです。
       </p>
       <p>
-        CSRFトークンはフォームなどに含め、サーバーで要求の正当性を検証するための値です。
-        Originは要求の送信元のオリジンを示す情報です。オリジンは通信方式・ホスト・ポートの組み合わせで区別します。
-        Railsは、これらの情報を使って検証しますが、GETで状態を変えるなどの設計では、想定する保護の条件から外れる場合があります。{cite}
+        この節のコードの XOR は2つのバイト列をビットごとに比べ、違えば1、同じなら0にした新しいバイト列を作る計算で、同じ値で2回 XOR すると元に戻ります。Base64 はバイト列を英数字と記号だけの文字列で表す形式です。
+      </p>
+      <Code lang="ruby" title="XOR と Base64（Ruby 4.0.9 で実行）" code={`require "base64"
+require "securerandom"
+
+token = "SECRET-TOKEN".b                          # サーバーが覚えている値
+pad   = SecureRandom.random_bytes(token.bytesize) # 毎回作るランダムな値
+xor = ->(a, b) { a.bytes.zip(b.bytes).map { |x, y| x ^ y }.pack("C*") }
+
+masked = xor.(pad, token)
+puts "Base64 にした値: #{Base64.strict_encode64(pad + masked)}"
+puts "パッドでもう一度 XOR: #{xor.(pad, masked)}"
+# 1回目 => Base64 にした値: LuHNNcn7GoeWooYtfaSOZ4yvN9PZ6cNj / パッドでもう一度 XOR: SECRET-TOKEN
+# 2回目 => Base64 にした値: zJOu4FuNPCMhf8Tqn9btsh7ZEXduNIGk / パッドでもう一度 XOR: SECRET-TOKEN`} />
+      <p>
+        実行するたびに出力される値は変わりますが、パッドで XOR し直すと、どちらも同じ SECRET-TOKEN に戻りました。Rails のトークンも同じ方法で、表示のたびに違う値を出力します。
+        HTTPS は通信を暗号化した HTTP です。422 は要求の内容を処理できなかったことを表す状態コードです。{cite}
       </p>
     </>,
     xss: cite => <>
       <p>
-        HTMLの中では、<code>&lt;</code>や<code>&gt;</code>がタグを表す特別な意味を持ちます。
-        利用者が入力した文字列をそのままHTMLとして解釈させると、タグやスクリプトとして動く内容が混ざる場合があります。
-        XSSはそうした入力などを通じ、利用者のブラウザー上で意図しないスクリプトを実行させる攻撃です。
+        「入力が HTML や SQL として解釈される」の節では、<code>{'<%= %>'}</code> のエスケープで script タグを文字にできることを見ました。この節では、エスケープだけでは防げない場面を扱います。
+        <code>javascript:</code> で始まる URL はリンクを押したときに、その後ろの JavaScript をページの中で実行させる書き方です。<code>{'<a href="javascript:alert(1)">'}</code> を押すと alert が動きます。
       </p>
       <p>
-        エスケープは特別な意味を持つ文字を、文字として表示できる表現へ変える処理です。
-        Railsの通常のERB出力はこれを行います。html_safeは内容を検査して安全にする処理ではなく、エスケープせず出力できる文字列として扱うAPIです。
-        入力が信頼できるかは、この指定とは別の条件です。信頼できない入力に使うと保護を外してしまいます。{cite}
+        JSON はデータを文字列で表す形式で、<code>{'<script>'}</code> タグの中にデータを埋め込むときにも使います。
+        CSP（Content-Security-Policy）は、ページで実行してよいスクリプトの出どころをブラウザーに伝える応答ヘッダーです。nonce は応答ごとに作るランダムな値で、CSP に書いた nonce と同じ値の属性を持つ script タグだけが実行されます。{cite}
       </p>
     </>,
     sqli: cite => <>
       <p>
-        SQLには列名や条件を表す構造の部分と、比較対象の値があります。
-        <code>where(title: input)</code>のように値として渡す場合、入力はタイトルの値として処理されます。
-        一方、SQLの文字列へそのまま埋め込むと、引用符や条件式として解釈され、命令の構造を変えられる場合があります。
+        「入力が HTML や SQL として解釈される」の節では、入力を SQL の文字列に埋め込むと、条件の形が変わることを見ました。
+        プレースホルダーは SQL の中の <code>?</code> の位置に値を入れる書き方で、Rails が値を SQL の文字列として正しく書けるように変換してから入れます。この変換をクォートと呼びます。
       </p>
+      <Code lang="ruby" title="プレースホルダーで作られる SQL（bin/rails runner で実行）" code={`puts Article.where("title = ?", "Rails入門").to_sql
+puts Article.where("title = ?", "it's").to_sql
+# => SELECT \`articles\`.* FROM \`articles\` WHERE (title = 'Rails入門')
+# => SELECT \`articles\`.* FROM \`articles\` WHERE (title = 'it\\'s')`} />
       <p>
-        SQLインジェクションはこの構造と値の混同を利用する攻撃です。
-        バインドやアダプターの値の変換を使うことに加え、並び順の列名など、値のパラメーターとして扱えない指定は許可する選択肢を決めます。
-        ActiveRecordを使っていても、SQLの断片を手書きで作る場所では、どの部分へ入力を入れるかの確認が残ります。{cite}
+        値は <code>'</code> で囲まれ、値の中の <code>'</code> は <code>\'</code> に変えられて、文字列の終わりとは解釈されません。
+        LIKE は文字列の一部が一致する行を探す SQL の条件で、<code>%</code> は0文字以上の任意の文字、<code>_</code> は任意の1文字を表します。<code>title LIKE '%Rails%'</code> は Rails を含むタイトルに当てはまります。
+        <code>order</code> に渡すのは値ではなく列の名前なので、プレースホルダーでは渡せません。{cite}
       </p>
     </>,
     secrets: cite => <>
       <p>
-        署名は、内容が改ざんされていないかを確かめるための情報です。暗号化は鍵を使わずに内容を読めないようにする処理です。
-        読めるが変更すると検出できる値と、内容を隠す値では目的が違います。
-        Cookieや署名付きURLで、どちらの性質を使っているかを区別します。
+        署名は、値が書き換えられていないかを確かめるために値に付ける文字列で、秘密の鍵から計算します。暗号化は、鍵が無ければ中身を読めないように値を変換することです。
+        デモで、同じ値に署名した場合と、暗号化した場合を比べました。
+      </p>
+      <Code lang="text" title="bin/rails runner で、署名と暗号化を試した結果" code={`署名付きの値: InVzZXJfaWQ9NDIi--d4404caa7c690c747725a8c9a5b904fbddff0ef1
+-- の前を Base64 で戻す: "user_id=42"
+そのまま検証: "user_id=42"
+中身を書き換えて検証: nil
+暗号化した値: GRtZYzKXqKQkZROw--SmMmuaE3nDxLZsbV--XYjOKP3TZLL+YeFlZn2u/Q==
+復号: "user_id=42"`} />
+      <p>
+        署名付きの値は、<code>--</code> の前を Base64 で戻すと中身（user_id=42）が読めますが、中身を書き換えると署名が合わず、検証の結果は nil になりました。暗号化した値は、鍵が無ければ中身を読めません。
+        署名付きの Cookie は中身を読まれてもよい値に、暗号化した Cookie は中身を隠したい値に使います。
+        PBKDF2 は1つの秘密の値と用途ごとの文字列（ソルト）から、用途ごとに別の鍵を作る計算の方法です。
+        credentials は外部のサービスのパスワードなどを暗号化して config/credentials.yml.enc に保存する仕組みです。{cite}
+      </p>
+    </>,
+    'host-ssl-csp': cite => <>
+      <p>
+        Host ヘッダーは要求の宛先のホスト名を入れるヘッダーです。<code>curl http://127.0.0.1:3300/up</code> は <code>Host: 127.0.0.1:3300</code> を送ります。ほかのヘッダーと同じく、送る側が書き換えられます。
+        HTTPS は通信を暗号化した HTTP で、途中の経路で中身を読まれたり書き換えられたりするのを防ぎます。301 は「この URL は別の URL に移った」ことを表すリダイレクトの状態コードです。
       </p>
       <p>
-        secret_key_baseは、Railsがこうした用途の鍵を作るもとになる秘密の値です。
-        credentialsは外部サービスの認証情報などを暗号化して管理する仕組みです。
-        暗号化したファイルを保存することと、復号できる鍵を誰が利用できるかは別の管理対象になります。{cite}
+        HSTS（Strict-Transport-Security ヘッダー）は、「このサイトには今後、指定した期間は HTTPS だけで接続すること」をブラウザーに覚えさせるヘッダーです。Cookie の secure 属性はその Cookie を HTTPS の要求にだけ付けるようにする属性です。
+        ロードバランサーは複数のサーバーの前に置いて要求を振り分けるサーバーで、HTTPS の暗号化をそこで解いて、後ろのサーバーには HTTP で転送する構成がよく使われます（<ChapterLink n={25} section="tls-proto" />）。X-Forwarded-Proto は、元の要求が http か https かを後ろのサーバーに伝えるヘッダーです。{cite}
+      </p>
+    </>,
+    tools: cite => <>
+      <p>
+        ソースを解析するツールは、アプリケーションを動かさずに、コードの書き方から危険な箇所を探します。この章で見た、文字列を埋め込んだ SQL や <code>raw</code> の出力のような書き方を見つけられます。
+        gem に見つかったセキュリティ上の問題（脆弱性）は、公開された一覧にまとめられています。Gemfile.lock の gem のバージョンをその一覧と照らし合わせると、更新が必要な gem がわかります。{cite}
       </p>
     </>,
   },
 }
 
 export const explanation22: Explanations = {
-  sources: [guide('caching_with_rails', 'Caching with Rails: An Overview'), guide('debugging_rails_applications', 'Debugging Rails Applications — Logging'), primarySource('ActiveSupport::Notifications', 'Ruby on Rails API', 'https://api.rubyonrails.org/v8.0/classes/ActiveSupport/Notifications.html', 'Rails 8.0')],
+  sources: [guide('caching_with_rails', 'Caching with Rails: An Overview'), guide('debugging_rails_applications', 'Debugging Rails Applications — Logging'), primarySource('ActiveSupport::Notifications', 'Ruby on Rails API', 'https://api.rubyonrails.org/v8.0/classes/ActiveSupport/Notifications.html', 'Rails 8.0'), primarySource('module GC', 'Ruby Documentation', 'https://docs.ruby-lang.org/en/4.0/GC.html', 'Ruby 4.0')],
   sections: {
     breakdown: cite => <>
       <p>
-        ブラウザーが待つ応答時間には、Railsの処理だけでなく、通信や前段の待ち時間なども含まれます。
-        Railsのログの時間は、Railsが計測した区間の値です。
-        同じ要求の時間でも、測り始める位置と終わる位置が違えば一致しません。msはミリ秒で、1秒の1000分の1です。
-      </p>
-      <p>
-        遅さを調べるときは、DBへの問い合わせ、ビューの描画、Rubyの処理などに時間を分けます。
-        ただし、内側の処理時間が外側の時間に含まれる場合があるので、すべての数字を単純に足せるわけではありません。
-        同じ入力・データ量・環境で区間をそろえることが、変更前後の比較の前提になります。{cite}
+        「応答時間とログの Completed の行」の節では、Completed の行の時間が curl で測った応答時間より短いことを見ました。測り始める位置と終わる位置が違えば、同じ要求でも時間は一致しません。
+        この節では、Rails の中でその時間がどう測られているかを確かめます。
+        Rails は SQL の実行やテンプレートの描画のたびに、処理の名前と、始まった時刻・終わった時刻を記録したイベントを発行します。ログはこのイベントを受け取って書かれます。
+        イベントの中には別のイベントが入れ子になることがあり、たとえば描画のイベントの時間には、描画の途中で実行した SQL のイベントの時間も含まれます。そのため、すべての数字を単純に足せるわけではありません。{cite}
       </p>
     </>,
     notifications: cite => <>
       <p>
-        処理の時間を測るには、開始と終了、その処理を識別する名前や値が必要です。
-        すべての処理へログ出力を直接書く代わりに、実行した出来事をイベントとして通知し、計測する側が受け取る構成にできます。
-        通知を受け取る登録を購読、イベントに添えるデータをペイロードと呼びます。
+        処理の時間を測るには、開始と終了の時刻と、その処理を区別する名前が必要です。
+        すべての処理にログを書くコードを直接入れる代わりに、処理をする側は「この処理が終わった」という知らせ（イベント）を出すだけにして、時間を測ってログに書く側がそれを受け取る作りにできます。
+        イベントを受け取るように登録することを購読、イベントに添えるデータ（SQL の文字列やテンプレートのパスなど）をペイロードと呼びます。
+        SQL を実行する側と、その SQL をログに書いたり時間を集計したりする側を分けているので、同じイベントをログ・Server-Timing・監視のサービスなどが別々に受け取れます。{cite}
       </p>
+    </>,
+    'db-memory': cite => <>
       <p>
-        Notificationsのinstrumentは、対象の処理の前後を測ってイベントを発行します。
-        subscribeはどのイベントをどのブロックで処理するかを登録します。
-        SQLを実行する側と、そのSQLをログに残したり時間を集計したりする側を分けることで、同じイベントを複数の観測に利用できます。{cite}
+        Ruby のプログラムは文字列やレコードを作るたびにメモリーを使います。使わなくなったオブジェクトのメモリーを回収して再び使えるようにする処理を GC（ガベージコレクション）と呼び、Ruby が自動で実行します。
+        オブジェクトを多く作るほど、GC は多く動きます。
+      </p>
+      <Code lang="ruby" title="文字列を100万個作ったときの GC（Ruby 4.0.9 で実行）" code={`before = GC.count
+1_000_000.times { |i| "記事#{i}" } # 文字列を100万個作り、すぐに使わなくなる
+puts "GC が動いた回数: #{GC.count - before} 回"
+puts "GC にかかった時間の合計: #{GC.stat(:time)} ms"
+# => GC が動いた回数: 307 回
+# => GC にかかった時間の合計: 76 ms`} />
+      <p>
+        EXPLAIN は、MySQL が SQL をどう実行するか（どの索引を使うか）を表示する命令で、索引は、列の値から行をすばやく探すためにデータベースが持つ表です（<ChapterLink n={12} section="explain" />）。
+        ロックは、ある行を同時に1つの処理だけが書き換えられるようにする仕組みで、ほかの処理はロックが外れるまで待ちます（<ChapterLink n={15} section="pessimistic" />）。
+        YJIT は Ruby の JIT コンパイラーで、プログラムの実行中に、よく実行される Ruby のコードを CPU が直接実行できる命令に変換して、次からはそれを実行します。{cite}
       </p>
     </>,
     'http-cache': cite => <>
       <p>
-        前回受け取った記事の表示が変わっていなければ、同じHTMLをもう一度転送せずに済む場合があります。
-        HTTPキャッシュは保存した応答をいつ再利用してよいかを、要求と応答のヘッダーで扱います。
-        新鮮な間は再取得せずに使う方法と、サーバーへ変更の有無を確認して使う方法があります。
+        「作った結果を保存して使い回すキャッシュ」の節では、Rails の中で計算の結果を保存しました。HTTP キャッシュは、ブラウザーなどが受け取った応答を保存しておき、次の要求で使い回す仕組みです。
+        保存した応答をいつまで使ってよいか、使う前にサーバーに変更の有無を確かめるかを、要求と応答のヘッダーで伝えます。
       </p>
       <p>
-        ETagは応答の表現を識別する値、Last-Modifiedは変更日時です。
-        ブラウザーが前回の識別情報を送れば、サーバーは変化がない場合に304を返せます。
-        304には元の表示内容の本文を含めず、保存済みの本文を使うため、通信量を減らせます。
-        ただし、アプリが変更の有無を判断するための処理までなくなるとは限りません。{cite}
+        ETag は応答の内容を区別する値、Last-Modified は内容を最後に変更した日時です。
+        ブラウザーが前回の ETag を If-None-Match ヘッダーで送り、サーバーが内容は変わっていないと判断すると、本文の無い 304（Not Modified）を返します。ブラウザーは保存しておいた本文を使います。
+        送る量は減りますが、サーバーが変更の有無を判断するまでの処理は行われます。{cite}
       </p>
     </>,
     fragment: cite => <>
       <p>
-        画面の一部だけが頻繁に再利用される場合、その部分を描画した結果を保存できます。
-        記事カードのHTMLを保存しておけば、同じ内容の表示でモデルの値から再び組み立てる処理を減らせます。
-        これがフラグメントキャッシュです。
+        フラグメントキャッシュはページの一部を描画した結果の HTML を、キャッシュに保存して使い回す仕組みです。記事のタイトルの部分の HTML を保存しておけば、次の表示ではテンプレートの描画を省けます。
       </p>
       <p>
-        保存したHTMLが古くなったら、使わずに作り直す必要があります。
-        キーにレコードの更新情報などを含めると、内容が変わった際に別の保存結果を選べます。
-        利用者の権限や言語で表示が違う場合は、それもキーやキャッシュする範囲に関わります。同じキーで共有してよい出力かを先に確認します。{cite}
+        「作った結果を保存して使い回すキャッシュ」の節で見たとおり、保存した結果は元のデータが変わっても自動では変わりません。
+        フラグメントキャッシュでは、キーにレコードの id や更新日時を入れておき、記事が更新されたら別の値として扱って作り直します。
+        利用者の権限や言語で表示が違う部分は、同じキーで保存すると別の利用者に同じ HTML が出るので、キーに含めるか、キャッシュする範囲から外します。{cite}
       </p>
     </>,
     'rails-cache': cite => <>
       <p>
-        キャッシュのキーは保存した結果を区別する名前です。ヒットは再利用できる値が見つかること、ミスは見つからず元の計算や取得が必要になることを表します。
-        有効期限は保存した結果を再利用する時間の条件です。Rails.cacheは描画に限らず結果を保存・取得するAPIです。
-      </p>
-      <Code lang="ruby" title="保存先が有効な環境でのfetchの形" code={`Rails.cache.fetch("learning/greeting", expires_in: 5.minutes) do
-  "こんにちは"
-end`} />
-      <p>
-        対応する値がなければブロックを実行して保存し、有効な値があればそれを返します。
-        キャッシュストアはその保存をメモリー・Redis・DBなどへ実装するものです。
-        プロセス内のメモリーだけに保存する場合と、複数プロセスが同じ保存先を使う場合では、共有される範囲や再起動時の扱いが変わります。{cite}
+        「作った結果を保存して使い回すキャッシュ」の節では、<code>Rails.cache.fetch</code> のヒット・ミスと有効期限を見ました。この節では、値をどこに保存するか（キャッシュストア）を比べます。
+        Redis と Memcached はデータをメモリーに置いて読み書きさせる、データベースとは別のサーバーのプログラムです。
+        プロセスのメモリーに保存する MemoryStore では、値はそのプロセスの中にしかありません。Redis などの別のサーバーに保存すると、複数のプロセスやサーバーから同じ値を読めます。
+        TTL は Redis が値を消すまでの残り時間で、<code>expires_in</code> の値が使われます。{cite}
       </p>
     </>,
   },

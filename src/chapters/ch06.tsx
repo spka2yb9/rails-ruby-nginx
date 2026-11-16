@@ -8,11 +8,109 @@ const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const PUMA = 'https://github.com/puma/puma/blob/v8.0.2'
 const RACK = 'https://github.com/rack/rack/blob/v3.2.8'
 
-/* ---------- 図 6-1 Puma と Rack アプリケーションの分担 ---------- */
-function ServerAppFigure() {
+/* ---------- 図 6-1 HTTP の要求と応答の形 ---------- */
+function HttpMessageFigure() {
+  const part = (x: number, y: number, h: number, label: string) => (
+    <T x={x} y={y + h / 2} fs={12} bold>
+      {label}
+    </T>
+  )
   return (
     <Svg
       id="6-1"
+      w={780}
+      h={316}
+      label="HTTP の要求と応答は、どちらも1行目、ヘッダー、空行、本文の順に並ぶ。要求の1行目は要求行で、GET /articles/1 HTTP/1.1 のようにメソッド、パス、バージョンを並べる。ヘッダーは Host、User-Agent、Accept。GET の要求には本文が無い。応答の1行目は状態行で、HTTP/1.1 200 OK のようにバージョン、状態コード、語句を並べる。ヘッダーは content-type、content-length、set-cookie、x-request-id など。空行の後の本文は HTML。行の区切りは CR LF"
+    >
+      <T x={20} y={18} bold>
+        要求（ブラウザー・curl → サーバー）
+      </T>
+      {part(20, 34, 30, '要求行')}
+      <Box x={92} y={34} w={288} h={30} lines="GET /articles/1 HTTP/1.1" mono fs={11.5} fill="box5" align="start" />
+      {part(20, 72, 84, 'ヘッダー')}
+      <Box x={92} y={72} w={288} h={84} lines={['Host: 127.0.0.1:3300', 'User-Agent: curl/8.23.0', 'Accept: */*']} mono fs={11} align="start" />
+      {part(20, 164, 22, '空行')}
+      <Box x={92} y={164} w={288} h={22} lines="（ヘッダーの終わり）" fs={10.5} fill="bg" dashed />
+      {part(20, 194, 48, '本文')}
+      <Box x={92} y={194} w={288} h={48} lines="GET では本文が無い" fs={11} fill="bg" dashed />
+
+      <T x={410} y={18} bold>
+        応答（サーバー → ブラウザー・curl）
+      </T>
+      {part(410, 34, 30, '状態行')}
+      <Box x={482} y={34} w={288} h={30} lines="HTTP/1.1 200 OK" mono fs={11.5} fill="box5" align="start" />
+      {part(410, 72, 84, 'ヘッダー')}
+      <Box
+        x={482}
+        y={72}
+        w={288}
+        h={84}
+        lines={['content-type: text/html; charset=utf-8', 'content-length: 2787', 'set-cookie: _demo_session=…', 'x-request-id: b7fbc33e-…']}
+        mono
+        fs={10.5}
+        align="start"
+      />
+      {part(410, 164, 22, '空行')}
+      <Box x={482} y={164} w={288} h={22} lines="（ヘッダーの終わり）" fs={10.5} fill="bg" dashed />
+      {part(410, 194, 48, '本文')}
+      <Box x={482} y={194} w={288} h={48} lines={['<!DOCTYPE html>', '<html> …（2787 バイト）']} mono fs={11} fill="box4" align="start" />
+
+      <T x={20} y={270} fs={11.5} tone="muted">
+        要求行・状態行：メソッド・パス・バージョン／バージョン・状態コード・語句を空白で区切る
+      </T>
+      <T x={20} y={294} fs={11.5} tone="muted">
+        ヘッダーは「名前: 値」を1行に1つ。行の区切りは CR LF（\r\n）で、空行がヘッダーの終わりを表す
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 6-2 前後に処理を挟んだときの呼び出しの順 ---------- */
+function WrapOrderFigure() {
+  return (
+    <Svg
+      id="6-2"
+      w={780}
+      h={300}
+      label="wrapped は Announce A で、A の @app が Announce B、B の @app が app（lambda）を指す。呼ぶ側が A の call を呼ぶと、A は前の表示をしてから B の call を呼び、B は前の表示をしてから app を呼ぶ。app が [200, 本文] を返すと、B が後の表示をして返し、最後に A が後の表示をして呼ぶ側に返す。要求は外側から内側へ、応答は内側から外側へ順に処理される"
+    >
+      <Box x={10} y={104} w={110} h={80} lines={['呼ぶ側', 'wrapped.call']} fs={12} fill="bg" subTone="muted" />
+      <rect x={150} y={20} width={610} height={248} rx={8} fill="var(--fig-box)" stroke="var(--fig-line)" />
+      <T x={164} y={40} bold fs={12.5}>
+        Announce A（外側）
+      </T>
+      <rect x={290} y={56} width={456} height={176} rx={8} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      <T x={304} y={76} bold fs={12.5}>
+        Announce B
+      </T>
+      <Box x={440} y={96} w={290} h={120} lines={['③ app（lambda）', '本文を作り', '[200, 本文] を返す']} fs={12} fill="box5" subTone="muted" />
+
+      <Arrow x1={120} y1={124} x2={438} y2={124} />
+      <T x={164} y={112} fs={11.5}>
+        ① → A：前の表示
+      </T>
+      <T x={304} y={112} fs={11.5}>
+        ② → B：前の表示
+      </T>
+      <Arrow x1={438} y1={168} x2={122} y2={168} dashed />
+      <T x={304} y={188} fs={11.5}>
+        ④ ← B：後の表示
+      </T>
+      <T x={164} y={188} fs={11.5}>
+        ⑤ ← A：後の表示
+      </T>
+      <T x={20} y={286} fs={11.5} tone="muted">
+        実線：内側を呼ぶ　破線：戻り値を返す。要求は外側から、応答は内側から順に処理される
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 6-3 Puma と Rack アプリケーションの分担 ---------- */
+function ServerAppFigure() {
+  return (
+    <Svg
+      id="6-3"
       w={720}
       h={250}
       label="クライアントからの HTTP リクエストを Puma が受け取り、解析して env というハッシュを作る。Puma は Rails.application の call メソッドに env を渡して呼び出す。Rails.application は status、headers、body の3要素の配列を返す。Puma はそれを HTTP レスポンスとしてクライアントに書き出し、最後に body の close を呼ぶ"
@@ -51,7 +149,7 @@ function ServerAppFigure() {
   )
 }
 
-/* ---------- 図 6-2 ミドルウェアを1つ挟んだときの呼び出し順 ---------- */
+/* ---------- 図 6-4 ミドルウェアを1つ挟んだときの呼び出し順 ---------- */
 function MiddlewareSeqFigure() {
   const cols = [
     { x: 100, name: 'Puma' },
@@ -60,7 +158,7 @@ function MiddlewareSeqFigure() {
   ]
   return (
     <Svg
-      id="6-2"
+      id="6-4"
       w={680}
       h={330}
       label="Puma が Timing の call を呼ぶ。Timing は開始時刻を記録してから、内側のアプリの call を呼ぶ。アプリは status、headers、body を Timing に返す。Timing は経過時間を x-elapsed-ms ヘッダーとして headers に追加し、配列を Puma に返す。前処理は内側を呼ぶ前、後処理は内側から戻った後に行われる"
@@ -97,7 +195,7 @@ function MiddlewareSeqFigure() {
   )
 }
 
-/* ---------- 図 6-3 Rails のミドルウェアスタック（production） ---------- */
+/* ---------- 図 6-5 Rails のミドルウェアスタック（production） ---------- */
 function RailsStackFigure() {
   type Row = { name: string; role: string; dashed?: boolean; endpoint?: boolean }
   const groups: { label: string; rows: Row[] }[] = [
@@ -168,7 +266,7 @@ function RailsStackFigure() {
   const h = y + 8
   return (
     <Svg
-      id="6-3"
+      id="6-5"
       w={780}
       h={h}
       label="production 環境で bin/rails middleware が表示するミドルウェアを、上から順に役割ごとにまとめた図。TLS と静的ファイルの担当として AssumeSSL、SSL、Rack::Sendfile、Static。実行の管理とログとして Executor、Rack::Runtime、Rack::MethodOverride、RequestId、RemoteIp、SilenceRequest、Logger。例外の担当として ShowExceptions と DebugExceptions。状態とヘッダーの担当として Callbacks、Cookies、CookieStore、Flash、ContentSecurityPolicy::Middleware。応答の後処理として Rack::Head、ConditionalGet、ETag、TempfileReaper。最後にエンドポイントとしてルーティングの RouteSet がある。Flash は一覧には出るが、実際の呼び出しの連鎖には入らない"
@@ -214,11 +312,11 @@ function RailsStackFigure() {
   )
 }
 
-/* ---------- 図 6-4 reverse と inject による組み立て ---------- */
+/* ---------- 図 6-6 reverse と inject による組み立て ---------- */
 function BuildFigure() {
   return (
     <Svg
-      id="6-4"
+      id="6-6"
       w={740}
       h={300}
       label="ミドルウェアの配列が上から SSL、Logger、ETag の順で、エンドポイントが routes の場合の組み立て。配列を逆順にして、まず ETag.new(routes)、次に Logger.new(etag)、最後に SSL.new(logger) を作る。最後に作った SSL のインスタンスが Rails.application.app になり、SSL の @app が Logger、Logger の @app が ETag、ETag の @app が routes を指す入れ子の構造になる"
@@ -276,8 +374,10 @@ const ch06: Chapter = {
   part: 2,
   title: 'Rack とミドルウェア',
   summary:
-    'Web サーバーと Ruby のアプリケーションをつなぐ Rack の取り決め、ミドルウェアの形、Rails のミドルウェアスタックの中身と組み立て方を説明します。Puma から受け取ったリクエストが Rails のルーティングに届くまでの経路が分かります。',
+    'HTTP の要求と応答の形を curl で確かめ、Web サーバーとアプリケーションの分担と、要求と応答の間に処理を挟むミドルウェアの考え方を小さな Ruby のプログラムで動かしてから、Web サーバーと Ruby のアプリケーションをつなぐ Rack の取り決め、ミドルウェアの形、Rails のミドルウェアスタックの中身と組み立て方を説明します。Puma から受け取ったリクエストが Rails のルーティングに届くまでの経路が分かります。',
   goals: [
+    'HTTP の要求行・状態行・ヘッダー・本文と、状態コードの種類を説明できる',
+    'Web サーバーが要求を読み取って応答を書き出し、アプリケーションが応答の内容を作るという分担を説明できる',
     'Rack アプリケーションの条件（call(env) が3要素の配列を返す）を説明できる',
     'Puma と Rails の役割の分担と、env に入る主なキーを説明できる',
     'ミドルウェアの前処理・後処理と、内側を呼ばずに応答を返す書き方を理解する',
@@ -287,6 +387,339 @@ const ch06: Chapter = {
   ],
   prerequisites: [1, 4],
   sections: [
+    {
+      id: 'http-message',
+      title: 'HTTP の要求と応答',
+      body: (
+        <>
+          <p>
+            ブラウザーで記事のページの URL を開くと、ブラウザーはその URL のサーバーに接続し、「このパスのページを返してください」という内容を、決まった書き方の文字の並びで送ります。サーバーはページの HTML
+            などを同じように決まった書き方で送り返します。この書き方の取り決めを <Term en="Hypertext Transfer Protocol">HTTP</Term> と呼び、ブラウザーが送るものを要求（リクエスト）、サーバーが返すものを応答（レスポンス）と呼びます
+            <Ref n={17} />。
+          </p>
+          <p>
+            curl はコマンドラインから HTTP の要求を送るプログラムです。<code>-v</code> を付けると、送った要求を <code>{'>'}</code> で始まる行に、受け取った応答のヘッダーを <code>{'<'}</code>{' '}
+            で始まる行に表示します
+            <Ref n={19} />。デモのアプリケーションを開発環境の Puma で動かし（手元の 3300 番のポートで受け付けるようにしています）、記事1件のページを要求しました。
+          </p>
+          <Code
+            lang="text"
+            title="curl -v の出力（Rails 8.1.4.1・Puma 8.0.2。接続の情報と長い値の一部を省略）"
+            code={`
+$ curl -v http://127.0.0.1:3300/articles/1
+> GET /articles/1 HTTP/1.1
+> Host: 127.0.0.1:3300
+> User-Agent: curl/8.23.0
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< x-frame-options: SAMEORIGIN
+< x-xss-protection: 0
+< x-content-type-options: nosniff
+< x-permitted-cross-domain-policies: none
+< referrer-policy: strict-origin-when-cross-origin
+< link: </assets/application-8b441ae0.css>; rel=preload; as=style; nopush
+< content-type: text/html; charset=utf-8
+< vary: Accept, X-Requested-With
+< etag: W/"52704b7419f5cd12be2592943966f5e9"
+< cache-control: max-age=0, private, must-revalidate
+< set-cookie: _demo_session=DBZIxnM%2Boy77…（省略）; path=/; httponly; samesite=lax
+< x-request-id: b7fbc33e-a5c1-4de7-ab20-0a3f1ef474c0
+< x-runtime: 0.089790
+< server-timing: start_processing.action_controller;dur=0.03, …（省略）
+< content-length: 2787
+<
+<!-- BEGIN app/views/layouts/application.html.erb
+--><!DOCTYPE html>
+<html>
+  <head>
+    <title>Demo</title>
+（以下省略）
+`}
+          />
+          <p>
+            <code>{'>'}</code> の行が curl の送った要求です。1行目を要求行と呼び、メソッド（<code>GET</code>）、パス（<code>/articles/1</code>）、HTTP のバージョン（<code>HTTP/1.1</code>
+            ）を空白で区切って並べます
+            <Ref n={16} />。メソッドは要求の種類で、GET はページなどを取得するとき、POST はフォームに入力した内容などを送るときに使います。2行目からはヘッダーで、「名前: 値」の形で1行に1つずつ情報を書きます。Host
+            は接続先のホスト名とポート番号、User-Agent は要求を送ったプログラム、Accept は受け取りたい本文の種類（<code>*/*</code> はどれでもよいという意味）です。ヘッダーの後の空行で要求が終わります。GET
+            の要求には本文がありません。
+          </p>
+          <p>
+            <code>{'<'}</code> の行が応答です。1行目を状態行と呼び、バージョン、状態コード（<code>200</code>）、状態コードの意味を表す語句（<code>OK</code>
+            ）を並べます。続くヘッダーで、本文についての情報などを伝えます。content-type は本文の種類で、ここでは文字コードが UTF-8 の HTML です。content-length は本文のバイト数です。set-cookie
+            はブラウザーに値を保存させるヘッダーで、ブラウザーは次の要求から cookie ヘッダーでその値を送り返します。Rails はこの値で同じブラウザーからの要求を見分けます（
+            <ChapterLink n={10} section="cookies-session" />
+            ）。etag は本文の内容から作った識別子で、内容が前と変わったかを調べるのに使います（<ChapterLink n={22} section="http-cache" />
+            ）。空行の後が本文で、記事のページの HTML です。本文の先頭のコメントは、開発環境の Rails がどのテンプレート（HTML のひな形のファイル）から作った部分かを書き込んだものです。
+          </p>
+          <p>
+            ヘッダーの名前は大文字と小文字を区別しません
+            <Ref n={17} />。curl は <code>Host</code> のように先頭を大文字で書き、Rails は <code>content-type</code> のようにすべて小文字で書いています。小文字で書く理由は「Rack 3 での変更点」の節で扱います。
+          </p>
+          <p>本文のある要求も送りました。curl の <code>-d</code> に渡した値は、要求の本文として送られます。</p>
+          <Code
+            lang="text"
+            title="本文のある要求（応答のヘッダーの一部を省略）"
+            code={`
+$ curl -v -X POST http://127.0.0.1:3300/probe/echo/hello -d 'body=Hi'
+> POST /probe/echo/hello HTTP/1.1
+> Host: 127.0.0.1:3300
+> User-Agent: curl/8.23.0
+> Accept: */*
+> Content-Length: 7
+> Content-Type: application/x-www-form-urlencoded
+>
+< HTTP/1.1 200 OK
+< content-type: application/json; charset=utf-8
+< content-length: 66
+<
+{"body":"Hi","controller":"probe","action":"echo","title":"hello"}
+`}
+          />
+          <p>
+            要求のヘッダーに、本文の長さ（Content-Length の7バイト）と形式（Content-Type。フォームの入力と同じ「名前=値」の形）が加わりました。<code>/probe/echo</code>{' '}
+            は受け取った値をそのまま JSON で返すように作った検証用のアクションで、応答の本文から、サーバーが本文の <code>body=Hi</code> を受け取ったことが分かります。
+          </p>
+          <p>
+            状態コードは3桁の数字で、最初の桁が種類を表します
+            <Ref n={17} />。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>状態コード</th>
+                  <th>種類</th>
+                  <th>例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1xx</td>
+                  <td>処理の途中経過の通知</td>
+                  <td>本書ではほとんど扱わない</td>
+                </tr>
+                <tr>
+                  <td>2xx</td>
+                  <td>成功</td>
+                  <td>200 OK：要求どおりに処理した</td>
+                </tr>
+                <tr>
+                  <td>3xx</td>
+                  <td>リダイレクトなど（別の URL を開き直させる）</td>
+                  <td>302 Found：location ヘッダーの URL へ移動させる。304 Not Modified：前に受け取った内容から変わっていない</td>
+                </tr>
+                <tr>
+                  <td>4xx</td>
+                  <td>要求の側の誤り</td>
+                  <td>404 Not Found：そのパスに対応するものが無い</td>
+                </tr>
+                <tr>
+                  <td>5xx</td>
+                  <td>サーバーの側の誤り</td>
+                  <td>500 Internal Server Error：処理の途中で例外が起きた</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            デモで、ルートが無いパスと、例外を起こすように作った検証用のアクションを要求すると、それぞれ 404 と 500 が返りました（<code>{"-w '%{http_code}'"}</code> は状態コードだけを表示させるオプションです）。
+          </p>
+          <Code
+            lang="text"
+            code={`
+$ curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3300/nothing
+404
+$ curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3300/probe/boom
+500
+`}
+          />
+          <p>
+            要求も応答も1行目、ヘッダー、空行、本文の順に並んだ文字の並びです（図 6-1）。ネットワークからこの文字の並びを読み取り、応答の文字の並びを書き出すのは、Rails ではなく Web サーバーの Puma
+            です。次の節ではその仕事を小さな Ruby のプログラムで確かめます。
+          </p>
+          <Figure n="6-1" title="HTTP の要求と応答の形" caption="上の curl -v の出力から主な行を抜き出した図。">
+            <HttpMessageFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'web-server',
+      title: 'Web サーバーが受け持つこと',
+      body: (
+        <>
+          <p>
+            <ChapterLink n={23} section="app-server" />
+            で見たとおり、<code>bin/rails server</code> は Puma という Web サーバーを起動します。Puma はポート（同じコンピューターで動く複数のプログラムを区別する通信用の番号。Rails の既定は
+            3000）で接続を待ち、届いた要求を Rails に渡し、Rails が作った応答を送り返します。ここでは、Web サーバーの仕事のうち、要求を読み取って応答を書き出す部分を、Ruby の標準ライブラリだけで書いて動かします。
+          </p>
+          <Code
+            lang="ruby"
+            title="tiny_server.rb"
+            code={`
+require "socket"
+$stdout.sync = true                   # puts の表示をすぐ画面に出す
+
+server = TCPServer.new(8000)          # 8000 番ポートで接続を待つ
+puts "8000 番ポートで待っています"
+
+loop do
+  client = server.accept              # 接続が来るまでここで止まる
+  request_line = client.gets          # 1行目（要求行）を読む
+  puts "受け取った要求行: #{request_line.inspect}"
+  while (line = client.gets) != "\\r\\n" # 空行までがヘッダー
+    puts "受け取ったヘッダー: #{line.inspect}"
+  end
+
+  method, path, _version = request_line.split(" ")
+  body = "#{method} #{path} を受け取りました\\n"
+  client.write "HTTP/1.1 200 OK\\r\\n"
+  client.write "content-type: text/plain; charset=utf-8\\r\\n"
+  client.write "content-length: #{body.bytesize}\\r\\n"
+  client.write "\\r\\n"
+  client.write body
+  client.close
+end
+`}
+          />
+          <p>
+            1つの端末で <code>ruby tiny_server.rb</code> を実行したまま、別の端末から curl で要求を送りました。<code>-i</code> は応答のヘッダーも表示させるオプションです。
+          </p>
+          <Code
+            lang="text"
+            title="curl の出力と、tiny_server.rb の表示（Ruby 4.0.9）"
+            code={`
+$ curl -i "http://127.0.0.1:8000/articles/1?page=2"
+HTTP/1.1 200 OK
+content-type: text/plain; charset=utf-8
+content-length: 48
+
+GET /articles/1?page=2 を受け取りました
+
+（tiny_server.rb を実行した端末）
+8000 番ポートで待っています
+受け取った要求行: "GET /articles/1?page=2 HTTP/1.1\\r\\n"
+受け取ったヘッダー: "Host: 127.0.0.1:8000\\r\\n"
+受け取ったヘッダー: "User-Agent: curl/8.23.0\\r\\n"
+受け取ったヘッダー: "Accept: */*\\r\\n"
+`}
+          />
+          <p>
+            <code>TCPServer.new(8000)</code> は、8000 番ポートで接続を受け付ける準備をします。<code>accept</code>{' '}
+            は接続が来るまで待ち、来たら、その接続を読み書きするためのオブジェクトを返します。このオブジェクトはソケット（ネットワークの接続を読み書きするために OS が用意するもの）を表します
+            <Ref n={18} />。<code>gets</code> で1行ずつ読むと、前の節の curl -v の表示と同じ要求行とヘッダーが届いていました。行の終わりの <code>\r\n</code>（CR と LF の2文字）は、HTTP
+            で決められた行の区切りで、<code>\r\n</code> だけの空行がヘッダーの終わりです
+            <Ref n={16} />。応答も同じ形で、状態行、ヘッダー、空行、本文の順に <code>write</code> で書き出し、<code>close</code> で接続を閉じました。
+          </p>
+          <p>
+            このプログラムのうち、応答の内容を決めているのは <code>body</code> を作る1行だけです。ほかの行はどのページを返すときも変わりません。実際の Web サーバーはほかにも次のことを受け持ちます。
+          </p>
+          <ul>
+            <li>
+              複数の要求を同時に処理する。Puma はスレッド（1つのプログラムの中で並行して進む処理の流れ）を使います（<ChapterLink n={23} section="thread" />
+              ）。
+            </li>
+            <li>POST などの本文のある要求で、content-length の長さだけ本文を読む。</li>
+            <li>1つの接続で続けて届く要求を、接続を閉じずに処理する（keep-alive）。</li>
+            <li>形式の誤った要求に、400 などの状態コードで応答する。</li>
+          </ul>
+          <p>
+            Rails はこれらを自分では行いません。Puma から受け取った要求の内容をもとに、状態コード・ヘッダー・本文を作ることだけを受け持ちます。小さなサーバーで言えば、<code>body</code>{' '}
+            を作る1行を、別のオブジェクトに任せる形です。Web サーバーとアプリケーションをこのように分けておくと、同じ Rails のアプリケーションを Puma 以外の Web サーバーでも動かせます。分けたことで、要求と応答の間に別の処理を挟むこともできるようになります。次の節でその書き方を見ます。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'wrap',
+      title: '要求と応答の間に処理を挟む',
+      body: (
+        <>
+          <p>
+            「HTTP の要求と応答」の節の応答には、<code>x-request-id</code> と <code>x-runtime</code> というヘッダーがありました。x-request-id は要求ごとに振った識別子、x-runtime
+            は処理にかかった秒数です。この2つは、記事のページを作る ArticlesController ではなく、Rails がコントローラーの前後で実行する処理が付けたものです。ルートが無いため、コントローラーを通らずに 404
+            になった <code>/nothing</code> の応答にも付いています。
+          </p>
+          <Code
+            lang="text"
+            title="curl -si の出力（ヘッダーの一部を抜き出し、本文を省略）"
+            code={`
+$ curl -si http://127.0.0.1:3300/nothing
+HTTP/1.1 404 Not Found
+content-type: text/html; charset=UTF-8
+x-request-id: 57c6f87a-7e4b-4640-b078-30d0db13584c
+x-runtime: 0.094512
+content-length: 58166
+`}
+          />
+          <p>
+            このように、アプリケーションの本体を呼ぶ前と後に、決まった処理を入れたいことがあります。要求の記録、処理時間の計測、ログインしていない要求を断る処理などです。Ruby では、本体と同じ呼び出し方ができるオブジェクトを作り、本体の代わりにそのオブジェクトを呼ばせると、呼ぶ側を変えずに処理を足せます。Rack
+            を使わない Ruby だけの例で確かめます。
+          </p>
+          <Code
+            lang="ruby"
+            title="wrap.rb"
+            code={`
+# 応答を作る処理。要求（ハッシュ）を受け取り、[状態コード, 本文] を返す
+app = ->(request) {
+  puts "    アプリ: #{request[:path]} の本文を作る"
+  [200, "#{request[:path]} のページ"]
+}
+
+# 内側の処理を呼ぶ前と後に、名前を表示する
+class Announce
+  def initialize(name, app)
+    @name = name
+    @app = app   # 内側の処理
+  end
+
+  def call(request)
+    puts "→ #{@name}: 要求を受け取った"
+    status, body = @app.call(request)   # 内側を呼ぶ
+    puts "← #{@name}: 状態コード #{status} を返す"
+    [status, body]
+  end
+end
+
+wrapped = Announce.new("A", Announce.new("B", app))
+p wrapped.call({ method: "GET", path: "/articles/1" })
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+→ A: 要求を受け取った
+→ B: 要求を受け取った
+    アプリ: /articles/1 の本文を作る
+← B: 状態コード 200 を返す
+← A: 状態コード 200 を返す
+[200, "/articles/1 のページ"]
+`}
+          />
+          <p>
+            <code>app</code> は lambda（<code>{'->(引数) { 処理 }'}</code> で作り、<code>call</code> で呼び出せる処理のまとまり。<ChapterLink n={4} section="proc-lambda" />
+            ）で、要求を表すハッシュを受け取り、<code>[状態コード, 本文]</code> の配列を返します。Announce も <code>call(request)</code> で呼べて、同じ形の配列を返します。そのため、呼ぶ側の{' '}
+            <code>wrapped.call(...)</code> は、相手が app なのか Announce なのかを区別せずに呼べます。Announce は <code>new</code> のときに内側の処理を受け取って <code>@app</code>{' '}
+            に入れ、<code>call</code> の中で <code>@app.call(request)</code> の前と後に表示をします。<code>status, body = ...</code>{' '}
+            は返ってきた配列の要素を前から順に2つの変数に入れる書き方（多重代入）です。
+          </p>
+          <p>
+            表示の順を見ると、A の「→」、B の「→」、アプリ、B の「←」、A の「←」の順でした。外側の A が内側の B を呼び、B が app を呼ぶので、要求は外側から順に、応答は内側から順に処理されます（図
+            6-2）。Rails の x-request-id や x-runtime も、この形でコントローラーより外側に置かれた処理が付けています。アプリケーションの本体を内側に持ち、その前後で処理を行うオブジェクトを
+            <Term en="middleware">ミドルウェア</Term>と呼びます。
+          </p>
+          <Figure n="6-2" title="前後に処理を挟んだときの呼び出しの順" caption="wrap.rb の実行結果をもとにした模式図。">
+            <WrapOrderFigure />
+          </Figure>
+          <p>
+            この例の request のハッシュと <code>[状態コード, 本文]</code> の配列は、この節のために決めた形です。Puma と Rails、それにいろいろな gem（インストールして使う Ruby のライブラリ）のミドルウェアを組み合わせるには、受け渡す値の形を全員で同じにしておく必要があります。その形を決めたものが
+            Rack です。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'rack-contract',
       title: 'Rack の取り決め',
@@ -302,11 +735,11 @@ const ch06: Chapter = {
               と呼ばれ、HTTP リクエストの内容を表すハッシュです。
             </li>
             <li>
-              <code>call</code> は、ステータス・ヘッダー・本文（body）の3要素からなる配列を返します。この配列は凍結（freeze）されていてはいけません。
+              <code>call</code> は、ステータス・ヘッダー・本文（body）の3要素からなる配列を返します。この配列は凍結（freeze）されていてはいけません。凍結は freeze メソッドでオブジェクトを変更できない状態にすることです。
             </li>
           </ul>
           <p>
-            <code>call</code> を持っていればよいので、lambda もそのまま Rack アプリケーションになります。次の <code>config.ru</code> は、リクエストのメソッドとパスを返すだけのアプリケーションです。
+            <code>call</code> を持っていればよいので、lambda もそのまま Rack アプリケーションになります。次の <code>config.ru</code>（Web サーバーが起動時に読み込む、Rack アプリケーションを指定する Ruby のファイル）は、リクエストのメソッドとパスを返すだけのアプリケーションです。
           </p>
           <Code
             lang="ruby"
@@ -317,7 +750,7 @@ run ->(env) {
 }
 `}
           />
-          <p>env には CGI の仕様に由来する大文字のキーと、Rack が定めた rack. で始まるキーが入ります。主なものを表にまとめます。</p>
+          <p>env には CGI（Web サーバーが別のプログラムを起動して要求の内容を渡すための、古くからある取り決め）の仕様に由来する大文字のキーと、Rack が定めた rack. で始まるキーが入ります。主なものを表にまとめます。</p>
           <div className="table-wrap">
             <table>
               <thead>
@@ -404,7 +837,7 @@ run ->(env) {
                   <td>
                     <code>rack.input</code>
                   </td>
-                  <td>リクエスト本文を読む IO のようなオブジェクト（任意）</td>
+                  <td>リクエスト本文を読む IO（ファイルなどを読み書きする Ruby のクラス）のようなオブジェクト（任意）</td>
                   <td>POST の本文</td>
                 </tr>
                 <tr>
@@ -418,7 +851,7 @@ run ->(env) {
             </table>
           </div>
           <p>
-            <code>rack.url_scheme</code> について、仕様は「最後の区間の接続に合わせる」としています。ロードバランサーまでが HTTPS で、その先の Puma までが HTTP の場合、ここには <code>"http"</code>{' '}
+            <code>rack.url_scheme</code> について、仕様は「最後の区間の接続に合わせる」としています。ロードバランサー（受けた要求を複数のサーバーに振り分ける仕組み）までが HTTPS（通信を暗号化した HTTP）で、その先の Puma までが HTTP の場合、ここには <code>"http"</code>{' '}
             が入ります
             <Ref n={1} />。Rails がこれを HTTPS と扱うための設定は、<ChapterLink n={25} />で説明します。
           </p>
@@ -430,7 +863,7 @@ run ->(env) {
             </li>
             <li>
               body は <code>each</code> か <code>call</code> に応答するオブジェクトです。<code>each</code> で文字列を順に渡す形を Enumerable Body、<code>call</code>{' '}
-              にストリームを渡して書き込ませる形を Streaming Body と呼びます。body が <code>close</code> に応答する場合、サーバーは送信後に必ず <code>close</code> を呼びます。
+              にストリーム（書き込んだ順にクライアントへ送られる出力先）を渡して書き込ませる形を Streaming Body と呼びます。body が <code>close</code> に応答する場合、サーバーは送信後に必ず <code>close</code> を呼びます。
             </li>
           </ul>
           <p>
@@ -448,7 +881,7 @@ run ->(env) {
             Rack の仕様があるため、Web サーバーとアプリケーションは互いの実装を知らずに組み合わせられます。Puma の側は、通信の接続口であるソケットから HTTP リクエストを読んで解析し、env を作って{' '}
             <code>app.call(env)</code> を呼び、返ってきた配列を HTTP の応答として書き出します。Rails の側は、env を受け取って3要素の配列を返すことだけを担当します。
           </p>
-          <Figure n="6-1" title="Puma と Rack アプリケーションの分担" caption="模式図。HTTP の解析と書き出しは Puma が行い、Rails は Ruby のオブジェクトだけを扱う。">
+          <Figure n="6-3" title="Puma と Rack アプリケーションの分担" caption="模式図。HTTP の解析と書き出しは Puma が行い、Rails は Ruby のオブジェクトだけを扱う。">
             <ServerAppFigure />
           </Figure>
           <p>Puma のソースでは、アプリケーションを呼ぶ部分は次のようになっています。</p>
@@ -536,7 +969,10 @@ use Timing
 run ->(env) { [200, { "content-type" => "text/plain" }, ["#{env["REQUEST_METHOD"]} #{env["PATH_INFO"]}?#{env["QUERY_STRING"]}\\n"]] }
 `}
           />
-          <p>Puma 8.0.2 で起動してリクエストを送ると、次の応答が返りました。</p>
+          <p>
+            config.ru のあるディレクトリで puma コマンドを実行すると、Puma はこのファイルを読み込み、既定の 9292 番ポートで要求を待ちます
+            <Ref n={10} />。Puma 8.0.2 で起動してリクエストを送ると、次の応答が返りました。
+          </p>
           <Code
             lang="text"
             code={`
@@ -553,11 +989,11 @@ GET /hello?x=1
             <code>x-elapsed-ms</code> は Timing が追加したヘッダー、<code>content-length</code> は Puma が本文の長さから付けたヘッダーです。<code>use</code> と <code>run</code> は{' '}
             <code>Rack::Builder</code> のメソッドで、<code>use Timing</code> は「<code>run</code> に渡したアプリケーションを <code>Timing.new</code> で包む」という意味になります。
           </p>
-          <Figure n="6-2" title="ミドルウェアを1つ挟んだときの呼び出し順" caption="図 6-1 の Rails.application の位置に、Timing とアプリ本体が入った状態。">
+          <Figure n="6-4" title="ミドルウェアを1つ挟んだときの呼び出し順" caption="図 6-3 の Rails.application の位置に、Timing とアプリ本体が入った状態。">
             <MiddlewareSeqFigure />
           </Figure>
           <p>
-            図 6-2 のように、<code>@app.call(env)</code> より前に書いた処理はリクエストが内側へ進むときに、後に書いた処理は応答が外側へ戻るときに実行されます。ミドルウェアが何段も重なると、リクエストは外側から順に、応答は内側から順に処理されます。
+            図 6-4 のように、<code>@app.call(env)</code> より前に書いた処理はリクエストが内側へ進むときに、後に書いた処理は応答が外側へ戻るときに実行されます。ミドルウェアが何段も重なると、リクエストは外側から順に、応答は内側から順に処理されます。
           </p>
           <p>
             内側を呼ばずに自分で配列を返すこともできます。認証に失敗したら 401 を返す、メンテナンス中なら 503 を返す、といった処理はこの形で書きます。その場合、内側のミドルウェアとアプリケーションは実行されません。
@@ -611,12 +1047,12 @@ run Demo::Application.routes
 `}
           />
           <p>
-            上にあるものほど外側にあり、リクエストを先に受け取ります。最後の <code>run</code> の行には、ミドルウェアを通ったリクエストを最後に受け取るアプリケーション（ここではエンドポイントと呼びます）を指定します。これは、ルーティングを行う <code>RouteSet</code>{' '}
-            のインスタンスです。役割ごとにまとめると図 6-3 のようになります。各ミドルウェアの説明は Rails ガイドにもあります
+            上にあるものほど外側にあり、リクエストを先に受け取ります。最後の <code>run</code> の行には、ミドルウェアを通ったリクエストを最後に受け取るアプリケーション（ここではエンドポイントと呼びます）を指定します。これは、ルーティング（要求のメソッドとパスから、どのコントローラーのどのアクションを呼ぶかを決める処理）を行う <code>RouteSet</code>{' '}
+            のインスタンスです。役割ごとにまとめると図 6-5 のようになります。各ミドルウェアの説明は Rails ガイドにもあります
             <Ref n={3} />。
           </p>
           <Figure
-            n="6-3"
+            n="6-5"
             title="Rails のミドルウェアスタック（production）"
             caption="Rails 8.1.4.1 の新規アプリケーションを production 環境で実行した結果を、役割ごとにまとめた図。役割の分け方は本書によるもの。"
           >
@@ -655,7 +1091,7 @@ run Demo::Application.routes
           <p>
             <code>use</code> を呼んだ順がそのまま並び順になり、多くのミドルウェアは <code>if</code> で設定値を確かめてから追加されます
             <Ref n={4} />。新規アプリケーションの <code>config/environments/production.rb</code> には <code>config.assume_ssl = true</code>、<code>config.force_ssl = true</code>、
-            <code>config.silence_healthcheck_path = "/up"</code> が書かれているので、AssumeSSL・SSL・SilenceRequest が入ります。AssumeSSL は、TLS を終端したロードバランサーの後ろでも
+            <code>config.silence_healthcheck_path = "/up"</code> が書かれているので、AssumeSSL・SSL・SilenceRequest が入ります。AssumeSSL は、TLS（HTTPS で通信を暗号化する仕組み）を終端した（暗号化された通信を受けて復号し、後ろへは HTTP で送る）ロードバランサーの後ろでも
             HTTPS のリクエストとして扱えるように、env の <code>HTTPS</code> や <code>rack.url_scheme</code> を書き換えるミドルウェアです
             <Ref n={12} />。
           </p>
@@ -666,13 +1102,13 @@ run Demo::Application.routes
             </li>
             <li>
               <code>ActionDispatch::Reloader</code>（コードの再読み込み。<ChapterLink n={8} />）、<code>ActionDispatch::ActionableExceptions</code>、
-              <code>ActiveRecord::Migration::CheckPending</code>（未実行のマイグレーションの検出）、<code>ActionDispatch::ServerTiming</code> が入る。
+              <code>ActiveRecord::Migration::CheckPending</code>（未実行のマイグレーションの検出。マイグレーションは、データベースのテーブルを変更する手順を書いたファイル）、<code>ActionDispatch::ServerTiming</code> が入る。
             </li>
             <li>
-              アセット配信の <code>Propshaft::Server</code> と、そのログを抑える <code>Propshaft::QuietAssets</code> が入る。
+              アセット（CSS・JavaScript・画像などのファイル）配信の <code>Propshaft::Server</code> と、そのログを抑える <code>Propshaft::QuietAssets</code> が入る。
             </li>
             <li>
-              <code>ActiveSupport::Cache::Strategy::LocalCache::Middleware</code> が入る。development のキャッシュストア（memory_store）が LocalCache を持つため、Bootstrap の初期化処理がこのミドルウェアを加える。
+              <code>ActiveSupport::Cache::Strategy::LocalCache::Middleware</code> が入る。development のキャッシュストア（一度作った値を保存して使い回すための保存先。ここでは memory_store）が LocalCache を持つため、Bootstrap の初期化処理がこのミドルウェアを加える。
             </li>
             <li>
               AssumeSSL・SSL・SilenceRequest は入らない。エンドポイントは <code>Rails::Engine::LazyRouteSet</code>（routes.rb を最初に必要になったときに読み込む RouteSet のサブクラス）になる。
@@ -732,7 +1168,7 @@ run Demo::Application.routes
             <code>call</code> は、env から <code>ActionDispatch::Request</code> を作り（このとき <code>req.routes</code> などを設定します）、<code>app</code> が返すオブジェクトの{' '}
             <code>call</code> に env を渡します。<code>app</code> は、既定のスタック（前節の build_stack）にアプリケーションの設定（<code>config.middleware</code>）を適用し、エンドポイントを渡して{' '}
             <code>build</code> した結果を <code>@app</code> に保存します
-            <Ref n={5} />。<code>@app_build_lock</code> による排他は、複数のスレッドが同時に組み立てを始めないためのものです。なお、この <code>app</code> は初期化の最後の段階（Finisher の{' '}
+            <Ref n={5} />。<code>@app_build_lock</code> による排他（同時に1つのスレッドだけが実行できるようにすること）は、複数のスレッドが同時に組み立てを始めないためのものです。なお、この <code>app</code> は初期化の最後の段階（Finisher の{' '}
             <code>build_middleware_stack</code> という初期化処理）で一度呼ばれるので、リクエストを受ける時点では組み立てが終わっています。
           </p>
           <p>組み立ての本体は ActionDispatch::MiddlewareStack の build です。</p>
@@ -758,7 +1194,7 @@ run Demo::Application.routes
             <Ref n={6} />。配列を逆順にしてから <code>inject</code> するので、最も内側（エンドポイントの直前）のミドルウェアから順にインスタンスが作られ、作ったインスタンスが1つ外側のミドルウェアの{' '}
             <code>new</code> に渡されます。最後に作られる、一番外側のインスタンスが戻り値です。
           </p>
-          <Figure n="6-4" title="reverse と inject による組み立て" caption="模式図。ミドルウェアを3つに減らして描いている。実際の production 環境では、外側から AssumeSSL、SSL、Rack::Sendfile … と続く。">
+          <Figure n="6-6" title="reverse と inject による組み立て" caption="模式図。ミドルウェアを3つに減らして描いている。実際の production 環境では、外側から AssumeSSL、SSL、Rack::Sendfile … と続く。">
             <BuildFigure />
           </Figure>
           <p>
@@ -924,7 +1360,10 @@ puts chain.last(3).join(" -> ")
               適用の順は、追加系（<code>@operations</code>）が全部終わってから削除・移動系（<code>@delete_operations</code>）になる。書いた順ではない。
             </li>
           </ul>
-          <p>2点目を確かめるため、デモのアプリケーションに次の初期化ファイルを置きました。</p>
+          <p>
+            2点目を確かめるため、デモのアプリケーションに次の初期化ファイル（config/initializers に置く、起動時に1回実行されるファイル。<ChapterLink n={7} section="environments" />
+            ）を置きました。
+          </p>
           <Code
             lang="ruby"
             title="config/initializers/middleware.rb（検証用）"
@@ -944,7 +1383,7 @@ Rails.application.config.middleware.use Rack::Runtime   # delete の後に書い
             <p>
               自作のミドルウェアを <code>lib/middleware/</code> に置く場合、Rails ガイドは <code>config.autoload_lib(ignore: %w[assets tasks middleware])</code>{' '}
               のようにオートロードの対象から外すことを勧めています
-              <Ref n={3} />。外さないと、Zeitwerk は <code>lib/middleware/timing.rb</code> に <code>Middleware::Timing</code> が定義されていると期待するため、production
+              <Ref n={3} />。外さないと、Zeitwerk（ファイルの場所からクラス名を決めて、自動で読み込む gem）は <code>lib/middleware/timing.rb</code> に <code>Middleware::Timing</code> が定義されていると期待するため、production
               環境の一括読み込みで食い違いが起きます（<ChapterLink n={8} />）。また、ミドルウェアのスタックは起動時に一度だけ組み立てられ、開発環境でも再読み込みの対象になりません。変更したらサーバーを再起動します。
             </p>
           </Callout>
@@ -1070,6 +1509,9 @@ Rack::MockRequest.new(Rack::Lint.new(bad)).get("/")
       title: 'まとめ',
       body: (
         <ul>
+          <li>HTTP の要求と応答は、1行目（要求行・状態行）、ヘッダー、空行、本文の順に並んだ文字の並びです。状態コードの最初の桁が、成功・リダイレクト・要求の誤り・サーバーの誤りを表します。</li>
+          <li>Web サーバーは接続を受け付けて要求を読み、応答を書き出します。Rails は要求の内容から状態コード・ヘッダー・本文を作ることだけを受け持ちます。</li>
+          <li>本体と同じ呼び出し方ができるオブジェクトで本体を呼ぶと、前後に処理を挟めます。要求は外側から、応答は内側から順に処理されます。</li>
           <li>Rack アプリケーションは、env を受け取って [ステータス, ヘッダー, body] を返す call を持つオブジェクトです。</li>
           <li>Puma は HTTP の解析と env の作成、応答の書き出しを行い、各リクエストで Rails.application.call(env) を1回呼びます。</li>
           <li>ミドルウェアは内側のアプリケーションを @app に持ち、その前後で処理します。内側を呼ばずに応答を返すこともできます。</li>
@@ -1096,6 +1538,10 @@ Rack::MockRequest.new(Rack::Lint.new(bad)).get("/")
     { title: 'actionpack（8.1.4.1・7.2.4 の依存関係）', publisher: 'RubyGems.org', url: 'https://rubygems.org/gems/actionpack/versions/8.1.4.1', accessed: '2026-11-11', version: 'actionpack 8.1.4.1 / 7.2.4', note: '8.1.4.1 は rack >= 2.2.4、7.2.4 は rack >= 2.2.4, < 3.3 を要求する（各 gem のメタデータで確認）。' },
     { title: 'railties/lib/rails/application/default_middleware_stack.rb', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.4/railties/lib/rails/application/default_middleware_stack.rb', accessed: '2026-11-11', version: 'Rails 7.2.4', note: '7.2 の既定のスタックに SilenceRequest が無いこと（8.1.4.1 との差分で確認）。' },
     { title: 'railties/CHANGELOG.md', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v8.0.0/railties/CHANGELOG.md', accessed: '2026-11-11', version: 'Rails 8.0.0', note: 'Rails::Rack::SilenceRequest と config.silence_healthcheck_path の追加、ルートの描画を最初のリクエストまで遅らせる変更が 8.0 の項目にあること。' },
+    { title: 'RFC 9112 HTTP/1.1', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9112.html', accessed: '2026-11-16', version: 'RFC 9112', note: 'メッセージの形（1行目・ヘッダーの行・空行・本文、行の区切りの CRLF）と、要求行（メソッド・要求の対象・バージョン）・状態行の書き方。' },
+    { title: 'RFC 9110 HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', version: 'RFC 9110', note: '要求と応答、ヘッダーの名前が大文字と小文字を区別しないこと（5.1節）、状態コードの5つの種類（15節）。' },
+    { title: 'class TCPServer', publisher: 'Ruby Documentation', url: 'https://docs.ruby-lang.org/en/4.0/TCPServer.html', accessed: '2026-11-16', version: 'Ruby 4.0', note: 'TCPServer.new でポートを開き、accept が接続を待って TCPSocket を返すこと。tiny_server.rb の実行結果は Ruby 4.0.9 で実測。' },
+    { title: 'curl man page', publisher: 'curl project', url: 'https://curl.se/docs/manpage.html', accessed: '2026-11-16', version: 'curl 8.23.0（実行に使った版）', note: '-v で送ったヘッダーを > 、受け取ったヘッダーを < で示すこと。-i・-d・-X・-w の働き。' },
   ],
 }
 

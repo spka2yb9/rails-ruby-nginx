@@ -6,11 +6,96 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 4-1 クロージャが変数を捕まえる ---------- */
-function ClosureFigure() {
+/* ---------- 図 4-1 map がブロックを要素ごとに実行する ---------- */
+function MapBlockFigure() {
+  const rows = [
+    ['"Ruby入門"', '6'],
+    ['"Rails入門"', '7'],
+    ['"SQL入門"', '5'],
+  ]
   return (
     <Svg
       id="4-1"
+      w={720}
+      h={260}
+      label="titles.map { |title| title.size } の流れ。map は配列の要素を1つずつブロックに渡す。1回目は title に Ruby入門 が入り、ブロックの値は 6。2回目は Rails入門 で 7、3回目は SQL入門 で 5。map はブロックの値を集めて [6, 7, 5] を返す。each も要素ごとにブロックを実行するが、値は集めず、元の配列を返す"
+    >
+      <Box x={20} y={12} w={360} h={34} lines="titles.map { |title| title.size }" mono fs={12.5} fill="bg" />
+      <T x={20} y={68} fs={11.5} tone="muted">
+        要素
+      </T>
+      <T x={200} y={68} fs={11.5} tone="muted">
+        ブロックを実行（要素ごとに1回）
+      </T>
+      <T x={470} y={68} fs={11.5} tone="muted">
+        ブロックの値
+      </T>
+      {rows.map(([el, v], i) => {
+        const y = 84 + i * 50
+        return (
+          <g key={el}>
+            <Box x={20} y={y} w={130} h={34} lines={el} mono fs={12} fill="box4" />
+            <Arrow x1={150} y1={y + 17} x2={198} y2={y + 17} />
+            <Box x={200} y={y} w={240} h={34} lines={`title = ${el}`} mono fs={12} fill="box5" />
+            <Arrow x1={440} y1={y + 17} x2={478} y2={y + 17} />
+            <Box x={480} y={y} w={60} h={34} lines={v} mono fs={12.5} />
+            <Arrow x1={540} y1={y + 17} x2={588} y2={135} />
+          </g>
+        )
+      })}
+      <Box x={590} y={107} w={110} h={56} lines={['map の戻り値', '[6, 7, 5]']} fs={12} fill="box4" accent />
+      <T x={20} y={246} fs={11.5} tone="muted">
+        each も要素ごとにブロックを実行するが、ブロックの値は集めず、titles をそのまま返す
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 4-2 ブロックを実行する時点 ---------- */
+function BlockTimingFigure() {
+  const rows = [
+    ['titles.each do |title| … end', 'すぐに、要素の数だけ（3回）'],
+    ['Article.transaction do … end', 'すぐに1回。SQL は BEGIN と COMMIT の間'],
+    ['respond_to do |format| … end', 'すぐに1回。中のブロックは形式が合う1つだけ'],
+    ['Rails.application.routes.draw do … end', 'config/routes.rb を読み込むときに1回'],
+    ['before_action { … }', '保存しておき、アクションの前に毎回'],
+  ]
+  return (
+    <Svg
+      id="4-2"
+      w={780}
+      h={300}
+      label="ブロックを受け取るメソッドと、ブロックを実行する時点の比較。each はすぐに要素の数だけ実行する。transaction はすぐに1回実行し、ブロックの中の SQL は BEGIN と COMMIT の間に入る。respond_to はすぐに1回実行し、中の format.html などのブロックは形式が合う1つだけを実行する。routes.draw は config/routes.rb を読み込むときに1回実行する。before_action はブロックを保存しておき、アクションを実行する前に毎回実行する"
+    >
+      <T x={20} y={18} fs={12} tone="muted">
+        ブロックを渡すメソッド
+      </T>
+      <T x={420} y={18} fs={12} tone="muted">
+        ブロックを実行する時点と回数
+      </T>
+      {rows.map(([code, when], i) => {
+        const y = 34 + i * 50
+        const later = i === rows.length - 1
+        return (
+          <g key={code}>
+            <Box x={20} y={y} w={350} h={38} lines={code} mono fs={11.5} fill="bg" />
+            <Arrow x1={370} y1={y + 19} x2={418} y2={y + 19} />
+            <Box x={420} y={y} w={340} h={38} lines={when} fs={12} fill={later ? 'box5' : 'box'} accent={later} />
+          </g>
+        )
+      })}
+      <T x={20} y={290} fs={11.5} tone="muted">
+        上の4つは受け取ったブロックをその場で実行し、before_action は保存して後で実行する
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 4-3 クロージャが変数を捕まえる ---------- */
+function ClosureFigure() {
+  return (
+    <Svg
+      id="4-3"
       w={600}
       h={250}
       label="counter メソッドを呼ぶと、ローカル変数 count を持つ領域が作られる。その中で作った2つの lambda、increment と read は、どちらも同じ count を参照する。counter メソッドが終わった後も、呼び出し元が inc と read を持っている間は count が残り、inc を2回呼ぶと read は 2 を返す"
@@ -46,11 +131,11 @@ function ClosureFigure() {
   )
 }
 
-/* ---------- 図 4-2 スコープゲート ---------- */
+/* ---------- 図 4-4 スコープゲート ---------- */
 function ScopeGateFigure() {
   return (
     <Svg
-      id="4-2"
+      id="4-4"
       w={640}
       h={300}
       label="トップレベルのローカル変数 level は、class Gate の本体や def show の中からは見えない。class、module、def は新しいスコープを作るためである。一方、Class.new に渡したブロックや define_method に渡したブロックの中からは level が見える。ブロックは外側のスコープを引き継ぐためである"
@@ -102,7 +187,7 @@ function ScopeGateFigure() {
   )
 }
 
-/* ---------- 図 4-3 self とメソッドの定義先 ---------- */
+/* ---------- 図 4-5 self とメソッドの定義先 ---------- */
 function EvalFigure() {
   const rows: { code: string; self: string; target: string; fill: 'box' | 'box3' }[] = [
     { code: 'w.instance_eval { def only_me }', self: 'w', target: '#<Class:w>（w の特異クラス）', fill: 'box3' },
@@ -111,7 +196,7 @@ function EvalFigure() {
   ]
   return (
     <Svg
-      id="4-3"
+      id="4-5"
       w={660}
       h={190}
       label="w.instance_eval のブロックでは self は w で、def は w の特異クラスにメソッドを定義する。Widget.class_eval のブロックでは self は Widget で、def は Widget のインスタンスメソッドを定義する。Widget.instance_eval のブロックでは self は Widget で、def は Widget の特異クラスにメソッドを定義し、クラスメソッドになる"
@@ -142,11 +227,11 @@ function EvalFigure() {
   )
 }
 
-/* ---------- 図 4-4 routes.draw のブロックが実行される流れ ---------- */
+/* ---------- 図 4-6 routes.draw のブロックが実行される流れ ---------- */
 function DslFigure() {
   return (
     <Svg
-      id="4-4"
+      id="4-6"
       w={640}
       h={250}
       label="config/routes.rb の Rails.application.routes.draw に渡したブロックは、RouteSet#draw から eval_block に渡される。eval_block は Mapper のインスタンスを作り、mapper.instance_exec(&block) でブロックを実行する。ブロックの中では self が mapper になるので、get や resources は mapper のメソッドとして呼ばれる。ブロックはクロージャなので、routes.rb のローカル変数も参照できる"
@@ -180,8 +265,10 @@ const ch04: Chapter = {
   part: 1,
   title: 'ブロック・Proc・lambda とスコープ',
   summary:
-    'ブロックとクロージャの性質、Proc と lambda の違い、新しいスコープが作られる場所、instance_eval・class_eval による self の切り替えを説明します。routes.rb や scope のブロックが Rails の中でどう実行されるかが分かります。',
+    'each や map にブロックを渡す書き方と、Rails の routes.rb・transaction・respond_to・before_action がブロックをいつ実行するか、ローカル変数が見える範囲を確かめてから、ブロックとクロージャの性質、Proc と lambda の違い、新しいスコープが作られる場所、instance_eval・class_eval による self の切り替えを説明します。routes.rb や scope のブロックが Rails の中でどう実行されるかが分かります。',
   goals: [
+    'each・map などにブロックを渡し、ブロックの引数と値の使われ方を説明できる',
+    'Rails のメソッドがブロックをすぐに実行するか、保存して後で実行するかを区別し、ローカル変数が見える範囲を説明できる',
     'yield と &block の違いを理解し、ブロックを Proc として受け渡せる',
     'Proc と lambda の引数と return の違いを説明できる',
     'クロージャが変数そのものを参照することと、class・module・def が新しいスコープを作ることを説明できる',
@@ -190,6 +277,293 @@ const ch04: Chapter = {
   ],
   prerequisites: [2, 3],
   sections: [
+    {
+      id: 'block-basics',
+      title: 'メソッドにブロックを渡す',
+      body: (
+        <>
+          <p>
+            Ruby の配列には、要素を1つずつ取り出して処理する <code>each</code> メソッドがあります。each の後ろに <code>do … end</code>{' '}
+            で囲んだコードを書くと、each は配列の要素を1つずつそのコードに渡して実行します。このように、メソッドを呼ぶときに付けて渡すコードのまとまりを<Term en="block">ブロック</Term>と呼びます
+            <Ref n={1} />。
+          </p>
+          <Code
+            lang="ruby"
+            title="block_basics.rb"
+            code={`
+titles = ["Ruby入門", "Rails入門", "SQL入門"]
+
+titles.each do |title|
+  puts "タイトル: #{title}"
+end
+
+sizes = titles.map { |title| title.size }
+p sizes
+
+rails_only = titles.select { |title| title.start_with?("R") }
+p rails_only
+
+3.times { |i| puts "#{i}回目" }
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+タイトル: Ruby入門
+タイトル: Rails入門
+タイトル: SQL入門
+[6, 7, 5]
+["Ruby入門", "Rails入門"]
+0回目
+1回目
+2回目
+`}
+          />
+          <p>
+            each は要素の数だけ、つまり3回ブロックを実行し、そのたびに要素を <code>title</code> に入れました。<code>|title|</code> はブロックの引数です。縦棒の間に書いた名前で、メソッドから渡された値を受け取ります。名前は自由に決められます。
+          </p>
+          <p>
+            ブロックは <code>do … end</code> のほかに、<code>{'{ … }'}</code> でも書けます。どちらも同じブロックです。この例では1行で書けるブロックを <code>{'{ … }'}</code>{' '}
+            で、複数行のブロックを <code>do … end</code> で書いています。
+          </p>
+          <p>
+            <code>map</code> は要素ごとにブロックを実行し、ブロックの最後の式の値を集めた新しい配列を返します（図 4-1）。<code>title.size</code> は文字数を返すので、<code>[6, 7, 5]</code>{' '}
+            になりました。<code>select</code> はブロックの値が真になった要素だけを集めます
+            <Ref n={12} />。<code>start_with?("R")</code> は文字列が R で始まるかどうかを返します。<code>3.times</code>{' '}
+            は 0、1、2 を順にブロックに渡して3回実行します。どのメソッドでも、ブロックを何回、どの値で実行するかはメソッドが決め、1回ごとに何をするかは呼び出す側がブロックに書きます。
+          </p>
+          <Figure n="4-1" title="map がブロックを要素ごとに実行する" caption="block_basics.rb の titles.map の流れ。">
+            <MapBlockFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'rails-blocks',
+      title: 'Rails でブロックを書く場面',
+      body: (
+        <>
+          <p>
+            Rails のアプリケーションでも、ブロックを渡すメソッドを多く使います。どのメソッドも受け取ったブロックをいつ、何回実行するかを自分で決めています。デモのアプリで代表的な例を確かめます。
+          </p>
+          <h3>routes.rb の draw</h3>
+          <p>
+            config/routes.rb は、URL とコントローラーのアクションの対応（ルーティング）を書くファイルです。ファイルの全体が <code>Rails.application.routes.draw</code>{' '}
+            に渡すブロックになっています。
+          </p>
+          <Code
+            lang="ruby"
+            title="config/routes.rb（デモのアプリ。一部を省略）"
+            code={`
+Rails.application.routes.draw do
+  resources :articles, only: [:index, :show] do
+    resources :comments, only: [:new, :create]
+  end
+  get "up" => "rails/health#show", as: :rails_health_check
+  # …（検証用のルートを省略）
+end
+`}
+          />
+          <p>
+            draw は config/routes.rb を読み込むときにこのブロックを1回実行します。ブロックの中の <code>resources</code> や <code>get</code> の呼び出しが、URL とアクションの対応を1つずつ登録します
+            <Ref n={13} />。登録された対応は <code>bin/rails routes</code> で表示できます。
+          </p>
+          <Code
+            lang="text"
+            title="bin/rails routes の出力（デモのアプリ。一部を省略）"
+            code={`
+$ bin/rails routes -c articles
+         Prefix Verb URI Pattern                    Controller#Action
+       articles GET  /articles(.:format)            articles#index
+        article GET  /articles/:id(.:format)        articles#show
+
+$ bin/rails routes -c comments
+             Prefix Verb URI Pattern                                  Controller#Action
+   article_comments POST /articles/:article_id/comments(.:format)     comments#create
+new_article_comment GET  /articles/:article_id/comments/new(.:format) comments#new
+`}
+          />
+          <p>
+            Verb は HTTP の要求の種類で、GET はページの取得、POST はフォームの送信などに使います。URI Pattern の <code>:id</code> の部分には記事の番号などが入ります。
+            <code>resources :articles, only: [:index, :show]</code> の1行から、<code>/articles</code> を articles#index（ArticlesController の index アクション）に、
+            <code>/articles/:id</code> を articles#show に対応させる2つのルートができました。resources に渡したブロックの中の <code>resources :comments</code> からは、記事の URL の下に続く{' '}
+            <code>/articles/:article_id/comments</code> のルートができています。
+          </p>
+          <h3>transaction</h3>
+          <p>
+            データベースのトランザクションは、複数の変更をまとめて、すべて成功したときだけ確定し、途中で失敗したらすべて取り消す仕組みです（<ChapterLink n={15} section="transaction" />
+            ）。Rails では <code>transaction</code> メソッドにブロックを渡して使います
+            <Ref n={14} />。デモのアプリで、実行した SQL のログを画面に出しながら試しました。
+          </p>
+          <Code
+            lang="ruby"
+            title="bin/rails runner で実行（デモのアプリ）"
+            code={`
+ActiveRecord::Base.logger = Logger.new($stdout)   # SQL のログを画面に出す
+result = Article.transaction do
+  puts "ブロックの1行目"
+  first = Article.where(id: 1).exists?
+  second = Article.where(id: 2).exists?
+  puts "ブロックの最後の行"
+  [first, second]
+end
+p result
+`}
+          />
+          <Code
+            lang="text"
+            title="出力（ログの書式を整え、末尾の /*application='Demo'*/ を省略）"
+            code={`
+ブロックの1行目
+  TRANSACTION (0.9ms)  BEGIN
+  Article Exists? (0.8ms)  SELECT 1 AS one FROM \`articles\` WHERE \`articles\`.\`id\` = 1 LIMIT 1
+  Article Exists? (0.6ms)  SELECT 1 AS one FROM \`articles\` WHERE \`articles\`.\`id\` = 2 LIMIT 1
+ブロックの最後の行
+  TRANSACTION (0.3ms)  COMMIT
+[true, true]
+`}
+          />
+          <p>
+            BEGIN はトランザクションを始める SQL、COMMIT は確定する SQL です。transaction はブロックをすぐに1回実行し、ブロックの中で送った2つの SQL は BEGIN と COMMIT の間に入りました。ログでは、BEGIN
+            はブロックの1行目より後、最初の SQL の直前に出ています。transaction の戻り値はブロックの最後の式の値（ここでは <code>[first, second]</code>）です。
+          </p>
+          <h3>respond_to</h3>
+          <p>
+            コントローラーの <code>respond_to</code> は、要求が求める形式（HTML か JSON かなど）に合わせて、返す応答を選ぶメソッドです
+            <Ref n={15} />。デモの CommentsController では、コメントを保存した後に次のように使っています。
+          </p>
+          <Code
+            lang="ruby"
+            title="app/controllers/comments_controller.rb（デモのアプリ。create アクションの一部）"
+            code={`
+    if @comment.save
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to @article }
+      end
+`}
+          />
+          <p>
+            respond_to のブロックは引数 <code>format</code> を受け取ります。<code>format.turbo_stream</code> や <code>format.html</code>{' '}
+            は形式ごとの処理を登録するメソッドで、要求の形式に合ったものだけが実行されます。turbo_stream はページの一部だけを書き換えるための形式です（<ChapterLink n={17} section="streams" />
+            ）。動きを確かめるため、HTML と JSON を返す小さなコントローラーを bin/rails runner の中で定義し、要求の形式を変えて呼びました。要求の形式は要求に付ける
+            Accept ヘッダー（ブラウザーなどが受け取りたい形式を伝える情報）で指定します。
+          </p>
+          <Code
+            lang="ruby"
+            title="bin/rails runner で実行（デモのアプリ）"
+            code={`
+class Basics04Controller < ActionController::Base
+  def show
+    respond_to do |format|
+      puts "respond_to のブロック: format は #{format.class}"
+      format.html { render plain: "HTML を返す" }
+      format.json { render json: { message: "JSON を返す" } }
+    end
+  end
+end
+
+# ブラウザーの代わりに、Accept を変えた要求を作ってアクションを呼ぶ
+["text/html", "application/json"].each do |accept|
+  env = Rack::MockRequest.env_for("/basics04", "HTTP_ACCEPT" => accept)
+  status, headers, body = Basics04Controller.action(:show).call(env)
+  puts "Accept: #{accept} => #{status} #{headers["content-type"]} #{body.each.to_a.join}"
+end
+`}
+          />
+          <Code
+            lang="text"
+            title="出力"
+            code={`
+respond_to のブロック: format は ActionController::MimeResponds::Collector
+Accept: text/html => 200 text/html; charset=utf-8 HTML を返す
+respond_to のブロック: format は ActionController::MimeResponds::Collector
+Accept: application/json => 200 application/json; charset=utf-8 {"message":"JSON を返す"}
+`}
+          />
+          <p>
+            respond_to のブロックはどちらの要求でも1回実行されました。format には、Rails が用意した ActionController::MimeResponds::Collector のオブジェクトが入っています。text/html
+            を求める要求では format.html のブロックが、application/json を求める要求では format.json のブロックが実行され、応答の本文が変わりました。
+          </p>
+          <h3>before_action のブロック</h3>
+          <p>
+            ブロックをすぐには実行せず、保存しておいて後で実行するメソッドもあります。デモの ArticlesController の先頭には{' '}
+            <code>before_action {'{ request.variant = :phone if params[:phone] }'}</code> と書いてあります（URL に phone が付いていれば、スマートフォン用のテンプレートを選ぶ設定です）。before_action
+            はこのブロックを保存し、アクションを実行する前に毎回実行します
+            <Ref n={16} />。
+          </p>
+          <p>
+            図 4-2 に、ここまでのメソッドがブロックを実行する時点をまとめます。ブロックを受け取るメソッドを読むときは、そのメソッドがブロックをすぐに実行するのか、保存して後で実行するのか、何回実行するのかを確かめます。
+          </p>
+          <Figure n="4-2" title="ブロックを実行する時点" caption="この節の実行例と、各メソッドの説明書をもとにまとめた表。">
+            <BlockTimingFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'local-scope',
+      title: 'ローカル変数が見える範囲',
+      body: (
+        <>
+          <p>
+            <code>total = 0</code> のように、名前に値を代入して作る変数を<Term en="local variable">ローカル変数</Term>と呼びます。ローカル変数を使える範囲は、作った場所によって決まっています。この範囲を
+            <Term en="scope">スコープ</Term>と呼びます
+            <Ref n={11} />。ブロックの内側と外側、メソッドの内側と外側で確かめます。
+          </p>
+          <Code
+            lang="ruby"
+            title="block_scope.rb"
+            code={`
+total = 0
+[100, 250, 400].each do |price|
+  tax = price / 10
+  total += price + tax   # ブロックの外の total を書き換える
+end
+p total
+p defined?(tax)    # ブロックの中で作った変数
+p defined?(price)  # ブロックの引数
+
+def show_total
+  total            # メソッドの外の total を読もうとする
+end
+
+begin
+  show_total
+rescue NameError => e
+  puts e.message
+end
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+825
+nil
+nil
+undefined local variable or method 'total' for main
+`}
+          />
+          <p>
+            ブロックの中から、ブロックの外で作った total を読み書きできました。3回の実行で値段と税を足し、total は 825 になっています。一方、ブロックの中で作った tax と、ブロックの引数の price
+            は、ブロックの外では使えません。<code>defined?</code> は名前が変数やメソッドとして使えるかを調べるもので、使えなければ nil を返します。
+          </p>
+          <p>
+            def で定義したメソッドの中からは、メソッドの外のローカル変数は見えません。show_total の中の total はローカル変数としてもメソッドとしても見つからず、NameError（名前が見つからないことを示す例外）になりました
+            <Ref n={4} />。メソッドの中で外の値を使いたいときは、引数で渡します。
+          </p>
+          <p>
+            ブロックの中から外のローカル変数を使えるので、each や transaction のブロックでは、ブロックの前に用意した変数をそのまま使えます。ブロックが外の変数を参照する性質は、ブロックを保存して後で実行するときにも残ります。これは「クロージャ：作られた場所の変数を参照する」の節で扱います。
+          </p>
+          <p>
+            ここまでは、each や transaction のように Ruby や Rails が用意したメソッドにブロックを渡してきました。次の節ではブロックを受け取るメソッドを自分で定義し、受け取ったブロックを{' '}
+            <code>yield</code> で実行します。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'block-yield',
       title: 'ブロックと yield',
@@ -217,7 +591,7 @@ with_timing               # => "ブロックがありません"
           <p>
             ブロックはメソッドの引数リストとは別枠で渡され、1回の呼び出しに1つだけ付けられます。<code>block_given?</code> でブロックが渡されたかどうかを調べられます。Rails のコードでは{' '}
             <code>transaction do ... end</code>、<code>respond_to do |format| ... end</code>、<code>run_callbacks(:save) {'{ ... }'}</code>{' '}
-            など、「前後の処理はメソッドが行い、間の処理を呼び出し側が渡す」形でよく使われます。
+            （第5章で扱う、コールバックを実行するメソッド）など、「前後の処理はメソッドが行い、間の処理を呼び出し側が渡す」形でよく使われます。
           </p>
         </>
       ),
@@ -553,7 +927,7 @@ pair.call([10, 20])
       body: (
         <>
           <p>
-            ブロック・Proc・lambda は作られた場所のローカル変数を参照できます。値をコピーするのではなく、変数そのものを参照します。このような性質を持つ関数を<Term en="closure">クロージャ</Term>
+            ブロック・Proc・lambda は作られた場所のローカル変数を参照できます。値をコピーするのではなく、変数そのものを参照します。このような性質を持つ関数（呼び出して実行できる処理のまとまり）を<Term en="closure">クロージャ</Term>
             と呼びます
             <Ref n={2} />
             <Ref n={4} />。
@@ -580,7 +954,7 @@ add.call(1)                         # => 21（作った後に変えた x の値�
 add.binding.local_variable_get(:x)  # => 20
 `}
           />
-          <Figure n="4-1" title="クロージャが変数を参照する" caption="模式図。counter が終わった後も、lambda が参照している count は残り続ける。">
+          <Figure n="4-3" title="クロージャが変数を参照する" caption="模式図。counter が終わった後も、lambda が参照している count は残り続ける。">
             <ClosureFigure />
           </Figure>
           <p>
@@ -621,7 +995,7 @@ end
 Klass.new.show               # => "top"
 `}
           />
-          <Figure n="4-2" title="スコープゲートとブロック" caption="class・module・def は新しいスコープを作る。Class.new や define_method に渡すブロックは外側のスコープを引き継ぐ。">
+          <Figure n="4-4" title="スコープゲートとブロック" caption="class・module・def は新しいスコープを作る。Class.new や define_method に渡すブロックは外側のスコープを引き継ぐ。">
             <ScopeGateFigure />
           </Figure>
           <p>
@@ -654,7 +1028,7 @@ Klass.new.show               # => "top"
             </li>
             <li>
               <code>Klass.class_eval {'{ ... }'}</code>（別名 <code>module_eval</code>）：<code>self</code> を <code>Klass</code> にしてブロックを実行します。中で <code>def</code>{' '}
-              すると、<code>Klass</code> のインスタンスメソッドになります。クラスを再オープンするのと同じ効果です。
+              すると、<code>Klass</code> のインスタンスメソッドになります。クラスを再オープン（定義済みのクラスにもう一度 class 〜 end を書いてメソッドを足すこと）するのと同じ効果です。
             </li>
           </ul>
           <Code
@@ -679,7 +1053,7 @@ Widget.instance_eval { def build = :class_method }
 Widget.build                     # => :class_method
 `}
           />
-          <Figure n="4-3" title="self とメソッドの定義先" caption="instance_eval はレシーバの特異クラスに、class_eval はレシーバのクラス自身に def の結果を定義する。">
+          <Figure n="4-5" title="self とメソッドの定義先" caption="instance_eval はレシーバの特異クラスに、class_eval はレシーバのクラス自身に def の結果を定義する。">
             <EvalFigure />
           </Figure>
           <p>
@@ -705,7 +1079,7 @@ Widget.build                     # => :class_method
           <h3>routes.rb：Mapper を self としてブロックを実行する</h3>
           <p>
             <code>config/routes.rb</code> の <code>Rails.application.routes.draw do ... end</code> に渡したブロックの中では、<code>get</code> や <code>resources</code>{' '}
-            をレシーバなしで呼べます。これは、Rails が <code>Mapper</code> オブジェクトを self として、そのブロックを <code>instance_exec</code> で実行しているからです。
+            をレシーバなしで呼べます。これは、Rails が <code>Mapper</code>（ルートの定義を受け付けるオブジェクト）を self として、そのブロックを <code>instance_exec</code> で実行しているからです。
           </p>
           <Code
             lang="ruby"
@@ -722,7 +1096,7 @@ Widget.build                     # => :class_method
       end
 `}
           />
-          <Figure n="4-4" title="routes.draw のブロックが実行される流れ" caption="ブロックは routes.rb で作られたクロージャのまま、self だけが Mapper のインスタンスに切り替わって実行される。">
+          <Figure n="4-6" title="routes.draw のブロックが実行される流れ" caption="ブロックは routes.rb で作られたクロージャのまま、self だけが Mapper のインスタンスに切り替わって実行される。">
             <DslFigure />
           </Figure>
           <p>同じ仕組みを、小さな例で再現すると次のようになります。</p>
@@ -864,6 +1238,13 @@ Page.new.build2 # => ["GET /Page のタイトル → x#y"]
       body: (
         <ul>
           <li>
+            ブロックはメソッドを呼ぶときに渡すコードのまとまりで、<code>do … end</code> か <code>{'{ … }'}</code> で書きます。each や map は要素ごとにブロックを実行し、map はブロックの値を集めます。
+          </li>
+          <li>
+            Rails の transaction・respond_to はブロックをすぐに1回実行し、routes.rb の draw は読み込むときに1回実行し、before_action はブロックを保存してアクションの前に毎回実行します。
+          </li>
+          <li>ブロックの中からは外のローカル変数を読み書きできますが、ブロックの中で作った変数は外から使えません。def の中からは外のローカル変数が見えません。</li>
+          <li>
             ブロックは <code>yield</code> で実行します。<code>&block</code> で受けると Proc オブジェクトになり、保存して後で呼べます。
           </li>
           <li>通常の Proc と lambda はどちらも処理を保存して call で実行できます。lambda は引数の数を検査し、中の return は lambda の実行だけを終了します。通常の Proc の return はその Proc を作ったメソッドを終了します。</li>
@@ -888,6 +1269,12 @@ Page.new.build2 # => ["GET /Page のタイトル → x#y"]
     { title: 'activerecord/lib/active_record/relation.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/relation.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '_exec_scope の実装。' },
     { title: 'activerecord/lib/active_record/associations/builder/association.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/associations/builder/association.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '関連のスコープを arity で区別する build_scope の実装。' },
     { title: 'class Symbol（to_proc）', publisher: 'Ruby 4.0 Documentation', url: 'https://docs.ruby-lang.org/en/4.0/Symbol.html#method-i-to_proc', accessed: '2026-11-13', version: 'Ruby 4.0', note: 'シンボルが表す名前のメソッドを、受け取ったオブジェクトに対して呼ぶ Proc。' },
+    { title: 'Assignment（Local Variable Scope）', publisher: 'Ruby 4.0 Documentation', url: 'https://docs.ruby-lang.org/en/4.0/syntax/assignment_rdoc.html', accessed: '2026-11-16', version: 'Ruby 4.0', note: 'ブロックの中で作ったローカル変数は外に出ず、外で作ったローカル変数はブロックの中から見えること。block_scope.rb の結果は Ruby 4.0.9 で実測。' },
+    { title: 'class Array（each・map・select）', publisher: 'Ruby 4.0 Documentation', url: 'https://docs.ruby-lang.org/en/4.0/Array.html', accessed: '2026-11-16', version: 'Ruby 4.0', note: 'each が要素ごとにブロックを呼んで自身を返すこと、map がブロックの値を集めた配列を返すこと、select がブロックの値が真の要素を集めること。' },
+    { title: 'Rails Routing from the Outside In', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/routing.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'routes.draw のブロックがルーターの DSL の範囲を決めること、resources が対応するルートを宣言すること、入れ子のリソース。' },
+    { title: 'ActiveRecord::Transactions::ClassMethods', publisher: 'Ruby on Rails API', url: 'https://api.rubyonrails.org/v8.1.4.1/classes/ActiveRecord/Transactions/ClassMethods.html', accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'トランザクションはブロックの中の SQL がすべて成功したときだけ確定すること。ログはデモのアプリで実測。' },
+    { title: 'ActionController::MimeResponds', publisher: 'Ruby on Rails API', url: 'https://api.rubyonrails.org/v8.1.4.1/classes/ActionController/MimeResponds.html', accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'respond_to のブロックに渡される format と、要求の形式に合うものだけを実行すること。' },
+    { title: 'Action Controller Overview（Controller Callbacks）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/action_controller_overview.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'before_action がアクションの前に実行される処理を登録すること。ブロックも渡せること。' },
   ],
 }
 

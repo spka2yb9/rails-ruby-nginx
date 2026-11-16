@@ -1,12 +1,74 @@
 import type { Chapter } from '../content/types'
 import { withExplanations } from '../explanations/shared'
 import { explanation29 } from '../explanations/operations'
-import { Callout, ChapterLink, Code, Figure, Ref } from '../components/content'
+import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 A-1 サポート期間 ---------- */
+/* ---------- 図 A-1 バージョン番号の読み方 ---------- */
+function VersionFigure() {
+  const parts = [
+    ['8', 'メジャー'],
+    ['1', 'マイナー'],
+    ['4', 'パッチ'],
+    ['1', 'セキュリティ修正'],
+  ]
+  const series = [
+    ['8.1.0', '2025-10-22'],
+    ['8.1.1', '2025-10-28'],
+    ['8.1.2', '2026-01-08'],
+    ['8.1.2.1', '2026-03-23'],
+    ['8.1.3', '2026-03-24'],
+    ['8.1.3.1', '2026-07-29'],
+    ['8.1.4', '2026-09-24'],
+    ['8.1.4.1', '2026-11-04'],
+  ]
+  return (
+    <Svg
+      id="A-1"
+      w={780}
+      h={262}
+      label="8.1.4.1 は、左からメジャー 8、マイナー 1、パッチ 4、セキュリティ修正の 1。8.1 系列は 8.1.0（2025-10-22）から、8.1.1、8.1.2、8.1.2.1、8.1.3、8.1.3.1、8.1.4、8.1.4.1（2026-11-04）の順に公開された。4つ目の数字が付くのはセキュリティ修正だけのバージョン"
+    >
+      {parts.map(([d, name], i) => (
+        <g key={name}>
+          <Box x={120 + i * 140} y={14} w={70} h={44} lines={d} fs={22} bold fill={i === 3 ? 'box5' : 'box'} />
+          {i < 3 && (
+            <T x={120 + i * 140 + 98} y={44} fs={22} bold>
+              .
+            </T>
+          )}
+          <T x={155 + i * 140} y={76} fs={11.5} anchor="middle">
+            {name}
+          </T>
+        </g>
+      ))}
+      <T x={28} y={118} bold fs={12}>
+        8.1 系列のバージョン（rubygems.org の公開日）
+      </T>
+      {series.map(([v, date], i) => (
+        <g key={v}>
+          <Box x={28 + i * 92} y={132} w={80} h={46} lines={[v, date]} fs={11} fill={v.split('.').length === 4 ? 'box5' : 'box'} subTone="muted" />
+          {i < series.length - 1 && <Arrow x1={108 + i * 92} y1={155} x2={118 + i * 92} y2={155} />}
+        </g>
+      ))}
+      <rect x={28} y={206} width={14} height={12} fill="var(--fig-box)" stroke="var(--fig-line)" />
+      <T x={48} y={212} fs={11}>
+        系列の最初のリリースと、バグ修正のパッチ
+      </T>
+      <rect x={330} y={206} width={14} height={12} fill="var(--fig-box5)" stroke="var(--fig-line)" />
+      <T x={350} y={212} fs={11}>
+        直前のバージョンにセキュリティ修正だけを加えたもの
+      </T>
+      <T x={28} y={244} fs={11} tone="muted">
+        {'Gemfile の "~> 8.1.4" は 8.1.4 以上 8.2 未満を表し、Gemfile.lock に実際に使うバージョンが記録される'}
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 A-2 サポート期間 ---------- */
 function SupportFigure() {
   // 2024-01 を 0 とした月の位置
   const x0 = 130
@@ -21,7 +83,7 @@ function SupportFigure() {
   const fmt = (d: number[]) => d.map((n, i) => (i === 0 ? String(n) : String(n).padStart(2, '0'))).join('-')
   return (
     <Svg
-      id="A-1"
+      id="A-2"
       w={780}
       h={250}
       label="Rails 7.2、8.0、8.1 のサポート期間。7.2 は 2024年8月9日に公開され、方針どおりならバグ修正は 2025年8月9日まで、セキュリティ修正は 2026年8月9日まで。8.0 は 2024年11月7日に公開され、公式ページではバグ修正が 2026年5月7日まで、セキュリティ修正が 2026年11月7日まで。8.1 は 2025年10月22日に gem が公開され、公式ページではバグ修正が 2026年10月10日まで、セキュリティ修正が 2027年10月10日まで。2026年11月11日の時点で、セキュリティ修正の期間内にあるのは 8.1 だけ"
@@ -68,7 +130,7 @@ function SupportFigure() {
   )
 }
 
-/* ---------- 図 A-2 アップグレードの順 ---------- */
+/* ---------- 図 A-3 アップグレードの順 ---------- */
 function UpgradeFigure() {
   const steps = [
     { t: 'Ruby を上げる', s: '8.x は 3.2 以上' },
@@ -79,7 +141,7 @@ function UpgradeFigure() {
   ]
   return (
     <Svg
-      id="A-2"
+      id="A-3"
       w={780}
       h={200}
       label="アップグレードは、まず Ruby を上げ、次に今の Rails の最新のパッチ版に上げて非推奨の警告を消し、それから 7.2、8.0、8.1 と1つずつ上げる。各段階で bin/rails app:update を実行し、作られた new_framework_defaults のファイルの設定を1つずつ有効にして、全部を有効にしたら config.load_defaults の値を上げてファイルを消す"
@@ -115,8 +177,10 @@ const ch29: Chapter = {
   part: 6,
   title: 'Rails 7.2→8.x の主な違いとサポート状況',
   summary:
-    'Rails 7.2・8.0・8.1 のサポート期間と、2026年11月11日時点の状況を公式の情報から整理します。load_defaults 8.0・8.1 で変わる設定、rails new の既定の変化（Propshaft、Solid Queue・Cache・Cable、Kamal、Thruster、認証のジェネレーター）、本書の各章で見た 7.2 との違い、アップグレードの手順をまとめます。',
+    'バージョン番号（メジャー・マイナー・パッチ）の読み方、セキュリティ修正とサポート期間、load_defaults が選ぶ既定値を確かめてから、Rails 7.2・8.0・8.1 のサポート期間と、2026年11月11日時点の状況を公式の情報から整理します。load_defaults 8.0・8.1 で変わる設定、rails new の既定の変化（Propshaft、Solid Queue・Cache・Cable、Kamal、Thruster、認証のジェネレーター）、本書の各章で見た 7.2 との違い、アップグレードの手順をまとめます。',
   goals: [
+    'バージョン番号のメジャー・マイナー・パッチと4つ目の数字の意味を説明し、Gemfile の範囲と Gemfile.lock の違いを説明できる',
+    'サポート期間が終わった系列では脆弱性が直らないことを、セキュリティ勧告の例から説明できる',
     'Rails のサポートの方針と、7.2・8.0・8.1 のサポート期間を説明できる',
     'Rails のバージョンと load_defaults の値の違いを説明し、load_defaults 8.0・8.1 で変わる設定を挙げられる',
     'rails new の既定の変化が既存のアプリケーションには自動で入らないことを説明できる',
@@ -125,6 +189,150 @@ const ch29: Chapter = {
   ],
   prerequisites: [],
   sections: [
+    {
+      id: 'version-numbers',
+      title: 'バージョン番号の読み方',
+      body: (
+        <>
+          <p>
+            Rails のバージョンは 8.1.4.1 のように点で区切った数字で表します。動いているアプリケーションのバージョンは <code>bin/rails -v</code> で確かめられます。デモのアプリケーションで実行しました。
+          </p>
+          <Code
+            lang="text"
+            code={`
+$ bin/rails -v
+Rails 8.1.4.1
+$ bin/rails runner 'p Rails.gem_version.segments'
+[8, 1, 4, 1]
+`}
+          />
+          <p>
+            左から順に、メジャーバージョン（8）、マイナーバージョン（1）、パッチバージョン（4）で、4つ目の数字（1）はセキュリティ修正のためのバージョンに付きます（図 A-1）。Rails
+            のメンテナンスの方針はそれぞれを次のように決めています<Ref n={1} />。
+          </p>
+          <ul>
+            <li>パッチ（8.1.3 → 8.1.4）：バグの修正だけで、新しい機能や API の変更を含まない</li>
+            <li>マイナー（8.0 → 8.1）：新しい機能を含み、API が変わることがある。互換性の無い変更は前のバージョンで非推奨の警告を出してから行う</li>
+            <li>メジャー（7.2 → 8.0）：マイナーと同じく新しい機能と API の変更を含む。マイナーとの違いは変更の大きさ</li>
+            <li>4つ目の数字（8.1.4 → 8.1.4.1）：直前のバージョンに、セキュリティの修正だけを加えたもの</li>
+          </ul>
+          <p>
+            8.0 や 8.1 のように、メジャーとマイナーが同じバージョンの集まりを<Term en="release series">系列</Term>と呼びます。gem を公開するサイトの rubygems.org で、8.1 系列のバージョンを確かめました<Ref n={12} />。
+          </p>
+          <Code
+            lang="text"
+            title="rubygems.org の rails の 8.1 系列（公開日。2026-11-16 に確認）"
+            code={`
+8.1.0    2025-10-22
+8.1.1    2025-10-28
+8.1.2    2026-01-08
+8.1.2.1  2026-03-23
+8.1.3    2026-03-24
+8.1.3.1  2026-07-29
+8.1.4    2026-09-24
+8.1.4.1  2026-11-04
+`}
+          />
+          <p>
+            アプリケーションが使う Rails のバージョンは Gemfile と Gemfile.lock で決まります。デモの Gemfile の <code>gem "rails", "~&gt; 8.1.4", "&gt;= 8.1.4.1"</code>{' '}
+            は、使ってよいバージョンの範囲の指定で、<code>~&gt; 8.1.4</code> は「8.1.4 以上、8.2 未満」を表します<Ref n={13} />。この範囲から実際に選んだバージョンが Gemfile.lock に記録され、デモでは{' '}
+            <code>rails (8.1.4.1)</code> でした。範囲の上限が 8.2 未満なので、<code>bundle update rails</code> を実行しても 8.1 系列の中でしか上がりません。
+          </p>
+          <Figure n="A-1" title="バージョン番号の読み方" caption="Rails の Maintenance Policy と rubygems.org の公開日（2026-11-16 に確認）をもとにした図。">
+            <VersionFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'security-support',
+      title: 'セキュリティ修正とサポートの終了',
+      body: (
+        <>
+          <p>
+            <Term en="vulnerability">脆弱性</Term>は、攻撃する人に、本来できないはずのこと（他人のデータを読む、利用者のブラウザーで任意のスクリプトを動かすなど）を許してしまう不具合です。脆弱性を直す変更をセキュリティ修正と呼びます。Rails
+            の開発者は脆弱性を直したバージョンを公開し、その内容を GitHub のセキュリティ勧告で知らせます。
+          </p>
+          <p>
+            2026年11月4日に公開された 8.1.4.1 と 8.0.5.2 は、セキュリティ修正のためのバージョンです。そのうちの1つの勧告 GHSA-gmj8-hvj3-49mw は、Action Pack のセッションの保存方式のうち CookieStore
+            以外が、セッションの Cookie に SameSite 属性（ほかのサイトから送られる要求に、その Cookie を付けるかどうかを決める属性）を付けていなかった問題です。影響を受けるのは、8.1 系列の 8.1.4.1 より前のバージョンと、8.0.5.2 より前のすべてのバージョンで、修正されたのは 8.1.4.1
+            と 8.0.5.2 です<Ref n={11} />。7.2 系列も影響を受ける範囲に入りますが、修正したバージョンは出ていません。
+          </p>
+          <p>
+            新しいバージョンが公開される期間を<Term en="support period">サポート期間</Term>と呼びます。Rails
+            の方針では、マイナーバージョンの各系列は、最初のリリースから1年間はバグの修正を、2年間はセキュリティの修正を受けます。2年を過ぎた系列はサポートの終了（end-of-life、EOL）となり、脆弱性が見つかっても新しいバージョンは出ません。EOL
+            の系列を使い続けるなら、修正は自分の責任で行うことになり、方針はサポート中の系列に上げることを勧めています<Ref n={1} />。7.2
+            系列のセキュリティ修正の期間は、方針どおりなら 2026年8月9日に終わっています。上の勧告の問題は、7.2 のまま使うアプリケーションでは、自分で直すかサポート中の系列に上げるまで残ります。
+          </p>
+          <p>
+            業務のアプリケーションでは、使っている系列がサポート期間の中にあるかどうかで、次に上げるバージョンと時期を決めます。各系列の期間は『サポートの方針と期間』の節で扱います。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'load-defaults-basics',
+      title: 'load_defaults が選ぶ既定値',
+      body: (
+        <>
+          <p>
+            Rails には、アプリケーションが設定しなかったときに使う値（既定値）があります。新しいバージョンの Rails では既定値をより安全な値や速い値に変えることがあります。ただし、Rails
+            を上げただけで既存のアプリケーションの動きが変わらないように、どのバージョンの既定値を使うかを config/application.rb の <code>config.load_defaults</code> で選びます
+            <Ref n={5} />。デモの config/application.rb には次の行があります。
+          </p>
+          <Code
+            lang="ruby"
+            title="config/application.rb（デモ。24行目とその上のコメント）"
+            code={`
+    # Initialize configuration defaults for originally generated Rails version.
+    config.load_defaults 8.1
+`}
+          />
+          <p>
+            コメントのとおり、rails new はアプリケーションを作ったときの Rails のバージョンをこの行に書きます。同じ Rails 8.1.4.1 で、load_defaults に渡す値だけを変えた小さなアプリケーションを起動し、3つの設定の値を比べました。
+          </p>
+          <Code
+            lang="ruby"
+            title="defaults.rb（デモの Gemfile の gem で実行）"
+            code={`
+# 使い方: ruby defaults.rb 7.2
+# 同じ Rails で、load_defaults に渡すバージョンだけを変えたアプリケーションを起動し、設定の値を表示する
+require "bundler/setup"
+require "rails"
+require "action_controller/railtie"
+
+class LabApp < Rails::Application
+  config.root = __dir__
+  config.load_defaults ARGV[0]
+  config.eager_load = false
+  config.logger = Logger.new(nil)
+  config.secret_key_base = "lab"
+end
+LabApp.initialize!
+
+puts format("Rails %s / load_defaults %s: yjit=%-5s Regexp.timeout=%-4s escape_json_responses=%s",
+  Rails.version, ARGV[0], LabApp.config.yjit.inspect, Regexp.timeout.inspect,
+  ActionController::Base.escape_json_responses.inspect)
+`}
+          />
+          <Code
+            lang="text"
+            title="RAILS_ENV=development で 7.2・8.0・8.1 を渡した結果"
+            code={`
+Rails 8.1.4.1 / load_defaults 7.2: yjit=true  Regexp.timeout=nil  escape_json_responses=true
+Rails 8.1.4.1 / load_defaults 8.0: yjit=true  Regexp.timeout=1.0  escape_json_responses=true
+Rails 8.1.4.1 / load_defaults 8.1: yjit=false Regexp.timeout=1.0  escape_json_responses=false
+`}
+          />
+          <p>
+            Rails は同じ 8.1.4.1 でも、load_defaults 7.2 では Regexp.timeout（正規表現の照合にかける時間の上限）が nil（上限なし）で、8.0 にすると1秒になりました。escape_json_responses（render
+            json: の応答で HTML の記号をエスケープするか）と、開発環境の yjit（Ruby の実行を速くする YJIT を有効にするか。<ChapterLink n={22} section="db-memory" />
+            ）は、8.1 で false になりました。load_defaults にはメジャーとマイナーまでのバージョンを渡し、そのバージョンまでに変わった既定値がまとめて使われます。次の節では業務のアプリケーションで Rails
+            のバージョンと load_defaults の値を確かめます。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'check',
       title: '業務のアプリケーションで確かめること',
@@ -201,7 +409,7 @@ $ grep -n "load_defaults" config/application.rb  # 既定値の世代
           <p>
             公式のメンテナンスのページに載っている「サポート中の版」は 8.1 と 8.0 だけで、7.2 は載っていません
             <Ref n={2} />。必要な Ruby のバージョンは gem の情報とアップグレードのガイドによります
-            <Ref n={3} />。表と図 A-1 から、次のことがわかります。
+            <Ref n={3} />。表と図 A-2 から、次のことがわかります。
           </p>
           <ul>
             <li>2026年11月11日の時点で、セキュリティ修正の期間内にあるのは 8.1 だけです。8.0 はページの記載では4日前（11月7日）に終わっています。</li>
@@ -213,7 +421,7 @@ $ grep -n "load_defaults" config/application.rb  # 既定値の世代
               8.1 の期限は、ページでは10月10日起点になっていますが、gem の公開は10月22日でした。また、8.1 のバグ修正の期限（2026年10月10日）は過ぎていますが、8.2 はまだ公開されていません。方針の「1年間新しい版が出なければ延長する」が当てはまる状況ですが、延長後の期限はページに書かれていません。
             </li>
           </ul>
-          <Figure n="A-1" title="サポート期間" caption="Rails の Maintenance Policy（rubyonrails.org、2026-11-11 に確認）と rubygems.org の公開日をもとにした図。7.2 の期限は方針から計算した値。">
+          <Figure n="A-2" title="サポート期間" caption="Rails の Maintenance Policy（rubyonrails.org、2026-11-11 に確認）と rubygems.org の公開日をもとにした図。7.2 の期限は方針から計算した値。">
             <SupportFigure />
           </Figure>
           <Callout kind="warn" title="期限の数字の扱い">
@@ -637,10 +845,11 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
             </li>
           </ol>
           <p>
-            業務のアプリケーションが 7.x のどこかで、Ruby が 3.2 未満なら、まず Ruby を 3.2 以上にします。そのうえで 7.2 → 8.0 → 8.1 と進めます（図 A-2）。8.0 から 8.1 への変更点としてガイドに挙げられているのは、schema.rb
-            の列がアルファベット順に並ぶようになったことです。schema.rb の列の順が、マイグレーションで追加した順からアルファベット順に変わるので、最初の差分が大きくなります。
+            業務のアプリケーションが 7.x のどこかで、Ruby が 3.2 未満なら、まず Ruby を 3.2 以上にします。そのうえで 7.2 → 8.0 → 8.1 と進めます（図 A-3）。8.0 から 8.1 への変更点としてガイドに挙げられているのは、schema.rb
+            の列がアルファベット順に並ぶようになったことです。ただし、この並べ替えは 8.1.4 で取り消されました
+            <Ref n={14} />。本書の基準の 8.1.4.1 では、schema.rb の列はマイグレーションで追加した順に並びます。8.1.0〜8.1.3 で schema.rb を書き出すと列がアルファベット順に並ぶので、その版を経由して上げる場合は、schema.rb の差分がいったん大きくなります。
           </p>
-          <Figure n="A-2" title="アップグレードの順" caption="Upgrading Ruby on Rails（ガイド）の手順をもとにした図。">
+          <Figure n="A-3" title="アップグレードの順" caption="Upgrading Ruby on Rails（ガイド）の手順をもとにした図。">
             <UpgradeFigure />
           </Figure>
           <p>
@@ -656,6 +865,8 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
       title: 'まとめ',
       body: (
         <ul>
+          <li>8.1.4.1 はメジャー 8・マイナー 1・パッチ 4 で、4つ目の数字はセキュリティ修正だけのバージョンです。サポート期間を過ぎた系列には、脆弱性が見つかっても修正したバージョンが出ません。</li>
+          <li>load_defaults は、どのバージョンの既定値を使うかを選ぶ設定で、同じ Rails でも値によって設定の値が変わります。</li>
           <li>Rails はバグ修正が1年、セキュリティ修正が2年です。2026年11月11日の時点で、セキュリティ修正の期間内にあるのは 8.1 だけです。</li>
           <li>7.2 は公式のページのサポート中の一覧に無く、2026年9月の 7.2.4 はバグ修正だけのバージョンです。今後の新しいバージョンは期待できません。</li>
           <li>バージョンを上げても、load_defaults を上げなければ既定値は変わりません。8.0 と 8.1 の load_defaults で変わる設定は合わせて9つで、render json: のエスケープや相対の URL へのリダイレクトなどが含まれます。</li>
@@ -676,6 +887,10 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
     { title: 'Kamal README', publisher: 'basecamp/kamal（GitHub）', url: 'https://github.com/basecamp/kamal/blob/v2.12.0/README.md', accessed: '2026-11-11', version: 'Kamal 2.12.0', note: 'コンテナのアプリケーションを SSH でサーバーに配置し、kamal-proxy で停止時間なしに切り替えること。' },
     { title: 'Thruster README', publisher: 'basecamp/thruster（GitHub）', url: 'https://github.com/basecamp/thruster/blob/v0.1.27/README.md', accessed: '2026-11-11', version: 'Thruster 0.1.27', note: 'HTTP/2、Let\'s Encrypt、公開アセットのキャッシュ、X-Sendfile と圧縮、Puma のプロセスの管理。' },
     { title: 'activejob/lib/active_job/queue_adapters/sidekiq_adapter.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activejob/lib/active_job/queue_adapters/sidekiq_adapter.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'Rails 本体の sidekiq のアダプターが Rails 8.2 で削除される予定という非推奨の警告。' },
+    { title: 'Action Pack: Missing SameSite attribute on session cookies from Action Pack session stores（GHSA-gmj8-hvj3-49mw）', publisher: 'rails/rails（GitHub Security Advisories）', url: 'https://github.com/rails/rails/security/advisories/GHSA-gmj8-hvj3-49mw', accessed: '2026-11-16', version: 'Rails 8.1.4.1・8.0.5.2', note: '影響を受けるバージョン（8.1.0.beta1 以上 8.1.4.1 未満、8.0.5.2 未満）と修正されたバージョン。問題の内容は actionpack 8.1.4.1 の CHANGELOG でも確認。' },
+    { title: 'rails versions', publisher: 'rubygems.org', url: 'https://rubygems.org/gems/rails/versions', accessed: '2026-11-16', version: '—', note: '8.1 系列の各バージョンの公開日（rubygems.org の API で確認）。' },
+    { title: 'Gemfile Reference', publisher: 'RubyGems Guides', url: 'https://guides.rubygems.org/gemfile/', accessed: '2026-11-16', version: '—', note: '~> の範囲（~> 2.0.3 は 2.0.3 以上 2.1 未満）。' },
+    { title: 'activerecord CHANGELOG（Rails 8.1.4）', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v8.1.4.1/activerecord/CHANGELOG.md', accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: '8.1.0 で入った schema.rb の列のアルファベット順の並べ替えを、8.1.4 で取り消したこと。' },
   ],
 }
 

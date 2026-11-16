@@ -6,11 +6,150 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 13-1 外部キーと関連のメソッド ---------- */
-function ForeignKeyFigure() {
+/* ---------- 図 13-1 外部キーでつないだ2つのテーブル ---------- */
+function TablesFigure() {
+  const cell = (x: number, y: number, w: number, text: string, head = false, fill: 'bg' | 'box' | 'box5' = 'box') => (
+    <Box key={`${x}-${y}`} x={x} y={y} w={w} h={28} lines={text} mono={!/[ぁ-んァ-ン一-龥]/.test(text)} fs={12} rx={0} fill={head ? 'bg' : fill} bold={head} />
+  )
+  const articles = [
+    ['5', '記事5'],
+    ['6', '記事6'],
+    ['7', '記事7'],
+  ]
+  const comments = [
+    ['1', '5', 'コメント'],
+    ['2', '5', 'コメント'],
+    ['3', '5', 'コメント'],
+    ['727', '6', 'コメント'],
+  ]
   return (
     <Svg
       id="13-1"
+      w={760}
+      h={290}
+      label="articles テーブルには記事5・記事6・記事7の行がある。comments テーブルの id 1・2・3 の行は article_id が 5 で記事5を、id 727 の行は article_id が 6 で記事6を指す。記事7を指すコメントは無い。comments の article_id が外部キーで、外部キー制約があるので、articles に無い id（999999）を指すコメントは保存できない"
+    >
+      <T x={20} y={24} bold>
+        articles（記事）
+      </T>
+      {cell(20, 40, 60, 'id', true)}
+      {cell(80, 40, 150, 'title', true)}
+      {articles.map((r, i) => (
+        <g key={r[0]}>
+          {cell(20, 68 + i * 28, 60, r[0])}
+          {cell(80, 68 + i * 28, 150, r[1])}
+        </g>
+      ))}
+      <T x={430} y={24} bold>
+        comments（コメント）
+      </T>
+      {cell(430, 40, 70, 'id', true)}
+      {cell(500, 40, 110, 'article_id', true)}
+      {cell(610, 40, 130, 'body', true)}
+      {comments.map((r, i) => (
+        <g key={r[0]}>
+          {cell(430, 68 + i * 28, 70, r[0])}
+          {cell(500, 68 + i * 28, 110, r[1], false, 'box5')}
+          {cell(610, 68 + i * 28, 130, r[2])}
+        </g>
+      ))}
+      <Box x={500} y={68} w={110} h={112} fill="none" accent rx={0} />
+      {[0, 1, 2].map((i) => (
+        <Arrow key={i} x1={428} y1={82 + i * 28} x2={233} y2={82} dashed />
+      ))}
+      <Arrow x1={428} y1={166} x2={233} y2={110} dashed />
+      <T x={330} y={186} anchor="middle" fs={11} tone="muted">
+        article_id の値が指す記事
+      </T>
+      <T x={20} y={174} fs={11.5} tone="muted">
+        記事7 を指すコメントは無い（0件）
+      </T>
+      <T x={20} y={212} fs={12}>
+        comments の article_id（外部キー）が、articles の id を指す。1件の記事に0件以上のコメント（1対多）
+      </T>
+      <T x={20} y={236} fs={12}>
+        外部キーは「多」の側（comments）に置く
+      </T>
+      <Box x={20} y={250} w={720} h={30} lines="外部キー制約：articles に無い id（999999）を指すコメントの INSERT は ERROR 1452 で拒否される" fs={11.5} fill="bg" />
+    </Svg>
+  )
+}
+
+/* ---------- 図 13-2 INNER JOIN と LEFT OUTER JOIN の結果 ---------- */
+function JoinFigure() {
+  const cols = [
+    { x: 20, w: 100, h: 'articles.id' },
+    { x: 120, w: 130, h: 'articles.title' },
+    { x: 250, w: 120, h: 'comments.id' },
+    { x: 370, w: 140, h: 'comments.body' },
+  ]
+  const rows = [
+    ['5', '記事5', '1', 'コメント'],
+    ['5', '記事5', '2', 'コメント'],
+    ['5', '記事5', '3', 'コメント'],
+    ['6', '記事6', '727', 'コメント'],
+    ['7', '記事7', 'NULL', 'NULL'],
+  ]
+  return (
+    <Svg
+      id="13-2"
+      w={760}
+      h={290}
+      label="articles と comments を ON comments.article_id = articles.id でつないだ結果。記事5はコメントの数だけ3行、記事6は1行になる。INNER JOIN の結果はこの4行。LEFT OUTER JOIN では、コメントの無い記事7の行も残り、comments の列は NULL になる。結果の行の数は、記事の数ではなく、組み合わせた行の数になる"
+    >
+      <T x={20} y={20} mono fs={11.5}>
+        articles（INNER または LEFT OUTER）JOIN comments ON comments.article_id = articles.id
+      </T>
+      {cols.map((c) => (
+        <Box key={c.h} x={c.x} y={36} w={c.w} h={28} lines={c.h} mono fs={11.5} rx={0} fill="bg" bold />
+      ))}
+      {rows.map((r, i) =>
+        cols.map((c, j) => (
+          <Box
+            key={`${i}-${j}`}
+            x={c.x}
+            y={64 + i * 28}
+            w={c.w}
+            h={28}
+            lines={r[j]}
+            mono={!/[ぁ-んァ-ン一-龥]/.test(r[j])}
+            fs={12}
+            rx={0}
+            fill={i === 4 ? 'box4' : j < 2 ? 'box' : 'box5'}
+            dashed={i === 4}
+          />
+        )),
+      )}
+      <Arrow x1={530} y1={66} x2={530} y2={174} plain />
+      <Arrow x1={530} y1={66} x2={540} y2={66} plain />
+      <Arrow x1={530} y1={174} x2={540} y2={174} plain />
+      <T x={548} y={110} fs={12}>
+        INNER JOIN の結果（4行）
+      </T>
+      <T x={548} y={132} fs={11} tone="muted">
+        記事5 はコメントの数だけ3行
+      </T>
+      <T x={530} y={192} fs={12} tone="acc">
+        ← LEFT OUTER JOIN だけに出る行
+      </T>
+      <T x={20} y={234} fs={11.5}>
+        INNER JOIN：相手（コメント）の無い記事7 は結果に出ない
+      </T>
+      <T x={20} y={256} fs={11.5}>
+        LEFT OUTER JOIN：左側（articles）の行をすべて残し、相手の無い行では comments の列を NULL にする
+      </T>
+      <T x={20} y={278} fs={11} tone="muted">
+        結果の行の数は記事の数（3）ではなく、組み合わせた行の数（4 または 5）
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 13-3 外部キーと関連のメソッド ---------- */
+function ForeignKeyFigure() {
+  return (
+    <Svg
+      id="13-3"
       w={760}
       h={290}
       label="articles テーブルの author_id 列が、authors テーブルの id を指す。外部キーを持つ Article には belongs_to :author を、Author には has_many :articles を書く。article.author は authors から id が 23 の行を1件読み、author.articles は articles から author_id が 23 の行を読む"
@@ -91,11 +230,11 @@ function ForeignKeyFigure() {
   )
 }
 
-/* ---------- 図 13-2 関連を作るオブジェクト ---------- */
+/* ---------- 図 13-4 関連を作るオブジェクト ---------- */
 function ObjectsFigure() {
   return (
     <Svg
-      id="13-2"
+      id="13-4"
       w={760}
       h={300}
       label="Article クラスは関連ごとにリフレクションを持つ。comments は HasManyReflection、author は BelongsToReflection、tags は ThroughReflection。Article のインスタンスの association(:comments) は、初めて呼ばれたときに HasManyAssociation を作り、@association_cache に保存する。Association は owner、reflection、読み込んだ target と、読み込み済みかどうかを持つ。a.comments が返すのは CollectionProxy で、Relation のサブクラスなので where などを続けられる。a.author は BelongsToAssociation の reader で、読み込んだ Author を返す"
@@ -160,7 +299,7 @@ function ObjectsFigure() {
   )
 }
 
-/* ---------- 図 13-3 読み込み方式と SQL の回数 ---------- */
+/* ---------- 図 13-5 読み込み方式と SQL の回数 ---------- */
 function StrategiesFigure() {
   const rows = [
     { name: '何もしない（N+1）', n: '6回', sql: ['SELECT articles … LIMIT 5', 'SELECT authors WHERE id = 15 LIMIT 1', '…（記事ごとに1回、計5回）'] },
@@ -169,7 +308,7 @@ function StrategiesFigure() {
   ]
   return (
     <Svg
-      id="13-3"
+      id="13-5"
       w={760}
       h={300}
       label="公開済みの記事5件とその著者を表示する場合の比較。何もしないと、記事の SELECT が1回と、著者の SELECT が記事ごとに1回で、計6回になる。preload は、記事の SELECT と、著者を IN でまとめて取る SELECT の2回になる。eager_load は、記事と著者を LEFT OUTER JOIN でつないだ1回の SELECT になり、列には t0_r0 や t1_r0 のような別名が付く"
@@ -192,11 +331,11 @@ function StrategiesFigure() {
   )
 }
 
-/* ---------- 図 13-5 includes がどちらになるか ---------- */
+/* ---------- 図 13-7 includes がどちらになるか ---------- */
 function IncludesFigure() {
   return (
     <Svg
-      id="13-5"
+      id="13-7"
       w={760}
       h={290}
       label="includes を指定した Relation が eager_load になるかは eager_loading? で決まる。eager_load を指定していれば eager_load。includes の関連が joins にも指定されているか、references に、JOIN していないテーブルが含まれていれば eager_load。それ以外は preload になる。where(authors: ...) のようにハッシュで関連のテーブルの条件を書くと、references が自動で追加されるので eager_load になる。order に authors.name のような文字列を書いた場合も同じ"
@@ -254,11 +393,11 @@ function IncludesFigure() {
   )
 }
 
-/* ---------- 図 13-4 JOIN の結果の行とレコード ---------- */
+/* ---------- 図 13-6 JOIN の結果の行とレコード ---------- */
 function JoinRowsFigure() {
   return (
     <Svg
-      id="13-4"
+      id="13-6"
       w={760}
       h={250}
       label="eager_load で has_many の comments を読み込むと、記事1件にコメントが3件あれば、JOIN の結果は記事の列が同じ3行になる。JoinDependency は t0_r0（記事の id）が同じ行を1件の記事にまとめ、t1_ で始まる列からコメントのレコードを作って、記事の comments の target に入れる。行が増えるので、LIMIT を付けると Rails はまず DISTINCT で記事の id を LIMIT 件取り、その id で本体の SELECT を絞る"
@@ -313,8 +452,10 @@ const ch13: Chapter = {
   part: 3,
   title: '関連と読み込み方式・N+1 問題',
   summary:
-    '外部キーと has_many・belongs_to の基本的な使い方を確かめた後、has_many や belongs_to の関連が、リフレクションと Association のオブジェクトでどう表され、いつ SQL を実行するかを説明します。N+1 問題と、preload・eager_load・includes の違い、joins との使い分け、counter_cache と inverse_of、strict_loading を MySQL での実測とともに扱います。',
+    '記事とコメントの行を外部キーでつなぐことと、JOIN で2つのテーブルを1回の SELECT で読むことを MySQL で確かめます。外部キーと has_many・belongs_to の基本的な使い方を確かめた後、has_many や belongs_to の関連が、リフレクションと Association のオブジェクトでどう表され、いつ SQL を実行するかを説明します。N+1 問題と、preload・eager_load・includes の違い、joins との使い分け、counter_cache と inverse_of、strict_loading を MySQL での実測とともに扱います。',
   goals: [
+    '別のテーブルの行を外部キーで指す1対多の表し方と、外部キー制約が防ぐことを説明できる',
+    'INNER JOIN と LEFT OUTER JOIN の結果の行の違いを、相手の数と相手の無い行から説明できる',
     '外部キーを持つ側に belongs_to、相手の側に has_many を書く理由と、関連のメソッドが実行する SQL を説明できる',
     'belongs_to の存在の検証と、親を削除するときの dependent の選択肢を説明できる',
     'リフレクション、Association、CollectionProxy の関係を説明できる',
@@ -327,6 +468,175 @@ const ch13: Chapter = {
   ],
   prerequisites: [5, 12],
   sections: [
+    {
+      id: 'foreign-key',
+      title: '外部キーでテーブルをつなぐ',
+      body: (
+        <>
+          <p>
+            ブログの記事にはコメントが付きます。1件の記事に付くコメントは、0件のこともあれば何十件のこともあります。MySQL のようなリレーショナルデータベースは、データを行と列からなる表（テーブル）に保存し、1件のデータを1行で表します（
+            <ChapterLink n={11} section="crud" />
+            ）。articles テーブルに「コメント1」「コメント2」のような列を用意すると、列の数より多いコメントは保存できません。そこで、コメントは別の comments テーブルに1件1行で保存し、各行に「どの記事のコメントか」を記録します。デモの MySQL で、記事3件と、それらに付いたコメントを読みました。
+          </p>
+          <Code
+            lang="text"
+            title="MySQL 8.4.13 での実行結果（デモの demo_development）"
+            code={`
+SELECT id, title FROM articles WHERE id IN (5, 6, 7);
++----+---------+
+| id | title   |
++----+---------+
+|  5 | 記事5   |
+|  6 | 記事6   |
+|  7 | 記事7   |
++----+---------+
+
+SELECT id, article_id, body FROM comments WHERE article_id IN (5, 6, 7);
++-----+------------+--------------+
+| id  | article_id | body         |
++-----+------------+--------------+
+|   1 |          5 | コメント     |
+|   2 |          5 | コメント     |
+|   3 |          5 | コメント     |
+| 727 |          6 | コメント     |
++-----+------------+--------------+
+`}
+          />
+          <p>
+            comments の id が 1・2・3 の行は article_id が 5 なので記事5のコメントで、id が 727 の行は記事6のコメントです。記事7を指す行は無いので、記事7のコメントは0件です。このように、別のテーブルの行の
+            id を保存する列を<Term en="foreign key">外部キー</Term>と呼びます。id はテーブルの中で行を1つに決める番号で、主キーと呼びます。1件の記事に複数のコメントが対応する関係を1対多と呼び、外部キーは「多」の側（comments）に置きます（図 13-1）。記事5のコメントだけが必要なら、外部キーで絞り込みます。
+          </p>
+          <Code
+            lang="text"
+            code={`
+SELECT id, body FROM comments WHERE article_id = 5;
++----+--------------+
+| id | body         |
++----+--------------+
+|  1 | コメント     |
+|  2 | コメント     |
+|  3 | コメント     |
++----+--------------+
+`}
+          />
+          <p>
+            外部キーの列は整数の列なので、そのままでは存在しない記事の id も入ってしまいます。それを防ぐのが外部キー制約です。制約は、行を保存するたびに MySQL が確かめる条件です。デモの comments テーブルには「article_id は articles の id のどれかを指す」という制約があり、存在しない記事（id が 999999）を指すコメントの INSERT は拒否されました
+            <Ref n={11} />。
+          </p>
+          <Code
+            lang="text"
+            title="SHOW CREATE TABLE comments の結果（一部）と、INSERT の結果"
+            code={`
+  \`article_id\` bigint NOT NULL,
+  KEY \`index_comments_on_article_id\` (\`article_id\`),
+  CONSTRAINT \`fk_rails_3bf61a60d3\` FOREIGN KEY (\`article_id\`) REFERENCES \`articles\` (\`id\`),
+
+INSERT INTO comments (article_id, body, created_at, updated_at) VALUES (999999, 'x', NOW(), NOW());
+ERROR 1452 (23000) at line 1: Cannot add or update a child row: a foreign key constraint fails
+(\`demo_development\`.\`comments\`, CONSTRAINT \`fk_rails_3bf61a60d3\` FOREIGN KEY (\`article_id\`) REFERENCES \`articles\` (\`id\`))
+`}
+          />
+          <p>
+            CONSTRAINT の行が外部キー制約で、KEY の行は article_id の索引です。索引は、列の値から行をすばやく探すために MySQL が作るデータで、<code>WHERE article_id = 5</code>{' '}
+            のように外部キーで探すときに使われます（<ChapterLink n={12} section="explain" />
+            ）。fk_rails_3bf61a60d3 や index_comments_on_article_id は、Rails のマイグレーション（テーブルの構造を変える Ruby のファイル）で制約と索引を作ったときに付いた名前です。
+          </p>
+          <Figure n="13-1" title="外部キーでつないだ2つのテーブル" caption="デモの MySQL で読んだ articles と comments の行をもとにした図。">
+            <TablesFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'join',
+      title: 'JOIN で2つのテーブルをつないで読む',
+      body: (
+        <>
+          <p>
+            記事のタイトルとコメントの本文を並べて表示するには、2つのテーブルの値が必要です。articles と comments を別々に SELECT し、プログラムの側で article_id を見て組み合わせることもできますが、SQL の{' '}
+            <Term>JOIN</Term> を使うと、条件に合う行どうしを横につないだ結果を1回の SELECT で受け取れます
+            <Ref n={12} />。
+          </p>
+          <Code
+            lang="text"
+            title="INNER JOIN（MySQL 8.4.13）"
+            code={`
+SELECT articles.id, articles.title, comments.id, comments.body
+FROM articles INNER JOIN comments ON comments.article_id = articles.id
+WHERE articles.id IN (5, 6, 7);
++----+---------+-----+--------------+
+| id | title   | id  | body         |
++----+---------+-----+--------------+
+|  5 | 記事5   |   1 | コメント     |
+|  5 | 記事5   |   2 | コメント     |
+|  5 | 記事5   |   3 | コメント     |
+|  6 | 記事6   | 727 | コメント     |
++----+---------+-----+--------------+
+`}
+          />
+          <p>
+            FROM の後の <code>articles INNER JOIN comments</code> が、つなぐ2つのテーブルです。ON に書くのは、つなぐ条件です。ここでは「コメントの article_id が記事の id と同じ」行どうしを組み合わせています。2つのテーブルのどちらにも
+            id の列があるので、<code>articles.id</code> のようにテーブルの名前と列の名前をドットでつないで区別します。
+          </p>
+          <p>
+            結果は4行で、記事5はコメントの数だけ3回出ています。JOIN の結果は組み合わせた行の数だけできるからです。一方、コメントの無い記事7は、組み合わせる相手が無いので INNER JOIN の結果には出ません。相手の無い行も残したいときは LEFT OUTER JOIN を使います。
+          </p>
+          <Code
+            lang="text"
+            title="LEFT OUTER JOIN（MySQL 8.4.13）"
+            code={`
+SELECT articles.id, articles.title, comments.id, comments.body
+FROM articles LEFT OUTER JOIN comments ON comments.article_id = articles.id
+WHERE articles.id IN (5, 6, 7);
++----+---------+------+--------------+
+| id | title   | id   | body         |
++----+---------+------+--------------+
+|  5 | 記事5   |    1 | コメント     |
+|  5 | 記事5   |    2 | コメント     |
+|  5 | 記事5   |    3 | コメント     |
+|  6 | 記事6   |  727 | コメント     |
+|  7 | 記事7   | NULL | NULL         |
++----+---------+------+--------------+
+`}
+          />
+          <p>
+            LEFT OUTER JOIN は左側（FROM で先に書いた articles）の行をすべて残し、相手の無い行では右側（comments）の列を NULL（値が無いことを表す特別な値）にします
+            <Ref n={12} />。2つの結果を図 13-2 にまとめました。結果の行が相手の数だけ増えることは、「eager_load：JOIN の1回で読む」と「joins との違い」の節で、Rails が記事を組み立てるときや件数を数えるときに関わります。
+          </p>
+          <Figure n="13-2" title="INNER JOIN と LEFT OUTER JOIN の結果" caption="上の2つの実行結果をまとめた図。">
+            <JoinFigure />
+          </Figure>
+          <p>
+            Rails ではこうした SQL を自分で書く代わりに、モデルに関連を宣言します。デモの Article には <code>has_many :comments</code>、Comment には <code>belongs_to :article</code>{' '}
+            が書かれていて、次のメソッドが上と同じ形の SQL を組み立てて実行しました。<code>pluck</code> は指定した列の値だけを配列で返すメソッドです
+            <Ref n={13} />。
+          </p>
+          <Code
+            lang="ruby"
+            title="デモのアプリケーションでの実行結果（SQL の末尾のコメントは省略）"
+            code={`
+Article.find(5).comments.map(&:id)   # => [1, 2, 3]
+#   SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`id\` = 5 LIMIT 1
+#   SELECT \`comments\`.* FROM \`comments\` WHERE \`comments\`.\`article_id\` = 5
+
+Article.joins(:comments).where(id: [5, 6, 7]).pluck("articles.id", "comments.id")
+# => [[5, 1], [5, 2], [5, 3], [6, 727]]
+#   SELECT \`articles\`.\`id\`, \`comments\`.\`id\` FROM \`articles\`
+#   INNER JOIN \`comments\` ON \`comments\`.\`article_id\` = \`articles\`.\`id\` WHERE \`articles\`.\`id\` IN (5, 6, 7)
+
+Article.left_outer_joins(:comments).where(id: [5, 6, 7]).pluck("articles.id", "comments.id")
+# => [[5, 1], [5, 2], [5, 3], [6, 727], [7, nil]]
+#   SELECT \`articles\`.\`id\`, \`comments\`.\`id\` FROM \`articles\`
+#   LEFT OUTER JOIN \`comments\` ON \`comments\`.\`article_id\` = \`articles\`.\`id\` WHERE \`articles\`.\`id\` IN (5, 6, 7)
+`}
+          />
+          <p>
+            <code>Article.find(5).comments</code> は記事5の id を使って comments を絞り込み、<code>joins</code> は INNER JOIN、<code>left_outer_joins</code> は LEFT OUTER JOIN
+            の SQL を作りました。NULL は Ruby では nil です。外部キーの列名 article_id は、Rails が関連の名前から決めています。次の節では著者と記事を例に、関連の宣言の書き方と、関連を通して読む・作る・削除するメソッドを見ていきます。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'basics',
       title: '関連の基本的な使い方',
@@ -375,7 +685,7 @@ class Article < ApplicationRecord
 end
 `}
           />
-          <Figure n="13-1" title="外部キーと関連のメソッド" caption="模式図。下段の SQL は、この節の実行結果を短く書いたもの。">
+          <Figure n="13-3" title="外部キーと関連のメソッド" caption="模式図。下段の SQL は、この節の実行結果を短く書いたもの。">
             <ForeignKeyFigure />
           </Figure>
           <h3>関連を通して読む・作る</h3>
@@ -478,7 +788,7 @@ author.destroy
 `}
           />
           <p>
-            <code>dependent: :destroy</code> は、著者を削除する前に記事を読み込み、1件ずつ <code>destroy</code> します（記事ごとに ActiveStorage の添付を調べる SELECT もありましたが、省略しています）。記事のコールバックも実行されますが、記事の数だけ SQL
+            <code>dependent: :destroy</code> は、著者を削除する前に記事を読み込み、1件ずつ <code>destroy</code> します（記事ごとに ActiveStorage の添付を調べる SELECT もありましたが、省略しています。ActiveStorage は画像などのファイルをレコードに添付する Rails の機能です）。記事のコールバック（保存や削除の前後に Rails が呼ぶメソッド。<ChapterLink n={14} section="callback-basics" />）も実行されますが、記事の数だけ SQL
             が増えます。ほかに、コールバックを実行せずに1つの DELETE で消す <code>:delete_all</code>、外部キーを NULL にする <code>:nullify</code>、記事が残っていれば例外を投げて削除しない{' '}
             <code>:restrict_with_exception</code> などがあります
             <Ref n={10} />。子のレコードを親と一緒に消してよいか、残すべきかで選びます。
@@ -545,7 +855,7 @@ a.comments.to_sql  # => "SELECT \`comments\`.* FROM \`comments\` WHERE \`comment
             のように条件を続けられ、この時点ではまだ SQL を実行しません。belongs_to の <code>a.author</code> は、未読み込みなら <code>reload</code> で読み込んでから相手のレコードを返します（
             <code>singular_association.rb</code> の 7〜15 行目）。
           </p>
-          <Figure n="13-2" title="関連を表すオブジェクト" caption="上の実行結果と associations.rb・association.rb を読んでまとめた模式図。">
+          <Figure n="13-4" title="関連を表すオブジェクト" caption="上の実行結果と associations.rb・association.rb を読んでまとめた模式図。">
             <ObjectsFigure />
           </Figure>
           <p>関連の相手を読み込む処理は次のとおりです。</p>
@@ -615,7 +925,7 @@ Article.where(status: :published).limit(5).each { |x| x.author&.name }   # SQL 6
             一覧の1回（1）と、記事ごとの著者の読み込み（N）を合わせて N+1 回の SQL になります。これを<Term en="N+1 queries">N+1 問題</Term>と呼びます。1回あたりは速くても、件数が増えるとその分だけ往復の回数が増え、応答時間が長くなります。対策は、一覧を読み込むときに関連もまとめて読み込むことで、Rails
             には preload、eager_load、includes の3つの方法があります。
           </p>
-          <Figure n="13-3" title="読み込み方式と SQL の回数" caption="デモのアプリケーション（MySQL 8.4.13）で、公開済みの記事5件と著者を読み込んだときの SQL。">
+          <Figure n="13-5" title="読み込み方式と SQL の回数" caption="デモのアプリケーション（MySQL 8.4.13）で、公開済みの記事5件と著者を読み込んだときの SQL。">
             <StrategiesFigure />
           </Figure>
           <p>
@@ -717,7 +1027,7 @@ WHERE \`authors\`.\`name\` = '著者3' LIMIT 3
 `}
           />
           <p>
-            どのテーブルのどの列かを区別するため、すべての列に <code>t0_r0</code>（0番目のテーブルの0番目の列）のような別名が付きます。結果の行からレコードを組み立てるのは JoinDependency
+            どのテーブルのどの列かを区別するため、すべての列に <code>t0_r0</code>（0番目のテーブルの0番目の列）のような別名（SQL の AS で結果の列に付ける名前）が付きます。結果の行からレコードを組み立てるのは JoinDependency
             です。関連のテーブルの列を WHERE や ORDER BY に使えるのが eager_load の利点です。
           </p>
           <p>
@@ -734,8 +1044,8 @@ Article.where(id: [1, 2, 3, 4, 5]).eager_load(:comments).limit(3).to_a
         WHERE \`articles\`.\`id\` IN (1, 2, 3, 4, 5) AND \`articles\`.\`id\` IN (1, 2, 3)
 `}
           />
-          <p>まず DISTINCT で記事の id を3件決め、その id で本体の SELECT を絞っています。</p>
-          <Figure n="13-4" title="JOIN の結果の行とレコード" caption="模式図。下段の SQL はデモのアプリケーションでの実測（列の別名は省略）。">
+          <p>まず DISTINCT（同じ値の行を1行にまとめる指定）で記事の id を3件決め、その id で本体の SELECT を絞っています。</p>
+          <Figure n="13-6" title="JOIN の結果の行とレコード" caption="模式図。下段の SQL はデモのアプリケーションでの実測（列の別名は省略）。">
             <JoinRowsFigure />
           </Figure>
         </>
@@ -775,7 +1085,7 @@ Article.includes(:author).references(:authors).eager_loading?                 # 
 Article.includes(:author).order("authors.name").eager_loading?                # => true
 `}
           />
-          <Figure n="13-5" title="includes がどちらになるか" caption="Rails 8.1.4.1 の relation.rb の eager_loading? と、デモでの実行結果をまとめた図。">
+          <Figure n="13-7" title="includes がどちらになるか" caption="Rails 8.1.4.1 の relation.rb の eager_loading? と、デモでの実行結果をまとめた図。">
             <IncludesFigure />
           </Figure>
           <p>
@@ -809,7 +1119,7 @@ Article.joins(:author).where(authors: { name: "著者3" }).limit(2).each { |x| x
           <p>
             has_many を joins すると、相手の件数だけ行が増えます。デモのアプリケーションでは、<code>Article.where(id: 1..5).joins(:comments).count</code> が 6、
             <code>.distinct.count</code> が 2 でした。件数を数えるときは <code>distinct</code> を付けるか、<code>where(id: Comment.select(:article_id))</code>{' '}
-            のような副問い合わせにします。
+            のような副問い合わせ（SQL の中に入れた別の SELECT）にします。
           </p>
         </>
       ),
@@ -870,7 +1180,7 @@ a.tags.to_a
           />
           <p>
             through の関連を preload すると、まず中間の taggings を、次に tags を、それぞれ IN で読み込みます。デモの taggings テーブルには <code>(article_id, tag_id)</code>{' '}
-            の一意の複合索引があり、<code>WHERE taggings.article_id = ?</code> の検索にはこの索引の先頭の列が使えます（<ChapterLink n={12} />）。
+            の一意の複合索引（2つの列の値の組み合わせで作る索引で、同じ組み合わせの行は保存できない）があり、<code>WHERE taggings.article_id = ?</code> の検索にはこの索引の先頭の列が使えます（<ChapterLink n={12} />）。
           </p>
         </>
       ),
@@ -1012,6 +1322,8 @@ Article.strict_loading.first.author
       title: 'まとめ',
       body: (
         <ul>
+          <li>comments の article_id のように、別のテーブルの行の id を保存する列が外部キーです。外部キー制約は、存在しない行を指す値の保存を拒否します。</li>
+          <li>JOIN は ON の条件に合う行どうしをつなぎ、結果は組み合わせた数だけの行になります。INNER JOIN は相手の無い行を除き、LEFT OUTER JOIN は残して相手の列を NULL にします。</li>
           <li>
             1対多のつながりは、「多」の側のテーブルに外部キー（<code>author_id</code>）を置いて表します。外部キーを持つモデルに <code>belongs_to</code>、相手に <code>has_many</code>{' '}
             を書きます。<code>belongs_to</code> は既定で相手の存在を検証し、<code>optional: true</code> で外せます。
@@ -1042,6 +1354,9 @@ Article.strict_loading.first.author
     { title: 'Active Record Query Interface — Eager Loading Associations', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_querying.html#eager-loading-associations', accessed: '2026-11-12', version: 'Rails 8.1', note: 'N+1、includes・preload・eager_load、strict_loading、group による件数の集計。追加例は説明用であり、新たな実測結果ではない。' },
     { title: 'ActiveRecord::Associations::CollectionProxy', publisher: 'Ruby on Rails API', url: 'https://api.rubyonrails.org/v8.1.0/classes/ActiveRecord/Associations/CollectionProxy.html', accessed: '2026-11-12', version: 'Rails 8.1.0', note: 'count と size の違い。読み込み済みの関連の件数を size が利用すること。' },
     { title: 'Active Record Associations（belongs_to・has_many・dependent）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/association_basics.html', accessed: '2026-11-13', version: 'Rails 8.1', note: '外部キーを持つ側に belongs_to を書くこと、外部キーの列名、belongs_to が既定で相手の存在を検証し optional: true で外せること、dependent の :destroy・:delete_all・:nullify・:restrict_with_exception。' },
+    { title: 'FOREIGN KEY Constraints', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/create-table-foreign-keys.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: '外部キーの親テーブルと子テーブル、親に無い値を子テーブルに入れる INSERT・UPDATE を拒否すること。実行例は MySQL 8.4.13 で実測。' },
+    { title: 'JOIN Clause', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/join.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'INNER JOIN と LEFT JOIN の構文、LEFT JOIN で右側に一致する行が無いとき右側の列がすべて NULL の行が使われること。' },
+    { title: 'Active Record Query Interface（Joining Tables・pluck）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_querying.html#joining-tables', accessed: '2026-11-16', version: 'Rails 8.1', note: 'joins が INNER JOIN、left_outer_joins が LEFT OUTER JOIN の SQL を作ること。pluck が指定した列の値を取り出すこと。実行例は Rails 8.1.4.1 で実測。' },
   ],
 }
 

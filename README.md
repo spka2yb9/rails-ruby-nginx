@@ -1,6 +1,6 @@
 # Rails・Ruby・Nginx 教科書
 
-業務で Rails を使っている開発者が、Ruby のオブジェクトモデル、Rails の起動とリクエストの処理経路、ActiveRecord の内部、前段の Puma と Nginx の設定の根拠までを、実際のソースコードとともに学ぶための日本語の Web 教科書です（Vite + React + TypeScript の静的サイト）。
+Rails で開発を始めたエンジニアが、Rails の機能やプロセス・データベースなどの仕組みを実例で確かめながら、Ruby のオブジェクトモデル、Rails の起動とリクエストの処理経路、ActiveRecord の内部、前段の Puma と Nginx の設定の根拠までを、実際のソースコードとともに学ぶための日本語の Web 教科書です（Vite + React + TypeScript の静的サイト）。
 
 ## 必要なもの
 

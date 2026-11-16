@@ -1,78 +1,150 @@
-import { Code } from '../components/content'
-import { guide, rubyDoc, type Explanations } from './shared'
+import { ChapterLink, Code } from '../components/content'
+import { guide, primarySource, rubyDoc, type Explanations } from './shared'
 
 export const explanation01: Explanations = {
-  sources: [guide('getting_started', 'Getting Started with Rails'), rubyDoc('Method', 'Method — owner / source_location / super_method')],
+  sources: [
+    guide('getting_started', 'Getting Started with Rails'),
+    rubyDoc('Method', 'Method — owner / source_location / super_method'),
+    { title: 'Gemfiles', publisher: 'RubyGems Guides（Bundler）', url: 'https://guides.rubygems.org/gemfile/', accessed: '2026-11-16', note: 'Gemfile の gem の行とバージョンの条件（~> の意味）、Bundler.require。' },
+    { title: 'bundle install', publisher: 'RubyGems Guides（Bundler コマンドリファレンス）', url: 'https://guides.rubygems.org/command-reference/bundle-install/', accessed: '2026-11-16', note: 'bundle install が依存関係を解決して Gemfile.lock に書き、次からはそのバージョンを使うこと。' },
+    { title: 'module Kernel（require・caller）', publisher: 'Ruby 4.0 Documentation', url: 'https://docs.ruby-lang.org/en/4.0/Kernel.html', accessed: '2026-11-16', version: 'Ruby 4.0', note: 'require が Ruby のファイルを読み込むこと、caller が実行中の呼び出しの履歴を返すこと。' },
+  ],
   sections: {
     scope: cite => <>
       <p>
-        記事の詳細画面を開くとき、ブラウザーは記事のURLへ要求を送ります。この要求がリクエストです。
-        サーバーは要求を受け、記事のデータを取得して画面用のHTMLを作り、レスポンスとして返します。
-        HTMLは見出しや段落などを記述する形式で、ブラウザーが解釈して画面に表示します。HTTPはこの要求と応答の規則です。
-        HTTPSではTLSによって通信を暗号化します。
+        IP アドレスは、ネットワークにつながったコンピューターを区別する番号で、「HTTP の要求と応答」の節の 127.0.0.1 もその1つです。
+        静的ファイルはデモの HTML の head にある /icon.png のように、要求のたびに内容が変わらず、ファイルをそのまま返せばよいものです。
+        rails new で作ったアプリケーションでは public ディレクトリに置きます。/articles の HTML のように、要求のたびに Rails が作る応答とは分けて扱います。{cite}
       </p>
       <p>
-        Rubyはプログラミング言語、RailsはRubyでWebアプリを作るためのフレームワークです。
-        フレームワークは要求を受ける処理、データの保存、画面の生成などに共通する仕組みと書き方を提供します。
-        アプリ側には「どの記事を取得するか」「どの値を保存してよいか」といった、そのアプリの処理を書きます。
-      </p>
-      <p>
-        Railsでは主に3つの役割に分けます。コントローラーが要求に対応する処理を進め、モデルがデータの取得・保存や業務上の条件を扱い、ビューが表示する内容を組み立てます。
-        この分担をMVCと呼びます。記事を開く例なら、コントローラーが記事のIDを受け取り、モデルで記事を取得し、ビューでタイトルをHTMLにします。
-        DBはデータを保存する仕組み、MySQLはその管理を行うソフトウェアです。
-      </p>
-      <p>
-        コントローラーの処理に到達するまでにも、通信を受け付けるソフトウェアが動いています。
-        PumaはHTTPを受けてRubyのアプリを呼ぶサーバーです。Nginxはその前で要求を転送したり、保存済みの画像やCSSを返したりできます。
-        さらに複数のサーバーへ振り分けるロードバランサーを置く構成もあります。これらを同じ「サーバー」という言葉で済ませず、どの要求を誰が処理するかを区別します。{cite}
+        プロセスは実行中のプログラム、スレッドはプロセスの中で命令を順に実行する流れです。
+        Puma は複数のプロセスと、各プロセスの中の複数のスレッドを使って、複数の要求を同時に処理します（<ChapterLink n={23} section="process" />）。
+        Rack は、Puma のような Web サーバーが Ruby のアプリケーションを呼び出すときの、メソッドの名前と引数・戻り値の形を決めた規約です（<ChapterLink n={6} />）。
+        Redis はデータをメモリーに置いて読み書きするデータベースです（<ChapterLink n={18} />）。
       </p>
     </>,
     gems: cite => <>
       <p>
-        gemはRubyのライブラリを配布する単位です。Gemfileには使うgemとバージョンの条件を書き、Bundlerが依存するgemも含めた組み合わせを決めます。
-        Gemfile.lockはそのとき解決された具体的なバージョンを記録するファイルです。「AがBに依存する」は、Aを動かすためにBも必要だという意味です。
+        gem は Ruby のライブラリを配布するときのまとまりです。Rails も rails という名前の gem として配布されています。
+        アプリケーションで使う gem は Gemfile に書き、rails new が作った Gemfile には次の行があります。
+      </p>
+      <Code lang="ruby" title="Gemfile（rails new が作ったものの一部）" code={`gem "rails", "~> 8.1.4", ">= 8.1.4.1"`} />
+      <p>
+        <code>gem</code> の後ろは gem の名前と、使ってよいバージョンの条件です。<code>"~&gt; 8.1.4"</code> は 8.1.4 以上 8.2 未満、<code>"&gt;= 8.1.4.1"</code> は 8.1.4.1 以上を表します。
+        Bundler は gem の組み合わせを決めてインストールするツールで、<code>bundle install</code> を実行すると、Gemfile の条件と、gem どうしの依存（ある gem が動くのに必要な別の gem）を満たすバージョンを選んでインストールし、選んだバージョンを Gemfile.lock に書きます。
+        次に bundle install を実行したときは、Gemfile を変えていなければ Gemfile.lock のバージョンを使います。
+      </p>
+      <Code lang="text" title="Gemfile.lock（rails new が作ったものの一部）" code={`    rails (8.1.4.1)
+      actioncable (= 8.1.4.1)
+      actionmailbox (= 8.1.4.1)
+      actionmailer (= 8.1.4.1)
+      actionpack (= 8.1.4.1)
+      actiontext (= 8.1.4.1)
+      actionview (= 8.1.4.1)
+      activejob (= 8.1.4.1)
+      activemodel (= 8.1.4.1)
+      activerecord (= 8.1.4.1)
+      activestorage (= 8.1.4.1)
+      activesupport (= 8.1.4.1)
+      bundler (>= 1.15.0)
+      railties (= 8.1.4.1)`} />
+      <p>
+        rails (8.1.4.1) の下に並ぶのは、rails gem が依存している gem です。Gemfile に書いたのは rails だけでも、これらの gem も一緒にインストールされます。
       </p>
       <p>
-        たとえば、メールを作る機能は本文を描画する機能も使います。メール用のgemだけで描画の実装を持ち直す代わりに、別のgemを利用できます。
-        Railsもルーティング・DB操作・画面描画などのgemを組み合わせて動きます。アプリで呼んだメソッドの定義が、Gemfileに直接書いていない依存先のgemにある場合もあります。{cite}
+        インストールした gem のコードは、require で読み込んでから使います。require はライブラリのファイルを読み込むメソッドで、読み込んだファイルが定義したクラスやメソッドが、その後で使えるようになります。
+        activesupport gem の blank?（空の文字列や nil なら true を返すメソッド）で確かめました。respond_to? は、そのメソッドを呼べるかどうかを返すメソッドです。
       </p>
+      <Code lang="ruby" title="ruby で実行（activesupport 8.1.4.1 をインストールした環境）" code={`"".respond_to?(:blank?)   # => false
+require "active_support"
+require "active_support/core_ext/object/blank"
+"".respond_to?(:blank?)   # => true
+"  ".blank?               # => true`} />
+      <p>
+        Rails のアプリケーションでは gem を一つずつ自分で require しません。rails new が作る config/application.rb では、<code>require "rails/all"</code> が Rails の gem を読み込み、
+        <code>Bundler.require(*Rails.groups)</code> が Gemfile に書いた gem をまとめて読み込みます。{cite}
+      </p>
+      <Code lang="ruby" title="config/application.rb（rails new が作ったものの一部）" code={`require_relative "boot"
+
+require "rails/all"
+
+# Require the gems listed in Gemfile, including any gems
+# you've limited to :test, :development, or :production.
+Bundler.require(*Rails.groups)`} />
     </>,
     'find-source': cite => <>
       <p>
-        ターミナルはコマンドを入力してプログラムを動かす画面です。Railsアプリのディレクトリで<code>bin/rails console</code>を実行すると、
-        アプリのクラスを使いながらRubyの式を試せます。式の結果は戻り値と呼びます。ソースコードはその処理を定義したコードそのものです。
+        ターミナルはコマンドを入力してプログラムを動かす画面です。Rails のアプリケーションのディレクトリで <code>bin/rails console</code> を実行すると、アプリケーションのクラスを使いながら Ruby の式を1行ずつ試せます。
+        「rails new で作るアプリケーション」の節で使った <code>bin/rails runner</code> は、同じようにアプリケーションを読み込んだうえで、渡したコードを実行して終わります。
+        次の greeting.rb で、メソッドの定義場所を調べるメソッドを試しました。
       </p>
-      <Code lang="ruby" title="メソッドの実行と、メソッドの情報の取得" code={`class Greeting
+      <Code lang="ruby" title="greeting.rb（# => の後ろは p で表示した値）" code={`class Greeting
   def text
     "こんにちは"
   end
 end
 
-greeting = Greeting.new
-greeting.text             # => "こんにちは"
-method = greeting.method(:text)
-method.owner              # => Greeting`} />
+class PoliteGreeting < Greeting
+  def text
+    super + "。よろしくお願いします"
+  end
+end
+
+greeting = PoliteGreeting.new
+greeting.text                    # => "こんにちは。よろしくお願いします"
+m = greeting.method(:text)
+m.owner                          # => PoliteGreeting
+m.source_location                # => ["greeting.rb", 8]
+m.super_method.owner             # => Greeting
+m.super_method.source_location   # => ["greeting.rb", 2]
+m.super_method.super_method      # => nil
+"".method(:upcase).source_location  # => nil`} />
       <p>
-        <code>Greeting</code>はクラス、<code>Greeting.new</code>で作った個々のオブジェクトはインスタンスです。
-        <code>greeting.text</code>は処理を実行します。一方、<code>greeting.method(:text)</code>は処理を実行せず、そのメソッドを表すオブジェクトを取り出します。
-        <code>:text</code>はメソッド名を表すシンボルです。取り出したオブジェクトの<code>owner</code>は定義元を返し、<code>source_location</code>はRubyで定義されたファイルと行番号を返します。
+        class で定義した Greeting と PoliteGreeting はクラス、<code>PoliteGreeting.new</code> で作ったオブジェクトはインスタンスです（<ChapterLink n={2} section="class-instance" />）。
+        <code>class PoliteGreeting &lt; Greeting</code> は、PoliteGreeting が Greeting のメソッドを受け継ぐ（継承する）ことを表します。
+        PoliteGreeting の text の中の <code>super</code> は、受け継いだ Greeting の text を呼び、その戻り値に文字列を足しています。
       </p>
       <p>
-        Railsの<code>save</code>にもこうして定義の情報を問い合わせられます。
-        アプリのモデルに<code>def save</code>がなくても、親クラスや組み込まれたモジュールに定義があれば呼び出せます。
-        その実際の定義元を調べることで、アプリの1行とRails内部の処理を結び付けられます。{cite}
+        <code>greeting.text</code> はメソッドを実行しますが、<code>greeting.method(:text)</code> はメソッドを実行せず、そのメソッドを表すオブジェクトを返します（<code>:text</code> はメソッドの名前を表すシンボルです）。
+        返ったオブジェクトの owner は定義したクラス、source_location は定義したファイルと行番号、super_method は super で呼ばれる次のメソッドを返します。
+        String の upcase のように、Ruby の処理系の中に C 言語で書かれたメソッドでは、source_location は nil です。
+      </p>
+      <p>
+        Rails のメソッドの多くは、クラスではなくモジュールに定義されています。モジュールはメソッドをまとめて定義しておき、複数のクラスに組み込んで使うためのものです（<ChapterLink n={3} />）。
+        組み込まれたモジュールのメソッドどうしも super でつながっていて、この節の後半ではその順番を super_method でたどります。{cite}
       </p>
     </>,
     trace: cite => <>
       <p>
-        ファイルに定義されたコードには、条件によって通る部分と通らない部分があります。
-        たとえば保存できなかったときは、保存前の検証で止まったのか、DBへ問い合わせて失敗したのかで調べる場所が変わります。
-        ログは実行時の記録、デバッガは実行を途中で止めて値を調べる道具です。
+        ファイルに書かれたコードには、条件によって通る部分と通らない部分があります。
+        たとえば記事を保存できなかったときは、保存前の検証で止まったのか、データベースへの書き込みで失敗したのかで、調べる場所が変わります。
+        ログは実行時の記録、デバッガは実行を途中で止めて変数の値などを調べる道具です。
       </p>
       <p>
-        メソッドAがBを、BがCを呼んで停止したなら、A→B→Cという呼び出しの履歴があります。これがコールスタックです。
-        現在の変数とコールスタックを一緒に見ると、値がどこから来たかを調べられます。
-        静的な定義場所の調査に、実際に通った経路の確認を加えることで、不具合が発生した処理を絞れます。{cite}
+        メソッドの中で別のメソッドを呼ぶと、呼んだ側のメソッドは、呼ばれた側が終わるまで途中で止まって待ちます。Ruby の caller はいまの位置に来るまでの呼び出しの履歴を返すメソッドです。
+        次の callstack.rb では3つのメソッドを順に呼んだ先で履歴を表示しました。
+      </p>
+      <Code lang="ruby" title="callstack.rb" code={`def show_article
+  find_article
+end
+
+def find_article
+  load_row
+end
+
+def load_row
+  puts caller(0)
+end
+
+show_article`} />
+      <Code lang="text" title="実行結果（Ruby 4.0.9）" code={`callstack.rb:10:in 'Object#load_row'
+callstack.rb:6:in 'Object#find_article'
+callstack.rb:2:in 'Object#show_article'
+callstack.rb:13:in '<main>'`} />
+      <p>
+        上の行ほど新しい呼び出しで、13行目の show_article の呼び出しから、2行目と6行目を経て10行目に来たことが分かります（<code>&lt;main&gt;</code> はファイルの一番外側です）。
+        この履歴をコールスタックと呼びます。デバッガの bt コマンドで表示する呼び出しの履歴や、エラーのときに表示されるバックトレースも、同じ形式です。
+        定義場所の調査に、実際に通った経路の確認を加えると、不具合が起きた処理を絞り込めます。{cite}
       </p>
     </>,
   },
@@ -81,103 +153,46 @@ method.owner              # => Greeting`} />
 export const explanation02: Explanations = {
   sources: [rubyDoc('syntax/calling_methods_rdoc', 'Calling Methods'), rubyDoc('syntax/methods_rdoc', 'Methods'), rubyDoc('syntax/modules_and_classes_rdoc', 'Modules and Classes')],
   sections: {
-    'rails-syntax': cite => <>
-      <p>
-        Rubyのコードは値を作り、変数で参照し、メソッドを呼び出す形で読めます。
-        <code>name = "rails"</code>では文字列のオブジェクトに<code>name</code>という変数から参照できるようにし、
-        <code>name.upcase</code>ではその文字列に対して大文字へ変換するメソッドを呼びます。呼び出し先のオブジェクトをレシーバと呼びます。
-        メソッドへ渡す値が引数、メソッドから返る値が戻り値です。
-      </p>
-      <Code lang="ruby" title="値を作り、メソッドへ渡し、戻り値を受け取る" code={`name = "rails"
-upper = name.upcase
-upper # => "RAILS"
-
-names = ["Aki", "Mika"]
-names.first # => "Aki"
-
-options = { title: "Ruby", published: true }
-options[:title] # => "Ruby"`} />
-      <p>
-        <code>[...]</code>は順序を持つArray、<code>{'{...}'}</code>はキーと値を対応付けるHashです。
-        <code>:title</code>のようなシンボルは属性やメソッドなどの名前によく使います。
-        <code>true</code>と<code>false</code>は真偽、<code>nil</code>は値がない状態などを表します。
-        <code>=</code>は代入、<code>==</code>は比較です。Railsの設定やモデルの宣言も、これらの値とRubyのメソッド呼び出しを使っています。{cite}
-      </p>
-    </>,
     'object-contents': cite => <>
       <p>
-        クラスはある種類のオブジェクトで使うメソッドを定義するものです。インスタンスはそのクラスから作った個々のオブジェクトです。
-        メソッドはクラス側に定義し、それぞれのインスタンスの値は<code>@</code>で始まるインスタンス変数に保存できます。
-      </p>
-      <Code lang="ruby" title="同じメソッドを使い、別々の値を持つ" code={`class Note
-  def initialize(title)
-    @title = title
-  end
-
-  def title
-    @title
-  end
-end
-
-first = Note.new("Ruby")
-second = Note.new("Rails")
-first.title  # => "Ruby"
-second.title # => "Rails"`} />
-      <p>
-        <code>new</code>で作成すると、<code>initialize</code>に引数が渡り、作られたインスタンスの<code>@title</code>に保存されます。
-        <code>first.title</code>と<code>second.title</code>は同じ定義を実行しますが、読んでいる変数の持ち主が違うため結果も異なります。
-        オブジェクトの構造を調べる際には、個々のデータと、共有するメソッドの定義を区別します。{cite}
+        「クラスとインスタンス」の節の Note は、initialize で受け取ったタイトルを @title に入れ、title メソッドで返すクラスでした。
+        この節では、インスタンスが値をどこに持ち、メソッドの定義がどこにあるかを、Ruby のメソッドで取り出して確かめます。{cite}
       </p>
     </>,
     'class-is-object': cite => <>
       <p>
-        <code>Note.new</code>も「オブジェクトにメソッドを呼ぶ」という形です。この場合のレシーバは<code>Note</code>です。
-        <code>Note</code>という定数がクラスを表すオブジェクトを参照し、そのオブジェクトが<code>new</code>を実行して別のインスタンスを作ります。
-        <code>first.class</code>が<code>Note</code>を返すのは、インスタンスから所属するクラスを参照できるためです。
+        大文字で始まる名前は定数です。<code>LIMIT = 3</code> のように値を入れると、その後は LIMIT と書いてその値を使えます。
+        <code>class Note</code> と書くと、Ruby はクラスを表すオブジェクトを作り、Note という定数に入れます。
+        「クラスとインスタンス」の節の <code>Note.new("Ruby")</code> は、この定数が指すオブジェクトに new を呼ぶ式で、「クラスの本体で呼ぶメソッド」の節のクラスメソッド label も、同じオブジェクトに対して呼んでいました。
       </p>
       <p>
-        つまり、<code>Note</code>と<code>first</code>はどちらもオブジェクトですが役割が違います。
-        <code>Note.class</code>でクラス自体の種類を調べることと、<code>first.class</code>でインスタンスの種類を調べることを分けると、ClassやObjectの関係を追えます。{cite}
+        この節では、クラスを表すオブジェクトがどのクラスのインスタンスかを調べます。
+        結果に出てくる Module はモジュール（メソッドをまとめて定義し、クラスに組み込んで使うもの。<ChapterLink n={3} />）を表すクラスです。{cite}
       </p>
     </>,
     self: cite => <>
       <p>
-        <code>first.title</code>の実行中は、メソッドの中の<code>self</code>が<code>first</code>の指すオブジェクトです。
-        同じ定義でも<code>second.title</code>なら<code>self</code>は<code>second</code>の指すオブジェクトになります。
-        <code>@title</code>はそのときの<code>self</code>の変数なので、インスタンスごとの値を取得できます。
+        「クラスとインスタンス」の節では、first.title と second.title が同じ title メソッドを実行し、それぞれ自分の @title を返しました。
+        メソッドの実行中に、いま呼び出しの対象になっているオブジェクトを self と呼びます。
+        first.title の実行中は self が first で、second.title の実行中は self が second です。@title はそのときの self のインスタンス変数を指します。
       </p>
       <p>
-        呼び出し先を省略した<code>title</code>も現在の<code>self</code>に対するメソッド呼び出しになります。
-        ただし、<code>title = ...</code>はローカル変数への代入と解釈されます。属性へ代入するメソッドを呼びたい場合に<code>self.title = ...</code>と書くのは、この違いがあるためです。{cite}
+        レシーバを省略した呼び出しは、self に対する呼び出しになります。「クラスの本体で呼ぶメソッド」の節で、本体に書いた label "メモ帳" が Note.label として呼ばれたのは、クラスの本体では self がそのクラスだからです。
+        ただし、<code>title = ...</code> のようにレシーバを省略して代入の形で書くと、メソッドの呼び出しではなく、ローカル変数への代入として扱われます。{cite}
       </p>
     </>,
     'method-lookup': cite => <>
       <p>
-        継承は別のクラスで定義したメソッドを引き継ぐ仕組みです。
-        <code>class Child &lt; Parent</code>は、<code>Child</code>の親クラスが<code>Parent</code>であることを示します。
-        子にないメソッドも親にあれば実行でき、子に同じ名前を定義すれば子の処理を使います。後者をオーバーライドと呼びます。
-      </p>
-      <Code lang="ruby" title="定義がないメソッドを親から探す" code={`class Parent
-  def label
-    "親の定義"
-  end
-end
-
-class Child < Parent
-end
-
-Child.new.label # => "親の定義"`} />
-      <p>
-        <code>Child.new</code>が作ったインスタンスに<code>label</code>を呼ぶと、まず子の定義を調べ、そこになければ親を調べます。
-        <code>superclass</code>は直接の親クラス、<code>ancestors</code>は組み込まれたモジュールも含めた探索の並びを確認するメソッドです。
-        クラスに書いていないメソッドをRailsのモデルで呼べることも、この探索に基づきます。{cite}
+        「クラスとインスタンス」の節では、Memo のインスタンスで、Memo に書いていない title を呼べました。
+        Ruby は呼ばれたメソッドをまず Memo で探し、見つからなければ親クラスの Note で探します。
+        この節ではこの探す順番を、親クラスのさらに親までたどって確かめます。{cite}
       </p>
     </>,
     'method-missing': cite => <>
       <p>
-        メソッド名を書き間違えたときに発生する<code>NoMethodError</code>は、定義を探しても呼べるものがなかった結果です。
-        ただしRubyには、見つからなかった呼び出しを<code>method_missing</code>で受け取る仕組みがあります。
-        通常のメソッドの代わりに、指定された名前や引数を調べて処理を分けることもできます。
+        「オブジェクトとメソッドの呼び出し」の節で <code>10.upcase</code> が NoMethodError になったのは、Integer のオブジェクトに対して upcase の定義を探しても、見つからなかったためです。
+        ただし Ruby には、見つからなかった呼び出しを <code>method_missing</code> というメソッドで受け取る仕組みがあります。
+        method_missing を定義すると、呼ばれた名前や引数を調べて、処理を分けることもできます。
       </p>
       <p>
         そのため、見た目は<code>obj.foo</code>でも、<code>def foo</code>が存在する場合と、見つからなかった呼び出しを動的に処理する場合があります。
@@ -192,35 +207,33 @@ export const explanation03: Explanations = {
   sections: {
     'module-basics': cite => <>
       <p>
-        複数のクラスで同じメソッドを使いたい場合、そのためだけに同じ親クラスを継承すると、クラスの関係まで固定されます。
-        たとえば記事にも通知にも表示用のラベルを付けたくても、どちらも「同じ種類のもの」として扱う必要があるとは限りません。
-        共通の処理をモジュールにまとめ、必要なクラスへ組み込む方法があります。
+        「モジュールを include してメソッドを共有する」の節では、複数のクラスでメソッドを共有するためにモジュールを使いました。
+        モジュールにはもう1つ、クラスの名前を区別する使い方があります。
+        同じ Report という名前のクラスでも、別々のモジュールの中に定義すれば、別のクラスとして扱えます。
       </p>
-      <p>
-        一方、<code>Admin::Report</code>と<code>Public::Report</code>のように、同じReportという名前を区別するためにもモジュールを使えます。
-        <code>::</code>は、その名前の内側にある定数を指定する書き方です。処理の共有と名前の区分は、同じモジュールの別々の用途です。{cite}
-      </p>
-    </>,
-    include: cite => <>
-      <Code lang="ruby" title="モジュールに分けた処理をインスタンスから呼ぶ" code={`module Labelled
-  def label
-    "表示用ラベル"
+      <Code lang="ruby" title="モジュールで名前を区別する（Ruby 4.0.9 で実行）" code={`module Admin
+  class Report
+    def title = "管理者向けの集計"
   end
 end
 
-class Report
-  include Labelled
+module Public
+  class Report
+    def title = "公開用の集計"
+  end
 end
 
-Report.new.label # => "表示用ラベル"`} />
+Admin::Report.new.title  # => "管理者向けの集計"
+Public::Report.new.title # => "公開用の集計"`} />
       <p>
-        <code>Report</code>の本体に<code>def label</code>はありませんが、インスタンスから呼び出せます。
-        <code>include</code>は、Reportのインスタンスでメソッドを探す経路にLabelledを加えます。メソッドをReportのソースへ文字としてコピーする操作ではありません。
-        どこへ組み込まれたかは<code>Report.ancestors</code>で確かめられます。
+        <code>::</code>は、モジュールの中に定義したクラスや定数（大文字で始まる名前に入れた値）を指定する書き方です。
+        Rails の<code>ActiveRecord::Base</code>と<code>ActionController::Base</code>はどちらも Base という名前のクラスですが、ActiveRecord と ActionController という別々のモジュールの中にあるので区別できます。{cite}
       </p>
+    </>,
+    include: cite => <>
       <p>
-        ここで調べたいのは、クラスにも同じ名前のメソッドがある場合の優先順位です。
-        組み込み順が結果を変えるため、モジュールの一覧だけでなく、クラスに対して前後どちらに並ぶかが意味を持ちます。{cite}
+        「モジュールを include してメソッドを共有する」の節で見たとおり、include したモジュールは ancestors のクラスのすぐ後ろに入ります。
+        この節では1つのクラスに複数のモジュールを include したときの並び方と、モジュールとクラスに同じ名前のメソッドがあるときにどちらが先に見つかるかを確かめます。{cite}
       </p>
     </>,
     prepend: cite => <>
@@ -235,23 +248,10 @@ Report.new.label # => "表示用ラベル"`} />
       </p>
     </>,
     super: cite => <>
-      <Code lang="ruby" title="親の戻り値を利用して返す" code={`class Message
-  def text
-    "お知らせ"
-  end
-end
-
-class ImportantMessage < Message
-  def text
-    "【重要】" + super
-  end
-end
-
-ImportantMessage.new.text # => "【重要】お知らせ"`} />
       <p>
-        子の<code>text</code>を実行し、<code>super</code>で親の<code>text</code>の結果を受け取ってから文字列を連結しています。
-        この例では次の定義が親クラスにあります。モジュールが間に入ると、次の定義がモジュール側にある場合もあります。
-        <code>super</code>は別のオブジェクトへ依頼するのではなく、同じレシーバで、現在の定義より後ろを探して実行を続けます。{cite}
+        「継承でメソッドを受け継ぐ」の節では、子クラスの greeting の中の<code>super</code>で、親クラスの greeting を呼び、その戻り値に文字列を付け足しました。
+        その例では、次に見つかる定義が親クラスにありました。クラスとその親クラスの間にモジュールが入っていると、次の定義がモジュールにある場合もあります。
+        この節ではその場合の呼ばれ方と、super に引数を渡す書き方を確かめます。{cite}
       </p>
     </>,
     singleton: cite => <>
@@ -277,24 +277,24 @@ second.respond_to?(:label)   # => false`} />
     </>,
     'class-methods': cite => <>
       <p>
-        <code>Article.find(1)</code>はArticleクラスに対する呼び出し、<code>article.save</code>は取得したインスタンスに対する呼び出しです。
-        どちらも「オブジェクト.メソッド」という同じ形で、レシーバが違います。
-        クラス本体の<code>self</code>はクラス自身なので、<code>def self.find</code>は、そのクラスという1つのオブジェクトにメソッドを定義します。
+        「クラスに対して呼ぶメソッド」の節では、<code>def self.table</code>で Book のクラスメソッドを定義しました。
+        Ruby ではクラスもオブジェクトで、Book というクラスは Class クラスのインスタンスです（<ChapterLink n={2} section="class-is-object" />）。
+        そのため<code>def self.table</code>は Book という1つのオブジェクトだけにメソッドを定義する書き方で、前の節の<code>def obj.greet</code>と同じ形です。
       </p>
       <p>
-        その定義先がクラス自身の特異クラスです。<code>class &lt;&lt; self</code>は、現在のselfの特異クラスを開いて定義を書く構文です。
-        したがって、インスタンス用の定義を調べる<code>Article.ancestors</code>と、Articleそのものへの呼び出しの定義を調べる経路は区別します。{cite}
+        インスタンスメソッドを探す順番は<code>Article.ancestors</code>で調べられますが、<code>Article.find</code>のようなクラスメソッドを探す順番は別にあります。
+        この節では、クラスメソッドがクラスの特異クラスに定義されることと、その探す順番を確かめます。{cite}
       </p>
     </>,
     extend: cite => <>
       <p>
-        モジュールにあるメソッドを<code>Report.new.label</code>から使いたいならinclude、
-        <code>Report.label</code>から使いたいならReport自体へのextendが候補になります。
-        extendもincludeもメソッドを組み込む操作ですが、組み込み先がクラスのインスタンス用か、指定したオブジェクト専用かで変わります。
+        「モジュールを include してメソッドを共有する」の節では、Greeting を User に include して、<code>User.new.hello</code>のようにインスタンスから hello を呼びました。
+        <code>User.hello</code>のようにクラスに対して呼びたいときは、User 自体に extend します。
+        extend も include もモジュールのメソッドを使えるようにする操作ですが、include はクラスのインスタンスに、extend は指定したオブジェクトだけにメソッドを加えます。
       </p>
       <p>
-        Railsのソースに<code>base.extend(ClassMethods)</code>が出てきたら、baseに入っているクラス自身へClassMethodsのメソッドを追加している、と対応付けられます。
-        <code>ClassMethods</code>という名前自体が特別な構文ではなく、通常のモジュール名です。{cite}
+        Rails のソースに<code>base.extend(ClassMethods)</code>が出てきたら、base に入っているクラスに ClassMethods のメソッドをクラスメソッドとして加えている、と読めます。
+        <code>ClassMethods</code>は特別な構文ではなく、普通のモジュールの名前です。{cite}
       </p>
     </>,
   },
@@ -305,21 +305,9 @@ export const explanation04: Explanations = {
   sections: {
     'block-yield': cite => <>
       <p>
-        配列の値を1件ずつ表示したい場合、Rubyでは<code>each</code>へ処理を渡せます。
-        ブロックはこのようにメソッドへ渡すコードのまとまりです。値だけを引数に渡す呼び出しに対し、ブロック付きの呼び出しでは「受け取った値に何をするか」も指定できます。
-      </p>
-      <Code lang="ruby" title="配列の要素をブロックで受け取る" code={`titles = ["Ruby", "Rails"]
-
-titles.each do |title|
-  puts title.upcase
-end
-# 表示:
-# RUBY
-# RAILS`} />
-      <p>
-        <code>|title|</code>はブロックの引数の名前です。eachは1回目に<code>"Ruby"</code>、2回目に<code>"Rails"</code>を渡します。
-        <code>puts</code>は画面へ出力するメソッドです。繰り返す順序はeachが決め、各要素で何をするかは呼び出し側のブロックが決めます。
-        自分で同じ形のメソッドを作るとき、渡されたブロックを実行するのが<code>yield</code>です。{cite}
+        「メソッドにブロックを渡す」の節では、each や map にブロックを渡しました。each はメソッドの中で、受け取ったブロックを要素ごとに実行しています。
+        自分で定義するメソッドでも、呼び出し側から渡されたブロックを実行できます。そのために使うのが<code>yield</code>です。
+        yield に値を渡すと、ブロックの引数（<code>|n|</code>など）がその値を受け取ります。{cite}
       </p>
     </>,
     'block-to-proc': cite => <>
@@ -340,8 +328,8 @@ double.call(5) # => 10`} />
     </>,
     closure: cite => <>
       <p>
-        ローカル変数のスコープはその変数を参照できる範囲です。ブロックは書いた場所の外側のローカル変数も参照します。
-        処理をProcにして後で実行しても、この参照関係が残ります。外の値を固定したコピーとは限らないことが、結果に影響します。
+        「ローカル変数が見える範囲」の節で見たとおり、ブロックの中からはブロックを書いた場所の外のローカル変数を読み書きできます。
+        処理を Proc にして後で実行しても、この参照の関係は残ります。Proc が持つのは外の値のコピーではなく変数そのものなので、作った後で変数を変えると結果も変わります。
       </p>
       <Code lang="ruby" title="Procを作った後に外側の変数を変更する" code={`prefix = "記事: "
 label = proc { |title| prefix + title }
@@ -374,12 +362,23 @@ end # => "RAILS!"`} />
     </>,
     dsl: cite => <>
       <p>
+        DSL（ドメイン固有言語）はルーティングの定義やモデルの関連のように、特定の用途の内容を短く書けるように作った書き方です。
+        Rails の DSL は Ruby のメソッド呼び出しでできています（<ChapterLink n={5} section="dsl-intro" />）。
+      </p>
+      <p>
         <code>routes.rb</code>の<code>get</code>はRuby言語に最初からある予約語ではなく、Railsが用意するメソッドです。
         <code>draw do ... end</code>のブロック内でgetを呼べるのは、そのブロックをルート定義用のオブジェクトをselfとして実行するためです。
         一方、<code>{'scope :published, -> { where(published: true) }'}</code>では、条件を作る処理をlambdaとして渡します。
       </p>
       <p>
-        同じブロック付きの見た目でも、受け取ってすぐに実行する場合と、登録して後で実行する場合があります。
+        <code>where</code>は SQL をすぐには実行せず、条件を持ったオブジェクトを返します。このオブジェクトを Relation と呼びます。
+        Relation は検索の条件や並び順を集めておき、結果が必要になったときに SQL を組み立てて実行します（<ChapterLink n={12} section="lazy" />）。
+      </p>
+      <Code lang="ruby" title="bin/rails runner で実行（デモのアプリ）" code={`relation = Article.where(published: true)
+relation.class  # => Article::ActiveRecord_Relation
+relation.to_sql # => "SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`published\` = TRUE"`} />
+      <p>
+        同じブロック付きの見た目でも、受け取ってすぐに実行する場合と、登録して後で実行する場合があります（「Rails でブロックを書く場面」の節）。
         さらに、実行するときのselfを切り替える場合もあります。「何を登録するメソッドか」「どのオブジェクトで実行するか」が分かれば、DSLの短い記述を通常のRubyの呼び出しとして追えます。{cite}
       </p>
     </>,
@@ -387,7 +386,11 @@ end # => "RAILS!"`} />
 }
 
 export const explanation05: Explanations = {
-  sources: [rubyDoc('Module', 'Module — define_method / attr_reader'), guide('active_support_core_extensions', 'Active Support Core Extensions'), guide('active_record_callbacks', 'Active Record Callbacks')],
+  sources: [
+    rubyDoc('Module', 'Module — define_method / attr_reader'), guide('active_support_core_extensions', 'Active Support Core Extensions'), guide('active_record_callbacks', 'Active Record Callbacks'),
+    primarySource('ActiveRecord::Timestamp', 'Ruby on Rails API', 'https://api.rubyonrails.org/v8.1.4.1/classes/ActiveRecord/Timestamp.html', 'Rails 8.1.4.1'),
+    primarySource('ActiveRecord::Reflection::ClassMethods（reflect_on_association）', 'Ruby on Rails API', 'https://api.rubyonrails.org/v8.1.4.1/classes/ActiveRecord/Reflection/ClassMethods.html', 'Rails 8.1.4.1'),
+  ],
   sections: {
     send: cite => <>
       <p>
@@ -396,7 +399,7 @@ export const explanation05: Explanations = {
         たとえば<code>attribute = :title</code>とした場合、<code>article.public_send(attribute)</code>がtitleを呼びます。
       </p>
       <p>
-        このように、実行中のデータを使って呼び出しや定義を変える手法をメタプログラミングと呼びます。
+        「実行するとメソッドができる」の節では、実行中にメソッドを作る側のメタプログラミングを見ました。名前を値として持ち、その名前でメソッドを呼ぶのも、メタプログラミングの1つです。
         名前を値にすることと、指定した名前を自由に実行してよいことは別です。
         privateな処理を呼べるかというメソッドの公開範囲と、入力として許可する名前の範囲を確認します。{cite}
       </p>
@@ -421,23 +424,27 @@ Note.new.label # => "生成されたメソッド"`} />
     </>,
     'class-macro': cite => <>
       <p>
-        Rubyはクラスの本体を上から評価します。そこに書いたメソッド呼び出しは、インスタンスを作る前に実行されます。
-        一方、<code>def</code>で定義したメソッドの本体は、そのメソッドを呼ぶまで実行されません。
-        Railsの宣言を読むには、この2つの時点を区別します。
+        「実行するとメソッドができる」の節で見たとおり、Ruby はクラスの本体を上から実行し、本体に書いた attr_accessor や has_many はその時点で実行されます。
+        一方、<code>def</code>で定義したメソッドの本体は、そのメソッドを呼ぶまで実行されません。Rails の宣言を読むときは、この2つの時点を区別します。
       </p>
-      <Code lang="ruby" title="Ruby標準の宣言もメソッド呼び出し" code={`class Note
-  attr_reader :title
-
-  def initialize(title)
-    @title = title
-  end
-end
-
-Note.new("クラスマクロ").title # => "クラスマクロ"`} />
       <p>
-        <code>attr_reader :title</code>は、その場でタイトルを取得する操作ではありません。後でtitleを呼べるように読み取り用のメソッドを定義します。
-        <code>has_many</code>や<code>before_action</code>もクラスを定義するときに呼ぶ通常のメソッドです。
-        関連の情報や実行する処理を登録し、実際の取得やコールバックの実行は後の時点で行います。{cite}
+        この節では宣言で受け取った設定をどこに保存するかを扱います。インスタンス変数（<code>@</code>で始まる変数）は self が指すオブジェクトに属します。
+        クラスの本体や<code>def self.</code>の中では self はクラスなので、そこで作ったインスタンス変数はクラスというオブジェクトに属します。これをクラスのインスタンス変数と呼びます。{cite}
+      </p>
+    </>,
+    'class-attribute': cite => <>
+      <p>
+        Rails には、クラスごとに持ち、子クラスが親クラスの値を引き継ぐ設定があります。たとえば record_timestamps は、保存するときに created_at と updated_at を自動で入れるかどうかの設定で、
+        ActiveRecord::Timestamp の中で class_attribute を使って定義されています。
+      </p>
+      <Code lang="ruby" title="bin/rails runner で実行（デモのアプリ）" code={`ActiveRecord::Base.record_timestamps # => true
+Comment.record_timestamps = false
+Comment.record_timestamps            # => false
+Article.record_timestamps            # => true（親の値のまま）
+ActiveRecord::Base.record_timestamps # => true（親は変わらない）`} />
+      <p>
+        Comment で false を代入しても、Article と ActiveRecord::Base の値は true のままでした。この節では、この動きを特異クラスに定義したメソッド（<ChapterLink n={3} section="class-methods" />）と、
+        ブロックが外の変数を参照し続けるクロージャ（<ChapterLink n={4} section="closure" />）で実現している実装を読みます。{cite}
       </p>
     </>,
     concern: cite => <>
@@ -449,18 +456,49 @@ Note.new("クラスマクロ").title # => "クラスマクロ"`} />
       <p>
         ActiveSupport::Concernはこうした組み込み時の処理やクラスメソッド、モジュール間の依存をまとめるための仕組みです。
         <code>included do ... end</code>は、モジュールを評価したその場でモデルへ設定するのではなく、組み込み先が決まったときの処理として保持されます。
-        Rubyのincludedフックを直接書く形と比べると、何を後で実行するために保存しているかが分かります。{cite}
+        Rubyのincludedフックを直接書く形と比べると、何を後で実行するために保存しているかが分かります。
+        rails new で作ったアプリには app/models/concerns と app/controllers/concerns というディレクトリがあり、Concern を使ったモジュールを置く場所になっています。{cite}
       </p>
     </>,
     callbacks: cite => <>
       <p>
         保存の前に値を整える、アクションの前にログインを確認するといった処理は、決まった時点に結び付けておくと複数の呼び出しで共有できます。
         このように登録して呼ばれる処理がコールバックです。登録と実行は別の操作で、<code>before_action :set_article</code>を書いた時点では記事を取得しません。
+        モデルの before_validation（検査の前に呼ばれるコールバック）で確かめます。
+      </p>
+      <Code lang="ruby" title="bin/rails runner で実行（デモのアプリ）" code={`class Article05 < ApplicationRecord
+  self.table_name = "articles"
+  before_validation { puts "before_validation: title=#{title.inspect}"; self.title = title.to_s.strip }
+end
+puts "クラスの定義が終わった"
+a = Article05.new(title: "  コールバック  ")
+a.valid?
+p a.title
+# 出力:
+# クラスの定義が終わった
+# before_validation: title="  コールバック  "
+# "コールバック"`} />
+      <p>
+        before_validation の行はクラスの定義のときに実行されますが、ブロックはそのとき実行されず、valid? を呼んだときに実行されて、title の前後の空白を取り除きました。
       </p>
       <p>
         共通の仕組みに必要なのは、「どのイベントか」「その前後のどちらか」「何を呼ぶか」の記録と、イベント発生時に記録を順に実行する処理です。
         <code>define_callbacks</code>はイベントを定義し、<code>set_callback</code>は処理を登録し、<code>run_callbacks</code>はイベント本体と前後の処理を実行します。
         コントローラーとモデルで名前が違っていても、この登録・実行の構造を共有できます。{cite}
+      </p>
+    </>,
+    'rails-dsl': cite => <>
+      <p>
+        has_many が作るもう1つのものが Reflection です。Reflection は関連の名前、相手のクラス、外部キーの列名などを持つオブジェクトで、
+        <code>reflect_on_association</code>で取り出せます。
+      </p>
+      <Code lang="ruby" title="bin/rails runner で実行（デモのアプリ）" code={`r = Article.reflect_on_association(:comments)
+r.class       # => ActiveRecord::Reflection::HasManyReflection
+r.name        # => :comments
+r.klass.name  # => "Comment"
+r.foreign_key # => "article_id"`} />
+      <p>
+        comments メソッドで記事のコメントを読むとき、Rails はこの情報から comments テーブルと article_id 列を使う SQL を組み立てます。{cite}
       </p>
     </>,
   },

@@ -7,11 +7,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const SQ = 'https://github.com/sidekiq/sidekiq/blob/v8.1.7'
 
-/* ---------- 図 18-1 投入から実行まで ---------- */
+/* ---------- 図 18-3 投入から実行まで ---------- */
 function PipelineFigure() {
   return (
     <Svg
-      id="18-1"
+      id="18-3"
       w={780}
       h={340}
       label="Rails のプロセスで perform_later を呼ぶと、ActiveJob がジョブを JSON の Hash に変換し、Sidekiq のアダプターが Sidekiq::ActiveJob::Wrapper のジョブとして Redis のリスト queue:default に LPUSH する。待ち時間を指定したジョブは ZSET の schedule に入る。Sidekiq のプロセスでは、5つのスレッドがそれぞれ BRPOP でリストからジョブを取り出し、Wrapper の perform が ActiveJob::Base.execute を呼び、Rails の Executor の中でジョブの perform が実行される。スケジュールのポーラーは schedule と retry の ZSET から時刻の来たジョブをリストに戻す。失敗したジョブは retry に入り、再試行を使い切ると dead に入る"
@@ -69,11 +69,11 @@ function PipelineFigure() {
   )
 }
 
-/* ---------- 図 18-2 再試行の状態遷移 ---------- */
+/* ---------- 図 18-4 再試行の状態遷移 ---------- */
 function RetryFigure() {
   return (
     <Svg
-      id="18-2"
+      id="18-4"
       w={780}
       h={300}
       label="ジョブはキューから取り出されて実行される。成功すれば終わる。retry_on を指定した例外なら、ActiveJob がジョブを schedule に入れ直し、executions が attempts に達するまで繰り返す。retry_on の回数を使い切った例外や、retry_on の無い例外は Sidekiq に伝わり、Sidekiq が retry に入れる。retry からは (回数の4乗 + 15 秒 + 揺らぎ) の後にキューに戻る。Sidekiq の再試行の回数（既定 25 回、約3週間）を使い切ると dead に入り、6か月後に消える。discard_on を指定した例外は、その場でジョブを捨てる"
@@ -108,13 +108,137 @@ function RetryFigure() {
   )
 }
 
+/* ---------- 図 18-1 perform_now と perform_later ---------- */
+function SyncAsyncFigure() {
+  const x0 = 150
+  const sx = 220 // 1 秒あたりの幅
+  const bar = (y: number, s: number, e: number, label: string, fill: string) => (
+    <g>
+      <rect x={x0 + s * sx} y={y} width={Math.max((e - s) * sx, 4)} height={24} rx={3} fill={fill} stroke="var(--fig-line)" />
+      <T x={x0 + s * sx + 8} y={y + 12} fs={11}>
+        {label}
+      </T>
+    </g>
+  )
+  return (
+    <Svg
+      id="18-1"
+      w={780}
+      h={300}
+      label="perform_now では、Rails のプロセスがその場で perform を実行し、2秒待ってから戻る。要求の処理の中で呼べば、応答もその分遅れる。perform_later では、Rails のプロセスはジョブを Redis のキューに入れて約0.01〜0.05秒で戻り、別のプロセスの Sidekiq がキューから取り出して perform を約2秒かけて実行する"
+    >
+      <T x={20} y={20} bold fs={12.5}>
+        perform_now：その場で実行する
+      </T>
+      <T x={20} y={56} fs={11.5}>
+        Rails のプロセス
+      </T>
+      {bar(44, 0, 2.13, 'perform（2秒待つ）', 'var(--fig-box5)')}
+      <Arrow x1={x0 + 2.13 * sx} y1={56} x2={x0 + 2.13 * sx + 40} y2={56} />
+      <T x={x0 + 2.13 * sx + 46} y={56} fs={11} tone="acc">
+        2.13 秒後に戻る
+      </T>
+
+      <T x={20} y={110} bold fs={12.5}>
+        perform_later：キューに入れて戻る
+      </T>
+      <T x={20} y={146} fs={11.5}>
+        Rails のプロセス
+      </T>
+      <rect x={x0} y={134} width={6} height={24} rx={2} fill="var(--fig-box)" stroke="var(--fig-line)" />
+      <Arrow x1={x0 + 6} y1={146} x2={x0 + 46} y2={146} />
+      <T x={x0 + 52} y={146} fs={11} tone="acc">
+        0.014〜0.048 秒で戻る（キューに入れるだけ）
+      </T>
+      <T x={20} y={186} fs={11.5}>
+        Redis
+      </T>
+      <Box x={x0 - 4} y={174} w={150} h={24} lines="queue:default に1件" fs={10.5} fill="box4" />
+      <T x={20} y={226} fs={11.5}>
+        Sidekiq のプロセス
+      </T>
+      {bar(214, 0.02, 2.05, 'perform（2秒待つ）', 'var(--fig-box5)')}
+      <Arrow x1={x0 + 3} y1={158} x2={x0 + 3} y2={172} dashed />
+      <Arrow x1={x0 + 6} y1={198} x2={x0 + 6} y2={212} dashed />
+
+      <line x1={x0} y1={258} x2={x0 + 2.25 * sx} y2={258} stroke="var(--fig-line)" />
+      {[0, 0.5, 1, 1.5, 2].map((t) => (
+        <g key={t}>
+          <line x1={x0 + t * sx} y1={254} x2={x0 + t * sx} y2={262} stroke="var(--fig-line)" />
+          <T x={x0 + t * sx} y={276} anchor="middle" fs={10.5} tone="muted">
+            {`${t} 秒`}
+          </T>
+        </g>
+      ))}
+    </Svg>
+  )
+}
+
+/* ---------- 図 18-2 キューとワーカー ---------- */
+function QueueWorkerFigure() {
+  return (
+    <Svg
+      id="18-2"
+      w={780}
+      h={330}
+      label="左は1つのプロセスの中のキュー（Thread::Queue）。受付のメインスレッドが仕事を入れ、ワーカーのスレッドが取り出して実行する。プロセスが終わるとキューの中身も消え、ほかのプロセスからは仕事を入れられない。右はプロセスの外の Redis に置いたキュー。Puma のワーカーや bin/rails runner の別々のプロセスが LPUSH でリスト queue:default に入れ、Sidekiq のプロセスのスレッドが BRPOP で取り出して実行する"
+    >
+      <T x={20} y={20} bold fs={12.5}>
+        1つのプロセスの中のキュー
+      </T>
+      <rect x={20} y={34} width={330} height={234} rx={8} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      <T x={32} y={52} fs={11.5} tone="muted">
+        プロセス（ruby queue_worker.rb）
+      </T>
+      <Box x={60} y={66} w={250} h={44} lines={['受付（メインスレッド）', 'queue << "メール0"']} fs={11.5} fill="box" subTone="muted" />
+      <Arrow x1={185} y1={110} x2={185} y2={134} />
+      <Box x={60} y={136} w={250} h={44} lines={['Thread::Queue', 'メモリーの中']} fs={11.5} fill="box4" subTone="muted" />
+      <Arrow x1={185} y1={180} x2={185} y2={204} />
+      <Box x={60} y={206} w={250} h={44} lines={['ワーカーのスレッド', 'queue.pop で取り出して実行']} fs={11.5} fill="box5" subTone="muted" />
+      <T x={20} y={290} fs={11} tone="muted">
+        プロセスが終わると中身も消える。
+      </T>
+      <T x={20} y={308} fs={11} tone="muted">
+        ほかのプロセスからは入れられない
+      </T>
+
+      <T x={390} y={20} bold fs={12.5}>
+        プロセスの外のキュー（Redis）
+      </T>
+      {['Puma のワーカー 0', 'Puma のワーカー 1', 'bin/rails runner'].map((t, i) => (
+        <g key={t}>
+          <Box x={390 + i * 128} y={40} w={118} h={40} lines={t} fs={11} fill="box" />
+          <Arrow x1={449 + i * 128} y1={80} x2={575 + (i - 1) * 40} y2={128} />
+        </g>
+      ))}
+      <T x={680} y={106} fs={10.5} tone="muted" mono>
+        LPUSH
+      </T>
+      <Box x={470} y={130} w={210} h={50} lines={['Redis（別のプロセス）', 'リスト queue:default']} fs={11.5} fill="box4" subTone="muted" />
+      <Arrow x1={575} y1={180} x2={575} y2={214} />
+      <T x={585} y={198} fs={10.5} tone="muted" mono>
+        BRPOP
+      </T>
+      <Box x={470} y={216} w={210} h={50} lines={['Sidekiq のプロセス', 'スレッドが取り出して perform']} fs={11.5} fill="box5" subTone="muted" />
+      <T x={390} y={290} fs={11} tone="muted">
+        入れたプロセスが終わってもジョブは残り、
+      </T>
+      <T x={390} y={308} fs={11} tone="muted">
+        どのプロセスが入れたジョブも同じリストに並ぶ
+      </T>
+    </Svg>
+  )
+}
+
 const ch18: Chapter = {
   number: 18,
   part: 4,
   title: '非同期処理（ActiveJob・Sidekiq）',
   summary:
-    'perform_later で投入したジョブがどんな JSON になり、Redis を経て Sidekiq のスレッドで実行されるかを、Redis の中身とログで追います。再試行と Dead、ActiveJob 経由と Sidekiq 直接の違い、トランザクションと投入の時刻、Solid Queue との違い、冪等性も扱います。',
+    '時間のかかる処理を要求の処理の外で行う理由、キューとワーカーと Redis の働き、ActiveJob のジョブの書き方と perform_later を、デモの実行結果で確かめてから、perform_later で投入したジョブがどんな JSON になり、Redis を経て Sidekiq のスレッドで実行されるかを、Redis の中身とログで追います。再試行と Dead、ActiveJob 経由と Sidekiq 直接の違い、トランザクションと投入の時刻、Solid Queue との違い、冪等性も扱います。',
   goals: [
+    'perform_now と perform_later の違いと、時間のかかる処理を非同期にする理由を説明できる',
+    'キューとワーカーの役割と、キューをプロセスの外の Redis に置く理由を説明できる',
     'ActiveJob が引数を JSON に変換する方法（GlobalID・シリアライザー）と、レコードが消えたときの例外を説明できる',
     'Sidekiq が Redis のどのキーを使い、どのスレッドがジョブを取り出して実行するかを説明できる',
     'ActiveJob の retry_on と Sidekiq の再試行の関係、retry と dead の集合を説明できる',
@@ -124,6 +248,258 @@ const ch18: Chapter = {
   ],
   prerequisites: [8, 14, 15],
   sections: [
+    {
+      id: 'why-async',
+      title: '時間のかかる処理を応答の後に回す',
+      body: (
+        <>
+          <p>
+            Web アプリケーションには、要求の処理の中で行うと時間のかかる仕事があります。メールの送信ではメールのサーバーに接続して内容を渡し終えるまで待ちます。決済や地図のような外部のサービスの
+            API（ほかのプログラムがそのサービスの機能を使うための呼び出し方）を呼ぶと、相手の応答を待ちます。これらを要求の処理の中で行うと、その時間だけ利用者への応答が遅れます。Puma のスレッドもその間ふさがるので、同時に処理できるほかの要求も減ります（
+            <ChapterLink n={23} section="app-server" />
+            ）。
+          </p>
+          <p>
+            デモのアプリケーションに、メールの送信の代わりに2秒待つ<Term en="job">ジョブ</Term>を書きました。ジョブは後で実行する仕事を1つのクラスにまとめたものです（書き方は「ActiveJob のジョブの書き方」の節）。
+          </p>
+          <Code
+            lang="ruby"
+            title="app/jobs/notice18_job.rb（デモ）"
+            code={`
+class Notice18Job < ApplicationJob
+  queue_as :default
+
+  def perform(article_id)
+    article = Article.find(article_id)
+    sleep 2 # メールの送信や外部の API の呼び出しにかかる時間の代わり
+    Rails.logger.info "通知を送信しました article=#{article.id} title=#{article.title}"
+  end
+end
+`}
+          />
+          <p>
+            このジョブを、その場で実行する <code>perform_now</code> と、キュー（実行を待つ仕事を順に並べておく置き場所。次の節）に入れるだけの <code>perform_later</code> で呼び、それぞれの呼び出しから戻るまでの時間を測りました。
+          </p>
+          <Code
+            lang="ruby"
+            title="bin/rails runner で実行したコードと出力（Rails 8.1.4.1・Sidekiq 8.1.7）"
+            code={`
+t = Time.now
+Notice18Job.perform_now(1)
+puts format("perform_now:   %.2f 秒", Time.now - t)
+
+2.times do
+  t = Time.now
+  job = Notice18Job.perform_later(1)
+  puts format("perform_later: %.3f 秒  job_id=%s", Time.now - t, job.job_id)
+end
+
+# 出力
+perform_now:   2.13 秒
+perform_later: 0.048 秒  job_id=ae99c88d-6fe2-443d-a175-c2775fae282b
+perform_later: 0.014 秒  job_id=08dd7d1e-ef5b-4bb6-8386-c9da7b29ca66
+`}
+          />
+          <p>
+            perform_now はジョブの perform をその場で実行するので、2秒待ってから戻りました。コントローラーのアクションの中で呼べば、応答もその分だけ遅れます。perform_later はジョブをキューに入れて 0.05
+            秒以内に戻りました。perform は、Sidekiq という別のプロセスが後で実行します（図 18-1）。呼び出した処理が終わるのを待ってから次へ進む方式を同期、終わるのを待たずに先へ進む方式を
+            <Term en="asynchronous">非同期</Term>と呼びます。Rails のガイドは時間のかかる仕事を要求と応答のやり取りの外に出し、要求への応答を速く保つことを、バックグラウンドのジョブの目的としています
+            <Ref n={2} />。
+          </p>
+          <p>
+            非同期にすると、応答を返した時点では、メールはまだ送られていません。送信に失敗しても、利用者への応答はすでに成功として返っています。失敗したジョブをやり直す仕組みは「再試行と Dead」の節で扱います。
+          </p>
+          <Figure n="18-1" title="perform_now と perform_later" caption="デモでの実測（bin/rails runner と Sidekiq のログの時刻）をもとにした模式図。">
+            <SyncAsyncFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'queue-worker',
+      title: 'キューとワーカー、Redis',
+      body: (
+        <>
+          <p>
+            非同期の処理は仕事を受け付ける側と実行する側を分け、その間に<Term en="queue">キュー</Term>を置いて作ります。キューは先に入れたものから順に取り出す置き場所です。キューから仕事を取り出して実行する側を
+            <Term en="worker">ワーカー</Term>と呼びます。Ruby の Thread::Queue で、1つのプロセスの中にキューとワーカーを作りました。Thread::Queue の <code>pop</code>{' '}
+            は、キューが空なら、次の値が入るまでスレッドを待たせます
+            <Ref n={11} />。
+          </p>
+          <Code
+            lang="ruby"
+            title="queue_worker.rb"
+            code={`
+start = Time.now
+log = ->(msg) { puts format("%.1f 秒  %s", Time.now - start, msg) }
+
+queue = Thread::Queue.new
+
+worker = Thread.new do
+  while (job = queue.pop) # キューが空なら、次の仕事が入るまで待つ
+    sleep 1 # メールの送信に1秒かかる代わり
+    log.("ワーカー: #{job} を送信した")
+  end
+end
+
+3.times do |i|
+  queue << "メール#{i}"
+  log.("受付: メール#{i} をキューに入れた")
+end
+log.("受付: 応答を返した")
+
+queue.close # これ以上入れないことを知らせる。空になると pop が nil を返す
+worker.join
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+0.0 秒  受付: メール0 をキューに入れた
+0.0 秒  受付: メール1 をキューに入れた
+0.0 秒  受付: メール2 をキューに入れた
+0.0 秒  受付: 応答を返した
+1.0 秒  ワーカー: メール0 を送信した
+2.0 秒  ワーカー: メール1 を送信した
+3.0 秒  ワーカー: メール2 を送信した
+`}
+          />
+          <p>
+            受付の側（メインスレッド）は3通のメールをキューに入れて、すぐに「応答を返した」まで進みました。ワーカーのスレッドはキューから入れた順に1通ずつ取り出し、1秒ずつかけて送りました。ただし、このキューはプロセスのメモリーの中にあります（
+            <ChapterLink n={23} section="process" />
+            ）。プロセスが終われば、キューに残っていた仕事も消えます。Puma のワーカーのような別のプロセスからは、このキューに仕事を入れられません。そこで Rails のアプリケーションでは、キューをプロセスの外の Redis などに置きます。
+          </p>
+          <p>
+            <Term>Redis</Term> はデータをメモリーに置き、ネットワークを通じてほかのプログラムに読み書きさせるサーバーのプログラムです
+            <Ref n={12} />。データベースと同じように独立したプロセスとして動き、複数のプロセスから同じデータを読み書きできます。Redis のリストは値を順に並べて持つデータで、LPUSH で先頭に入れて RPOP
+            で末尾から取り出すと、入れた順に取り出すキューになります
+            <Ref n={13} />。redis-cli（Redis にコマンドを送るプログラム）で試しました。1行ずつ別のプロセスとして実行しています。
+          </p>
+          <Code
+            lang="text"
+            title="redis-cli で Redis のリストを操作する（Redis 8.10.3）"
+            code={`
+$ redis-cli LPUSH demo18 mail0 mail1
+(integer) 2
+$ redis-cli LRANGE demo18 0 -1      # リストの中身を先頭から表示する
+1) "mail1"
+2) "mail0"
+$ redis-cli RPOP demo18
+"mail0"
+$ redis-cli RPOP demo18
+"mail1"
+$ redis-cli RPOP demo18
+(nil)
+`}
+          />
+          <p>
+            LPUSH を実行した redis-cli のプロセスはすぐに終わりましたが、入れた値は Redis に残り、別のプロセスの LRANGE や RPOP から読めました。RPOP は、リストが空なら nil を返します。BRPOP は RPOP
+            と同じく末尾から取り出しますが、リストが空なら、値が入るまで待ちます
+            <Ref n={14} />。
+          </p>
+          <Code
+            lang="text"
+            title="BRPOP で待つ（2つの端末で実行）"
+            code={`
+（端末1）$ redis-cli BRPOP demo18 0        # 0 は、いつまでも待つという指定
+          （端末2で LPUSH するまで、何も表示されずに待つ）
+1) "demo18"
+2) "mail2"
+
+（端末1の3秒後に、端末2）$ redis-cli LPUSH demo18 mail2
+(integer) 1
+`}
+          />
+          <p>
+            BRPOP は、別のプロセスが LPUSH するまで戻らず、値が入るとすぐに受け取りました。Sidekiq のワーカーはこの BRPOP で Redis のリストからジョブを取り出します。Puma のどのワーカーが入れたジョブも同じ
+            Redis のリストに並び、Sidekiq のプロセスが取り出して実行します（図 18-2）。
+          </p>
+          <Figure n="18-2" title="キューとワーカー" caption="queue_worker.rb の実行結果と、redis-cli での実測をもとにした模式図。">
+            <QueueWorkerFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'job-basics',
+      title: 'ActiveJob のジョブの書き方',
+      body: (
+        <>
+          <p>
+            ActiveJob はジョブの書き方と投入の仕方を共通にする Rails の機能です。ジョブは app/jobs に置き、ApplicationJob を継承したクラスに <code>perform</code> メソッドを書きます
+            <Ref n={2} />。「時間のかかる処理を応答の後に回す」の節の Notice18Job では、次のように書きました（名前の 18 は、デモのアプリケーションでほかの章の例と区別するために付けたものです）。
+          </p>
+          <ul>
+            <li>
+              <code>queue_as :default</code> はジョブを入れるキューの名前です。
+            </li>
+            <li>
+              <code>perform</code> に実行する処理を書きます。perform の引数が投入するときに渡す値です。ここでは記事の id を渡し、perform の中で <code>Article.find</code>{' '}
+              で読み直しています（記事のオブジェクトそのものを渡す書き方は「引数のシリアライズと GlobalID」の節）。
+            </li>
+            <li>
+              投入するときは、クラスの <code>perform_later</code> に perform の引数を渡します。戻り値はジョブのオブジェクトで、<code>job_id</code> でジョブの ID を読めます。
+            </li>
+          </ul>
+          <p>前の節の2回の perform_later で、投入した側（runner）と実行した側（Sidekiq）のログには次の行が出ました。</p>
+          <Code
+            lang="text"
+            title="投入した側と実行した側のログ（runner はログを画面にも出す設定を加えて実行。Sidekiq のログは時刻と ID の一部を省略）"
+            code={`
+（投入した側：bin/rails runner）
+Enqueued Notice18Job (Job ID: ae99c88d-6fe2-443d-a175-c2775fae282b) to Sidekiq(default) with arguments: 1
+Enqueued Notice18Job (Job ID: 08dd7d1e-ef5b-4bb6-8386-c9da7b29ca66) to Sidekiq(default) with arguments: 1
+
+（実行した側：docker logs rbdemo-sidekiq）
+07:07:53.461 tid=5ht Performing Notice18Job (Job ID: ae99c88d-…) from Sidekiq(default) enqueued at 2026-11-16T07:07:53.437226107Z with arguments: 1
+07:07:53.499 tid=5gp Performing Notice18Job (Job ID: 08dd7d1e-…) from Sidekiq(default) enqueued at 2026-11-16T07:07:53.478362618Z with arguments: 1
+07:07:55.496 tid=5ht 通知を送信しました article=1 title=変更後のタイトル
+07:07:55.497 tid=5ht Performed Notice18Job (Job ID: ae99c88d-…) from Sidekiq(default) in 2035.15ms
+07:07:55.521 tid=5gp 通知を送信しました article=1 title=変更後のタイトル
+07:07:55.521 tid=5gp Performed Notice18Job (Job ID: 08dd7d1e-…) from Sidekiq(default) in 2022.36ms
+`}
+          />
+          <p>
+            Enqueued の行は、ジョブがキュー default に入ったことを示しています。Job ID は ActiveJob がジョブごとに付ける ID で、実行した側の Performing・Performed の行の Job ID と同じです。投入から約 0.02
+            秒後に実行が始まり、Sidekiq は2つのジョブを2つのスレッド（tid=5ht と tid=5gp）で同時に実行して、どちらも約2秒で終わりました。
+          </p>
+          <p>
+            実行する側が動いていないときは、ジョブはキューに残ります。デモの Sidekiq は default のキューだけを読むように起動しています。そこで、ジョブを basics18 という別のキューに入れてから、しばらくして basics18 を読む
+            Sidekiq を起動しました。<code>set(queue: "basics18")</code> は、この1回の投入だけキューの名前を変える書き方です。
+          </p>
+          <Code
+            lang="text"
+            title="Sidekiq が読まないキューに入れてから、そのキューを読む Sidekiq を起動する（一部を省略）"
+            code={`
+（07:08:57 に bin/rails runner で投入）
+Notice18Job.set(queue: "basics18").perform_later(1)
+Enqueued Notice18Job (Job ID: 4ffaf27d-…) to Sidekiq(basics18) with arguments: 1
+
+（Sidekiq を起動する直前。LLEN はリストの要素の数）
+$ redis-cli LLEN queue:basics18
+(integer) 1
+
+（07:09:12 に bundle exec sidekiq -q basics18 で起動）
+07:09:12.358 Performing Notice18Job (Job ID: 4ffaf27d-…) from Sidekiq(basics18) enqueued at 2026-11-16T07:08:57.211213257Z with arguments: 1
+07:09:14.447 通知を送信しました article=1 title=変更後のタイトル
+07:09:14.447 Performed Notice18Job (Job ID: 4ffaf27d-…) from Sidekiq(basics18) in 2092.46ms
+
+$ redis-cli LLEN queue:basics18
+(integer) 0
+`}
+          />
+          <p>
+            投入から15秒後に起動した Sidekiq が、キューに残っていたジョブを取り出して実行しました。Rails のプロセスはジョブを Redis に入れた時点で仕事を終えていて、ジョブが実行されるかどうかは、Sidekiq
+            のプロセスが動いているかで決まります。本番環境では Puma とは別に Sidekiq のプロセスを起動しておきます。
+          </p>
+          <p>
+            次の節からは、perform_later を呼んでから Sidekiq が perform を実行するまでの間を詳しく追います。ActiveJob がジョブを何に変換して Redis に入れるのか、Sidekiq がそれをどう取り出して実行するのかを、Redis
+            の中身とログで確かめます。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'overview',
       title: 'ジョブが投入されて実行されるまで',
@@ -147,9 +523,9 @@ end
 `}
           />
           <p>
-            <code>ArticleNoteJob.perform_later(article, note: "メモ", tags: [:urgent])</code> を呼ぶと、Rails のプロセスでは引数を JSON に変換して Redis に入れるところまでを行い、すぐに戻ります。実行は別のプロセス（Sidekiq）が受け持ちます（図 18-1）。
+            <code>ArticleNoteJob.perform_later(article, note: "メモ", tags: [:urgent])</code> を呼ぶと、Rails のプロセスでは引数を JSON に変換して Redis に入れるところまでを行い、すぐに戻ります。実行は別のプロセス（Sidekiq）が受け持ちます（図 18-3）。
           </p>
-          <Figure n="18-1" title="投入から実行まで" caption="Sidekiq 8.1.7 の fetch.rb・processor.rb・scheduled.rb・job_retry.rb と、デモでの Redis の中身をもとにした模式図。">
+          <Figure n="18-3" title="投入から実行まで" caption="Sidekiq 8.1.7 の fetch.rb・processor.rb・scheduled.rb・job_retry.rb と、デモでの Redis の中身をもとにした模式図。">
             <PipelineFigure />
           </Figure>
         </>
@@ -280,7 +656,7 @@ KEYS: ["queue:default", "queues"]
           </p>
           <p>
             Sidekiq のプロセスは、既定で5つのスレッド（Processor）を持ち、それぞれが Redis の BRPOP でキューから1件ずつ取り出します
-            <Ref n={3} />。BRPOP は、リストが空なら要素が入るまで待つ命令なので、ジョブが入るとすぐに取り出されます。取り出したジョブの実行は、例外のバックトレースで確かめられます（下から上へ呼ばれる順。一部を抜粋）。
+            <Ref n={3} />。BRPOP は、リストが空なら要素が入るまで待つ命令なので、ジョブが入るとすぐに取り出されます。取り出したジョブの実行は、例外のバックトレース（例外が起きるまでに呼ばれたメソッドとファイル名・行番号の一覧）で確かめられます（下から上へ呼ばれる順。一部を抜粋）。
           </p>
           <Code
             lang="text"
@@ -297,7 +673,7 @@ app/jobs/flaky_job.rb:5:in 'FlakyJob#perform'
           />
           <p>
             <code>ActiveJob::Base.execute</code> は、ジョブを Reloader（Executor）の中で実行します。<ChapterLink n={8} section="executor" />
-            で見たとおり、Executor はリクエストと同じように、クエリキャッシュの有効化や接続の返却をジョブの前後で行います。Sidekiq の5つのスレッドは同時に ActiveRecord を使うので、Sidekiq
+            で見たとおり、Executor はリクエストと同じように、クエリキャッシュ（同じ SQL の結果をその間だけ覚えておく機能）の有効化や接続の返却をジョブの前後で行います。Sidekiq の5つのスレッドは同時に ActiveRecord を使うので、Sidekiq
             のプロセスの database.yml の max_connections は、スレッドの数以上にします（<ChapterLink n={15} section="pool" />
             ）。
           </p>
@@ -360,9 +736,9 @@ FlakyJob retry=1 retry_count=1 error=RuntimeError: FlakyJob の失敗 n=1 入っ
           />
           <p>
             RetryOnJob は ActiveJob の再試行で3回実行された後、Sidekiq の retry に入りました。ActiveJob の再試行は Hash の <code>executions</code> に回数を持ち、Sidekiq の再試行は{' '}
-            <code>retry_count</code> に回数を持ちます。retry_on の回数を使い切った後も Sidekiq の再試行（既定 25 回、約3週間）が続くので、両方を使うと、実行の回数と期間がその分だけ増えます。どちらで回数を管理するかを決めておきます（図 18-2）。FlakyJob は、最初の失敗から約22秒後に再試行され、もう一度失敗して dead に入りました。
+            <code>retry_count</code> に回数を持ちます。retry_on の回数を使い切った後も Sidekiq の再試行（既定 25 回、約3週間）が続くので、両方を使うと、実行の回数と期間がその分だけ増えます。どちらで回数を管理するかを決めておきます（図 18-4）。FlakyJob は、最初の失敗から約22秒後に再試行され、もう一度失敗して dead に入りました。
           </p>
-          <Figure n="18-2" title="再試行の状態遷移" caption="activejob 8.1.4.1 の exceptions.rb と sidekiq 8.1.7 の job_retry.rb を読み、デモのログで確かめてまとめた模式図。">
+          <Figure n="18-4" title="再試行の状態遷移" caption="activejob 8.1.4.1 の exceptions.rb と sidekiq 8.1.7 の job_retry.rb を読み、デモのログで確かめてまとめた模式図。">
             <RetryFigure />
           </Figure>
         </>
@@ -587,7 +963,7 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
           </p>
           <p>このため、ジョブは次のように書きます。</p>
           <ul>
-            <li>2回実行されても結果が同じになるようにする（冪等にする）。例：状態を確かめてから処理する、送信済みであることを同じトランザクションで記録する、一意の索引で二重登録を防ぐ</li>
+            <li>2回実行されても結果が同じになるようにする（冪等にする）。例：状態を確かめてから処理する、送信済みであることを同じトランザクションで記録する、一意の索引（同じ値の行を2つ入れられないようにする索引）で二重登録を防ぐ</li>
             <li>外部の API への送信など、取り消せない処理は、ジョブを小さく分けて、送信の前後で状態を保存する</li>
             <li>処理時間の長いジョブは、Sidekiq の停止のタイムアウト（既定 25 秒）と、デプロイの手順の待ち時間を合わせる</li>
           </ul>
@@ -599,6 +975,9 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
       title: 'まとめ',
       body: (
         <ul>
+          <li>perform_now はその場で実行し、perform_later はキューに入れてすぐに戻ります。時間のかかる処理を perform_later にすると、応答を待たせずに済みます。</li>
+          <li>キューは入れた順に取り出す置き場所で、ワーカーが取り出して実行します。キューを Redis に置くと、どのプロセスからも入れられ、入れたプロセスが終わっても残ります。</li>
+          <li>ジョブは ApplicationJob を継承したクラスに perform を書きます。実行する Sidekiq のプロセスが動いていなければ、ジョブはキューに残ります。</li>
           <li>ActiveJob は引数を JSON に変換し、ActiveRecord のオブジェクトは GlobalID で保存します。実行時にレコードを読み直すので、削除されていれば DeserializationError になります。</li>
           <li>Sidekiq のアダプターは ActiveJob の Hash を Wrapper のジョブに包み、Redis のリストに入れます。Sidekiq のスレッドが BRPOP で取り出し、Executor の中で perform を呼びます。</li>
           <li>待ち時間付きのジョブと再試行は ZSET に入り、ポーラーが平均5秒ごとにキューへ戻します。</li>
@@ -621,6 +1000,10 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
     { title: 'activejob/lib/active_job/enqueue_after_transaction_commit.rb', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.4/activejob/lib/active_job/enqueue_after_transaction_commit.rb', accessed: '2026-11-11', version: 'Rails 7.2.4', note: ':always・:never・:default の分岐と、:default でアダプターの enqueue_after_transaction_commit? に従うこと。' },
     { title: 'railties CHANGELOG（8.0.0）', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v8.0.0/railties/CHANGELOG.md', accessed: '2026-11-11', version: 'Rails 8.0.0', note: '本番環境の Active Job のバックエンドの既定を Solid Queue にしたこと。' },
     { title: 'Solid Queue README', publisher: 'rails/solid_queue（GitHub）', url: 'https://github.com/rails/solid_queue/blob/v1.7.2/README.md', accessed: '2026-11-11', version: 'Solid Queue 1.7.2', note: 'ワーカー・ディスパッチャー・スーパーバイザー、FOR UPDATE SKIP LOCKED、自動の再試行が無いこと、ハートビートの途絶えたプロセスのジョブの扱い。' },
+    { title: 'class Thread::Queue', publisher: 'Ruby Documentation', url: 'https://docs.ruby-lang.org/en/4.0/Thread/Queue.html', accessed: '2026-11-16', version: 'Ruby 4.0', note: '先に入れたものから取り出すキューであること、空のときの pop が待つこと、close。実行例は Ruby 4.0.9 で実測。' },
+    { title: 'Data structure store（Redis の概要）', publisher: 'Redis', url: 'https://redis.io/docs/latest/develop/get-started/', accessed: '2026-11-16', version: 'Redis 8', note: 'Redis がメモリーにデータを置くデータ構造のサーバーであること。' },
+    { title: 'Redis lists', publisher: 'Redis', url: 'https://redis.io/docs/latest/develop/data-types/lists/', accessed: '2026-11-16', version: 'Redis 8', note: 'LPUSH と RPOP でリストを先入れ先出しのキューとして使うこと、バックグラウンドのワーカーのキューに使うこと。redis-cli の実行例は Redis 8.10.3 で実測。' },
+    { title: 'BRPOP', publisher: 'Redis', url: 'https://redis.io/docs/latest/commands/brpop/', accessed: '2026-11-16', version: 'Redis 8', note: 'RPOP の待つ版で、リストが空なら要素が入るまで接続を待たせること。' },
   ],
 }
 

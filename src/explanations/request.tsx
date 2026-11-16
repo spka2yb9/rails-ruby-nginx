@@ -1,78 +1,60 @@
-import { Code } from '../components/content'
+import { ChapterLink, Code } from '../components/content'
 import { guide, primarySource, type Explanations } from './shared'
 
 export const explanation06: Explanations = {
-  sources: [guide('rails_on_rack', 'Rails on Rack'), primarySource('HTTP Semantics', 'IETF', 'https://www.rfc-editor.org/rfc/rfc9110.html', 'RFC 9110')],
+  sources: [guide('rails_on_rack', 'Rails on Rack'), primarySource('module Enumerable（inject）', 'Ruby Documentation', 'https://docs.ruby-lang.org/en/4.0/Enumerable.html', 'Ruby 4.0')],
   sections: {
     'rack-contract': cite => <>
       <p>
-        ブラウザーがURLを開くと、HTTPメソッドとパスなどを含む要求を送ります。
-        <code>GET /articles/1</code>なら「この記事を取得する」という要求です。応答には成功や失敗を示すステータス、
-        データの種類などを伝えるヘッダー、画面のHTMLなどの本文が含まれます。GETは取得、POSTはデータの送信などに使うHTTPメソッドです。
-      </p>
-      <Code lang="text" title="HTTP/1.1の要求と応答を短くした例" code={`GET /articles/1 HTTP/1.1
-Host: example.test
-
-HTTP/1.1 200 OK
-Content-Type: text/html; charset=utf-8
-
-<h1>Rubyの記事</h1>`} />
-      <p>
-        前半が要求、後半が応答です。<code>200</code>は成功、Content-Typeは本文の種類を表します。
-        この通信上の情報をRubyの処理へ渡すには、パスやヘッダーをRubyの値へ変える必要があります。
-        その受け渡しの規則がRackです。Webサーバー側が要求をHashにし、アプリ側はステータス・ヘッダー・本文を返します。
-      </p>
-      <p>
-        たとえば応答の<code>[200, {`{ "content-type" => "text/plain" }`}, ["Hello"]]</code>は、外側が3要素の配列です。
-        内側のHashがヘッダー、<code>["Hello"]</code>が本文です。本文を文字列の配列にしているのは、本文の各部分を順に渡せる形にするためです。
-        通信上は文字やバイト列でも、PumaからRailsへ渡す段階ではRubyのオブジェクトとして扱われます。{cite}
+        ここまでの3つの節で、Web サーバーは HTTP の文字の並びを読み書きし、アプリケーションは要求の内容から応答の内容を作ることを見ました。
+        Puma と Rails の間では、要求は Ruby のハッシュ、応答は Ruby の配列として受け渡されます。
+        たとえば応答の <code>[200, {`{ "content-type" => "text/plain" }`}, ["Hello"]]</code> は3要素の配列で、1つ目が状態コード、2つ目のハッシュがヘッダー、3つ目の <code>["Hello"]</code> が本文です。
+        本文を文字列の配列にしているのは、長い本文を部分に分けて順に渡せるようにするためです。
+        Puma はこの配列を受け取り、「HTTP の要求と応答」の節で見た形の文字の並びにして送ります。{cite}
       </p>
     </>,
     'server-and-app': cite => <>
       <p>
-        Webサーバーの仕事には通信相手との接続を保つこと、要求を読み取ること、応答を書き込むことがあります。
-        それに対し、記事を取得してHTMLを作る仕事はアプリ側です。
-        ソケットはOSが用意する通信の接続口で、Rubyのメソッド呼び出しとは異なります。
-      </p>
-      <p>
-        ブラウザーやNginxからPumaへはHTTPのデータが届きます。Pumaはそれを解析して<code>env</code>を作り、
-        <code>app.call(env)</code>でアプリを呼びます。ここは新たなHTTP通信ではなく、同じRubyプロセス内のメソッド呼び出しです。
-        返された3要素をPumaがHTTPの応答に変えて接続へ書き込むため、アプリはソケットへの書き込みを直接実装せずに済みます。{cite}
+        「Web サーバーが受け持つこと」の節の小さなサーバーでは、要求を読み取る処理と、応答の内容を作る処理が1つのプログラムに入っていました。
+        Puma と Rails では、この2つが別のオブジェクトに分かれています。
+        Puma が Rails を呼ぶのは新たな HTTP の通信ではなく、同じ Ruby のプロセス（実行中のプログラム）の中でのメソッド呼び出しです。
+        Rails が返した3要素を Puma が HTTP の応答の形に直してソケットに書き込むので、Rails はソケットを直接扱いません。{cite}
       </p>
     </>,
     middleware: cite => <>
       <p>
-        <code>before</code>という処理で開始時刻を記録し、アプリを実行してから<code>after</code>で経過時間を出したい場合を考えます。
-        アプリごとに同じコードを書く代わりに、内側のアプリを呼ぶオブジェクトを1つ追加できます。
-        そのオブジェクトもcallを持ち、同じ形の引数を受けて同じ形の応答を返せば、Webサーバーからは通常のアプリとして呼べます。
-      </p>
-      <p>
-        この中間のオブジェクトがミドルウェアです。<code>@app.call(env)</code>の前が前処理、戻ってきた後が後処理になります。
-        <code>status, headers, body = @app.call(env)</code>は、返された配列の3要素を別々の変数に受け取る多重代入です。
-        返ってきたheadersへ値を加え、同じ3要素の形で返せば、内側のアプリを変えずに応答を加工できます。{cite}
+        「要求と応答の間に処理を挟む」の節の Announce を Rack の取り決めに合わせて書き直すと、次の Timing の形になります。
+        違いは、受け取る値が Rack の env になることと、返す配列がヘッダーを含む3要素になることです。
+        Timing は内側を呼ぶ前と後で時計の値を読み、その差を経過時間としてヘッダーに書き込みます。
+        <code>Process.clock_gettime(Process::CLOCK_MONOTONIC)</code> は時計の値を秒で返すメソッドで、2回呼んだ値の差が経過時間になります。{cite}
       </p>
     </>,
     'rails-stack': cite => <>
       <p>
-        ミドルウェアを複数置くと、外側が次のミドルウェアを呼び、さらにその内側を呼ぶ形になります。
-        A→B→アプリの順で呼んだ場合、結果はアプリ→B→Aの順で戻ります。
-        最初に要求を見るものが応答を最後に加工する関係です。この並びをミドルウェアスタックと呼びます。
+        「要求と応答の間に処理を挟む」の節で、A が B を、B がアプリを呼ぶと、要求は外側から、応答は内側から順に処理されることを見ました。
+        Rails はこの形でミドルウェアを20個以上重ねています。重ねたミドルウェアの並びをミドルウェアスタックと呼びます。
+        入るミドルウェアは環境によって変わります。Rails には開発中に使う development、テストを実行するときの test、本番で動かす production の3つの環境があり、環境ごとに設定が違います（第7章）。
       </p>
       <p>
-        例外をHTTPのエラー応答に変えるミドルウェアなら、内側の処理を呼ぶ範囲を例外処理で囲みます。
-        静的ファイルを返せた場合は内側へ進まず、その場で応答を返すものもあります。
-        一覧に出る順番は単なる分類ではなく、どの処理を囲み、どこまでの例外や応答を扱えるかに関わります。{cite}
+        例外を HTTP のエラー応答に変えるミドルウェアは、内側の処理の呼び出しを begin と rescue の間に書きます。
+        静的ファイル（public ディレクトリにある、そのまま返すファイル）を返せたときは、内側を呼ばずにその場で応答を返すミドルウェアもあります。
+        そのため、並びの順によって、どのミドルウェアの例外や応答を扱えるかが変わります。{cite}
       </p>
     </>,
     build: cite => <>
       <p>
-        A・B・アプリを組み合わせるときは、まずアプリを作り、Bへ渡し、そのBをAへ渡します。
-        完成した一番外側のAだけをWebサーバーへ渡すと、A.callから全体を実行できます。
-        設定上の並びと、オブジェクトを組み立てる順番が逆になるのはこのためです。
+        A・B・アプリを組み合わせるときは、まずアプリを作り、それを B に渡し、その B を A に渡します。
+        wrap.rb の <code>Announce.new("A", Announce.new("B", app))</code> でも、内側の B を先に作ってから A に渡していました。
+        完成した一番外側の A だけを Web サーバーに渡せば、A.call から全体を実行できます。設定に書く並びと、オブジェクトを作る順が逆になるのはこのためです。
       </p>
       <p>
-        Rails.application.callは、要求のたびにすべてのミドルウェアを作り直す処理ではありません。
-        組み立てられた経路へ要求を渡す呼び出しです。最後のルーティングも同じcallの規約で接続されるため、Pumaから見た呼び出し口を変えずに内部の構成を追加できます。{cite}
+        Ruby の <code>inject</code> は配列の要素を前から順に取り出し、前の回の結果と合わせて1つの値にまとめるメソッドです。
+        <code>{'[1, 2, 3].inject(0) { |sum, x| sum + x }'}</code> は、0+1、1+2、3+3 と計算して 6 を返します。
+        後で見る build はこの inject を使って、ミドルウェアを内側から1つずつ new して重ねます。
+      </p>
+      <p>
+        Rails.application.call は、要求のたびにミドルウェアを作り直す処理ではありません。組み立て済みの一番外側のミドルウェアの call に、要求を渡す呼び出しです。
+        最後のルーティングも同じ call の取り決めでつながっているので、Puma から見た呼び出し方を変えずに、間にミドルウェアを足せます。{cite}
       </p>
     </>,
   },
@@ -83,14 +65,14 @@ export const explanation07: Explanations = {
   sections: {
     'boot-files': cite => <>
       <p>
-        <code>bin/rails server</code>を実行すると、Rubyのプログラムが起動し、設定やライブラリを読み込んで要求を待ち受けます。
-        この準備が初期化です。要求が1件来るたびに、Gemfileの読み込みからすべてをやり直すわけではありません。
-        起動時に決めることと、要求ごとに行うことを分けると、設定ファイルが関わる時点を整理できます。
+        「bin/rails server を実行したときに起きること」の節で見た3つの段階は、それぞれ決まったファイルで行われます。
+        config/boot.rb が Bundler を準備し、config/application.rb が gem を読み込み、config/environment.rb が <code>Rails.application.initialize!</code> を呼びます。
+        この節では、Puma が起動するときに、これらのファイルがどの順に読み込まれるかを追います。
       </p>
       <p>
-        gemのインストールはファイルを利用できる場所へ配置する操作で、<code>require</code>は実行中のRubyへ定義を読み込む操作です。
-        BundlerはGemfile.lockに沿ったgemを使えるようにします。<code>bundle exec puma</code>は、そのアプリのgemの組み合わせでPumaを実行するコマンドです。
-        <code>config.ru</code>は、Pumaなどが起動するRackアプリを指定するファイルです。ここからRailsの準備が呼ばれます。{cite}
+        本番環境では、Puma を <code>bin/rails server</code> からではなく、<code>bundle exec puma -C config/puma.rb</code> のように直接起動することがあります。
+        <code>bundle exec</code> は「gem と Bundler と require」の節で見たとおり、Gemfile.lock の gem だけを使える状態でコマンドを実行します。<code>-C</code> は Puma の設定ファイルを指定するオプションです。
+        <code>config.ru</code> は、Web サーバーが起動時に読み込み、どの Rack アプリケーションを動かすかを決める Ruby のファイルです（第6章）。{cite}
       </p>
     </>,
     railtie: cite => <>
@@ -117,9 +99,9 @@ export const explanation07: Explanations = {
     </>,
     'config-files': cite => <>
       <p>
-        <code>config/application.rb</code>はアプリ全体、<code>config/environments/*.rb</code>は開発・テスト・本番などの環境ごとの設定です。
-        <code>config/initializers/*.rb</code>には、起動時に実行する追加の設定処理を置きます。
-        環境はそれぞれdevelopment・test・productionという名前で区別します。
+        「環境ごとの設定」の節で見たとおり、<code>config/application.rb</code> はすべての環境に共通の設定、<code>config/environments</code> の環境名のファイルはその環境だけの設定、
+        <code>config/initializers/*.rb</code> は起動時に1回実行する初期化ファイルです。
+        この節では、それぞれが初期化のどの時点で読み込まれるかを見ます。
       </p>
       <p>
         「initializerという名前のファイル」と「Rails内部で名前付き登録された初期化処理」は同一ではありません。
@@ -146,9 +128,8 @@ export const explanation08: Explanations = {
   sections: {
     naming: cite => <>
       <p>
-        Rubyのファイルにクラスを書いても、そのファイルが読み込まれていなければ定義は使えません。
-        Railsではアプリの決まったディレクトリにファイルを置き、名前の規則をそろえることで、クラスが必要になった時点の読み込みを任せられます。
-        この必要時の読み込みがオートロードです。
+        「require を書かずにクラスを使う」の節では、Greeting を参照したときに Rails が app/models/greeting.rb を読み込みました。
+        Rails がファイルを見つけられるのは、クラスの名前とファイルの置き場所が、次のように決まった形で対応しているからです。
       </p>
       <Code lang="text" title="ファイルの置き場所と定義する名前" code={`app/models/article.rb
   → Article
@@ -159,39 +140,37 @@ app/models/article_comment.rb
 app/controllers/admin/articles_controller.rb
   → Admin::ArticlesController`} />
       <p>
-        <code>Article</code>はクラス名であり、Rubyでは定数として参照します。定数は先頭が大文字の名前です。
-        <code>Admin::ArticlesController</code>は、Adminという名前空間の中の定数です。
-        ファイル名を小文字とアンダースコア、定数名を単語の先頭を大文字にした形で対応付けるため、Articleを使うコードごとにrequireを書かずに済みます。{cite}
+        ファイル名は小文字の単語を _ でつなぎ、定数名はそれぞれの単語の先頭を大文字にしてつなぎます。
+        admin ディレクトリは名前空間の Admin になり、その中のファイルは <code>Admin::ArticlesController</code> のように Admin の中の定数を定義します（「クラスの名前は定数」の節）。
+        この対応があるので、Article を使うファイルごとに require を書かずに済みます。{cite}
       </p>
     </>,
     autoload: cite => <>
       <p>
-        自動読み込みを行うには、クラスを実行する前に「この名前が必要になったら、このファイルを読む」という対応を登録しておく必要があります。
-        Ruby標準の<code>autoload</code>はその登録を行います。登録時点ではファイルのクラス本体を実行せず、定数を使う時点で読み込みます。
+        「クラスの名前は定数」の節の最後で、定数がまだ無いときに、名前からファイルを探して読み込めれば require を書かずに済むと述べました。
+        そのためには、定数が使われる前に「この名前が必要になったら、このファイルを読む」という対応を登録しておきます。
+        Ruby に組み込まれた <code>Module#autoload</code> はこの登録を行うメソッドで、登録した時点ではファイルを実行せず、定数が初めて使われた時点で読み込みます。
       </p>
       <p>
-        Zeitwerkはディレクトリを調べ、ファイル名から定数名を求め、Rubyのautoloadへ登録します。
-        したがって、ローダーのsetupでディレクトリを調べる段階と、Articleを参照してarticle.rbを実行する段階は別です。
-        ファイルを配置しただけなのか、読み込み予約があるのか、実際に読み込まれたのかを分けて追えます。{cite}
+        Zeitwerk はディレクトリを調べ、ファイル名から定数名を求めて、この autoload に登録します。
+        そのため、ローダーの setup でディレクトリを調べる段階と、Article を参照して article.rb を実行する段階は別です。
+        ファイルを置いただけの状態、autoload に登録された状態、実際に読み込まれた状態を分けて追えます。{cite}
       </p>
     </>,
     'eager-load': cite => <>
       <p>
-        必要な定数だけ読む方式では、初めてその機能を使う要求の中でファイル読み込みが発生します。
-        一括読み込みは管理対象のファイルを先に読み、要求を処理する前に定義を用意する方式です。
-        本番でどのタイミングに読み込みを済ませるかが、起動時間と初回利用時の処理に関わります。
+        「本番環境は起動時にまとめて読み込む」の節で、本番環境では起動時に app/ のファイルがすべて読み込まれることを確かめました。
+        この節では、その一括読み込みを Rails と Zeitwerk のどの処理が行うかを見ます。
       </p>
       <p>
-        どちらの方式も、同じクラス定義を実行して利用可能にする点は共通です。
-        オートロードを使わず一括読み込みをしたからといって、ファイル名と定数名の対応が不要になるわけではありません。
-        Railsの設定とZeitwerkの管理対象の両方が、何を読み込むかを決めます。{cite}
+        一括読み込みでも、ファイル名と定数名の対応は使われます。オートロードと同じく、ファイルを読み込んだ後に、名前から期待した定数が定義されたかを確かめるからです。
+        何を読み込むかは Rails の設定（<code>config.eager_load</code> など）と、Zeitwerk が管理するディレクトリの両方で決まります。{cite}
       </p>
     </>,
     reload: cite => <>
       <p>
-        開発中はサーバーを起動したままモデルのファイルを書き換えます。
-        変更を次の要求へ反映するには、以前の定義を使い続けず、ファイルを再び評価する必要があります。
-        Railsのリロードは管理している定数を取り除き、同じ名前を次に参照したときに読み込み直す形で行います。
+        「require を書かずにクラスを使う」の節で、開発環境では greeting.rb を書き換えると、次の要求から新しい内容が返ることを確かめました。
+        Rails のリロードは読み込み済みのクラスの中身を書き換えるのではありません。管理している定数を取り除き、同じ名前が次に参照されたときにファイルを読み込み直します。
       </p>
       <p>
         古いArticleクラスを別の変数に保存しておくと、定数Articleが新しいクラスを参照するようになっても、その変数は古いクラスを指し続けます。
@@ -219,70 +198,124 @@ export const explanation09: Explanations = {
   sections: {
     dsl: cite => <>
       <p>
-        URLの<code>https://example.test/articles/1?preview=true</code>では、example.testがホスト名、
-        <code>/articles/1</code>がパス、<code>preview=true</code>がクエリ文字列です。
-        ルーティングはHTTPメソッドとパスなどから処理の行き先を決めます。
-        同じパスでも、GETなら表示、PATCHなら更新というように別の処理へ対応付けられます。
+        routes.rb に書く <code>get</code> や <code>resources</code> は、Ruby のメソッドの呼び出しです。<code>Rails.application.routes</code>{' '}
+        は、アプリケーションのルートをすべて持つ RouteSet のオブジェクトで、routes.rb はその <code>draw</code> メソッドにブロックを渡しています。
+        draw はルートを登録するメソッドを持つ Mapper のオブジェクトを作り、ブロックの中の self をそのオブジェクトに切り替えて、instance_exec でブロックを実行します。
+        そのため、ブロックの中の <code>get</code> は Mapper の get メソッドの呼び出しになります。素の Ruby で同じ形を作ると、次のようになります（<ChapterLink n={4} section="dsl" />）。
       </p>
-      <Code lang="ruby" title="1つのURLと1つの処理を対応付ける" code={`Rails.application.routes.draw do
-  get "/articles/:id", to: "articles#show", as: :article
-end`} />
+      <Code lang="ruby" title="instance_exec.rb と実行結果（Ruby 4.0.9）" code={`class Recorder
+  def initialize = @routes = []
+  attr_reader :routes
+  def get(path, to:) = @routes << "GET #{path} → #{to}"
+end
+
+r = Recorder.new
+r.instance_exec do
+  get "/articles", to: "articles#index"
+  get "/articles/:id", to: "articles#show"
+end
+puts r.routes
+# GET /articles → articles#index
+# GET /articles/:id → articles#show`} />
       <p>
-        <code>GET /articles/1</code>なら、ArticlesControllerのshowというアクションを呼ぶ定義です。
-        アクションは要求を処理するコントローラーのメソッドです。変化する<code>:id</code>の部分には<code>"1"</code>が入り、
-        アクションから<code>params[:id]</code>で取り出せます。asで付けた名前はパスを組み立てるヘルパーにも使います。
+        この節のコードには次の用語も出てきます。collection と member は resources が作るルートの分け方で、collection は記事の全体を対象にするルート（<code>/articles</code>{' '}
+        の index と create）、member は1件の記事を対象にするルート（<code>/articles/:id</code> の show・update・destroy）です。scope と namespace
+        は複数のルートのパスやコントローラーの名前の前に、同じものをまとめて付け足す書き方です。たとえば <code>namespace :admin</code> のブロックの中に書いた{' '}
+        <code>resources :articles</code> は /admin/articles というパスと Admin::ArticlesController を使います。
       </p>
       <p>
-        <code>resources :articles</code>は、一覧・詳細・作成・更新・削除などのルートをまとめて登録します。
-        登録しただけではアクションを実行せず、後から要求が来たときの対応が用意されます。
-        drawがルート定義用のオブジェクトをselfとしてブロックを実行することで、そのオブジェクトのgetやresourcesを、呼び出し先を省略して使えます。{cite}
+        構文木は文字列を部品に分け、部品の組み合わせを木の形で表したものです。<code>Journey::Parser.parse("/articles/:id(.:format)")</code>{' '}
+        の結果を、部品の種類と値で表示すると次のようになりました。Cat は2つの部品が続くこと、Slash と Literal と Dot は決まった文字、Symbol は値が入る部分、Group は省略できる部分を表します。{cite}
       </p>
+      <Code lang="text" title="/articles/:id(.:format) の構文木（bin/rails runner で表示）" code={`Cat
+  Slash "/"
+  Cat
+    Literal "articles"
+    Cat
+      Slash "/"
+      Cat
+        Symbol ":id"
+        Group
+          Cat
+            Dot "."
+            Symbol ":format"`} />
     </>,
     route: cite => <>
       <p>
-        ルートには「受け付けるHTTPメソッド」「一致させるパスの形」「値として取り出す部分」「呼び出し先」を記録する必要があります。
-        <code>/articles/:id</code>は固定の文字列だけではなく、変化する部分を含むパターンです。
-        Railsは、この定義を要求が来るたびにRubyのソースから読み直すのではなく、照合に使うオブジェクトとして保持します。
+        「ルーティングが決めること」の節で見たとおり、1つのルートはメソッド、パスの形、呼び出すコントローラーとアクションを持ちます。Rails の中では、ルートは Journey::Route
+        のオブジェクトとして保存され、要求が来るたびに routes.rb を実行し直すことはしません。この節のコードには、保存したルートすべてのパターンをまとめた状態遷移表（simulator）も出てきます。
       </p>
       <p>
-        Journeyはこのパスの解析や照合を担当する実装です。構文木はパスを文字列のまま扱う代わりに、固定部分や変化する部分を構造として表したものです。
-        Routeの中の<code>app</code>は一致した後に呼ぶ処理です。
-        こうして条件と行き先を同じルートへまとめることで、照合から実行へ進めます。{cite}
+        状態遷移表は入力を先頭から1つずつ読み、読んだ値に応じて次の状態へ進む規則を表にしたものです。/articles、/articles/new、/articles/:id の3つのルートなら、パスを /
+        で区切った部分を順に読み、次のように進みます。
+      </p>
+      <Code lang="text" title="3つのルートをまとめた状態遷移（説明のために簡単にした例）" code={`状態0 ──"articles"──→ 状態1（ここで読み終われば /articles）
+状態1 ──"new"────────→ 状態2（ここで読み終われば /articles/new と /articles/:id）
+状態1 ──それ以外─────→ 状態3（ここで読み終われば /articles/:id）`} />
+      <p>
+        パスを1回読み終えたときの状態から、合う可能性のあるルートがまとめて分かります。ルートを1つずつ試す方法と比べ、ルートの数が増えても、読む回数はパスの長さで決まります。
+        内部用のルートの説明に出てくる ActionCable は、ブラウザーとサーバーの接続をつないだままにして、サーバーから画面へ変更を送る Rails の機能です（
+        <ChapterLink n={17} section="actioncable" />）。{cite}
       </p>
     </>,
     recognize: cite => <>
       <p>
-        ルートの登録は起動や再読み込みの際に行い、照合は各リクエストに対して行います。
-        たとえばGETと<code>/articles/1</code>が届いたら、まずパスに合い得るルートを選び、HTTPメソッドや制約も満たすかを調べます。
-        ルート数が増えると、すべてに同じ処理を繰り返すのではなく、候補を絞るための内部構造が重要になります。
+        Puma は要求を受け取ると、要求の情報を env というハッシュに入れて、Rails のアプリケーションの <code>call(env)</code>{' '}
+        を呼びます。アプリケーションは状態コード、ヘッダー、本文の3つを配列にして返します。この取り決めを Rack と呼びます（<ChapterLink n={6} section="rack-contract" />）。
+        Rails のアプリケーションは受け取った要求を、ミドルウェア（要求の前後に共通の処理をする部品）に外側から順に通し、最後に RouteSet の call を呼びます。この最後に呼ばれるものをエンドポイントと呼びます（
+        <ChapterLink n={6} section="rails-stack" />）。
       </p>
       <p>
-        照合結果には行き先だけでなく<code>id</code>のようにパスから取り出した値も含まれます。
-        RouteSetはcallでRackの要求を受け取り、照合を担当するルーターへ渡し、一致したルートのappを呼びます。
-        単に文字列を比べて終わるのではなく、呼び出しに使える情報を作る処理までがルーティングです。{cite}
+        この節のコードの <code>recognize(req) do |route, parameters| ... end</code> は、recognize にブロックを渡し、recognize が候補のルートごとに yield
+        でブロックを呼ぶ形です（<ChapterLink n={4} section="block-yield" />）。HEAD は GET と同じ要求を送り、応答の本文を除いてヘッダーだけを返させるメソッドです。constraints
+        はルートに付ける追加の条件で、「ルートの順序」の節で例を見ます。x-cascade は Rails が使う応答のヘッダーで、値が pass のときは「このルートでは処理しないので、次の候補を試す」ことを表します。{cite}
       </p>
     </>,
     dispatch: cite => <>
       <p>
-        <code>"articles#show"</code>は、文字列の中に直接メソッド本体が入っているわけではありません。
-        登録時にコントローラー名とアクション名へ分け、要求が一致した後で、コントローラーのクラスと呼ぶアクションを決めます。
-        <code>path_parameters</code>は、このようなパスの照合で決まった値を保持する情報です。
+        ルートの <code>"articles#show"</code> は、登録のときに controller の <code>"articles"</code> と action の <code>"show"</code>{' '}
+        に分けて保存されます。要求がルートに合うと、Dispatcher（ルートとコントローラーの間で受け渡しをするオブジェクト）が、controller の名前からクラスを求めます。
+        文字列からクラスを求めるには constantize を使います。constantize は文字列と同じ名前の定数を探して返すメソッドで（クラスの名前も定数です）、<code>"ArticlesController".constantize</code>{' '}
+        は ArticlesController のクラスを返します。名前に合う定数が無ければ、NameError（定義されていない名前を使ったときの例外）になります。
       </p>
       <p>
-        Dispatcherはルーティングの照合結果をコントローラーへ渡す役割です。
-        ルーティングの条件を解釈する処理と、コントローラーのインスタンスを作ってアクションを実行する処理を分けることで、Rackアプリを直接呼ぶルートなども同じ照合に組み込めます。{cite}
+        development では、定数が初めて使われたときに、名前に対応するファイル（ArticlesController なら app/controllers/articles_controller.rb）を読み込みます。この仕組みをオートロードと呼びます（
+        <ChapterLink n={8} section="naming" />）。状態コードの 404 は「求められたものが無い」、500 は「サーバーの中で誤りが起きた」ことを表します。{cite}
       </p>
     </>,
     'url-generation': cite => <>
       <p>
-        受け取ったパスから処理を決めるのとは逆に、ビューなどでは行き先からパスを作る必要があります。
-        名前付きルートがあれば、<code>article_path(1)</code>から<code>"/articles/1"</code>を作れます。
-        <code>article_url(1)</code>はホスト名などを含めたURLを作り、メールの中のリンクなどで使います。
+        「URL ヘルパーでパスを作る」の節で使った article_path は、routes.rb を実行するときに Rails が定義するメソッドです。プログラムの中で名前を決めてメソッドを定義するには{' '}
+        <code>define_method</code> を使います（<ChapterLink n={5} section="define-method" />）。この節のコードは名前の無いモジュール（<code>Module.new</code>{' '}
+        で作ったモジュール）にメソッドを定義し、そのモジュールをコントローラーやビューに include します。include はモジュールのメソッドをクラスのインスタンスから呼べるようにします（
+        <ChapterLink n={3} section="include" />）。同じ流れを素の Ruby で書くと次のようになります。
+      </p>
+      <Code lang="ruby" title="helpers_module.rb と実行結果（Ruby 4.0.9）" code={`helpers = Module.new
+helpers.define_method(:article_path) { |id| "/articles/#{id}" }
+p helpers                     # => #<Module:0x00007f134cb7dc00>
+
+class View
+end
+View.include(helpers)
+p View.new.article_path(1)    # => "/articles/1"`} />
+      <p>
+        <code>#&lt;Module:0x…&gt;</code> は、名前の無いモジュールを表示したものです。ヘルパーが返すのは文字列で、リンク先のアクションをその場で実行するわけではありません。利用者がリンクを開くと新しい要求が届き、もう一度ルーティングが行われます。{cite}
+      </p>
+    </>,
+    mount: cite => <>
+      <p>
+        Rack のアプリケーションは <code>call(env)</code> というメソッドを持ち、状態コード、ヘッダー、本文の配列を返すオブジェクトです（<ChapterLink n={6} section="rack-contract" />
+        ）。lambda も call で呼べるので、次の lambda は Rack のアプリケーションとして使えます。
+      </p>
+      <Code lang="ruby" code={`->(env) { [200, { "content-type" => "text/plain" }, ["OK"]] }`} />
+      <p>
+        Rails のアプリケーションの中に、別の Rack のアプリケーションを組み込むこともできます。この節に出てくる Sidekiq は時間のかかる処理を要求とは別のプロセスで実行する gem
+        で（<ChapterLink n={18} section="sidekiq" />）、管理画面を Rack のアプリケーションとして持っています。Engine はルートやコントローラーを持ち、Rails のアプリケーションに組み込める部品です（
+        <ChapterLink n={7} section="railtie" />）。
       </p>
       <p>
-        ヘルパーが生成するのは文字列であり、リンク先のアクションをその場で実行するわけではありません。
-        HTMLへその文字列を埋め込み、利用者がリンクを開いて新しい要求を送ったときに、再びルーティングの照合が行われます。
-        登録した1つの定義を、要求の認識とURLの生成の両方向で利用している関係です。{cite}
+        env の SCRIPT_NAME と PATH_INFO は、要求のパスを2つに分けて持つ値です。SCRIPT_NAME はアプリケーションが組み込まれた位置までのパス、PATH_INFO はそこから後ろのパスです。Rack::MockRequest
+        はテスト用のクラスで、ネットワークを使わずに Rack のアプリケーションへ要求を送れます。{cite}
       </p>
     </>,
   },
@@ -293,69 +326,131 @@ export const explanation10: Explanations = {
   sections: {
     hierarchy: cite => <>
       <p>
-        コントローラーのアクションには入力を受け取り、必要なモデルを操作し、応答を決める処理を書きます。
-        記事の詳細表示なら、パスから記事のIDを受け取り、その記事を取得してビューへ渡します。
-        <code>articles</code>テーブルに対象の行がある場合、基本形は次のようになります。
+        「before_action でアクションの前に処理を入れる」の節の最後で見たとおり、ArticlesController で使った params や render は、継承とモジュールを通して受け継いだメソッドです。
+        <code>class ArticlesController &lt; ApplicationController</code> の <code>&lt;</code> は継承を表し、親クラスのメソッドを子クラスのインスタンスから呼べるようにします。モジュールを
+        include したクラスでは、モジュールのメソッドも呼べます。<code>ancestors</code> はメソッドを探す順にクラスとモジュールを並べた配列を返します（
+        <ChapterLink n={2} section="rails-ancestors" />、<ChapterLink n={3} section="include" />）。素の Ruby で確かめます。
       </p>
-      <Code lang="ruby" title="app/controllers/articles_controller.rbの基本形" code={`class ArticlesController < ApplicationController
-  def show
-    @article = Article.find(params[:id])
-  end
-end`} />
+      <Code lang="ruby" title="ancestors.rb と実行結果（Ruby 4.0.9）" code={`module Greeting
+  def hello = "こんにちは"
+end
+
+class Base
+  include Greeting
+  def params = { id: "1" }
+end
+
+class ArticlesController < Base
+  def show = "show で params[:id] = #{params[:id]}"
+end
+
+p ArticlesController.ancestors.take(3)  # => [ArticlesController, Base, Greeting]
+c = ArticlesController.new
+p c.show                                # => "show で params[:id] = 1"
+p c.hello                               # => "こんにちは"`} />
       <p>
-        <code>Article.find</code>はIDからレコードを取得し、結果を<code>@article</code>へ代入します。
-        paramsやビューの描画をこのファイルに定義していないのに使えるのは、ApplicationControllerやその親クラス、組み込まれたモジュールの機能を引き継ぐためです。
-        アプリが書く1つのshowの前後には、その共通処理が加わります。{cite}
+        ArticlesController に params を定義していなくても、親クラスの Base の params を呼べました。この節に出てくる ActionMailer はメールを送るための Rails の機能（
+        <ChapterLink n={19} section="mailer" />）、CSRF はほかのサイトのページから利用者のブラウザーを使って勝手に送信させる攻撃です（<ChapterLink n={21} section="csrf" />）。{cite}
       </p>
     </>,
     dispatch: cite => <>
       <p>
-        ルーティングから渡ってくるのは、呼ぶコントローラーのクラス、アクションの名前、要求と応答の情報です。
-        クラスに対する呼び出しを受け、要求を担当するインスタンスへ情報を渡し、showなどのメソッドを実行します。
-        <code>dispatch</code>は、これらを受け渡して実行を進めるための内部の呼び出し口です。
+        ルーティングの Dispatcher は、<code>ArticlesController.dispatch</code> のように、クラスに対してメソッドを呼びます（クラスメソッド）。クラスメソッドの中で <code>new</code>{' '}
+        を呼んでコントローラーのインスタンスを作り、そのインスタンスの dispatch（インスタンスメソッド）がアクションを実行します。この節のコードに出てくる <code>send</code>{' '}
+        は、メソッドの名前を文字列やシンボルで受け取って、そのメソッドを呼ぶメソッドです（<ChapterLink n={5} section="send" />）。アクションの名前はルートから文字列で届くので、send で呼べます。
       </p>
+      <Code lang="ruby" title="send.rb と実行結果（Ruby 4.0.9）" code={`class ArticlesController
+  def show = "show を実行"
+end
+c = ArticlesController.new
+name = "show"
+p c.send(name)   # => "show を実行"`} />
       <p>
-        <code>before_action :set_article</code>のような設定がある場合は、showを呼ぶ前に登録した処理を実行します。
-        例外処理や計測も同じアクションの実行を囲みます。複数のモジュールがprocess_actionを定義しsuperで次を呼ぶため、1つのアクションへ共通処理を重ねられます。{cite}
+        <code>def process(action, ...)</code> の <code>...</code> は、残りの引数をまとめて受け取り、次のメソッドにそのまま渡す書き方です。<code>alias send_action send</code>{' '}
+        は、send に send_action という別の名前を付けます。flash は次の要求まで残しておくメッセージを入れる場所です。<code>redirect_to @article, notice: "作成しました"</code>{' '}
+        と書くと、移動先の画面で <code>flash[:notice]</code> として読めます。flash の中身はセッションに保存されます。before_action（「before_action でアクションの前に処理を入れる」の節）を呼ぶのも、この節の
+        process_action の連鎖です。{cite}
       </p>
     </>,
     params: cite => <>
       <p>
-        <code>GET /articles/1?preview=true</code>なら、パスからid、クエリ文字列からpreviewという値を受け取ります。
-        フォームやJSONの要求では本文にも値が入ります。paramsはその入力をアクションから扱うためのオブジェクトです。
-        パスの<code>1</code>やフォームの数字が最初からRubyの整数になるとは限りません。
+        「ルーティングが決めること」（<ChapterLink n={9} section="routing-role" />）と「render と redirect_to」の節で見たとおり、params には、パスの値（id）、クエリ文字列の値（preview）、フォームから送られた値（article）が入ります。
+        フォームの値は要求の本文に入って届きます。記事の作成のフォームを curl で送ったとき、要求は次のようになりました。
       </p>
-      <Code lang="ruby" title="入力の構造と、まとめて渡す項目の選択" code={`# 入力が article: { title: "Ruby", published: "1" } の形の場合
-attributes = params.require(:article).permit(:title)
-# titleだけをモデルへの一括代入の対象にする`} />
+      <Code lang="text" title="フォームを送る要求（curl --trace-ascii の出力から、要求の行・Content-Type・本文を抜き出したもの）" code={`POST /articles HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+article[title]=%E3%83%AB%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%E3%81%AE%E5%9F%BA%E6%9C%AC&commit=%E4%BD%9C%E6%88%90`} />
       <p>
-        <code>require</code>は必要なキーを取り出し、<code>permit</code>は許可する項目を指定します。
-        Strong Parametersは、管理者用の項目などを想定外にまとめて代入させないための仕組みです。
-        値の型への変換、モデルの検証、本人の記事を編集してよいかという認可は、それぞれ別に確認します。{cite}
+        本文は <code>名前=値</code> を <code>&amp;</code> でつないだ形で、日本語は <code>%E3%83%AB</code> のような記号の並びに置き換えて送ります。Content-Type
+        は本文の形式を表すヘッダーで、application/x-www-form-urlencoded はこのフォームの形式、application/json は JSON の形式です。Rails は Content-Type を見て本文を読み取り、params に入れます。
+      </p>
+      <p>
+        この節に出てくる一括代入は、<code>Article.new(title: "…", body: "…")</code> のように、ハッシュで複数の属性をまとめてモデルに入れることです。モデルに管理者かどうかを表す admin
+        という属性があるとき、params をそのまま渡すと、利用者がフォームに無い <code>article[admin]=1</code> を足して送った場合に admin も代入されます。Strong Parameters
+        は、permit や expect で許可したキーだけをモデルに渡せるようにして、これを防ぎます。状態コードの 400 は、要求の形が正しくないという意味です。値の型の変換、モデルの検証、その利用者が操作してよいかの確認は、Strong
+        Parameters とは別に行います。{cite}
       </p>
     </>,
     render: cite => <>
       <p>
-        renderはテンプレートやJSONなどを使って今回の要求の応答を作ります。
-        showが記事を取得するだけなら、通常はアクションと同名の<code>app/views/articles/show.html.erb</code>が描画されます。
-        これを暗黙の描画と呼びます。コントローラーのインスタンス変数をビューへ渡し、HTMLなどを作って応答の本文にします。
+        「コントローラーとアクション」の節で見たとおり、render を書かないアクションでは、アクションと同じ名前のテンプレートが使われます。この節ではその仕組みと、テンプレートが無いときの動きを見ます。
+        要求の Accept ヘッダーは受け取りたいデータの種類を表します。ブラウザーがページを開くときは text/html（HTML）を求め、JavaScript から呼ぶ API では application/json（JSON）を求めることがよくあります。
       </p>
       <p>
-        <code>redirect_to</code>は、別のURLを開くようブラウザーへ応答する処理です。
-        保存後に詳細画面へ移動する場合、保存への要求と、リダイレクト先の詳細表示への要求は別になります。
-        renderでは同じ要求の中で表示を作り、リダイレクトでは次の要求を発生させるため、どのアクションで値が用意されたかも変わります。{cite}
+        この節に出てくる状態コードの 406 は、求められた種類で応答を作れないこと、204 は成功したが本文が無いことを表します。<code>head :no_content</code>{' '}
+        は本文を付けずに状態コードだけを返すメソッドです。{cite}
+      </p>
+    </>,
+    exceptions: cite => <>
+      <p>
+        例外は、処理を続けられない誤りが起きたことを表す Ruby のオブジェクトです。<code>raise</code> で例外を発生させると、その後のコードは実行されず、<code>begin</code>{' '}
+        の中なら、例外の種類が合う <code>rescue</code> に移ります。rescue が無ければ、呼び出し元のメソッドへ順にさかのぼります。
+      </p>
+      <Code lang="ruby" title="rescue.rb と実行結果（Ruby 4.0.9）" code={`def find_article(id)
+  raise ArgumentError, "記事 #{id} はありません" if id > 3
+  "記事#{id}"
+end
+
+begin
+  puts find_article(1)
+  puts find_article(9)
+  puts "ここは実行されない"
+rescue ArgumentError => e
+  puts "rescue した: #{e.class}: #{e.message}"
+end
+# 記事1
+# rescue した: ArgumentError: 記事 9 はありません`} />
+      <p>
+        Rails のコントローラーでは例外の種類ごとの処理を <code>rescue_from</code> で登録できます。デモのアプリケーションの ProbeController は、記事が見つからないときに Article.find
+        が発生させる ActiveRecord::RecordNotFound を、not_found メソッドで処理しています。
+      </p>
+      <Code lang="ruby" title="app/controllers/probe_controller.rb（一部）" code={`class ProbeController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found
+
+  def find_rescued
+    Article.find(999_999)
+  end
+
+  private
+    def not_found
+      render plain: "見つかりません（rescue_from）", status: :not_found
+    end
+end`} />
+      <p>
+        rescue_from で処理しない例外は、コントローラーの外のミドルウェアまで伝わり、エラーの画面になります。development では誤りの場所を示す詳しい画面、production では public/404.html や
+        public/500.html のような、前もって用意したページが返ります。状態コードの 404 は見つからない、400 は要求の形が正しくない、422 は送られた内容を処理できない、500
+        はサーバーの中で誤りが起きたことを表します。{cite}
       </p>
     </>,
     'cookies-session': cite => <>
       <p>
-        HTTPの各要求だけでは、前の要求と同じ利用者かをアプリが継続して識別する仕組みはありません。
-        Cookieは、サーバーから渡された値をブラウザーが保存し、後の要求で送る仕組みです。
-        セッションはログイン中の利用者のIDなど、要求をまたいで必要な情報を扱います。
+        「Cookie とセッションでログインを覚える」の節で、セッションの中身が暗号化されて _demo_session という Cookie に入ることを見ました。この節ではその Cookie
+        をどこで読み書きし、どう守るかを見ます。署名は値と秘密の鍵から計算した文字列を値に付けたものです。鍵を知らない人が値を書き換えると署名と合わなくなるので、書き換えを見つけられます。暗号化は、鍵を知らない人が中身を読めないように値を変換することです。
       </p>
       <p>
-        RailsのCookieStoreでは、セッションの値を暗号化したCookieに保存します。
-        アクションでsessionへ値を代入した後、応答へCookieの情報を書き込み、次の要求で読み取る処理が必要です。
-        コントローラーのsessionやcookiesというAPIの前後に、ミドルウェアによる読み込みと書き出しがある関係です。{cite}
+        この節に出てくる secret_key_base は、アプリケーションごとの秘密の文字列で、署名と暗号化の鍵はこれから作られます（<ChapterLink n={21} section="secrets" />
+        ）。ソルトは同じ secret_key_base から用途ごとに違う鍵を作るために混ぜる文字列、AES-256-GCM は暗号化の方式の名前です。{cite}
       </p>
     </>,
   },

@@ -2,7 +2,104 @@ import type { Chapter } from '../content/types'
 import { withExplanations } from '../explanations/shared'
 import { explanation28 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
-import { Arrow, Box, Svg } from '../components/diagram'
+import { Arrow, Box, Svg, T } from '../components/diagram'
+
+/* ---------- 図 28-1 調査の手掛かり ---------- */
+function CluesFigure() {
+  const clues = [
+    ['応答', 'ステータス 500 とエラーの画面'],
+    ['ログ', 'どの処理が動き、何を返したか'],
+    ['例外とバックトレース', 'どこで、どんなエラーが起きたか'],
+    ['止めた時点の変数の値', 'デバッガーで調べる'],
+  ]
+  return (
+    <Svg
+      id="28-1"
+      w={780}
+      h={282}
+      label="curl で GET /price?quantity=2 を送ると、Rails の PricesController#show が PriceCalculator#total を呼ぶ。調査の手掛かりは、応答（ステータス 500 とエラーの画面）、ログ（どの処理が動き、何を返したか）、例外とバックトレース（どこで、どんなエラーが起きたか）、止めた時点の変数の値（デバッガーで調べる）の4つ"
+    >
+      <Box x={20} y={100} w={110} h={56} lines={['curl', '（ブラウザー）']} fs={12} fill="box" subTone="muted" />
+      <Arrow x1={130} y1={128} x2={248} y2={128} />
+      <T x={140} y={106} fs={10.5} mono tone="muted">
+        GET /price
+      </T>
+      <T x={140} y={146} fs={10.5} mono tone="muted">
+        ?quantity=2
+      </T>
+      <Box x={250} y={70} w={210} h={116} lines={['Rails のアプリケーション', 'PricesController#show', '↓', 'PriceCalculator#total']} fs={12} fill="box" subTone="muted" />
+      {clues.map(([a, b], i) => (
+        <g key={a}>
+          <Box x={530} y={14 + i * 62} w={230} h={50} lines={[a, b]} fs={12} fill="box4" subTone="muted" />
+          <Arrow x1={460} y1={100 + i * 18} x2={528} y2={39 + i * 62} dashed={i === 3} />
+        </g>
+      ))}
+      <T x={20} y={266} fs={11} tone="muted">
+        期待（合計: 2900 円）と実際（500 のエラー）の違いがどこで生まれたかを、これらの手掛かりから探す
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 28-2 開発環境のエラー画面 ---------- */
+function ErrorPageFigure() {
+  const notes: [number, string][] = [
+    [31, '例外のクラスと、起きたアクション'],
+    [66, 'メッセージ'],
+    [136, '例外が起きた行の前後のソース'],
+    [226, 'バックトレース（アプリケーションの行）'],
+    [290, '要求のパラメーター（"2" は文字列）'],
+  ]
+  return (
+    <Svg
+      id="28-2"
+      w={780}
+      h={322}
+      label="開発環境のエラー画面。一番上に例外のクラスと、例外が起きたアクション（TypeError in PricesController#show）、次にメッセージ（String can't be coerced into Integer）、例外が起きた行の前後のソース（3行目が強調される）、Application Trace としてアプリケーションのファイルの行だけのバックトレース、最後に要求のパラメーター（quantity は文字列の 2）が表示される"
+    >
+      <rect x={20} y={14} width={470} height={296} rx={6} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      <rect x={20} y={14} width={470} height={34} rx={6} fill="var(--fig-box5)" stroke="var(--fig-line)" />
+      <T x={32} y={31} bold fs={13} tone="danger">
+        TypeError in PricesController#show
+      </T>
+      <T x={32} y={66} bold fs={12} tone="danger">
+        String can't be coerced into Integer
+      </T>
+      <rect x={32} y={80} width={446} height={100} fill="var(--fig-box)" stroke="var(--fig-line)" />
+      <T x={40} y={94} fs={10.5}>
+        Extracted source (around line #3):
+      </T>
+      <rect x={33} y={136} width={444} height={16} fill="var(--fig-box5)" />
+      {['1  class PriceCalculator', '2    def total(unit_price, quantity)', '3      subtotal = unit_price * quantity', '4      subtotal + 500'].map((l, i) => (
+        <text key={l} x={40} y={112 + i * 16} fontSize={10.5} dominantBaseline="central" className="mono" style={{ whiteSpace: 'pre' }}>
+          {l}
+        </text>
+      ))}
+      <T x={32} y={196} fs={10.5} tone="acc">
+        Application Trace | Framework Trace | Full Trace
+      </T>
+      {["lib/price_calculator.rb:3:in 'Integer#*'", "lib/price_calculator.rb:3:in 'PriceCalculator#total'", "app/controllers/prices_controller.rb:3:in 'PricesController#show'"].map((l, i) => (
+        <T key={l} x={32} y={214 + i * 15} fs={10} mono>
+          {l}
+        </T>
+      ))}
+      <T x={32} y={270} bold fs={12} tone="danger">
+        Request
+      </T>
+      <T x={32} y={290} fs={10.5} mono>
+        {'Parameters: {"quantity" => "2"}'}
+      </T>
+      {notes.map(([y, text]) => (
+        <g key={text}>
+          <Arrow x1={514} y1={y} x2={494} y2={y} />
+          <T x={520} y={y} fs={11.5}>
+            {text}
+          </T>
+        </g>
+      ))}
+    </Svg>
+  )
+}
 
 function InvestigationFigure() {
   const rows = [
@@ -11,7 +108,7 @@ function InvestigationFigure() {
     ['原因を絞る', '期待と実際が最初に違う位置を探す'],
     ['修正して確かめる', '再現ケースと周辺ケースをテストする'],
   ]
-  return <Svg id="28-1" w={700} h={332} label="調査の進め方。条件を固定して再現し、値や呼び出し元を観察し、期待と実際が分かれる箇所を特定して修正する。最後に同じ条件と周辺条件でテストする。">
+  return <Svg id="28-3" w={700} h={332} label="調査の進め方。条件を固定して再現し、値や呼び出し元を観察し、期待と実際が分かれる箇所を特定して修正する。最後に同じ条件と周辺条件でテストする。">
     {rows.map(([a, b], i) => <g key={a}>
       <Box x={20} y={14 + i * 80} w={180} h={58} lines={a} fs={14} bold />
       <Arrow x1={202} y1={43 + i * 80} x2={238} y2={43 + i * 80} />
@@ -22,7 +119,7 @@ function InvestigationFigure() {
 }
 
 function FramesFigure() {
-  return <Svg id="28-2" w={700} h={294} label="呼び出し履歴の模式図。コントローラーがサービスを呼び、サービスの掛け算でTypeErrorが発生する。呼び出しごとの実行状態をフレームと呼び、上のフレームへ移って入力の由来を調べる。">
+  return <Svg id="28-4" w={700} h={294} label="呼び出し履歴の模式図。コントローラーがサービスを呼び、サービスの掛け算でTypeErrorが発生する。呼び出しごとの実行状態をフレームと呼び、上のフレームへ移って入力の由来を調べる。">
     <Box x={20} y={18} w={300} h={62} lines={['#2 コントローラー', 'フォームから quantity = "2"']} fs={13} subTone="muted" />
     <Arrow x1={170} y1={80} x2={170} y2={110} />
     <Box x={20} y={112} w={300} h={62} lines={['#1 PriceCalculator#total', 'unit_price = 1200 / quantity = "2"']} fs={12} subTone="muted" />
@@ -40,7 +137,7 @@ function ToolsFigure() {
     ['応答が遅い', 'rack-mini-profiler', '時間のかかる処理を絞る'],
     ['メールの内容がおかしい', 'letter_opener_web', '保存したメールを表示する'],
   ]
-  return <Svg id="28-3" w={760} h={352} label="症状と道具の対応。値や分岐にはdebugやpry-byebug、例外画面にはbetter_errorsやweb-console、SQLの繰り返しにはBullet、性能にはrack-mini-profiler、メールの確認にはletter_opener_webを使う。">
+  return <Svg id="28-5" w={760} h={352} label="症状と道具の対応。値や分岐にはdebugやpry-byebug、例外画面にはbetter_errorsやweb-console、SQLの繰り返しにはBullet、性能にはrack-mini-profiler、メールの確認にはletter_opener_webを使う。">
     {rows.map(([a, b, c], i) => <g key={a}>
       <Box x={20} y={12 + i * 68} w={230} h={54} lines={a} fs={12.5} />
       <Arrow x1={252} y1={39 + i * 68} x2={286} y2={39 + i * 68} />
@@ -53,8 +150,10 @@ const ch28: Chapter = {
   number: 28,
   part: 5,
   title: 'Railsのデバッグ実践と調査用gem',
-  summary: '不具合の再現から変数・呼び出し履歴の調査、修正の確認までを追います。debugに加え、業務アプリで確認したPry、Better Errors、Bullet、rack-mini-profiler、メール確認とログ・例外調査の道具を使い分けます。',
+  summary: '数量の文字列で例外になる画面を例に、Rails のログの読み方、例外とバックトレースの読み方、ブレークポイントで実行を止めて値を調べる方法を確かめます。そのうえで、不具合の再現から変数・呼び出し履歴の調査、修正の確認までを追います。debugに加え、業務アプリで確認したPry、Better Errors、Bullet、rack-mini-profiler、メール確認とログ・例外調査の道具を使い分けます。',
   goals: [
+    'Rails のログから、要求を処理したアクション・SQL・ステータスと、起きた例外を読み取れる',
+    'バックトレースとエラーの画面から例外の場所と呼び出し元をたどり、ブレークポイントで止めて変数の値を確かめられる',
     '再現条件を固定し、例外・ログ・値から原因を絞り込める',
     'debugとpry-byebugで停止、ステップ実行、変数と呼び出し履歴の確認ができる',
     'ブラウザーの例外画面、SQLの検出、性能計測の道具を目的に応じて選べる',
@@ -63,10 +162,343 @@ const ch28: Chapter = {
   ],
   prerequisites: [1, 10, 13, 18, 19, 20, 22],
   sections: [
+    {
+      id: 'bug-clues',
+      title: '不具合の調査で確かめること',
+      body: (
+        <>
+          <p>
+            <Term>不具合</Term>（バグ）は、プログラムが期待どおりに動かないことです。この章ではデモのアプリケーションをコピーし、単価1200円に数量を掛けて送料500円を足す画面 /price
+            を加えて例にします。数量が2なら、期待する結果は 1200 × 2 + 500 = 2900 円です。
+          </p>
+          <Code
+            lang="ruby"
+            title="lib/price_calculator.rb と app/controllers/prices_controller.rb（デモのコピー）"
+            code={`
+class PriceCalculator
+  def total(unit_price, quantity)
+    subtotal = unit_price * quantity
+    subtotal + 500
+  end
+end
+
+class PricesController < ApplicationController
+  def show
+    total = PriceCalculator.new.total(1200, params[:quantity])
+    render plain: "合計: #{total} 円\\n"
+  end
+end
+`}
+          />
+          <p>開発環境で起動し、ブラウザーの代わりに curl で数量2を送りました。</p>
+          <Code
+            lang="text"
+            title="curl の出力（ヘッダーの一部を省略）"
+            code={`
+$ curl -i 'http://127.0.0.1:3328/price?quantity=2'
+HTTP/1.1 500 Internal Server Error
+content-type: text/html; charset=UTF-8
+x-request-id: f0f667f8-5e60-4452-9e2e-20e1c1979c9e
+`}
+          />
+          <p>
+            期待した「合計: 2900 円」ではなく、ステータス 500（Internal Server Error。サーバーの中でエラーが起きたことを表す）が返りました。これが不具合です。不具合の調査は、期待した結果と実際の結果がどこで分かれたかを探し、その原因を突き止める作業です。
+          </p>
+          <p>
+            手掛かりは4つあります。1つ目は応答で、ステータスや画面から何が起きたかの見当を付けます。2つ目はログで、Rails がその要求をどう処理したかの記録です。3つ目は例外とバックトレースで、どこでどんなエラーが起きたかを示します。4つ目は実行を途中で止めて見る変数の値です（図
+            28-1）。次の3つの節で、ログ、例外とバックトレース、実行を止める方法を、この /price の不具合で順に確かめます。
+          </p>
+          <Figure n="28-1" title="不具合の調査の手掛かり" caption="デモのコピー（Rails 8.1.4.1）の /price を例にした図。">
+            <CluesFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'rails-log',
+      title: 'Rails のログを読む',
+      body: (
+        <>
+          <p>
+            Rails は要求を1件処理するたびに、何をしたかをログに書きます。開発環境では <code>bin/rails server</code> を起動した端末と log/development.log の両方に出ます<Ref n={1} />
+            。まず、正常に処理された GET /articles/1 のログを見ます。
+          </p>
+          <Code
+            lang="text"
+            title="GET /articles/1 のログ（開発環境。色の指定と SQL の末尾のコメントを除いた）"
+            code={`
+Started GET "/articles/1" for 172.29.0.1 at 2026-11-16 07:09:48 +0000
+Processing by ArticlesController#show as */*
+  Parameters: {"id" => "1"}
+  Article Load (0.4ms)  SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`id\` = 1 LIMIT 1
+  ↳ app/controllers/articles_controller.rb:9:in 'ArticlesController#show'
+  Rendering layout layouts/application.html.erb
+  Rendering articles/show.html.erb within layouts/application
+  Comment Load (0.4ms)  SELECT \`comments\`.* FROM \`comments\` WHERE \`comments\`.\`article_id\` = 1 ORDER BY \`comments\`.\`id\` DESC LIMIT 2
+  ↳ app/views/articles/show.html.erb:5
+  Rendered collection of templates [0 times] (Duration: 0.0ms | GC: 0.0ms)
+  Rendered articles/show.html.erb within layouts/application (Duration: 22.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 27.2ms | GC: 0.0ms)
+Completed 200 OK in 70ms (Views: 29.0ms | ActiveRecord: 7.5ms (2 queries, 0 cached) | GC: 0.0ms)
+`}
+          />
+          <p>
+            1件の要求のログは <code>Started</code> の行で始まり、<code>Completed</code> の行で終わります。Started の行には要求のメソッドとパス、送ってきた相手の IP アドレス、時刻があります。
+            <code>Processing by</code> はその要求を処理したコントローラーとアクション（ArticlesController#show）、<code>Parameters</code> はアクションが受け取った params です。
+            <code>Article Load (0.4ms)</code> の行は実行した SQL とかかった時間で、その下の ↳ の行はその SQL を実行させたコードの場所です。Rendering と Rendered の行は、HTML を作ったテンプレートです。最後の行は応答のステータス（200
+            OK）と全体の時間、そのうちビューと DB にかかった時間を示します。
+          </p>
+          <p>次は不具合の /price のログです。</p>
+          <Code
+            lang="text"
+            title="GET /price?quantity=2 のログ（開発環境）"
+            code={`
+Started GET "/price?quantity=2" for 172.29.0.1 at 2026-11-16 07:09:48 +0000
+Processing by PricesController#show as */*
+  Parameters: {"quantity" => "2"}
+Completed 500 Internal Server Error in 1ms (ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+TypeError (String can't be coerced into Integer):
+
+lib/price_calculator.rb:3:in 'Integer#*'
+lib/price_calculator.rb:3:in 'PriceCalculator#total'
+app/controllers/prices_controller.rb:3:in 'PricesController#show'
+`}
+          />
+          <p>
+            PricesController#show が動き、1ms で 500 を返したことが分かります。Parameters の <code>"quantity" =&gt; "2"</code> は、数量が引用符の付いた文字列で届いたことを示しています。その後の
+            <code>TypeError (String can't be coerced into Integer):</code> と3行が、起きた例外とその場所です。読み方は次の節で扱います。
+          </p>
+          <p>本番環境の設定でも同じ要求を送りました。</p>
+          <Code
+            lang="text"
+            title="本番環境のログ（RAILS_ENV=production。同じ2つの要求）"
+            code={`
+[db1ec7d7-3323-433e-b3b9-844268dc6613] Started GET "/price?quantity=2" for 172.29.0.1 at 2026-11-16 07:11:19 +0000
+[db1ec7d7-3323-433e-b3b9-844268dc6613] Processing by PricesController#show as */*
+[db1ec7d7-3323-433e-b3b9-844268dc6613]   Parameters: {"quantity" => "2"}
+[db1ec7d7-3323-433e-b3b9-844268dc6613] Completed 500 Internal Server Error in 7ms (ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+[db1ec7d7-3323-433e-b3b9-844268dc6613]
+[db1ec7d7-3323-433e-b3b9-844268dc6613] TypeError (String can't be coerced into Integer):
+[db1ec7d7-3323-433e-b3b9-844268dc6613]
+[db1ec7d7-3323-433e-b3b9-844268dc6613] lib/price_calculator.rb:3:in 'Integer#*'
+[db1ec7d7-3323-433e-b3b9-844268dc6613] lib/price_calculator.rb:3:in 'PriceCalculator#total'
+[db1ec7d7-3323-433e-b3b9-844268dc6613] app/controllers/prices_controller.rb:3:in 'PricesController#show'
+[033d908d-fe50-402d-aa1e-1435fb747c34] Started GET "/articles/1" for 172.29.0.1 at 2026-11-16 07:11:20 +0000
+[033d908d-fe50-402d-aa1e-1435fb747c34] Processing by ArticlesController#show as */*
+[033d908d-fe50-402d-aa1e-1435fb747c34]   Parameters: {"id" => "1"}
+[033d908d-fe50-402d-aa1e-1435fb747c34]   Rendered layout layouts/application.html.erb (Duration: 18.5ms | GC: 0.0ms)
+[033d908d-fe50-402d-aa1e-1435fb747c34] Completed 200 OK in 79ms (Views: 16.0ms | ActiveRecord: 13.6ms (2 queries, 0 cached) | GC: 0.0ms)
+`}
+          />
+          <p>
+            違いは2つあります。1つ目は行の先頭の <code>[db1ec7d7-…]</code> で、要求ごとに付く番号（リクエスト ID）です。本番環境では複数の要求を同時に処理するので、別々の要求の行が混ざって出力されます。rails new
+            が作る config/environments/production.rb の <code>config.log_tags = [ :request_id ]</code> がこの番号を行に付け、同じ番号の行を選べば1件の要求の記録だけを取り出せます。2つ目は、SQL
+            の行が無いことです。ログの各行には重要度（ログレベル。debug・info・warn・error など）があり、設定したレベルより低い行は出力されません。production.rb のログレベルは info で、SQL
+            の行は debug なので出ません<Ref n={1} /><Ref n={14} />。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'backtrace',
+      title: '例外とバックトレースを読む',
+      body: (
+        <>
+          <p>
+            <Term en="exception">例外</Term>は、処理を続けられないエラーが起きたことを表す Ruby のオブジェクトです。エラーが起きると Ruby は例外を発生させ、その時点の処理を中断します。rescue
+            で受け止めなければ、例外はメソッドの呼び出し元へ順に伝わり、最後はプログラムが止まります<Ref n={13} />。Rails では、アクションで受け止められなかった例外を Rails が受け止め、ステータス
+            500 などのエラーの応答に変えます（<ChapterLink n={10} section="exceptions" />）。
+          </p>
+          <p>/price と同じエラーを、Rails を使わない Ruby のファイルで起こしました。</p>
+          <Code
+            lang="ruby"
+            title="price.rb"
+            code={`
+class PriceCalculator
+  def total(unit_price, quantity)
+    subtotal = unit_price * quantity
+    subtotal + 500
+  end
+end
+
+def checkout(params)
+  PriceCalculator.new.total(1200, params[:quantity])
+end
+
+puts checkout({ quantity: 2 })
+puts checkout({ quantity: "2" })
+`}
+          />
+          <Code
+            lang="text"
+            title="ruby price.rb の出力（Ruby 4.0.9）"
+            code={`
+2900
+price.rb:3:in 'Integer#*': String can't be coerced into Integer (TypeError)
+
+    subtotal = unit_price * quantity
+                            ^^^^^^^^
+	from price.rb:3:in 'PriceCalculator#total'
+	from price.rb:9:in 'Object#checkout'
+	from price.rb:13:in '<main>'
+`}
+          />
+          <p>
+            12行目の整数の2では 2900 と表示され、13行目の文字列の "2" で例外が起きました。2行目は、例外が起きた場所（price.rb の3行目の、Integer の * メソッドの中）、メッセージ（文字列を整数に変えられない）、例外のクラス（TypeError）です。^^^^^^^^
+            は、原因になった式の位置を示します。
+          </p>
+          <p>
+            from で始まる行は、例外が起きた時点で実行の途中だったメソッドの呼び出しを、新しいものから順に並べたものです。この並びを<Term>バックトレース</Term>
+            （スタックトレース）と呼びます。下から読むと、ファイルの一番外側（&lt;main&gt;）の13行目が checkout を呼び、checkout の9行目が total を呼び、total の3行目の掛け算で例外が起きたことが分かります。例外が起きたのは
+            Ruby の Integer#* の中ですが、直すのは自分のコードです。上から順に見て最初に出てくる自分のコードの行（price.rb:3）から読み始め、そこに渡された値がどこから来たかを、下の行へたどります。
+          </p>
+          <p>rescue で例外を受け止めると、例外のオブジェクトからクラス・メッセージ・バックトレースを取り出せます。</p>
+          <Code
+            lang="ruby"
+            title="rescue.rb（price_lib.rb は price.rb の PriceCalculator のクラスだけを書いたファイル）"
+            code={`
+require_relative "price_lib"
+
+begin
+  PriceCalculator.new.total(1200, "2")
+rescue TypeError => e
+  puts "クラス:     #{e.class}"
+  puts "メッセージ: #{e.message}"
+  puts "バックトレース:"
+  puts e.backtrace
+end
+puts "rescue したので、処理はここまで進む"
+`}
+          />
+          <Code
+            lang="text"
+            title="ruby rescue.rb の出力"
+            code={`
+クラス:     TypeError
+メッセージ: String can't be coerced into Integer
+バックトレース:
+/ex/price_lib.rb:3:in 'Integer#*'
+/ex/price_lib.rb:3:in 'PriceCalculator#total'
+rescue.rb:4:in '<main>'
+rescue したので、処理はここまで進む
+`}
+          />
+          <p>
+            Rails のアプリケーションで例外が起きたときも、同じ情報が出ます。開発環境で /price?quantity=2 をブラウザーで開くと、Rails は例外の情報を並べたエラーの画面を返します（図 28-2）。Extracted source
+            は例外が起きた行の前後のソースで、3行目が強調されます。Application Trace はバックトレースのうちアプリケーションのファイル（app や lib）の行だけ、Framework Trace は Rails などの gem
+            の行だけ、Full Trace はすべての行です。前の節のログに出た3行も、Application Trace と同じ行です。Request の Parameters を見れば、quantity が文字列の "2" で届いたことも分かります。
+          </p>
+          <p>
+            この画面は、設定の <code>config.consider_all_requests_local</code> が true のとき（開発環境とテスト環境の既定）に表示されます。本番環境では false なので、利用者にはソースやパラメーターを含まない汎用のエラーの画面が返り、調査にはログを使います
+            <Ref n={14} />。
+          </p>
+          <Figure n="28-2" title="開発環境のエラー画面" caption="デモのコピーで /price?quantity=2 を開いた画面をもとにした図。パスの先頭の /work/demo/ を省き、Request の下の欄を省略した。">
+            <ErrorPageFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'breakpoint',
+      title: 'ブレークポイントで実行を止める',
+      body: (
+        <>
+          <p>
+            バックトレースから、例外が起きた行と、そこまでの呼び出しが分かりました。次に知りたいのは、その時点の変数の値です。手軽な方法は p で値を表示する行を足して実行し直すことです。
+          </p>
+          <Code
+            lang="ruby"
+            title="p_debug.rb と出力"
+            code={`
+class PriceCalculator
+  def total(unit_price, quantity)
+    p quantity
+    p quantity.class
+    subtotal = unit_price * quantity
+    subtotal + 500
+  end
+end
+
+PriceCalculator.new.total(1200, "2")
+
+# 出力
+"2"
+String
+p_debug.rb:5:in 'Integer#*': String can't be coerced into Integer (TypeError)
+`}
+          />
+          <p>
+            p は値を inspect の形で表示するので、文字列には引用符が付きます。"2" と String が表示されたので、quantity は文字列でした。ただし、ほかの値を見たくなるたびに、コードを書き換えて実行し直す必要があります。
+          </p>
+          <p>
+            デバッガは実行中のプログラムを途中で止め、その時点の変数を調べる道具です。止める場所を<Term en="breakpoint">ブレークポイント</Term>と呼びます。Ruby の debug gem
+            ではコードに <code>binding.break</code> を書くと、実行がその行に来たところで止まり、端末に (rdbg) という入力の印（プロンプト）が出ます。止まっている間は、p で変数を表示し、bt
+            でバックトレースを表示し、c（continue）で実行を再開できます<Ref n={2} />。
+          </p>
+          <Code
+            lang="ruby"
+            title="break.rb"
+            code={`
+require "debug"
+
+class PriceCalculator
+  def total(unit_price, quantity)
+    binding.break
+    subtotal = unit_price * quantity
+    subtotal + 500
+  end
+end
+
+puts PriceCalculator.new.total(1200, "2")
+`}
+          />
+          <Code
+            lang="text"
+            title="ruby break.rb の画面（Ruby 4.0.9・debug 1.11.1。色の指定と入力の補足表示を除いた）"
+            code={`
+[1, 10] in break.rb
+     1| require "debug"
+     2|
+     3| class PriceCalculator
+     4|   def total(unit_price, quantity)
+=>   5|     binding.break
+     6|     subtotal = unit_price * quantity
+     7|     subtotal + 500
+     8|   end
+     9| end
+    10|
+=>#0	PriceCalculator#total(unit_price=1200, quantity="2") at break.rb:5
+  #1	<main> at break.rb:11
+(rdbg) p quantity
+=> "2"
+(rdbg) p quantity.class
+=> String
+(rdbg) p unit_price
+=> 1200
+(rdbg) bt
+=>#0	PriceCalculator#total(unit_price=1200, quantity="2") at break.rb:5
+  #1	<main> at break.rb:11
+(rdbg) c
+break.rb:6:in 'Integer#*': String can't be coerced into Integer (TypeError)
+`}
+          />
+          <p>
+            止まると、まわりのソースが表示され、=&gt; の付いた5行目が次に実行する行です。その下の #0 と #1 は止まった時点の呼び出しの並び（バックトレース）で、#0 には total
+            に渡された引数（unit_price=1200、quantity="2"）も出ます。p で調べる値は止まっている間に何度でも変えられます。c で再開すると、6行目で TypeError が起きました。
+          </p>
+          <p>
+            rails new が作る Gemfile には、開発環境とテスト環境で使う debug gem が入っています。コントローラーやモデルに <code>debugger</code>（binding.break と同じ）を書いて要求を送ると、
+            <code>bin/rails server</code> を起動した端末に (rdbg) が出ます<Ref n={1} />。ここまでで、応答・ログ・例外とバックトレース・止めた時点の値という4つの手掛かりを見ました。次の節からはこれらを使って不具合を再現し、原因を絞り、修正を確かめるまでの進め方と、業務のアプリケーションで使われる調査用の
+            gem を扱います。
+          </p>
+        </>
+      ),
+    },
     { id: 'workflow', title: '再現条件を固定して期待と実際を比べる', body: <>
       <p>デバッグでは、期待した結果と実際の結果が分かれた位置を探し、なぜそうなったかを確かめます。第1章では調査用のコマンドを紹介しました。本章では、どの場面で何を調べ、修正の確認までどう進めるかを扱います。</p>
       <p>最初に、操作順、入力、期待する結果、実際の結果を揃えます。同じ画面でも、利用者の権限、データの状態、環境変数、実行しているコードのバージョンによって動きが変わります。ローカルで作った架空のデータで再現できれば、調べる範囲を狭められます。失敗したリクエストやジョブを識別するIDは、複数のログを結び付ける手掛かりになります。</p>
-      <Figure n="28-1" title="再現から修正確認まで" caption="模式図。観察で仮説が外れたら、条件を整理して調べ直します。"><InvestigationFigure /></Figure>
+      <Figure n="28-3" title="再現から修正確認まで" caption="模式図。観察で仮説が外れたら、条件を整理して調べ直します。"><InvestigationFigure /></Figure>
       <p>値がおかしいのか、例外が発生したのか、応答が遅いのかで道具を選びます。停止するデバッガは値の調査に向きますが、止めた時間が混ざるので応答時間の測定には向きません。ログを増やす場合も、調べたい値と期間を絞ります。<Ref n={1} /></p>
     </> },
     { id: 'environments', title: '教材の環境と参照した業務アプリの構成', body: <>
@@ -80,7 +512,7 @@ const ch28: Chapter = {
         <tr><td>letter_opener_web 3.0.0</td><td>メールの確認</td><td>開発・テスト・ステージング</td></tr>
         <tr><td>honeybadger 6.3.0 / lograge 0.14.0</td><td>例外通知とログの整理</td><td>グループ指定なし</td></tr>
       </tbody></table></div>
-      <p>Gemfileのグループ指定は、実際にその環境で機能が有効であることまで保証しません。Bundlerの除外設定、初期化処理、ミドルウェアの順序も確認します。業務アプリにはdebugの直接指定はなく、Pry系が宣言されていました。debugとpry-byebugは、同じ停止位置に両方を差し込まず、調査ごとに使う道具を決めます。</p>
+      <p>Gemfileのグループ指定は、実際にその環境で機能が有効であることまで保証しません。Bundlerの除外設定、初期化処理、ミドルウェア（要求がアクションに届く前後で処理を加える部品。<ChapterLink n={6} section="middleware" />）の順序も確認します。業務アプリにはdebugの直接指定はなく、Pry系が宣言されていました。debugとpry-byebugは、同じ停止位置に両方を差し込まず、調査ごとに使う道具を決めます。</p>
       <Callout title="確認済みの範囲"><p>業務アプリのDocker Compose環境で、上表の解決済みバージョンとpry-byebug・better_errorsの読み込みを確認しました。Pryの停止・ステップ実行も独立したRubyファイルで確認しています。ブラウザー内のgemの画面、メール配信、外部への例外送信は実行していません。設定例は各gemの公式資料と照合しています。</p></Callout>
     </> },
     { id: 'debug', title: 'debugで止めて値と型を確認する', body: <>
@@ -133,8 +565,8 @@ binding.break
 (rdbg) continue
 `} />
       <p>catch TypeError は、TypeErrorが発生した時点を調べます。後でrescueされる例外でも止まるため、「レスポンスは返るが内部で失敗を握りつぶしている」ケースの調査にも使えます。実測では Integer#* の中で停止し、btでPriceCalculatorへ戻る経路を確認できました。</p>
-      <p>呼び出し1回ごとの変数や実行位置を持つ状態を<Term en="stack frame">フレーム</Term>と呼びます。図28-2は、Rubyだけの実測例をRailsのコントローラーから呼ぶ構成へ広げた模式図です。例外が出た最深部だけでなく、入力を渡した側も調べます。</p>
-      <Figure n="28-2" title="例外から入力の由来をたどる" caption="模式図。実際のフレーム番号はライブラリや停止位置によって変わります。"><FramesFigure /></Figure>
+      <p>呼び出し1回ごとの変数や実行位置を持つ状態を<Term en="stack frame">フレーム</Term>と呼びます。図28-4は、Rubyだけの実測例をRailsのコントローラーから呼ぶ構成へ広げた模式図です。例外が出た最深部だけでなく、入力を渡した側も調べます。</p>
+      <Figure n="28-4" title="例外から入力の由来をたどる" caption="模式図。実際のフレーム番号はライブラリや停止位置によって変わります。"><FramesFigure /></Figure>
       <p>Rails内部へ進みたいときは、<ChapterLink n={1} />の owner・source_location と、停止中の呼び出し履歴を組み合わせます。全メソッドを順に追うより、期待と実際が分かれる処理の開始位置で止める方が、調べる範囲を限定できます。条件式も実行されるコードなので、DBへの更新など副作用のある式は使いません。</p>
     </> },
     { id: 'pry', title: 'pry-byebugとpry-rails：既存アプリの道具を使う', body: <>
@@ -176,7 +608,7 @@ show-routes --grep articles
 docker compose run --rm app bundle exec rails console
 docker compose run --rm app bundle exec rspec spec/services/price_calculator_spec.rb
 `} />
-      <p>サーバーのログを眺めるだけでは、別プロセスに出たPryの入力先にはなりません。停止位置を通るプロセスの標準入力につながった端末が必要です。参照したCompose設定には、端末を割り当てる tty と、標準入力を開いておく stdin_open がありました。ただし、-dを付けてバックグラウンドで起動したサーバーへ接続する方法は、実際の起動コマンドやプロセス管理によって異なります。まずconsoleや単独のspecで再現すると、入力先を揃えやすくなります。</p>
+      <p>サーバーのログを眺めるだけでは、別プロセスに出たPryの入力先にはなりません。停止位置を通るプロセスの標準入力（プログラムが入力を読み取る先。端末から起動したプログラムなら、その端末のキーボード）につながった端末が必要です。参照したCompose設定には、端末を割り当てる tty と、標準入力を開いておく stdin_open がありました。ただし、-dを付けてバックグラウンドで起動したサーバーへ接続する方法は、実際の起動コマンドやプロセス管理によって異なります。まずconsoleや単独のspecで再現すると、入力先を揃えやすくなります。</p>
     </> },
     { id: 'browser-tools', title: 'better_errors・binding_of_caller・web-console', body: <>
       <p>better_errorsは、例外のソース位置、呼び出し履歴、変数を調べやすいエラー画面を提供します。binding_of_callerは、呼び出し履歴にある実行状態へアクセスするための補助gemです。この2つを組み合わせると、各フレームで変数を確認したりRubyの式を評価したりできます。<Ref n={6} /></p>
@@ -229,7 +661,7 @@ end
       <p>遅い画面を開き、まずSQLに時間がかかるのか、それ以外の処理に時間がかかるのかを分けます。同じSQLが多数あればN+1を疑い、1回のSQLが遅ければ実行計画や索引を調べます。Ruby側の処理に時間がかかるなら、呼び出しごとの内訳を見る段階へ進みます。具体的な計測の考え方は<ChapterLink n={22} />と共通です。</p>
       <p>呼び出しの積み重なりと時間の割合を帯で表した図を<Term en="flame graph">フレームグラフ</Term>と呼びます。rack-mini-profilerでこの表示を使うにはstackprofなどの追加gemが必要です。メモリーの内訳にはmemory_profilerを追加できます。参照アプリのGemfileでは両者の直接指定は確認していないため、本章では追加候補として紹介します。<Ref n={9} /></p>
       <p>初回の読み込み、キャッシュ、データ量で時間は変わります。同じ条件で複数回測り、計測用ツール自体の負荷も考慮します。処理時間が短くなっても、必要な関連を落として表示が欠けていれば改善にはなりません。修正後は機能の確認と性能の確認を両方行います。</p>
-      <Figure n="28-3" title="症状に合わせた調査用gemの選択" caption="用途の対応図。すべてを同時に使う必要はありません。"><ToolsFigure /></Figure>
+      <Figure n="28-5" title="症状に合わせた調査用gemの選択" caption="用途の対応図。すべてを同時に使う必要はありません。"><ToolsFigure /></Figure>
     </> },
     { id: 'mail', title: 'letter_opener_webでメールを確認する', body: <>
       <p>メールの宛先や本文を調べるときは、実際に外へ送る前に、開発環境で生成結果を確認します。letter_opener_webは保存されたメールをブラウザーで読むための画面を提供します。delivery_methodを :letter_opener_web にすると、メールをこの仕組みに渡します。<Ref n={10} /></p>
@@ -246,7 +678,7 @@ end
       <p>deliver_laterを使う場合は、<ChapterLink n={18} />のジョブが実際に動いて初めてメールが生成されます。別コンテナでジョブを実行する構成では、生成側と閲覧側が保存場所を共有する必要があります。画面に何もないときは、Mailerだけでなく、ジョブの実行と保存先まで追います。保存したメールにも個人情報が入り得るので、教材の検証には架空の宛先と本文を使います。</p>
     </> },
     { id: 'logs-errors', title: 'LogrageとHoneybadgerでリクエスト・例外を追う', body: <>
-      <p>停止できない環境では、ログと例外の記録が調査の出発点になります。Logrageは、Railsのリクエストに関するログを整理して出力するgemです。参照アプリでは本番用の設定にJSON形式が指定されていました。時刻、リクエストID、処理名、ステータス、所要時間などを使い、関係する記録を検索します。<Ref n={11} /></p>
+      <p>停止できない環境では、ログと例外の記録が調査の出発点になります。Logrageは、Railsのリクエストに関するログを整理して出力するgemです。参照アプリでは本番用の設定にJSON形式（名前と値の組を決まった書き方で並べる、データの形式）が指定されていました。時刻、リクエストID、処理名、ステータス、所要時間などを使い、関係する記録を検索します。<Ref n={11} /></p>
       <Code lang="ruby" title="説明用：リクエストIDを付けるLogrageの設定例" code={`
 config.lograge.enabled = true
 config.lograge.formatter = Lograge::Formatters::Json.new
@@ -303,6 +735,8 @@ end
       <Callout kind="v72"><p>ここで扱うgemはRailsとは別にバージョンが決まります。Rails 7.2から8.xへ上げる場合も、debuggerのコマンドや検出gemの対応状況はGemfile.lockと各gemの資料で確認します。Ruby 3.4で動いたpry-byebugを、そのままRuby 4.0でも確認済みとは扱いません。</p></Callout>
     </> },
     { id: 'summary', title: 'まとめ', body: <ul>
+      <li>Rails のログは要求ごとに Started から Completed までの行で、アクション・params・SQL・ステータスを記録します。本番環境ではリクエスト ID が付き、SQL の行は出ません。</li>
+      <li>バックトレースは例外が起きた時点の呼び出しの並びで、上ほど新しい呼び出しです。最初に出てくる自分のコードの行から読み、ブレークポイントで止めて値と型を確かめます。</li>
       <li>再現条件を固定し、値と型、例外、呼び出し元から期待と実際の違いを調べます。</li>
       <li>debugとpry-byebugのプロンプトやコマンドを区別し、入力できる端末で使います。</li>
       <li>Better Errors・web-consoleは例外や変数、Bulletは関連読み込み、rack-mini-profilerは処理時間の調査に使います。</li>
@@ -323,6 +757,8 @@ end
     { title: 'letter_opener_web README', publisher: 'fgrehm/letter_opener_web（GitHub）', url: 'https://github.com/fgrehm/letter_opener_web', accessed: '2026-11-12', note: 'delivery_method、閲覧ルート、保存場所。' },
     { title: 'Lograge README', publisher: 'roidrage/lograge（GitHub）', url: 'https://github.com/roidrage/lograge', accessed: '2026-11-12', note: 'JSON形式、custom_payload、Railsのログの整理。' },
     { title: 'Honeybadger for Ruby', publisher: 'Honeybadger Docs', url: 'https://docs.honeybadger.io/lib/ruby/', accessed: '2026-11-12', note: '例外通知、context、機密情報のフィルタリングへの案内。外部送信は未実施。' },
+    { title: 'class Exception', publisher: 'Ruby Documentation', url: 'https://docs.ruby-lang.org/en/4.0/Exception.html', accessed: '2026-11-16', version: 'Ruby 4.0', note: '例外の発生と rescue、message と backtrace。実行例は Ruby 4.0.9 で実測。' },
+    { title: 'Configuring Rails Applications', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/configuring.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'consider_all_requests_local の既定値（開発・テストは true、本番は false）、log_level の既定値（本番は info）、log_tags。' },
   ],
 }
 export default withExplanations(ch28, explanation28)

@@ -6,6 +6,6 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   base: process.env.BASE_PATH ?? '/',
-  // 全文検索の索引（約530KB）は検索を初めて開いたときだけ読み込む別ファイルなので、警告の基準を上げる
-  build: { chunkSizeWarningLimit: 700 },
+  // 全文検索の索引（約1.3MB、gzip で約360KB）は検索を初めて開いたときだけ読み込む別ファイルなので、警告の基準を上げる
+  build: { chunkSizeWarningLimit: 1400 },
 })

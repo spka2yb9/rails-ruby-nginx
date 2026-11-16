@@ -6,11 +6,111 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 5-1 class_attribute の値の置き場所 ---------- */
-function ClassAttributeFigure() {
+/* ---------- 図 5-1 Article の宣言と Rails が作ったメソッドの置き場所 ---------- */
+function GeneratedFigure() {
+  const right: { y: number; lines: string[]; fill: 'box2' | 'box3' }[] = [
+    { y: 30, lines: ['Article::GeneratedAssociationMethods', 'author / comments / comment_ids / tags …（37個）'], fill: 'box2' },
+    { y: 88, lines: ['enum が作るモジュール（名前なし）', 'draft? / draft! / published? …（6個）'], fill: 'box2' },
+    { y: 146, lines: ['#<Class:Article>（特異クラス）', 'recent / draft / published / statuses …'], fill: 'box3' },
+    { y: 210, lines: ['Article::GeneratedAttributeMethods', 'title / title= / title_changed? …（287個）'], fill: 'box2' },
+  ]
   return (
     <Svg
       id="5-1"
+      w={780}
+      h={320}
+      label="デモの Article の宣言と、Rails が作ったメソッドの置き場所。belongs_to・has_many・has_one_attached からは、author、comments、comment_ids、tags などの37個のメソッドが Article::GeneratedAssociationMethods に作られる。enum :status からは draft? や draft! などの6個のメソッドが名前の無いモジュールに作られ、draft や published などのクラスメソッドも作られる。scope :recent からはクラスメソッド recent が Article の特異クラスに作られる。articles テーブルの列からは title、title=、title_changed? などの287個のメソッドが Article::GeneratedAttributeMethods に作られる。Article.ancestors では、Article の後ろに enum のモジュール、GeneratedAssociationMethods、GeneratedAttributeMethods の順に並ぶ"
+    >
+      <T x={20} y={18} fs={12} tone="muted">
+        app/models/article.rb（デモ。一部を省略）
+      </T>
+      <Box
+        x={20}
+        y={30}
+        w={330}
+        h={160}
+        lines={[
+          'class Article < ApplicationRecord',
+          '  belongs_to :author, optional: true',
+          '  has_many :comments',
+          '  has_many :taggings',
+          '  has_many :tags, through: :taggings',
+          '  enum :status, { draft: 0, … }',
+          '  has_one_attached :cover …',
+          '  scope :recent, -> { … }',
+          'end',
+        ]}
+        mono
+        fs={11}
+        fill="bg"
+        align="start"
+      />
+      <Box x={20} y={210} w={330} h={44} lines={['articles テーブルの列', 'id・title・body・status など13列']} fs={12} fill="box4" subTone="muted" />
+      <T x={430} y={18} fs={12} tone="muted">
+        Rails が作ったメソッドの置き場所
+      </T>
+      {right.map((r) => (
+        <Box key={r.y} x={430} y={r.y} w={330} h={44} lines={r.lines} mono fs={11.5} fill={r.fill} bold subTone="muted" />
+      ))}
+      <Arrow x1={350} y1={79} x2={428} y2={52} />
+      <Arrow x1={350} y1={125} x2={428} y2={110} />
+      <Arrow x1={350} y1={156} x2={428} y2={168} />
+      <Arrow x1={350} y1={232} x2={428} y2={232} />
+      <T x={20} y={290} fs={11.5} tone="muted">
+        Article.ancestors では、Article の後ろに enum のモジュール、GeneratedAssociationMethods、GeneratedAttributeMethods の順に並ぶ
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 5-2 DSL の宣言が登録するものと使われる時点 ---------- */
+function DslRegisterFigure() {
+  const rows = [
+    ['resources :articles', 'ルートの一覧（URL とアクションの対応）', '要求が届いてアクションを選ぶとき'],
+    ['before_action :set_article', 'process_action のコールバックの列', 'アクションを実行する前'],
+    ['validates :body, presence: true', 'バリデーター（PresenceValidator）', 'valid? や save のとき'],
+    ['has_many :comments', 'comments などのメソッドと関連の情報', 'comments を呼んだとき'],
+  ]
+  return (
+    <Svg
+      id="5-2"
+      w={780}
+      h={290}
+      label="Rails の DSL の宣言は、ファイルやクラスを読み込むときに実行され、情報を登録する。resources :articles はルートの一覧に登録し、要求が届いてアクションを選ぶときに使われる。before_action :set_article は process_action のコールバックの列に登録し、アクションを実行する前に使われる。validates :body, presence: true はバリデーターを登録し、valid? や save のときに使われる。has_many :comments はメソッドと関連の情報を作り、comments を呼んだときに使われる"
+    >
+      <T x={20} y={18} fs={12} tone="muted">
+        宣言（読み込むときに実行）
+      </T>
+      <T x={270} y={18} fs={12} tone="muted">
+        登録されるもの
+      </T>
+      <T x={540} y={18} fs={12} tone="muted">
+        使われる時点
+      </T>
+      {rows.map(([decl, reg, use], i) => {
+        const y = 32 + i * 56
+        return (
+          <g key={decl}>
+            <Box x={20} y={y} w={228} h={40} lines={decl} mono fs={11} fill="bg" />
+            <Arrow x1={248} y1={y + 20} x2={268} y2={y + 20} />
+            <Box x={270} y={y} w={252} h={40} lines={reg} fs={11.5} fill="box4" />
+            <Arrow x1={522} y1={y + 20} x2={538} y2={y + 20} />
+            <Box x={540} y={y} w={220} h={40} lines={use} fs={11.5} fill="box5" />
+          </g>
+        )
+      })}
+      <T x={20} y={270} fs={11.5} tone="muted">
+        宣言は登録だけを行い、登録したものを Rails が後で使う
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 5-3 class_attribute の値の置き場所 ---------- */
+function ClassAttributeFigure() {
+  return (
+    <Svg
+      id="5-3"
       w={640}
       h={300}
       label="class_attribute :settings を Base に定義すると、Base の特異クラスに settings、settings=、private な __class_attr_settings（値 {timeout: 5} を返す）が定義される。Child.settings = ... を実行すると、Child の特異クラスに {timeout: 10} を返す __class_attr_settings が追加される。Other の特異クラスには定義がないので、Other.settings は superclass である Base の特異クラスの値を読む"
@@ -57,7 +157,7 @@ function ClassAttributeFigure() {
   )
 }
 
-/* ---------- 図 5-2 Concern を include したときの処理順 ---------- */
+/* ---------- 図 5-4 Concern を include したときの処理順 ---------- */
 function ConcernFigure() {
   const N = 90
   const C = 320
@@ -71,7 +171,7 @@ function ConcernFigure() {
   const self = (x: number, y: number, text: string) => <Box x={x - 105} y={y - 15} w={210} h={30} lines={text} fs={11.5} fill="box5" />
   return (
     <Svg
-      id="5-2"
+      id="5-4"
       w={680}
       h={430}
       label="Commentable（Taggable に依存する Concern）を Note に include したときの処理順。1. Note が Commentable.append_features(Note) を呼ぶ。2. Commentable は依存先の Taggable を先に Note に include する。3. Taggable は super で Note の ancestors に自分を挿入する。4. Taggable は Note.extend(ClassMethods) を行う。5. Taggable は自分の included ブロックを Note.class_eval で実行する。6. Commentable が super で Note の ancestors に自分を挿入する。7. Commentable の included ブロックを Note.class_eval で実行する"
@@ -109,12 +209,12 @@ function ConcernFigure() {
   )
 }
 
-/* ---------- 図 5-3 コールバックの定義順と実行の入れ子 ---------- */
+/* ---------- 図 5-5 コールバックの定義順と実行の入れ子 ---------- */
 function CallbackNestingFigure() {
   const defs = ['around1', 'before A', 'after A', 'around2', 'before B', 'after B']
   return (
     <Svg
-      id="5-3"
+      id="5-5"
       w={640}
       h={330}
       label="左は set_callback で定義した順序：around1、before A、after A、around2、before B、after B。右は実行時の入れ子：around1 の前半、before A、around2 の前半、before B、本体、after B、around2 の後半、after A、around1 の後半の順に実行される。around はそれより後に定義したコールバックと本体を包む"
@@ -159,7 +259,7 @@ function CallbackNestingFigure() {
   )
 }
 
-/* ---------- 図 5-4 has_many :comments が行うこと ---------- */
+/* ---------- 図 5-6 has_many :comments が行うこと ---------- */
 function HasManyFigure() {
   const steps = [
     'create_reflection：HasManyReflection を作る',
@@ -169,7 +269,7 @@ function HasManyFigure() {
   ]
   return (
     <Svg
-      id="5-4"
+      id="5-6"
       w={680}
       h={340}
       label="has_many :comments を実行すると、まず Builder::HasMany.build が呼ばれ、Reflection の作成、関連メソッドの定義、dependent オプションのコールバック登録、バリデーションなどの登録を行う。関連メソッドの comments、comments=、comment_ids、comment_ids= は、Article に include 済みの Article::GeneratedAssociationMethods モジュールに定義される。次に Reflection.add_reflection が、作った Reflection を class_attribute の _reflections に登録する"
@@ -190,7 +290,7 @@ function HasManyFigure() {
       <Box x={20} y={120} w={260} h={74} lines={['Article::GeneratedAssociationMethods', 'comments / comments=', 'comment_ids / comment_ids=']} mono fs={11.5} fill="box2" bold />
       <Arrow x1={362} y1={143} x2={282} y2={150} />
       <T x={20} y={210} fs={11.5} tone="muted">
-        Article に include 済みのモジュール（図2-4 の1番目）
+        Article に include 済みのモジュール（図2-6 の1番目）
       </T>
 
       <Box x={20} y={262} w={260} h={44} lines="② Reflection.add_reflection" mono fs={12.5} />
@@ -209,8 +309,10 @@ const ch05: Chapter = {
   part: 1,
   title: 'メタプログラミングと Rails の DSL',
   summary:
-    'send・define_method・method_missing によるメタプログラミングと、Rails がそれを使って作っている class_attribute、ActiveSupport::Concern、ActiveSupport::Callbacks の実装を読みます。最後に before_action と has_many が実際に何をしているかを確かめます。',
+    'デモの Article で Rails が作ったメソッドを調べ、has_many や attribute を実行するとメソッドができること、Rails の DSL の宣言が何を登録するかを確かめます。そのうえで、send・define_method・method_missing によるメタプログラミングと、Rails がそれを使って作っている class_attribute、ActiveSupport::Concern、ActiveSupport::Callbacks の実装を読みます。最後に before_action と has_many が実際に何をしているかを確かめます。',
   goals: [
+    'モデルに書いていないメソッドの定義元を owner と source_location で調べ、has_many などを実行したときにメソッドが作られることを説明できる',
+    'Rails の DSL がメソッド呼び出しであり、宣言が情報を登録して後で使われることを説明できる',
     'send・public_send・define_method・文字列の class_eval の違いと使いどころを説明できる',
     'クラスマクロの仕組みと、クラスのインスタンス変数が継承されない問題を説明できる',
     'class_attribute が特異クラスとクロージャを使って、親子で別の値を持てる仕組みを説明できる',
@@ -220,6 +322,252 @@ const ch05: Chapter = {
   ],
   prerequisites: [3, 4],
   sections: [
+    {
+      id: 'generated-methods',
+      title: 'モデルに書いていないメソッド',
+      body: (
+        <>
+          <p>デモのアプリの Article モデルのファイルは、次の11行です。</p>
+          <Code
+            lang="ruby"
+            title="app/models/article.rb（デモのアプリ）"
+            code={`
+class Article < ApplicationRecord
+  belongs_to :author, optional: true
+  has_many :comments
+  has_many :taggings
+  has_many :tags, through: :taggings
+  enum :status, { draft: 0, published: 1, archived: 2 }
+  has_one_attached :cover do |attachable|
+    attachable.variant :thumb, resize_to_limit: [100, 100]
+  end
+  scope :recent, -> { order(published_at: :desc) }
+end
+`}
+          />
+          <p>このファイルには def が1つもありませんが、Article のインスタンスでは title や comments、draft? を呼べ、Article というクラスに対しては recent を呼べます。</p>
+          <Code
+            lang="ruby"
+            title="bin/rails runner で実行（デモのアプリ）"
+            code={`
+article = Article.new(title: "メタプログラミング")
+article.title          # => "メタプログラミング"
+article.comments.class # => Comment::ActiveRecord_Associations_CollectionProxy
+article.draft?         # => true
+Article.recent.class   # => Article::ActiveRecord_Relation
+`}
+          />
+          <p>
+            title は articles テーブルの title 列の値を返します。comments はこの記事に付いたコメントの一覧を返し、draft? は status 列が draft（下書き）かどうかを返します。recent は published_at
+            の新しい順に並べる条件を持ったオブジェクトを返します。どれも、このファイルに定義を書いていないメソッドです。定義元を owner と source_location で調べました（
+            <ChapterLink n={1} section="find-source" />
+            ）。
+          </p>
+          <Code
+            lang="ruby"
+            title="bin/rails runner で実行（デモのアプリ。gem のパスの前半を省略）"
+            code={`
+Article.instance_method(:title).owner     # => Article::GeneratedAttributeMethods
+Article.instance_method(:comments).owner  # => Article::GeneratedAssociationMethods
+Article.instance_method(:comments).source_location
+# => [".../activerecord-8.1.4.1/lib/active_record/associations/builder/association.rb", 104]
+Article.instance_method(:draft?).source_location
+# => [".../activerecord-8.1.4.1/lib/active_record/enum.rb", 307]
+
+Article.const_get(:GeneratedAssociationMethods).instance_methods(false).size # => 37
+Article.const_get(:GeneratedAttributeMethods).instance_methods(false).size   # => 287
+Article.const_get(:GeneratedAttributeMethods).instance_methods(false).grep(/\\Atitle/).size # => 16
+`}
+          />
+          <p>
+            title は Article::GeneratedAttributeMethods、comments は Article::GeneratedAssociationMethods というモジュールに定義されていました。どちらも Rails が Article のために作り、Article に include
+            したモジュールです（<ChapterLink n={3} section="module-include" />
+            ）。comments と draft? の source_location は、アプリのファイルではなく、ActiveRecord の gem の中の association.rb と enum.rb を指しています。Rails のコードが実行されて、Article
+            のためにこれらのメソッドを作ったということです。
+          </p>
+          <p>
+            2つのモジュールのメソッドを数えると、関連のメソッドが37個、属性のメソッドが287個ありました。title だけでも、値を書き込む title= や、値が変更されたかを返す title_changed? など16個あります（図
+            5-1）。has_many などの関連が作るメソッドは Rails のガイドに一覧があります
+            <Ref n={10} />。
+          </p>
+          <Figure n="5-1" title="Article の宣言と、Rails が作ったメソッドの置き場所" caption="デモのアプリ（Rails 8.1.4.1）で owner・instance_methods・ancestors を調べた結果をまとめた図。">
+            <GeneratedFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'runtime-define',
+      title: '実行するとメソッドができる',
+      body: (
+        <>
+          <p>
+            前の節のメソッドはいつ作られるのでしょうか。Ruby はクラスの本体を上から順に実行し、本体に書いたメソッド呼び出しもそのときに実行します。Ruby に最初からある{' '}
+            <code>attr_accessor</code> で確かめます。
+          </p>
+          <Code
+            lang="ruby"
+            title="class_body.rb"
+            code={`
+class Note
+  puts "クラスの本体を実行中: self は #{self}"
+  p instance_methods(false)
+  attr_accessor :title
+  p instance_methods(false)
+end
+
+note = Note.new
+note.title = "メモ"
+p note.title
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+クラスの本体を実行中: self は Note
+[]
+[:title, :title=]
+"メモ"
+`}
+          />
+          <p>
+            クラスの本体の中の puts が実行され、そのときの self は Note でした。attr_accessor を実行する前の <code>instance_methods(false)</code> は空で、実行した後は title と title=
+            が増えています。attr_accessor は指定した名前で値を読むメソッドと書き込むメソッドを作るメソッドです
+            <Ref n={2} />。def を書かなくても、メソッドを呼んだ結果としてメソッドができました。
+          </p>
+          <p>
+            has_many もクラスの本体で実行されるクラスメソッドです（<ChapterLink n={3} section="class-method-intro" />
+            ）。デモの Article と同じ articles テーブルを使う Article05 というクラスを bin/rails runner の中で定義し、has_many と attribute を実行する前と後で比べました。
+          </p>
+          <Code
+            lang="ruby"
+            title="bin/rails runner で実行（デモのアプリ）"
+            code={`
+class Article05 < ApplicationRecord
+  self.table_name = "articles"
+end
+
+p Article05.method_defined?(:comments)
+Article05.has_many :comments, foreign_key: :article_id
+p Article05.method_defined?(:comments)
+p Article05.const_get(:GeneratedAssociationMethods).instance_methods(false).sort
+
+p Article05.new.respond_to?(:memo)
+Article05.attribute :memo, :string, default: "なし"
+note = Article05.new
+p note.respond_to?(:memo)
+p note.memo
+note.memo = "下書き"
+p note.memo
+`}
+          />
+          <Code
+            lang="text"
+            title="出力"
+            code={`
+false
+true
+[:comment_ids, :comment_ids=, :comments, :comments=]
+false
+true
+"なし"
+"下書き"
+`}
+          />
+          <p>
+            <code>method_defined?</code> はインスタンスメソッドが定義されているかを返します。has_many :comments を実行する前は comments は無く、実行した後は comments、comments=、comment_ids、comment_ids=
+            の4つができました。<code>foreign_key: :article_id</code> は comments テーブルで記事を指す列の名前を指定するオプションです。クラスの名前が Article05 なので、指定しなければ article05_id
+            という列を探します。<code>attribute</code> は型を指定して属性を定義するメソッドで
+            <Ref n={11} />
+            、実行した後はテーブルに無い memo を読み書きできるようになりました。
+          </p>
+          <p>
+            このように、プログラムの実行中にメソッドを作ったり、名前を指定してメソッドを呼んだりする書き方を<Term en="metaprogramming">メタプログラミング</Term>
+            と呼びます。attr_accessor や has_many を使う側は、メソッドを作るコードを書かずに、作ってほしいメソッドの名前と設定だけを書きます。Rails のモデルやコントローラーに並ぶ1行ずつの宣言の多くは、このようにメソッドや設定を作るメソッドの呼び出しです。次の節ではこの書き方を見ます。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'dsl-intro',
+      title: '宣言の形で書く Rails の DSL',
+      body: (
+        <>
+          <p>
+            Rails のアプリケーションのファイルには、何を設定するかを1行ずつ宣言するような書き方が多く出てきます。routes.rb の <code>resources :articles</code>、モデルの{' '}
+            <code>has_many :comments</code> や <code>validates :body, presence: true</code>、コントローラーの <code>before_action :set_article</code> などです。このように、ある用途の内容を短く書けるように作った書き方を
+            <Term en="domain-specific language">DSL</Term> と呼び、日本語ではドメイン固有言語と言います
+            <Ref n={12} />。Rails のガイドも routes.rb の書き方をルーターの DSL と、マイグレーション（テーブルの構造を変える手順を書いたファイル）の書き方を Ruby の DSL と呼んでいます
+            <Ref n={13} />
+            <Ref n={14} />。
+          </p>
+          <p>
+            Rails の DSL は新しく作った言語ではなく Ruby のメソッド呼び出しです。括弧とレシーバを省略しているので宣言のように見えますが、<code>has_many :comments</code> は{' '}
+            <code>self.has_many(:comments)</code> と同じです（<ChapterLink n={2} section="rails-syntax" />
+            ）。前の節で見たとおり、こうした呼び出しはクラスの本体やファイルを読み込むときに実行されます。
+          </p>
+          <p>実行された宣言は情報を登録します。デモのアプリで、登録された内容を確かめました。</p>
+          <Code
+            lang="ruby"
+            title="bin/rails runner で実行（デモのアプリ）"
+            code={`
+p Comment.validators.map { |v| [v.class.name.demodulize, v.attributes] }
+
+ArticlesController._process_action_callbacks.each do |c|
+  where = c.filter.is_a?(Proc) ? File.basename(c.filter.source_location.join(":")) : c.filter
+  p [c.kind, where]
+end
+`}
+          />
+          <Code
+            lang="text"
+            title="出力"
+            code={`
+[["PresenceValidator", [:article]], ["PresenceValidator", [:body]]]
+[:before, :verify_authenticity_token]
+[:after, :verify_same_origin_request]
+[:before, "engine.rb:39"]
+[:before, "railtie.rb:51"]
+[:around, :turbo_tracking_request_id]
+[:before, "allow_browser.rb:58"]
+[:before, "articles_controller.rb:2"]
+`}
+          />
+          <p>
+            デモの Comment モデルには <code>belongs_to :article</code> と <code>validates :body, presence: true</code> が書いてあります。validators の結果から、body
+            の値が空でないことを検査する PresenceValidator が登録されていることが分かります。belongs_to も、記事が指定されていることを検査する PresenceValidator を登録していました
+            <Ref n={10} />。
+          </p>
+          <p>
+            <code>_process_action_callbacks</code> は、アクションの前後に実行する処理の列を返す、Rails の内部向けのメソッドです。ArticlesController
+            には7つが登録されていました。最後の articles_controller.rb の2行目は、ArticlesController に書いた before_action のブロックです。その1つ前の allow_browser.rb の58行目は、ApplicationController
+            に書かれた <code>allow_browser versions: :modern</code>（古いブラウザーからの要求を断る設定）が登録したものです。allow_browser の中身は、before_action を呼ぶ1行です
+            <Ref n={15} />。残りの5つは、Rails や gem が登録しています。
+          </p>
+          <Code
+            lang="ruby"
+            title="actionpack/lib/action_controller/metal/allow_browser.rb（57〜59行）"
+            href={`${GH}/actionpack/lib/action_controller/metal/allow_browser.rb#L57-L59`}
+            code={`
+      def allow_browser(versions:, block: -> { render file: Rails.root.join("public/406-unsupported-browser.html"), layout: false, status: :not_acceptable }, **options)
+        before_action -> { allow_browser(versions: versions, block: block) }, **options
+      end
+`}
+          />
+          <p>
+            登録された検査は valid? や save のときに、before_action の処理はアクションを実行する前に、Rails が呼び出します（図 5-2）。DSL の1行を読むときは、その宣言が何を登録し、登録したものがいつ使われるかを確かめます。
+          </p>
+          <Figure n="5-2" title="DSL の宣言が登録するものと、使われる時点" caption="この節と第4章の実行例をもとにまとめた表。">
+            <DslRegisterFigure />
+          </Figure>
+          <p>
+            <code>before_action :set_article</code> のように処理をシンボル（名前）で登録した場合、Rails は後でその名前のメソッドを呼びます。名前を値として受け取ってメソッドを呼ぶ方法が、次の節の send
+            です。この章では send や define_method などのメタプログラミングのメソッドを確かめてから、Rails の DSL がそれらでどう作られているかを読みます。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'send',
       title: 'send と public_send：名前を指定してメソッドを呼ぶ',
@@ -252,7 +600,7 @@ acc.public_send(:secret)
           </p>
           <p>
             Rails はシンボルで指定された処理を呼ぶときに <code>send</code> を使います。<code>before_action :set_article</code> の <code>:set_article</code>{' '}
-            は、コールバックの実行時に <code>send</code> で呼ばれます。<code>set_article</code> を private にしていても呼べるのはこのためです。
+            は、コールバック（アクションの前など、決まった時点で Rails が呼ぶ処理）の実行時に <code>send</code> で呼ばれます。<code>set_article</code> を private にしていても呼べるのはこのためです。
           </p>
         </>
       ),
@@ -319,7 +667,7 @@ Product.instance_methods(false).sort # => [:archived?, :draft?, :published?]
             </li>
             <li>
               第2・第3引数の <code>__FILE__, __LINE__ + 1</code> は、評価する文字列を「どのファイルの何行目にあるものとして扱うか」の指定です。第1章で <code>comments</code> の{' '}
-              <code>source_location</code> が <code>builder/association.rb</code> の104行目を指していたのは、この指定によるものです。例外が起きたときのバックトレースにも、この位置が表示されます。
+              <code>source_location</code> が <code>builder/association.rb</code> の104行目を指していたのは、この指定によるものです。例外が起きたときのバックトレース（例外が起きるまでに通ったメソッドの場所の一覧）にも、この位置が表示されます。
             </li>
           </ul>
           <p>
@@ -335,12 +683,12 @@ Product.instance_methods(false).sort # => [:archived?, :draft?, :published?]
         <>
           <p>
             <ChapterLink n={2} section="method-missing" />で説明した <code>method_missing</code> は、存在しないメソッドの呼び出しを受け取る仕組みでした。<code>method_missing</code>{' '}
-            による処理は、呼び出しのたびにメソッド探索を最後まで行ってから実行されます。また、<code>respond_to_missing?</code> を正しく定義しないと、<code>respond_to?</code>{' '}
+            による処理は、呼び出しのたびにメソッド探索を最後まで行ってから実行されます。また、<code>respond_to_missing?</code>（method_missing で受け付ける名前を respond_to? に知らせるメソッド）を正しく定義しないと、<code>respond_to?</code>{' '}
             の結果と実際の動作が食い違います。
           </p>
           <p>
             このため Rails では、<code>method_missing</code> を使う場合でも、最初の呼び出しで通常のメソッドを定義し、2回目以降はメソッド探索で見つかるようにする実装がとられています。第2章で見た{' '}
-            <code>find_by_title</code> がその例でした。
+            <code>find_by_title</code>（title 列の値で1件を探すメソッド）がその例でした。
           </p>
           <div className="table-wrap">
             <table>
@@ -430,7 +778,7 @@ Admin.presence_attributes  # => nil
       body: (
         <>
           <p>
-            <code>class_attribute</code> は ActiveSupport のコア拡張で、親クラスの値を子クラスに引き継ぎ、子クラスで代入したときだけ子クラス専用の値になる属性を定義します
+            <code>class_attribute</code> は ActiveSupport のコア拡張（ActiveSupport が Ruby の標準のクラスに足したメソッド）で、親クラスの値を子クラスに引き継ぎ、子クラスで代入したときだけ子クラス専用の値になる属性を定義します
             <Ref n={3} />。
           </p>
           <Code
@@ -502,7 +850,7 @@ Base.settings                  # => {timeout: 5}（親は変わらない）
             <code>__class_attr_settings</code> を呼びます。読み取りは<ChapterLink n={3} section="class-methods" />で説明した特異クラスのメソッド探索で行われます。<code>Child</code>{' '}
             の特異クラスに定義がなければ、superclass である <code>Base</code> の特異クラスのメソッドが見つかり、親の値が返ります。
           </p>
-          <Figure n="5-1" title="class_attribute の値の置き場所" caption="模式図。値は特異クラスに定義されたメソッドのクロージャに保持される。子クラスで代入すると、子クラスの特異クラスにメソッドが追加される。">
+          <Figure n="5-3" title="class_attribute の値の置き場所" caption="模式図。値は特異クラスに定義されたメソッドのクロージャに保持される。子クラスで代入すると、子クラスの特異クラスにメソッドが追加される。">
             <ClassAttributeFigure />
           </Figure>
           <p>実行して確かめると、代入した子クラス（Child）にメソッドが追加されていることがわかります。</p>
@@ -650,7 +998,7 @@ Commentable.instance_variable_get(:@_dependencies) # => [Taggable]
               で実行します。
             </li>
           </ul>
-          <Figure n="5-2" title="Concern を include したときの処理順" caption="Commentable（Taggable に依存）を Note に include した場合。紫の箱は、そのモジュールの append_features の中で行われる処理。">
+          <Figure n="5-4" title="Concern を include したときの処理順" caption="Commentable（Taggable に依存）を Note に include した場合。紫の箱は、そのモジュールの append_features の中で行われる処理。">
             <ConcernFigure />
           </Figure>
           <p>
@@ -760,7 +1108,7 @@ set_callback :save, :after,  -> { puts "after B" }
 # around1 前 / before A / around2 前 / before B / 本体 / after B / around2 後 / after A / around1 後
 `}
           />
-          <Figure n="5-3" title="コールバックの定義順と実行の入れ子" caption="Rails 8.1.4.1 で実行した結果を図にしたもの。around は自分より後に定義したコールバックと本体を包み、after は包んでいる範囲の終わりに実行される。">
+          <Figure n="5-5" title="コールバックの定義順と実行の入れ子" caption="Rails 8.1.4.1 で実行した結果を図にしたもの。around は自分より後に定義したコールバックと本体を包み、after は包んでいる範囲の終わりに実行される。">
             <CallbackNestingFigure />
           </Figure>
           <h3>チェーンの保存場所</h3>
@@ -859,7 +1207,7 @@ HaltDoc.new.save
           />
           <p>
             <code>before_action :set_article, only: %i[show edit]</code> は、<code>_insert_callbacks</code> で <code>only:</code> を <code>if:</code>{' '}
-            の条件（アクション名を照合するオブジェクト）に変換したうえで、<code>set_callback(:process_action, :before, :set_article, if: [...])</code> を呼びます。そして第1章の図1-3 で5番目にあった{' '}
+            の条件（アクション名を照合するオブジェクト）に変換したうえで、<code>set_callback(:process_action, :before, :set_article, if: [...])</code> を呼びます。そして第1章の図1-6 で5番目にあった{' '}
             <code>AbstractController::Callbacks#process_action</code> が、このチェーンを実行します。
           </p>
           <Code
@@ -880,7 +1228,7 @@ HaltDoc.new.save
           </p>
           <h3>has_many</h3>
           <p>
-            <code>has_many</code> は、第1章の最後に引用したとおり、<code>Builder::HasMany.build</code> と <code>Reflection.add_reflection</code> の2つを呼ぶだけのメソッドです。<code>build</code>{' '}
+            <code>has_many</code> は、第1章の最後に引用したとおり、<code>Builder::HasMany.build</code> と <code>Reflection.add_reflection</code> の2つを呼ぶだけのメソッドです。Reflection は関連の名前や相手のクラス、外部キーの列名などの情報を持つオブジェクトです。<code>build</code>{' '}
             の中身は次のとおりです。
           </p>
           <Code
@@ -924,7 +1272,7 @@ HaltDoc.new.save
       end
 `}
           />
-          <Figure n="5-4" title="has_many :comments が行うこと" caption="Rails 8.1.4.1 の has_many と Builder::Association.build を読んでまとめた図。">
+          <Figure n="5-6" title="has_many :comments が行うこと" caption="Rails 8.1.4.1 の has_many と Builder::Association.build を読んでまとめた図。">
             <HasManyFigure />
           </Figure>
           <p>
@@ -960,6 +1308,12 @@ Article.const_get(:GeneratedAssociationMethods).instance_methods(false).sort
       body: (
         <ul>
           <li>
+            Article の title や comments は、Rails が作って Article に include したモジュールに定義されています。has_many や attribute を実行すると、その時点でメソッドができます。実行中にメソッドを作ったり、名前でメソッドを呼んだりする書き方をメタプログラミングと呼びます。
+          </li>
+          <li>
+            Rails の DSL は Ruby のメソッド呼び出しで、読み込むときに実行されて情報を登録します。validates はバリデーターを、before_action はコールバックを登録し、Rails が後で使います。
+          </li>
+          <li>
             <code>send</code> は private メソッドも呼べ、<code>public_send</code> は public メソッドだけを呼びます。シンボルで指定したコールバックは <code>send</code> で呼ばれます。
           </li>
           <li>
@@ -994,6 +1348,12 @@ Article.const_get(:GeneratedAssociationMethods).instance_methods(false).sort
     { title: 'Ruby on Rails 8.1 Release Notes', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/8_1_release_notes.html', accessed: '2026-11-11', version: 'Rails 8.1', note: '関連の deprecated オプションなど 8.1 の変更点。' },
     { title: 'activesupport/lib/active_support/concern.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activesupport/lib/active_support/concern.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'append_features・included・class_methods の実装。' },
     { title: 'actionpack/lib/abstract_controller/callbacks.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/abstract_controller/callbacks.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'process_action チェーンの定義、before_action の定義、process_action の上書き。' },
+    { title: 'Active Record Associations', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/association_basics.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'belongs_to・has_many などを宣言するとクラスにメソッドが加わること、belongs_to が既定で関連先の存在を検査すること。メソッドの数はデモのアプリで実測。' },
+    { title: 'ActiveRecord::Attributes::ClassMethods（attribute）', publisher: 'Ruby on Rails API', url: 'https://api.rubyonrails.org/v8.1.4.1/classes/ActiveRecord/Attributes/ClassMethods.html', accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'attribute が型を指定して属性を定義すること。' },
+    { title: 'DomainSpecificLanguage', publisher: 'martinfowler.com', url: 'https://martinfowler.com/bliki/DomainSpecificLanguage.html', accessed: '2026-11-16', note: 'DSL は特定の種類の問題に向けたコンピューター言語であること。' },
+    { title: 'Rails Routing from the Outside In', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/routing.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'routes.draw のブロックをルーターの DSL と呼んでいること。' },
+    { title: 'Active Record Migrations', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/active_record_migrations.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'マイグレーションがテーブルの変更を Ruby の DSL で書くものであること。' },
+    { title: 'actionpack/lib/action_controller/metal/allow_browser.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_controller/metal/allow_browser.rb#L57-L59`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'allow_browser が before_action を呼んで処理を登録する実装。登録されたコールバックの一覧はデモのアプリで実測。' },
   ],
 }
 

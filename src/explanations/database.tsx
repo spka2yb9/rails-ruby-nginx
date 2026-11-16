@@ -1,173 +1,308 @@
-import { Code } from '../components/content'
+import { ChapterLink, Code } from '../components/content'
 import { guide, primarySource, type Explanations } from './shared'
 
 export const explanation11: Explanations = {
-  sources: [guide('active_record_basics', 'Active Record Basics'), guide('active_record_validations', 'Active Record Validations')],
+  sources: [
+    primarySource('SHOW COLUMNS Statement', 'MySQL 8.4 Reference Manual', 'https://dev.mysql.com/doc/refman/8.4/en/show-columns.html', 'MySQL 8.4'),
+    primarySource('class Class（new・allocate）', 'Ruby Documentation', 'https://docs.ruby-lang.org/en/4.0/Class.html', 'Ruby 4.0'),
+    primarySource('ActiveRecord::Enum', 'Rails API', 'https://api.rubyonrails.org/v8.1/classes/ActiveRecord/Enum.html', 'Rails 8.1'),
+    primarySource('ActiveModel::Dirty', 'Rails API', 'https://api.rubyonrails.org/v8.1/classes/ActiveModel/Dirty.html', 'Rails 8.1'),
+  ],
   sections: {
-    crud: cite => <>
-      <p>
-        リレーショナルデータベースはデータをテーブルという表に保存します。記事なら、1行が1件の記事で、titleやbodyなどの列が項目です。
-        行をレコードとも呼びます。<code>id</code>は行を識別する主キーです。文字列・整数・日時などの列の型、索引、制約を含む構造をスキーマと呼びます。
-      </p>
-      <Code lang="text" title="articlesテーブルの一部を表す架空の例" code={`id | title | published
-1  | Ruby  | true
-2  | Rails | false`} />
-      <p>
-        SQLはDBへ取得や変更を指示する言語です。行の作成はINSERT、取得はSELECT、更新はUPDATE、削除はDELETEを使います。
-        この4つの操作をまとめてCRUDと呼びます。ActiveRecordはこうした操作をRubyのメソッドで記述し、取得した行をモデルのインスタンスとして扱う仕組みです。
-        通常、Articleクラスがarticlesテーブルに対応し、保存済みのArticleインスタンスがその中の1行を表します。
-      </p>
-      <p>
-        ただし、Rubyのオブジェクトを作ることとDBに行を作ることは別です。
-        <code>Article.new(title: "Ruby")</code>は未保存のオブジェクトを作り、その属性を読み書きできます。
-        DBへ書き込むにはsaveなどが必要で、検証に失敗すれば保存されません。「オブジェクトがある」「行が保存されている」「保存に成功した」を、それぞれ区別して基本操作を使います。{cite}
-      </p>
-    </>,
     overview: cite => <>
       <p>
-        記事ごとに異なるのはtitleやbodyの値ですが、titleという列が文字列であることは全記事で共通です。
-        そのため、モデルは共通の列情報をクラス側で扱い、個々の値をインスタンス側で扱います。
-        <code>article.title</code>を呼ぶためのメソッドの定義も、記事ごとに別々のソースを持つ必要はありません。
+        「テーブルに対応するモデルのクラス」の節で見たとおり、Article のインスタンスは articles テーブルの1行を表し、title などの属性でその行の列の値を返します。
+        published の列の型が tinyint(1) であることは全部の記事で同じですが、published の値は記事ごとに違います。
+        この2つの情報をクラスとインスタンスのどちらが持つかを、デモで確かめました。
       </p>
+      <Code lang="ruby" title="bin/rails runner で実行" code={`Article.columns_hash["published"].sql_type   # => "tinyint(1)"
+Article.attribute_types["published"].class   # => ActiveModel::Type::Boolean
+a = Article.find(5)
+b = Article.find(3)
+a.published              # => true
+b.published              # => false
+a.persisted?             # => true（データベースに保存済み）
+Article.new.persisted?   # => false`} />
       <p>
-        さらに、インスタンスには未保存か保存済みか、どの値を変更したかという状態があります。
-        同じ属性名でも、「DBの列を説明する情報」「インスタンスが持つ値」「その値を読み書きするメソッド」を分けると、内部のデータ構造が何を担当するかを対応付けられます。{cite}
+        列の型のように全部の記事で同じ情報は、Article クラスが1つだけ持ちます。published の値や、保存済みかどうかのように記事ごとに違う情報は、それぞれのインスタンスが持ちます。
+        columns_hash は列の情報を、attribute_types は属性ごとの型を返すクラスのメソッドです。本文では、クラスとインスタンスが持つ情報を Rails の内部の名前で示します。{cite}
+      </p>
+    </>,
+    schema: cite => <>
+      <p>
+        テーブルにどんな列があり、それぞれの型が何かという構造を、テーブルのスキーマと呼びます。「テーブル・行・列と主キー」の節の DESCRIBE が表示したものです。
+        Rails はふだん、マイグレーションのファイルや db/schema.rb を読まず、動いているデータベースに問い合わせてスキーマを読みます。MySQL では SHOW FULL FIELDS という SQL を使います。
+      </p>
+      <Code lang="text" title="mysql コマンドで実行" code={`mysql> SHOW FULL FIELDS FROM articles WHERE Field IN ('id', 'title', 'published');
++-----------+--------------+--------------------+------+-----+---------+----------------+---------------------------------+---------+
+| Field     | Type         | Collation          | Null | Key | Default | Extra          | Privileges                      | Comment |
++-----------+--------------+--------------------+------+-----+---------+----------------+---------------------------------+---------+
+| id        | bigint       | NULL               | NO   | PRI | NULL    | auto_increment | select,insert,update,references |         |
+| title     | varchar(255) | utf8mb4_0900_ai_ci | YES  |     | NULL    |                | select,insert,update,references |         |
+| published | tinyint(1)   | NULL               | YES  |     | NULL    |                | select,insert,update,references |         |
++-----------+--------------+--------------------+------+-----+---------+----------------+---------------------------------+---------+
+3 rows in set (0.01 sec)`} />
+      <p>
+        DESCRIBE と同じ項目に加えて、文字列の比べ方（Collation）、使える操作（Privileges）、列の説明（Comment）が返ります。Rails はこの結果から列の名前・型・既定値などを読み取り、読んだスキーマを保存して、次からは問い合わせずに使います。
+        一度読んだ結果を保存して使い回すことをキャッシュと呼び、保存したスキーマをスキーマキャッシュと呼びます。{cite}
       </p>
     </>,
     instantiate: cite => <>
       <p>
-        DBから返る結果は最初からArticleのインスタンスではありません。
-        DB接続のアダプターが行と列の値を受け取り、それをモデルとして操作できる形へ組み立てます。
-        1行から1つのオブジェクトを作る際には、属性の値に加えて「これは取得済みの行である」という保存状態も設定します。
+        Rails が MySQL から受け取る SELECT の結果は、最初は列の名前と値の組です。ActiveRecord の接続の select_all で SQL を送ると、その形のまま受け取れます。
+      </p>
+      <Code lang="ruby" title="bin/rails runner で実行" code={`rows = ActiveRecord::Base.connection.select_all("SELECT id, title, published FROM articles WHERE id = 3")
+rows.class   # => ActiveRecord::Result
+rows.to_a    # => [{"id" => 3, "title" => "記事3", "published" => 0}]`} />
+      <p>
+        published は MySQL の値の 0 のままで、まだ Article のインスタンスでもありません。Article.find(3) などは、この1行の値から Article のインスタンスを作ります。
+        このとき、行の値に加えて「データベースから読んだ、保存済みの行である」という状態も設定します（persisted? が true になる）。
+        Article.new で作る保存前のインスタンスとは状態が違うので、Rails は new を使わずに別の手順でインスタンスを作ります。
       </p>
       <p>
-        <code>Article.new</code>による新規作成と、SELECTした既存行の組み立ては、同じ初期状態ではありません。
-        取得時に通常のnewをそのまま使わず、専用の経路でインスタンスと属性を作る理由は、保存済みの情報を再現するためです。{cite}
+        Ruby の new はオブジェクトの領域を確保する allocate を呼んでから、そのオブジェクトの initialize を呼んで初期化します。本文の allocate はこのうち領域の確保だけを行うメソッドで、initialize は呼びません。{cite}
       </p>
     </>,
     types: cite => <>
       <p>
-        フォームの値は<code>"12"</code>のような文字列で届くことがありますが、整数の列に対応する属性ではRubyの整数として扱いたくなります。
-        DBの日時をRubyの日時オブジェクトにする場合も、表現の変換が必要です。これを型変換、または型キャストと呼びます。
+        同じ値でも、MySQL と Ruby では表し方が違います。id が 3 と 5 の記事を、mysql コマンドと Rails で読み比べました。
+      </p>
+      <Code lang="text" title="mysql コマンドと bin/rails runner で実行" code={`mysql> SELECT id, published, status, price, published_at FROM articles WHERE id IN (3, 5);
++----+-----------+--------+--------+----------------------------+
+| id | published | status | price  | published_at               |
++----+-----------+--------+--------+----------------------------+
+|  3 |         0 |      2 | 160.23 | NULL                       |
+|  5 |         1 |      1 | 853.05 | 2026-10-21 07:53:47.260464 |
++----+-----------+--------+--------+----------------------------+
+2 rows in set (0.00 sec)
+
+a = Article.find(5)
+a.published         # => true
+a.price             # => 0.85305e3
+a.price.class       # => BigDecimal
+a.published_at      # => 2026-10-21 07:53:47.260464000 UTC +00:00
+a.published_at.class                        # => ActiveSupport::TimeWithZone
+Article.new(views_count: "12").views_count  # => 12`} />
+      <p>
+        MySQL の 1 は Ruby の true になりました。decimal(10,2) の 853.05 は BigDecimal（小数を誤差なく扱う Ruby のクラス）になり、0.85305e3（0.85305 × 10³）と表示されています。
+        datetime(6) の日時は Rails の日時のクラス ActiveSupport::TimeWithZone になりました。フォームから届く値は "12" のような文字列ですが、整数の列の属性に代入すると整数の 12 になります。
       </p>
       <p>
-        値を受け取った時点の表現、Rubyで読み出すときの表現、DBへ保存するときの表現は、必ずしも同じではありません。
-        モデルの型のオブジェクトはこうした方向ごとの変換規則を持ちます。
-        属性に代入した値と読み出した値を比べるときには、変換前か変換後かも確認します。{cite}
+        このように、値の表し方を変えることを型変換（型キャスト）と呼びます。変換の規則は型ごとにあり、Rails は列の型から属性の型を決めます。
+        変換の方向は、データベースから読むとき・代入するとき・データベースに保存するときの3つです。{cite}
+      </p>
+    </>,
+    'attribute-api': cite => <>
+      <p>
+        enum はデータベースには整数を入れ、Ruby では名前で扱うための宣言です。デモの Article には <code>enum :status, {'{'} draft: 0, published: 1, archived: 2 {'}'}</code> があり、status 列の 0・1・2
+        を、下書き（draft）・公開（published）・保管（archived）という名前に対応させています。「列の型と型変換」の節の最初の SELECT で見たとおり、id が 5 の記事の status は 1、id が 3 の記事は 2 です。
+      </p>
+      <Code lang="ruby" title="bin/rails runner で実行" code={`Article.statuses   # => {"draft" => 0, "published" => 1, "archived" => 2}
+a = Article.find(5)
+b = Article.find(3)
+a.status           # => "published"
+b.status           # => "archived"
+a.published?       # => true
+Article.published.to_sql
+# => "SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`status\` = 1"`} />
+      <p>
+        status を読むと名前の文字列が返り、published? のような名前ごとのメソッドや、Article.published のような検索条件も使えるようになります。
+        attribute は属性の型を指定する宣言です。列の型と違う型を使うときや、テーブルに無い属性を加えるときに書きます。
+        articles テーブルを使う検証用のクラスに、列の無い reading_minutes という整数の属性を加えました（self.table_name はクラスが使うテーブルの名前を指定する設定です）。
+      </p>
+      <Code lang="ruby" title="bin/rails runner で実行" code={`class Reading11 < ApplicationRecord
+  self.table_name = "articles"
+  attribute :reading_minutes, :integer, default: 3
+end
+
+r = Reading11.find(5)
+r.reading_minutes          # => 3
+r.reading_minutes = "10"
+r.reading_minutes          # => 10
+Reading11.column_names.include?("reading_minutes")   # => false`} />
+      <p>
+        reading_minutes は列が無いので保存されませんが、既定値の 3 が入り、代入した "10" は整数の 10 に変換されました。{cite}
       </p>
     </>,
     dirty: cite => <>
       <p>
-        取得した記事へ<code>article.title = "新しい題名"</code>と代入しても、その時点ではDBを更新しません。
-        ActiveRecordは取得時の値と現在の値を区別し、保存時にどの属性が変わったかを判断します。
-        変更の追跡をDirtyと呼びます。
+        取得した記事の title に新しい値を代入しても、その時点ではデータベースは変わりません。データベースに書き込むのは save を呼んだときです。
+        ActiveRecord は読み込んだときの値と今の値の両方を覚えていて、どの属性が変わったかを返せます。データベースは書き換えずに確かめました。
       </p>
+      <Code lang="ruby" title="bin/rails runner で実行" code={`a = Article.find(5)
+a.changed?            # => false
+a.title = "記事5（改）"
+a.changed?            # => true
+a.title_was           # => "記事5"
+a.changes             # => {"title" => ["記事5", "記事5（改）"]}
+a.restore_attributes  # 代入した値を取り消す
+a.changed?            # => false`} />
       <p>
-        保存前には「次に何を更新するか」、保存後には「今の保存で何を更新したか」を調べたい場合があります。
-        同じ変更情報でも時点が違うため、<code>changes</code>と<code>saved_changes</code>などのAPIを使い分けます。
-        内部で元の属性を保持することが、この前後の比較と、変更した列だけを更新する処理につながります。{cite}
+        title_was は代入する前の値を、changes は変わった属性ごとに「元の値と今の値」を返します。このように変更を記録する仕組みを変更の追跡（Dirty）と呼びます。
+        save は変わった列と、Rails が自動で更新する列（updated_at など）だけを UPDATE に入れます。保存した後は、何を保存したかを saved_changes で確かめられます。{cite}
       </p>
     </>,
   },
 }
 
 export const explanation12: Explanations = {
-  sources: [guide('active_record_querying', 'Active Record Query Interface')],
+  sources: [
+    guide('active_record_querying', 'Active Record Query Interface'),
+    primarySource('Working with NULL Values', 'MySQL 8.4 Reference Manual', 'https://dev.mysql.com/doc/refman/8.4/en/working-with-null.html', 'MySQL 8.4'),
+    primarySource('Pattern Matching', 'MySQL 8.4 Reference Manual', 'https://dev.mysql.com/doc/refman/8.4/en/pattern-matching.html', 'MySQL 8.4'),
+    primarySource('How MySQL Uses Indexes', 'MySQL 8.4 Reference Manual', 'https://dev.mysql.com/doc/refman/8.4/en/mysql-indexes.html', 'MySQL 8.4'),
+    primarySource('Server Status Variables（Handler_read_*）', 'MySQL 8.4 Reference Manual', 'https://dev.mysql.com/doc/refman/8.4/en/server-status-variables.html', 'MySQL 8.4'),
+  ],
   sections: {
     lazy: cite => <>
       <p>
-        記事の一覧から「公開済みだけ」「新しい順に」「10件まで」と条件を足したい場合、SQLではWHERE・ORDER BY・LIMITを使います。
-        SELECTは取得する列、FROMは対象のテーブルです。DESCは降順を表します。
+        「where・order・limit をつなげて書く」の節では、<code>Article.where(...)</code> も <code>Article.all</code> も Relation を返しました。
+        クラスの where と Relation の where がどこに定義されているかを、method(:where).owner（そのメソッドを定義しているモジュールを返す）で確かめました。
       </p>
-      <Code lang="sql" title="公開済みの記事をIDの大きい順に10件取得する" code={`SELECT * FROM articles
-WHERE published = TRUE
-ORDER BY id DESC
-LIMIT 10;`} />
-      <Code lang="ruby" title="同じ条件をActiveRecordで組み立てる" code={`relation = Article.where(published: true).order(id: :desc).limit(10)
-articles = relation.to_a`} />
+      <Code lang="ruby" title="bin/rails runner で実行" code={`Article.method(:where).owner       # => ActiveRecord::Querying
+Article.all.method(:where).owner   # => ActiveRecord::QueryMethods
+Article.where(author_id: 3).to_sql == Article.all.where(author_id: 3).to_sql   # => true`} />
       <p>
-        whereは条件、orderは順序、limitは最大件数を指定します。
-        それぞれの戻り値へ次のメソッドを呼ぶことで、条件を続けて記述できます。
-        ただしrelationは取得した記事の配列ではなく、取得条件を保持するRelationです。to_aで配列が必要になったときに読み込みが進みます。
-        コンソールでは結果の自動表示が読み込みを起こす場合もあるため、代入しただけか、表示や走査まで行ったかを区別します。
+        Article.where の where は ActiveRecord::Querying にあり、Relation の where は ActiveRecord::QueryMethods にあります。Querying の where は受け取った引数を、all が返す Relation の where にそのまま渡すだけです。
+        そのため Article.where(author_id: 3) と Article.all.where(author_id: 3) は同じ SQL になります。
+        受け取った呼び出しを、別のオブジェクトの同じ名前のメソッドにそのまま渡すことを委譲と呼びます。
       </p>
       <p>
-        Articleにwhereを呼べることと、whereの処理がArticleクラス自身に定義されていることは同じではありません。
-        Articleへの呼び出しをRelationへ渡して実行する仕組みを委譲と呼びます。これによって、クラスから始めた検索も、すでに条件を持つRelationへの追加も、同じ検索の仕組みで扱えます。{cite}
+        all は、ふだんは条件の無い Relation（SELECT `articles`.* FROM `articles`）を返します。本文の「その時点のスコープ」は、後の「スコープとクラスメソッドの委譲」の節で扱う scoping の中にいるときに、all がそのときの条件を持った Relation を返すことを指します。{cite}
       </p>
     </>,
     values: cite => <>
       <p>
-        条件を段階的に足せると、共通条件から複数の検索を作れます。
-        たとえば公開済みの記事を表すRelationを用意し、そこから新しい順の一覧と古い順の一覧を作る場合です。
-        片方へorderを足しただけで元のRelationまで変わると、もう片方の結果に影響してしまいます。
+        「where・order・limit をつなげて書く」の節では、r3 を作った後も r1 の SQL は WHERE だけのままでした。条件を足すたびに新しい Relation ができるので、共通の条件から複数の検索を作れます。
       </p>
+      <Code lang="ruby" title="bin/rails runner で実行" code={`base   = Article.where(status: :published)
+newest = base.order(published_at: :desc)
+oldest = base.order(published_at: :asc)
+[base.order_values.size, newest.order_values.size]   # => [0, 1]`} />
       <p>
-        そこで通常のwhereやorderは、元の条件をもとに別のRelationを作り、そちらへ条件を追加します。
-        内部には複製を作る呼び出しと、複製した先の値を変更する呼び出しが分かれて現れます。
-        SQLを実行する前に何の情報を保存しているかが、メソッドを連結できる仕組みを説明します。{cite}
+        order_values は、Relation が覚えている並べ方の一覧です。newest に order を加えても、base には並べ方が加わっていません。
+        もし order が base 自身を書き換えるなら、後から作った oldest には、大きい順と小さい順の2つの並べ方が入ってしまいます。
+        本文では複製を作る spawn と、複製に条件を書き込む where! を見ます。{cite}
       </p>
     </>,
     arel: cite => <>
       <p>
-        条件を文字列の連結だけで作ると、括弧の位置や値の埋め込み、DBごとの記法を呼び出し側が管理する必要があります。
-        Arelはテーブル、列、比較、論理条件などをオブジェクトの構造として表します。構文木は、その構造が木の形でつながったものです。
+        SQL の文字列をつなぎ合わせて条件を作ると、括弧の位置、値の囲み方、データベースごとの書き方の違いを、呼び出す側で気にする必要があります。
+        Arel は SQL の部品（テーブル、列、比較、AND など）を Ruby のオブジェクトで表すライブラリで、Article.arel_table から使えます。
+        title が 'Ruby' で published が真、という条件を Arel で組み立てました。
       </p>
+      <Code lang="ruby" title="bin/rails runner で実行" code={`t = Article.arel_table                      # Arel::Table
+cond = t[:title].eq("Ruby").and(t[:published].eq(true))
+cond.class                     # => Arel::Nodes::And
+cond.children.map(&:class)     # => [Arel::Nodes::Equality, Arel::Nodes::Equality]
+cond.children[0].left.name     # => "title"
+cond.children[0].right.value   # => "Ruby"
+Article.where(cond).to_sql
+# => "SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`title\` = 'Ruby' AND \`articles\`.\`published\` = TRUE"`} />
       <p>
-        <code>title = 'Ruby' AND published = TRUE</code>なら、titleの比較とpublishedの比較をANDで結び付ける構造として扱えます。
-        最後にDBに対応した変換処理がその構造をたどり、SQLの文字列と値の情報を作ります。
-        Relationに条件をためる段階と、Arelへ変換する段階、SQLを作る段階を分けることで、どの内部オブジェクトが何を保持するかを追えます。{cite}
+        eq は「等しい」の比較（Equality）を、and は AND（And）を表すオブジェクトを作ります。And は2つの Equality を子として持ち、1つ目の Equality は左辺に列の title を、右辺に値の "Ruby" を持ちます。
+        このように、オブジェクトが子のオブジェクトを持ち、その子がさらに子を持つ形を木構造と呼びます。木の中の1つ1つのオブジェクトを節点（ノード）と呼び、SQL の文を木構造で表したものを構文木と呼びます。
+        where に構文木を渡すと、Rails はそれを SQL の文字列にしました。構文木から SQL の文字列を作る処理は、本文の後半で扱います。{cite}
       </p>
     </>,
     load: cite => <>
       <p>
-        一覧の表示では、検索条件だけでなく実際の行が必要です。eachで1件ずつ処理したり、to_aで配列へ変換したりすると、Relationは結果を読み込みます。
-        読み込みには条件からSQLを作ること、DBへ送ること、返った行をモデルのインスタンスへ変えることが含まれます。
+        「where・order・limit をつなげて書く」の節で見たとおり、Relation は each や to_a で中身が必要になったときに SQL を送り、結果を受け取ると loaded? が true になります。
+        このとき Rails は Relation の条件から SQL を作る、MySQL に送る、返ってきた行からモデルのインスタンスを作る、の3つを順に行います。
       </p>
       <p>
-        同じRelationの読み込み済みの結果を繰り返し使うことと、同じ条件で別のRelationを作ることは別です。
-        <code>loaded?</code>はそのRelationの読み込み状態を確認します。
-        内部のrecordsやloadという名前は、条件を持つオブジェクトから実際のレコードの集合へ移る部分を担当します。{cite}
+        行からインスタンスを作る処理は、<ChapterLink n={11} section="instantiate" /> で見た instantiate_instance_of です。
+        本文の load・exec_queries・records は、SQL を送ってからインスタンスを作るまでを受け持つメソッドです。{cite}
+      </p>
+    </>,
+    conditions: cite => <>
+      <p>
+        WHERE の条件には、<code>=</code> のほかに次の書き方があります。デモの articles テーブルで、それぞれの条件に合う行の数を数えました。
+      </p>
+      <Code lang="text" title="mysql コマンドで実行（-- の後ろは COUNT(*) の結果）" code={`SELECT COUNT(*) FROM articles WHERE id IN (1, 2, 3);                   -- 3
+SELECT COUNT(*) FROM articles WHERE views_count BETWEEN 100 AND 200;   -- 974
+SELECT COUNT(*) FROM articles WHERE title LIKE '記事1%';               -- 1111
+SELECT COUNT(*) FROM articles WHERE published_at IS NULL;              -- 3989
+SELECT COUNT(*) FROM articles WHERE published_at = NULL;               -- 0`} />
+      <p>
+        IN は列の値が並べた値のどれかに一致する行を、BETWEEN 100 AND 200 は100以上200以下の行を選びます。LIKE は文字列の形で選ぶ条件で、% は0文字以上の任意の文字列を表すので、'記事1%' は「記事1」で始まる title に合います。
+        OR はどちらかの条件に合う行を選びます。
+      </p>
+      <p>
+        NULL は値が無いことを表す特別な値で、= で NULL と比べた結果は真にも偽にもならず、NULL になります。そのため published_at = NULL に合う行は0件でした。NULL の行を選ぶには IS NULL と書きます。
+        本文の表で where(published_at: nil) が IS NULL を作っているのはこのためです。{cite}
       </p>
     </>,
     delegation: cite => <>
       <p>
-        scopeはよく使う検索条件に名前を付ける仕組みです。
-        たとえばpublishedというscopeが公開済みの条件を返し、recentが並び順を返すなら、<code>Article.published.recent</code>で組み合わせられます。
-        各呼び出しがRelationを返すため、最後に別のwhereやlimitを足すこともできます。
+        「where・order・limit をつなげて書く」の節で見た recent のように、scope はよく使う検索条件に名前を付ける宣言です。
+        デモの Article では、enum :status が published という名前の検索条件（WHERE status = 1）も作ります。そのため Article.published.recent は「公開済みの記事を新しい順に」並べる Relation になり、各呼び出しが Relation を返すので、さらに where や limit を続けられます。
+      </p>
+      <Code lang="ruby" title="bin/rails runner で実行" code={`Article.published.recent.limit(5).to_sql
+# => "SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`status\` = 1
+#     ORDER BY \`articles\`.\`published_at\` DESC LIMIT 5"`} />
+      <p>
+        recent は Article クラスに定義されたメソッドですが、ここでの呼び出し先は published が返した Relation です。
+        Relation から Article.recent をそのまま呼び直すと、published の条件が失われます。Rails はクラスのメソッドを実行している間だけ、呼び出し元の Relation の条件を引き継がせる仕組み（scoping）を使って、条件を保ちます。{cite}
+      </p>
+    </>,
+    'query-cache': cite => <>
+      <p>
+        キャッシュは一度取り出した結果を保存しておき、同じものがもう一度必要になったときに、保存した結果を返す仕組みです。データベースに問い合わせる回数が減るぶん、早く応答できます。
+        その代わり、保存した後にデータベースの値が変わると、保存した結果は古くなります。
       </p>
       <p>
-        このときrecentがクラス側の定義でも、呼び出し先はpublishedが返したRelationです。
-        Railsはモデル側の処理を呼ぶ際に、そのRelationの条件を引き継ぐ実行範囲を用意します。
-        単にクラスのメソッドへ呼び直すだけでは、直前の公開済みの条件を保てないことが、内部の委譲やスコープ管理を必要にします。{cite}
+        Rails のクエリキャッシュは結果を保存しておく期間を1件のリクエストの処理の間に限っています。
+        Rails はリクエストを処理する前と後に決まった処理を実行し、この仕組みを Executor と呼びます（<ChapterLink n={8} section="executor" />）。
+        処理の前に呼ばれる run でクエリキャッシュを有効にし、処理の後に呼ばれる complete で保存した結果を捨てます。
+        たとえばビューの2か所で同じ Article.find(1) を呼ぶと、2回目は SQL を送らずに保存した結果を使います。
+        本文の接続プールはデータベースとの接続をためておき、使い回す仕組みです（<ChapterLink n={15} section="pool" />）。{cite}
       </p>
     </>,
     explain: cite => <>
       <p>
-        SQLの結果が正しくても、大量の行を調べていれば応答が遅くなる場合があります。
-        索引は、条件に合う行を見つけるためにDBが持つデータ構造です。索引を作っただけですべての検索が速くなるとは限らず、条件と並び順が使い方に関わります。
+        テーブルから条件に合う行を探すとき、何も手がかりが無ければ、MySQL は先頭の行から最後の行まで読み、1行ずつ条件を確かめます。これを全件走査と呼びます。
+        索引はある列の値を順に並べ、それぞれの値を持つ行をすぐにたどれるようにしたものです。たとえば author_id の索引は、author_id の値の順に並んでいます。
+        索引があれば、MySQL は条件の値の位置から読み始め、条件に合う範囲だけを読めます。
       </p>
       <p>
-        実行計画は、DBがどのテーブルや索引を、どのように調べる予定かを示す情報です。EXPLAINで確認できます。
-        Railsのメソッド名だけで効率を判断せず、生成したSQLがどの行を調べるかを見ることで、条件と索引の関係を調べられます。{cite}
+        デモの articles テーブルには author_id の索引があり、title には索引がありません。MySQL が行を読んだ回数を数える状態変数（Handler_read_ で始まる値）を FLUSH STATUS で0に戻してから、それぞれの列で検索しました。
+      </p>
+      <Code lang="text" title="mysql コマンドで実行（FLUSH STATUS の行を省略。SELECT の結果は -- の後ろに書き、SHOW SESSION STATUS は2つの値だけを表示）" code={`mysql> SELECT COUNT(*) FROM articles WHERE author_id = 3;     -- 482
+mysql> SHOW SESSION STATUS LIKE 'Handler_read%';
+| Handler_read_next     | 482   |
+| Handler_read_rnd_next | 0     |
+
+mysql> SELECT COUNT(*) FROM articles WHERE title = '記事5';   -- 1
+mysql> SHOW SESSION STATUS LIKE 'Handler_read%';
+| Handler_read_next     | 0     |
+| Handler_read_rnd_next | 10005 |`} />
+      <p>
+        Handler_read_next は索引の順に次の行を読んだ回数、Handler_read_rnd_next はテーブルの行を順に読んだ回数です。
+        author_id の検索では索引で author_id = 3 の位置を見つけ、条件に合う482行だけを読みました。title の検索では、合う行は1件なのに、テーブルの行を約1万回読んでいます。
+      </p>
+      <p>
+        索引はマイグレーションで作ります。デモの2つの索引は <ChapterLink n={11} section="migration" /> で見た add_reference（author_id の列と一緒に索引も作る）と add_index で作りました。
+        ただし、索引があっても MySQL がそれを使うとは限りません。MySQL は SQL を受け取ると、どの索引を使い、どの順に読むかを決めてから実行します。この手順を実行計画と呼び、SQL の前に EXPLAIN を付けると、MySQL は結果の行の代わりに実行計画を返します。{cite}
       </p>
     </>,
   },
 }
 
 export const explanation13: Explanations = {
-  sources: [guide('association_basics', 'Active Record Associations'), guide('active_record_querying', 'Active Record Query Interface — Eager Loading')],
+  sources: [guide('association_basics', 'Active Record Associations'), guide('active_record_querying', 'Active Record Query Interface — Eager Loading'), guide('active_record_migrations', 'Active Record Migrations')],
   sections: {
     basics: cite => <>
       <p>
-        別テーブルの行同士は通常、相手の主キーを保存して関連付けます。
-        記事とコメントなら、コメントのarticle_idに、その記事のidを保存します。
-        同じarticle_idのコメントが複数あれば、1つの記事と複数コメントの対応になります。相手のIDを保存する列が外部キーです。
+        「外部キーでテーブルをつなぐ」の節で見た外部キー制約と索引は、Rails のマイグレーションで作ったものです。
+        マイグレーションを実行すると、Rails はその時点のテーブルの構造を db/schema.rb に書き出します。
+        下の schema.rb の抜粋では、<code>create_table</code> がテーブルと列を、<code>t.index</code> が索引を、<code>add_foreign_key</code> が外部キー制約を表します。
+        モデルに書く <code>has_many</code> や <code>belongs_to</code> は、すでにある列を Ruby から使うための宣言で、列や制約は作りません。
       </p>
       <p>
-        <code>has_many :comments</code>と<code>belongs_to :article</code>はこの対応をRubyのオブジェクトから使うための宣言です。
-        宣言だけでDBの列が作られるわけではなく、列や外部キー制約はマイグレーションで用意します。
-        制約は存在しない相手のIDを入れられないようにするなど、DB側が守る条件です。{cite}
+        この節の実行例のログには、INSERT や DELETE の前後に BEGIN・COMMIT・ROLLBACK が出てきます。
+        これらは複数の変更をまとめて確定する（COMMIT）か、まとめて取り消す（ROLLBACK）ための SQL で、Rails は保存や削除の SQL を送るときに一緒に送ります（<ChapterLink n={15} section="transaction-basics" />）。
+        また、<code>valid?</code> と <code>errors</code> は保存する前に値を確かめるバリデーションの機能です（<ChapterLink n={14} section="validation-basics" />）。{cite}
       </p>
     </>,
     objects: cite => <>
@@ -195,7 +330,12 @@ export const explanation13: Explanations = {
       <p>
         最初の1回に、記事の件数Nに応じた問い合わせが加わるため、N+1問題と呼びます。
         1件ずつ表示するRubyのループが短くても、SQLの回数はデータ件数に合わせて増えます。
-        一覧に必要な関連をまとめて取得する先読みを使えば、この増え方を変えられます。{cite}
+        一覧に必要な関連をまとめて取得する先読みを使えば、この増え方を変えられます。
+      </p>
+      <p>
+        SQL を1回実行するたびに、アプリケーションは MySQL に SQL を送り、結果が返るまで待ちます。このやり取りを往復と呼びます。
+        1回の往復は短くても、記事が100件なら、著者を読む往復も100回です。
+        開発環境では、実行した SQL がログに1行ずつ出ます。下の実行例の <code>[Author Load]</code> は、Author のレコードを読み込んだ SQL という意味です。{cite}
       </p>
     </>,
     preload: cite => <>
@@ -211,9 +351,9 @@ export const explanation13: Explanations = {
     </>,
     'eager-load': cite => <>
       <p>
-        JOINは複数のテーブルの行を条件で結び付けるSQLの操作です。
-        記事と著者を結び付ければ、同じ結果の行に記事の列と著者の列を含められます。
-        LEFT OUTER JOINは、対応する著者がない記事も残し、相手側の列をNULLとして返します。
+        「JOIN で2つのテーブルをつないで読む」の節で見たとおり、JOIN は ON の条件に合う行どうしをつないだ結果を1回の SELECT で返します。
+        LEFT OUTER JOIN は相手の無い行も残し、相手の列を NULL にします。
+        eager_load はこの LEFT OUTER JOIN を使って記事の列と著者の列を同じ結果の行で受け取るので、著者のいない記事も、著者の列が NULL の行として残ります。
       </p>
       <p>
         1対多をJOINすると、1つの記事がコメントの数だけ結果に現れることがあります。
@@ -241,22 +381,67 @@ export const explanation14: Explanations = {
   sections: {
     'call-chain': cite => <>
       <p>
-        saveは属性の値をそのままDBへ送るだけの処理ではありません。
-        値を検証し、保存前後の追加処理を実行し、SQLを送り、変更を確定するかを判断します。
-        バリデーションは保存する値の検証、コールバックは決まった時点で呼ぶ処理、トランザクションはDB変更をまとめて確定・取り消しする仕組みです。
+        「保存する前に値を検証する」と「保存の前後に処理を足すコールバック」の節で見たとおり、save を1回呼ぶと、検証、コールバック、SQL の送信が決まった順に実行されます。
+        INSERT の前後の BEGIN と COMMIT は、保存の変更をまとめて確定するトランザクションの SQL で、途中で失敗すれば ROLLBACK で取り消します（<ChapterLink n={15} section="transaction-basics" />）。
       </p>
       <p>
-        検証で止まれば、保存用のINSERTやUPDATEまで進みません。保存のSQLを実行しても、外側の処理が失敗すれば変更が取り消されることがあります。
-        Rails内部ではこれらを1つの巨大なsaveに書かず、機能ごとのモジュールで同名のメソッドを定義してsuperでつなぎます。
-        普段のsaveという1回の呼び出しで、複数の定義を順に実行します。{cite}
+        Rails はこれらを1つの大きな save に書かず、機能ごとのモジュールに同じ名前の save を定義し、super でつないでいます。
+        super は ancestors（メソッドを探す順に並べたクラスとモジュールの一覧）で次にある、同じ名前のメソッドを呼びます（<ChapterLink n={3} section="super" />）。小さな例で確かめます。
+      </p>
+      <Code lang="ruby" title="super_chain.rb と実行結果（Ruby 4.0.9）" code={`class Base
+  def save
+    puts "  SQL を送る"
+    true
+  end
+end
+
+module Validations
+  def save
+    puts "  検証する"
+    super
+  end
+end
+
+module Transactions
+  def save
+    puts "  BEGIN"
+    result = super
+    puts "  COMMIT"
+    result
+  end
+end
+
+class Record < Base
+  include Validations
+  include Transactions
+end
+
+p Record.ancestors.take(4)  # => [Record, Transactions, Validations, Base]
+p Record.new.save
+#   BEGIN
+#   検証する
+#   SQL を送る
+#   COMMIT
+# => true`} />
+      <p>
+        後から include した Transactions が ancestors の前のほうにあるので、先に呼ばれます。
+        Transactions の save が BEGIN を出して super を呼ぶと Validations の save が呼ばれ、そこからさらに super で Base の save が呼ばれます。Base から戻った後に COMMIT が出ました。
+        ActiveRecord の save も、同じ形でモジュールを順にたどります。{cite}
       </p>
     </>,
     'callback-order': cite => <>
       <p>
-        beforeは対象の処理より前、afterは対象の後、aroundは対象を内側から呼ぶ形です。
-        aroundのコールバックが「開始を記録→渡された処理を実行→終了を記録」となっていれば、対象の前後を同じメソッドで扱えます。
-        対象を実行するブロックを呼ばなければ、その先の処理には進みません。
+        「保存の前後に処理を足すコールバック」の節で見た before_ と after_ のほかに、around_ で始まるコールバックがあります。
+        around のコールバックは対象の処理を自分の中から呼ぶメソッドです。次の例では、yield の行で保存の処理が実行されるので、前と後の両方を1つのメソッドで扱えます。
+        yield を呼ばなければ、その先の処理には進みません。
       </p>
+      <Code lang="ruby" title="around_save の書き方" code={`around_save :log_around
+
+def log_around
+  puts "around_save（前）"
+  yield            # ここで保存の処理が進む
+  puts "around_save（後）"
+end`} />
       <p>
         保存には検証する段階、新規作成か更新かに応じてSQLを実行する段階、トランザクションを確定する段階があります。
         after_saveは保存処理の後、after_commitはDBでの確定後です。
@@ -265,18 +450,13 @@ export const explanation14: Explanations = {
     </>,
     validations: cite => <>
       <p>
-        <code>validates :title, presence: true</code>は、タイトルが空でないことを検証する宣言です。
-        宣言時にその記事を検証するのではなく、valid?や保存時に呼ぶ条件を登録します。
-        valid?は検証だけを行い、結果を真偽値で返します。
+        「保存する前に値を検証する」の節で見たとおり、<code>validates</code> は検証の規則を登録する宣言で、規則は valid? や save のときに確かめられます。
+        規則を書いた時点でレコードを調べるわけではありません。
+        この節では検証の中で SQL を実行する規則と、型変換の前の値を調べる規則を見ます。
       </p>
-      <Code lang="ruby" title="タイトルのpresence検証があるモデルの場合" code={`article = Article.new(title: "")
-article.valid?                # => false
-article.errors[:title].any?    # => true
-article.save                  # => false`} />
       <p>
-        errorsは検証で見つかった問題を保持し、フォームの再表示などで使えます。
-        saveは検証に失敗するとfalseを返しますが、save!はActiveRecord::RecordInvalidという例外を発生させます。
-        例外は通常の処理の続きからエラー処理へ移る仕組みです。失敗を戻り値で判断するか、例外として扱うかで呼び出し側の書き方も変わります。{cite}
+        belongs_to の存在の検証は、外部キーが指す相手の行が本当にあるかを、相手のテーブルを SELECT して確かめます（<ChapterLink n={13} section="basics" />）。
+        型変換はフォームから文字列で届いた値を、列の型に合わせて整数や日時に変えることです（<ChapterLink n={11} section="types" />）。{cite}
       </p>
     </>,
     uniqueness: cite => <>
@@ -286,8 +466,13 @@ article.save                  # => false`} />
         順番に1件ずつ試したときに成功しても、この競合は検出できません。
       </p>
       <p>
+        索引は、列の値から行をすばやく探すために DB が作るデータです（<ChapterLink n={13} section="foreign-key" />）。
+        索引を作るときに一意（unique）を指定すると、DB は同じ値を持つ2行目の INSERT や UPDATE を拒否します。これを一意の索引と呼びます。
+        デモの authors テーブルの email 列に付いている index_authors_on_email が、一意の索引の例です。
+      </p>
+      <p>
         モデルの一意性の検証は利用者へ検証エラーを返すために使えます。
-        DB側の一意索引は、同じ値の保存をDBが拒否するための仕組みです。
+        同じ値の保存を確実に防ぐのは、DB 側の一意の索引です。
         検証と保存の間にも別の処理が入れることが、アプリ側の確認だけでは一意性を保証できない理由です。{cite}
       </p>
     </>,
@@ -307,23 +492,17 @@ article.save                  # => false`} />
 }
 
 export const explanation15: Explanations = {
-  sources: [primarySource('Active Record Transactions', 'Ruby on Rails API', 'https://api.rubyonrails.org/v8.0/classes/ActiveRecord/Transactions/ClassMethods.html', 'Rails 8.0'), primarySource('Active Record Connection Pool', 'Ruby on Rails API', 'https://api.rubyonrails.org/v8.0/classes/ActiveRecord/ConnectionAdapters/ConnectionPool.html', 'Rails 8.0'), guide('active_record_querying', 'Active Record Query Interface — Locking')],
+  sources: [primarySource('Active Record Transactions', 'Ruby on Rails API', 'https://api.rubyonrails.org/v8.0/classes/ActiveRecord/Transactions/ClassMethods.html', 'Rails 8.0'), primarySource('Active Record Connection Pool', 'Ruby on Rails API', 'https://api.rubyonrails.org/v8.0/classes/ActiveRecord/ConnectionAdapters/ConnectionPool.html', 'Rails 8.0'), guide('active_record_querying', 'Active Record Query Interface — Locking'), primarySource('SET TRANSACTION Statement', 'MySQL 8.4 Reference Manual', 'https://dev.mysql.com/doc/refman/8.4/en/set-transaction.html', 'MySQL 8.4'), primarySource('EXPLAIN Output Format', 'MySQL 8.4 Reference Manual', 'https://dev.mysql.com/doc/refman/8.4/en/explain-output.html', 'MySQL 8.4')],
   sections: {
     transaction: cite => <>
       <p>
-        2件の記事をまとめて更新し、片方だけ更新された状態を残したくない場合、DBのトランザクションを使えます。
-        正常に終われば変更をコミットして確定し、途中で失敗すればロールバックして取り消します。
-        同じDB接続上で行った対象の変更を、1つのまとまりとして扱う仕組みです。
+        「トランザクションで変更をまとめる」の節では、Account.transaction のブロックで BEGIN から COMMIT までの範囲を決めました。この節では、そのブロックの中で Rails が何をしているかを見ます。
+        ActiveRecord::Base.transaction は、そのスレッドが使っている接続（「データベースとの接続」の節）に、トランザクションを始めさせます。
       </p>
-      <Code lang="ruby" title="firstとsecondが保存済みの記事である場合" code={`Article.transaction do
-  first.update!(title: "最初の記事")
-  second.update!(title: "次の記事")
-end`} />
       <p>
-        secondのupdate!が例外で失敗すれば、firstに対するDBの更新も取り消されます。
-        updateのfalseを単に返した場合と、例外がブロックの外へ伝わる場合は同じ扱いではありません。
-        また、ロールバックしてもRubyオブジェクト上の属性や送信済みのメールまで元に戻るわけではありません。
-        何を同じ接続で変更したかが、取り消せる範囲を決めます。{cite}
+        下のコードに出てくるスタックは、最後に積んだものから順に取り出すデータの並べ方です。
+        <code>requires_new: true</code> を付けて transaction を入れ子にすると、内側のトランザクションが外側の上に積まれ、内側のブロックが終わると上から取り除かれます。
+        ActiveRecord::Rollback は Rails が用意した例外で、ブロックの中で投げるとトランザクションを取り消しますが、ほかの例外と違ってブロックの外へは伝わりません。{cite}
       </p>
     </>,
     nested: cite => <>
@@ -340,43 +519,63 @@ end`} />
     </>,
     isolation: cite => <>
       <p>
-        トランザクションは1つだけ動いているとは限りません。利用者Aが一覧を読んでいる間に、利用者Bが同じデータを更新できます。
-        Aが同じSELECTをもう一度実行したときに何が見えるか、Bの未確定の変更が見えるかなどを定めるのが分離レベルです。
-        変更をまとめることと、ほかの処理の変更をどう読むかは別の観点です。
+        「トランザクションで変更をまとめる」の節では、COMMIT する前の変更は、ほかの接続から見えませんでした。
+        ほかの接続が COMMIT した変更が、自分のトランザクションの途中でいつから見えるかを決めるのが分離レベルです。
+        MySQL では READ UNCOMMITTED・READ COMMITTED・REPEATABLE READ・SERIALIZABLE の4つから選べ、既定は REPEATABLE READ です。
       </p>
       <p>
-        スナップショットはある時点の状態に基づいて読むための見え方です。
-        ただし、通常の読み取りと、更新のためにロックする読み取りが同じ規則になるとは限りません。
-        DBの種類や分離レベル、使ったSQLをそろえて比較する必要があるため、実測では接続を分けて読み取りの順を確認します。{cite}
+        スナップショットはある時点で確定していたデータの状態です。分離レベルによって、通常の SELECT がいつの時点のスナップショットを読むかが変わります。
+        一方、UPDATE はスナップショットではなく、その時点で確定している最新の行を変更します。「ロックで更新の順番を待たせる」の節で、B の UPDATE が A の COMMIT した後の 1100 に 200 を足したのはこのためです。{cite}
       </p>
     </>,
     optimistic: cite => <>
       <p>
-        AとBが同じ記事を取得し、Aが先に保存した後でBが古い内容を保存すると、Aの変更を意図せず上書きすることがあります。
-        楽観的ロックは、取得時点からほかの更新がなかったかを保存時に確認する方法です。
-        取得した時点のバージョン番号とDBの番号が一致する場合だけ更新すれば、古い値に基づく保存を検出できます。
+        「同時に更新すると起きること」の節では、2つのスレッドが同じ残高を読み、後から書いた値が先に書いた値を上書きしました。
+        楽観的ロックはこの上書きを保存のときに見つける方法です。
+        行にバージョン番号（更新のたびに増える番号）を持たせ、読んだ時点の番号と DB の番号が同じときだけ UPDATE すれば、読んだ後でほかの更新があったことが分かります。
       </p>
       <p>
-        ActiveRecordのlock_versionは、この更新回数を表す列です。
-        常に編集を禁止するのではなく、競合したときに例外として知らせるため、アプリ側は再読み込みや再編集などの扱いを決めます。
-        通常のUPDATEに、取得時の更新回数と一致するかを確認する条件が加わる関係です。{cite}
+        ActiveRecord の lock_version は、このバージョン番号の列で、UPDATE のたびに1増えます。
+        編集を禁止するのではなく、更新が重なったときに例外で知らせるので、読み直しや入力のやり直しをどうするかはアプリケーションの側で決めます。{cite}
       </p>
     </>,
     pessimistic: cite => <>
       <p>
-        在庫を読み、残数を確認してから減らすような処理では、確認と更新の間に別の更新が進むと判断が変わることがあります。
-        悲観的ロックは対象をロックした状態で処理し、競合する更新を待たせる方法です。
-        <code>SELECT ... FOR UPDATE</code>は、そのために使うDBの読み取りです。
+        「ロックで更新の順番を待たせる」の節で見たとおり、UPDATE は変更する行にロックを掛け、同じ行を変更するほかのトランザクションを COMMIT まで待たせます。
+        悲観的ロックはこのロックを、UPDATE より前の読む時点で掛ける方法です。
+        <code>SELECT ... FOR UPDATE</code> は、読んだ行に UPDATE と同じ種類のロックを掛ける SELECT です。
       </p>
       <p>
-        ロックはトランザクションと合わせて扱います。対象を取得し、必要な更新を行い、確定または取り消しが終わるまでロックを保持するためです。
-        その間に外部サービスの応答などを長く待つと、ほかの処理の待ち時間も伸びます。
-        楽観的ロックが保存時の競合を検出するのに対し、こちらは競合する操作の進行を調整します。{cite}
+        在庫を読み、残数を確かめてから減らす処理なら、読む時点でロックを掛けておけば、確かめてから減らすまでの間にほかのトランザクションが同じ行を変えられません。
+        ロックは COMMIT か ROLLBACK まで持ち続けるので、その間に外部のサービスの応答などを長く待つと、ほかの処理の待ち時間も延びます。
+        楽観的ロックが保存のときに重なりを見つけるのに対し、悲観的ロックは重なる操作を待たせて順番に進めます。{cite}
+      </p>
+    </>,
+    'lock-index': cite => <>
+      <p>
+        索引は、列の値から行をすばやく探すために DB が作るデータです（<ChapterLink n={13} section="foreign-key" />）。
+        articles の author_id には索引があり、title にはありません。
+        EXPLAIN（SQL をどう実行する予定かを MySQL に表示させる命令。<ChapterLink n={12} section="explain" />）で、2つの条件を比べました。
+      </p>
+      <Code lang="text" title="EXPLAIN の結果から type・key・rows の列を抜き出したもの（MySQL 8.4.13）" code={`EXPLAIN SELECT * FROM articles WHERE title = '記事100';
+  type: ALL   key: NULL                          rows: 9838
+EXPLAIN SELECT * FROM articles WHERE author_id = 13;
+  type: ref   key: index_articles_on_author_id   rows: 475`} />
+      <p>
+        type が ALL は、表のすべての行を順に読む（全件走査）という意味で、rows は読む予定の行の数の見積もりです。
+        title で探すと表の約1万行を読み、author_id で探すと索引を使って 475 行だけを読みます。
+        FOR UPDATE や UPDATE のロックは、このとき読んだ行に掛かります。BEGIN の後で FOR UPDATE を実行し、主キーの側でロックが掛かった行を data_locks で数えました。
+      </p>
+      <Code lang="text" title="lockcount.rb の実行結果（数えた後は ROLLBACK）" code={`WHERE title = '記事100' FOR UPDATE: 一致した行 1 件、主キーで数えたロックした行 10004 行
+WHERE author_id = 13 FOR UPDATE: 一致した行 475 件、主キーで数えたロックした行 475 行`} />
+      <p>
+        一致したのは1件でも、title で探すと表の 10,004 行すべてにロックが掛かりました。author_id で探すと、ロックが掛かったのは一致した 475 行でした。
+        索引 index_articles_on_author_id の側にも、読んだ範囲にロックが掛かります。{cite}
       </p>
     </>,
     'timeout-deadlock': cite => <>
       <p>
-        ロック待ちは、別のトランザクションが対象を使用しているため進めない状態です。
+        「ロックで更新の順番を待たせる」の節の接続 B のように、ほかのトランザクションが持つロックが手放されるまで進めない状態をロック待ちと呼びます。
         Aが記事1を、Bが記事2をロックした後、Aが記事2を、Bが記事1を待つと、どちらも相手が終わるまで進めません。
         この循環した待ちがデッドロックです。
       </p>
@@ -388,12 +587,12 @@ end`} />
     </>,
     pool: cite => <>
       <p>
-        DB接続は、アプリがSQLを送り、結果を受け取る通信経路です。
-        問い合わせのたびに作成・切断を繰り返す代わりに、作った接続を保持して再利用するのが接続プールです。
-        SQLの条件や結果を保存するRelationやキャッシュとは異なり、通信に使う接続自体を管理します。
+        「データベースとの接続」の節で見たとおり、接続を作るには SQL を1つ送るより長い時間がかかります。
+        SQL のたびに接続を作って閉じる代わりに、作った接続を残しておき、スレッドに貸し出して使い回すのが接続プールです。
+        SQL の条件や結果を保存する Relation やキャッシュとは異なり、通信に使う接続そのものを管理します。
       </p>
       <p>
-        プロセス内で複数の要求を進めるスレッドがあっても、貸し出せる接続数には上限があります。
+        プロセス内で複数の要求を進めるスレッド（<ChapterLink n={23} section="thread" />）があっても、貸し出せる接続数には上限があります。
         空きがなければ、そのスレッドは接続を借りられるまで待ちます。
         DBへSQLを送った後の応答待ちや、行のロック待ちとは別の待ち時間です。スレッド数だけを増やしても、この上限は自動では増えません。{cite}
       </p>

@@ -6,11 +6,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 11-1 レコードの状態と、状態を変えるメソッド ---------- */
+/* ---------- 図 11-3 レコードの状態と、状態を変えるメソッド ---------- */
 function RecordStateFigure() {
   return (
     <Svg
-      id="11-1"
+      id="11-3"
       w={760}
       h={330}
       label="Article.new で作ったレコードは保存前の状態で、SQL は実行されない。save または save! で INSERT が実行されて保存済みになる。find・find_by・where で読み込んだレコードも保存済みである。保存済みのレコードは update で UPDATE が実行され、destroy で DELETE が実行されて削除済みになり、凍結される。検証に失敗した save は SQL を実行せずに false を返し、save! は例外を投げ、レコードは保存前のまま残る"
@@ -63,11 +63,11 @@ function RecordStateFigure() {
   )
 }
 
-/* ---------- 図 11-2 クラス側とインスタンス側が持つもの ---------- */
+/* ---------- 図 11-4 クラス側とインスタンス側が持つもの ---------- */
 function ClassInstanceFigure() {
   return (
     <Svg
-      id="11-2"
+      id="11-4"
       w={760}
       h={300}
       label="Article クラスは、テーブルの列の情報 columns_hash、属性ごとの型 attribute_types、既定値の集合 _default_attributes を持ち、祖先には属性メソッドを定義したモジュール Article::GeneratedAttributeMethods がある。Article のインスタンスは、属性の集合 @attributes と、@new_record などの状態を持つ。データベースから読み込んだレコードの @attributes は LazyAttributeSet で、行の値をそのまま持ち、読まれたときに型変換する"
@@ -110,11 +110,11 @@ function ClassInstanceFigure() {
   )
 }
 
-/* ---------- 図 11-3 行から値を読むまで ---------- */
+/* ---------- 図 11-5 行から値を読むまで ---------- */
 function LazyFigure() {
   return (
     <Svg
-      id="11-3"
+      id="11-5"
       w={760}
       h={250}
       label="SELECT の結果の1行は、列名と値のハッシュとして返る。instantiate_instance_of は、そのハッシュと型の一覧から LazyAttributeSet を作り、allocate したインスタンスに init_with_attributes で渡す。このときは型変換をしない。a.published を読むと、LazyAttributeSet が行の値 1 を Boolean 型の deserialize で true に変換し、結果を保存して返す。2回目からは保存した値を返す"
@@ -133,11 +133,11 @@ function LazyFigure() {
   )
 }
 
-/* ---------- 図 11-4 3つの値と変換 ---------- */
+/* ---------- 図 11-6 3つの値と変換 ---------- */
 function ThreeValuesFigure() {
   return (
     <Svg
-      id="11-4"
+      id="11-6"
       w={760}
       h={250}
       label="属性は3種類の値を持つ。value_before_type_cast は、データベースから来た値か、代入された値そのもの。value は Ruby で扱う値で、データベースからの値は deserialize、代入された値は cast で作られる。value_for_database は保存するときの値で、value を serialize して作られる。例として、published 列はデータベースでは 1、Ruby では true、保存するときは 1 になる"
@@ -165,11 +165,11 @@ function ThreeValuesFigure() {
   )
 }
 
-/* ---------- 図 11-5 代入と変更の検出 ---------- */
+/* ---------- 図 11-7 代入と変更の検出 ---------- */
 function DirtyFigure() {
   return (
     <Svg
-      id="11-5"
+      id="11-7"
       w={760}
       h={240}
       label="データベースから読み込んだ title の属性は FromDatabase で、値は記事1。a.title に新しい値を代入すると、FromUser の属性が新しく作られ、元の FromDatabase の属性を original_attribute として持つ。changed? は、代入による変更か、読んだ値をその場で書き換えた変更があれば真になる。save に成功すると changes_applied が呼ばれ、現在の値を元の値とする新しい属性に置き換わる"
@@ -197,13 +197,122 @@ function DirtyFigure() {
   )
 }
 
+/* ---------- 図 11-1 articles テーブルの行と列 ---------- */
+function TableFigure() {
+  const cols = [
+    { name: 'id', type: 'bigint', w: 70 },
+    { name: 'title', type: 'varchar(255)', w: 190 },
+    { name: 'published', type: 'tinyint(1)', w: 110 },
+    { name: 'views_count', type: 'int', w: 120 },
+  ]
+  const rows = [
+    ['1', '変更後のタイトル', '1', '1'],
+    ['2', 'タイトル2改', '1', '222'],
+    ['3', '記事3', '0', '60'],
+  ]
+  const xs = cols.reduce<number[]>((acc, _c, i) => [...acc, i === 0 ? 20 : acc[i - 1] + cols[i - 1].w], [])
+  return (
+    <Svg
+      id="11-1"
+      w={780}
+      h={290}
+      label="articles テーブルを表にした図。横の並びが行で、1行が1件の記事を表す。縦の並びが列で、id・title・published・views_count などの列ごとに、bigint・varchar(255)・tinyint(1)・int のような型が決まっている。id の列は主キーで、行を1つに特定する番号が入り、同じ値も NULL も入らない。published の 1 と 0 は、Rails では true と false として扱われる"
+    >
+      <T x={xs[1] + cols[1].w / 2} y={20} fs={11.5} tone="acc" anchor="middle">
+        列（column）
+      </T>
+      <Arrow x1={xs[1] + cols[1].w / 2} y1={28} x2={xs[1] + cols[1].w / 2} y2={44} accent />
+      {cols.map((c, i) => (
+        <g key={c.name}>
+          <Box x={xs[i]} y={46} w={c.w} h={30} lines={c.name} mono fs={12} bold rx={0} fill={i === 0 ? 'box5' : 'box'} />
+          <Box x={xs[i]} y={76} w={c.w} h={24} lines={c.type} mono fs={10.5} rx={0} fill="bg" />
+          {rows.map((r, j) => (
+            <Box key={j} x={xs[i]} y={100 + j * 30} w={c.w} h={30} lines={r[i]} mono={i !== 1} fs={12} rx={0} fill={i === 0 ? 'box5' : 'bg'} />
+          ))}
+        </g>
+      ))}
+      <rect x={xs[1]} y={46} width={cols[1].w} height={144} fill="none" stroke="var(--fig-accent)" strokeWidth={2} strokeDasharray="5 4" />
+      <rect x={20} y={130} width={490} height={30} fill="none" stroke="var(--fig-accent)" strokeWidth={2} />
+      <T x={300} y={206} fs={11} tone="muted">
+        … 約1万行
+      </T>
+
+      <Arrow x1={556} y1={145} x2={514} y2={145} accent />
+      <T x={562} y={138} fs={12} tone="acc">
+        行（row）・レコード
+      </T>
+      <T x={562} y={156} fs={11.5}>
+        1件の記事
+      </T>
+      <Arrow x1={556} y1={88} x2={514} y2={88} />
+      <T x={562} y={88} fs={11.5}>
+        列ごとに型が決まっている
+      </T>
+
+      <Arrow x1={55} y1={236} x2={55} y2={192} />
+      <T x={70} y={238} fs={12}>
+        id は主キー：行を1つに特定する番号（同じ値も NULL も入らない）
+      </T>
+      <T x={20} y={270} fs={11} tone="muted">
+        published は tinyint(1)。MySQL では 1 と 0 で、Rails では true と false になる
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 11-2 マイグレーション・テーブル・モデル ---------- */
+function ModelFigure() {
+  return (
+    <Svg
+      id="11-2"
+      w={780}
+      h={290}
+      label="マイグレーションのファイルに create_table :articles を書き、bin/rails db:migrate を実行すると、Rails が MySQL に CREATE TABLE を送って articles テーブルができ、実行したバージョンが schema_migrations に記録される。モデルの Article クラスで Article.first を呼ぶと、Rails が SELECT … LIMIT 1 を送り、返ってきた1行の値から Article のインスタンスを作る。インスタンスの title や published は列の値を返し、published は 1 から true に変換されている"
+    >
+      <Box x={20} y={44} w={226} h={56} lines={['マイグレーション', 'create_table :articles']} fs={12} mono subTone="muted" />
+      <Box x={20} y={126} w={226} h={56} lines={['モデル', 'class Article < ApplicationRecord']} fs={11.5} mono subTone="muted" />
+
+      <rect x={400} y={14} width={190} height={240} rx={8} fill="var(--fig-box4)" stroke="var(--fig-line)" />
+      <T x={495} y={34} bold anchor="middle">
+        MySQL
+      </T>
+      <Box x={412} y={50} w={166} h={116} fill="bg" lines={['articles テーブル', 'id  title  published', '1   …      1', '2   …      1', '3   …      0']} mono fs={11} subTone="muted" />
+      <Box x={412} y={186} w={166} h={52} fill="bg" lines={['schema_migrations', '20261116070447']} mono fs={11} subTone="muted" />
+
+      <Arrow x1={246} y1={72} x2={410} y2={72} />
+      <T x={328} y={60} fs={11} mono anchor="middle">
+        bin/rails db:migrate
+      </T>
+      <T x={328} y={86} fs={10.5} tone="muted" anchor="middle">
+        CREATE TABLE など
+      </T>
+
+      <Arrow x1={246} y1={154} x2={410} y2={154} />
+      <T x={328} y={142} fs={11} mono anchor="middle">
+        Article.first
+      </T>
+      <T x={328} y={168} fs={10.5} mono tone="muted" anchor="middle">
+        SELECT … LIMIT 1
+      </T>
+
+      <Arrow x1={580} y1={108} x2={618} y2={108} />
+      <Box x={620} y={60} w={150} h={96} lines={['インスタンス a', 'a.id → 1', 'a.title → "…"', 'a.published → true']} fs={11.5} fill="box5" subTone="muted" />
+      <T x={20} y={276} fs={11} tone="muted">
+        Article クラスは articles テーブルに、インスタンスはその1行に対応する。列の値は属性として読める
+      </T>
+    </Svg>
+  )
+}
+
 const ch11: Chapter = {
   number: 11,
   part: 3,
   title: 'モデルクラスと属性',
   summary:
-    'レコードを作成・取得・更新・削除する基本のメソッドの戻り値と使い分けを確かめた後、ActiveRecord のモデルが列の情報をいつ読み込み、属性メソッドをどこに定義し、データベースの値を Ruby の値にいつ変換するかを、MySQL 8.4 で実測しながら説明します。型変換の規則、enum などの属性 API、変更の追跡も扱います。',
+    'データベースのテーブル・行・列と主キー、SQL の SELECT・INSERT・UPDATE・DELETE、マイグレーションでテーブルを作る手順、モデルのクラスがテーブルに対応することを MySQL とデモで確かめます。続いて、レコードを作成・取得・更新・削除する基本のメソッドの戻り値と使い分けを確かめた後、ActiveRecord のモデルが列の情報をいつ読み込み、属性メソッドをどこに定義し、データベースの値を Ruby の値にいつ変換するかを、MySQL 8.4 で実測しながら説明します。型変換の規則、enum などの属性 API、変更の追跡も扱います。',
   goals: [
+    'テーブル・行・列・主キーの関係を説明し、SELECT・INSERT・UPDATE・DELETE で行を読み書きできる',
+    'マイグレーションでテーブルを作る手順と、モデルのクラスが SELECT を送って行をインスタンスにすることを説明できる',
     'new・save・create・find・find_by・where・update・destroy の戻り値と、実行される SQL、失敗したときの動作を説明できる',
     'save と save!、find と find_by を、失敗したときに処理をどう続けるかで使い分けられる',
     'モデルのクラスとインスタンスがそれぞれどんな情報を持つかを説明できる',
@@ -215,6 +324,458 @@ const ch11: Chapter = {
   ],
   prerequisites: [5, 8],
   sections: [
+    {
+      id: 'table',
+      title: 'テーブル・行・列と主キー',
+      body: (
+        <>
+          <p>
+            Web アプリケーションは、記事やコメントのように利用者が作ったデータを保存しておき、あとで取り出して画面に表示します。データの保存と検索を受け持つソフトウェアを
+            <Term en="database">データベース</Term>（正確にはデータベース管理システム）と呼びます。この本のデモで使う MySQL 8.4 もその1つで、サーバーとして動くプログラムです。Rails
+            のアプリケーションは MySQL に接続し、命令を送ってデータを読み書きします。
+          </p>
+          <p>
+            MySQL はデータを<Term en="table">テーブル</Term>という表の形で保存し、1つのデータベースの中に複数のテーブルを作れます。デモのデータベース demo_development のテーブルを、MySQL
+            に付属するクライアント（mysql コマンド）で一覧にしました。
+          </p>
+          <Code
+            lang="text"
+            title="mysql コマンドで実行（MySQL 8.4.13。起動時の表示は省略）"
+            code={`
+mysql> SHOW TABLES;
++--------------------------------+
+| Tables_in_demo_development     |
++--------------------------------+
+| active_storage_attachments     |
+| active_storage_blobs           |
+| active_storage_variant_records |
+| ar_internal_metadata           |
+| articles                       |
+| authors                        |
+| comments                       |
+| schema_migrations              |
+| taggings                       |
+| tags                           |
++--------------------------------+
+10 rows in set (0.00 sec)
+`}
+          />
+          <p>
+            articles は記事、authors は著者、comments はコメントを保存するテーブルです。schema_migrations と ar_internal_metadata は Rails が管理に使うテーブルで、「マイグレーションでテーブルを作る」の節で扱います。articles
+            テーブルの中身を、先頭から3件だけ表示しました（SELECT の書き方は次の節で説明します）。
+          </p>
+          <Code
+            lang="text"
+            code={`
+mysql> SELECT id, title, published, views_count, created_at FROM articles LIMIT 3;
++----+--------------------------+-----------+-------------+----------------------------+
+| id | title                    | published | views_count | created_at                 |
++----+--------------------------+-----------+-------------+----------------------------+
+|  1 | 変更後のタイトル         |         1 |           1 | 2026-11-11 07:53:47.260464 |
+|  2 | タイトル2改              |         1 |         222 | 2026-11-11 07:53:47.260464 |
+|  3 | 記事3                    |         0 |          60 | 2026-11-11 07:53:47.260464 |
++----+--------------------------+-----------+-------------+----------------------------+
+3 rows in set (0.00 sec)
+`}
+          />
+          <p>
+            表の横の並びを<Term en="row">行</Term>と呼び、1行が1件の記事です。行はレコードとも呼びます。縦の並びを<Term en="column">列</Term>と呼び、id・title
+            などの列が記事の項目です（図 11-1）。記事1件ごとに1行あり、デモの articles テーブルには約1万行あります。1件目と2件目のタイトルは、この本のほかの節の実験で書き換えたものです。
+          </p>
+          <p>列ごとに、入れられる値の種類（型）が決まっています。DESCRIBE で articles テーブルの列と型を表示しました。</p>
+          <Code
+            lang="text"
+            code={`
+mysql> DESCRIBE articles;
++----------------+---------------+------+-----+---------+----------------+
+| Field          | Type          | Null | Key | Default | Extra          |
++----------------+---------------+------+-----+---------+----------------+
+| id             | bigint        | NO   | PRI | NULL    | auto_increment |
+| title          | varchar(255)  | YES  |     | NULL    |                |
+| body           | text          | YES  |     | NULL    |                |
+| published      | tinyint(1)    | YES  |     | NULL    |                |
+| created_at     | datetime(6)   | NO   |     | NULL    |                |
+| updated_at     | datetime(6)   | NO   |     | NULL    |                |
+| author_id      | bigint        | YES  | MUL | NULL    |                |
+| status         | int           | NO   | MUL | 0       |                |
+| views_count    | int           | NO   |     | 0       |                |
+| comments_count | int           | NO   |     | 0       |                |
+| price          | decimal(10,2) | YES  |     | NULL    |                |
+| published_at   | datetime(6)   | YES  |     | NULL    |                |
+| lock_version   | int           | NO   |     | 0       |                |
++----------------+---------------+------+-----+---------+----------------+
+13 rows in set (0.00 sec)
+`}
+          />
+          <p>
+            Field が列の名前、Type が型です。bigint と int は整数、varchar(255) は255文字までの文字列、text は長い文字列、datetime(6) は日時（秒の小数点以下6桁まで）、decimal(10,2)
+            は全体で10桁・小数点以下2桁の数を入れる型です
+            <Ref n={7} />
+            <Ref n={14} />
+            <Ref n={15} />。tinyint(1) は小さな整数の型で、Rails はこの型の列を真偽値（true と false）の列として扱います。published の 1 は true、0 は false を表します（「列の型と型変換」の節）。Null
+            が NO の列には、値が無いことを表す NULL を入れられません。Default は値を指定せずに行を追加したときに入る値です。
+          </p>
+          <p>
+            id の Key は PRI です。これは id がこのテーブルの<Term en="primary key">主キー</Term>であることを表します。主キーは行を1つに特定するための列で、同じ値を2つの行に入れることも、NULL
+            を入れることもできません。Extra の auto_increment は、行を追加するときに id を指定しなければ、MySQL がそれまでより大きい番号を自動で入れることを表します
+            <Ref n={16} />。Rails で作るテーブルは、特に指定しなければ id という名前の主キーを持ちます
+            <Ref n={20} />。ある記事を指すときは「id が 3 の記事」のように主キーの値で指定します。
+          </p>
+          <p>
+            author_id はその記事を書いた著者の id を入れる列で、authors テーブルの行を指します（<ChapterLink n={13} />
+            ）。author_id と status の Key にある MUL は、その列から始まる索引（値から行を早く探すための仕組み。<ChapterLink n={12} section="explain" />
+            ）があることを表します
+            <Ref n={22} />。
+          </p>
+          <Figure n="11-1" title="articles テーブルの行と列" caption="上の SELECT と DESCRIBE の結果をもとにした模式図。列は一部だけを描いている。">
+            <TableFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'sql',
+      title: 'SQL で行を読み書きする',
+      body: (
+        <>
+          <p>
+            データベースへの命令は <Term>SQL</Term> という言語で書きます。前の節の SHOW TABLES や DESCRIBE も SQL の文です。行を読み書きする基本の文は次の4つです。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>文</th>
+                  <th>すること</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <code>SELECT</code>
+                  </td>
+                  <td>行を取り出す</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>INSERT</code>
+                  </td>
+                  <td>行を追加する</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>UPDATE</code>
+                  </td>
+                  <td>行の値を書き換える</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>DELETE</code>
+                  </td>
+                  <td>行を削除する</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>articles テーブルに記事を1件追加し、取り出し、書き換えてから削除しました。まず INSERT で追加し、SELECT で取り出します。</p>
+          <Code
+            lang="text"
+            code={`
+mysql> INSERT INTO articles (title, body, published, created_at, updated_at)
+    ->   VALUES ('SQL の練習', '本文です', 0, NOW(6), NOW(6));
+Query OK, 1 row affected (0.01 sec)
+
+mysql> SELECT id, title, published, views_count FROM articles WHERE title = 'SQL の練習';
++-------+---------------+-----------+-------------+
+| id    | title         | published | views_count |
++-------+---------------+-----------+-------------+
+| 10018 | SQL の練習    |         0 |           0 |
++-------+---------------+-----------+-------------+
+1 row in set (0.00 sec)
+`}
+          />
+          <p>
+            INSERT INTO の後にテーブル名と、値を入れる列の名前を書き、VALUES の後に値を同じ順で書きます。文字列の値は <code>'</code> で囲みます。NOW(6)
+            は今の日時を返す MySQL の関数です。<code>Query OK, 1 row affected</code> は、1行が追加されたことを表します。id は指定していませんが、auto_increment によって 10018
+            が入りました。views_count には Default の 0 が入っています
+            <Ref n={17} />。
+          </p>
+          <p>
+            SELECT は取り出す列の名前を並べ、FROM の後にテーブル名を書きます。WHERE の後に条件を書くと、条件に合う行だけを取り出します。ここでは title が 'SQL の練習'
+            の行です。列の名前の代わりに <code>*</code> と書くと、すべての列を取り出します
+            <Ref n={21} />。条件の書き方と並べ替えは <ChapterLink n={12} section="where-order-limit" /> で扱います。
+          </p>
+          <p>
+            created_at と updated_at は、Null が NO で Default も無い列です。この2つを省いて INSERT すると、エラーになりました。既定値の無い列の値を省くと、デモの MySQL の設定ではエラーになります
+            <Ref n={17} />。
+          </p>
+          <Code
+            lang="text"
+            code={`
+mysql> INSERT INTO articles (title) VALUES ('日時なし');
+ERROR 1364 (HY000): Field 'created_at' doesn't have a default value
+`}
+          />
+          <p>
+            Rails のメソッドで行を追加するときは、Rails がこの2つの列に今の日時を自動で入れます
+            <Ref n={13} />。次に、UPDATE で値を書き換え、DELETE で削除しました。
+          </p>
+          <Code
+            lang="text"
+            code={`
+mysql> UPDATE articles SET published = 1, views_count = 5 WHERE id = 10018;
+Query OK, 1 row affected (0.02 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> SELECT id, title, published, views_count FROM articles WHERE id = 10018;
++-------+---------------+-----------+-------------+
+| id    | title         | published | views_count |
++-------+---------------+-----------+-------------+
+| 10018 | SQL の練習    |         1 |           5 |
++-------+---------------+-----------+-------------+
+1 row in set (0.00 sec)
+
+mysql> DELETE FROM articles WHERE id = 10018;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> SELECT id, title, published, views_count FROM articles WHERE id = 10018;
+Empty set (0.01 sec)
+`}
+          />
+          <p>
+            UPDATE はテーブル名の後の SET に「列 = 新しい値」を並べ、WHERE で書き換える行を指定します。DELETE は WHERE で指定した行を削除します。どちらも WHERE を省くと、テーブルのすべての行が対象になります
+            <Ref n={18} />
+            <Ref n={19} />。ここでは WHERE で主キーの id を指定して、1行だけを対象にしました。最後の SELECT の <code>Empty set</code> は、条件に合う行が無いことを表します。
+          </p>
+          <p>
+            Rails のアプリケーションも MySQL にはこれと同じ形の SQL を送っています。Rails はモデルのメソッドが呼ばれると SQL を組み立てて送り、送った SQL をログに書きます（「テーブルに対応するモデルのクラス」の節）。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'migration',
+      title: 'マイグレーションでテーブルを作る',
+      body: (
+        <>
+          <p>
+            テーブルは CREATE TABLE という SQL の文で作ります。Rails では SQL を直接書く代わりに、<Term en="migration">マイグレーション</Term>という Ruby のファイルにテーブルの作り方を書き、
+            <code>bin/rails db:migrate</code> で実行します。マイグレーションのファイルは db/migrate ディレクトリに置いて、アプリケーションのコードと一緒に管理するので、ほかの開発者の環境や本番環境のデータベースにも、同じ変更を同じ順に適用できます
+            <Ref n={20} />。
+          </p>
+          <p>
+            デモをコピーした環境で、記事のモデルとテーブルを作り直しました。デモのデータベースを変えないように、ch11_migrate という別のデータベースを使っています。
+            <code>bin/rails generate model</code> にモデルの名前と「列の名前:型」を並べて渡すと、マイグレーションのファイルとモデルのファイルが作られます。
+          </p>
+          <Code
+            lang="text"
+            title="bin/rails generate model の出力"
+            code={`
+$ bin/rails generate model Article title:string body:text published:boolean
+      invoke  active_record
+      create    db/migrate/20261116070447_create_articles.rb
+      create    app/models/article.rb
+      invoke    rspec
+      create      spec/models/article_spec.rb
+      invoke      factory_bot
+      create        spec/factories/articles.rb
+`}
+          />
+          <Code
+            lang="ruby"
+            title="db/migrate/20261116070447_create_articles.rb（生成されたファイル）"
+            code={`
+class CreateArticles < ActiveRecord::Migration[8.1]
+  def change
+    create_table :articles do |t|
+      t.string :title
+      t.text :body
+      t.boolean :published
+
+      t.timestamps
+    end
+  end
+end
+`}
+          />
+          <p>
+            <code>create_table :articles</code> のブロックの中で、<code>t.string :title</code> は title という文字列の列を、<code>t.text</code> は長い文字列の列を、<code>t.boolean</code>{' '}
+            は真偽値の列を作る指定です。<code>t.timestamps</code> は created_at と updated_at の2つの列を作ります。id の列は書いていませんが、create_table が主キーの id
+            を自動で加えます。ファイル名の先頭の 20261116070447 はファイルを作った日時で、マイグレーションを区別する番号（バージョン）として使われます
+            <Ref n={20} />。rspec と factory_bot の行は、デモに入れてあるテスト用の gem がテストのファイルも作ったことを表します（<ChapterLink n={20} />
+            ）。
+          </p>
+          <p>
+            <code>bin/rails db:create</code> でデータベースを作り、<code>bin/rails db:migrate</code> でマイグレーションを実行しました。
+          </p>
+          <Code
+            lang="text"
+            code={`
+$ bin/rails db:create
+Created database 'ch11_migrate'
+$ bin/rails db:migrate
+== 20261116070447 CreateArticles: migrating ===================================
+-- create_table(:articles)
+   -> 0.0580s
+== 20261116070447 CreateArticles: migrated (0.0580s) ==========================
+`}
+          />
+          <p>ログ（log/development.log）には、実行された SQL が残っていました。</p>
+          <Code
+            lang="text"
+            title="log/development.log（一部を省略）"
+            code={`
+CREATE TABLE \`articles\` (\`id\` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, \`title\` varchar(255),
+  \`body\` text, \`published\` boolean, \`created_at\` datetime(6) NOT NULL, \`updated_at\` datetime(6) NOT NULL)
+INSERT INTO \`schema_migrations\` (\`version\`) VALUES ('20261116070447')
+`}
+          />
+          <p>
+            Ruby で書いた create_table が CREATE TABLE の SQL になりました。string は varchar(255) に、boolean は MySQL の boolean になり、boolean の列は MySQL の中では tinyint(1)
+            として作られます（前の節の DESCRIBE の published）
+            <Ref n={7} />。
+          </p>
+          <p>
+            続く INSERT は実行したマイグレーションのバージョンを schema_migrations テーブルに記録しています。db:migrate をもう一度実行すると、記録済みのマイグレーションは実行されず、何も表示されませんでした。
+            <code>db:migrate:status</code> はマイグレーションごとに実行済み（up）かどうかを表示します。
+          </p>
+          <Code
+            lang="text"
+            code={`
+$ bin/rails db:migrate
+$ bin/rails db:migrate:status
+
+database: ch11_migrate
+
+ Status   Migration ID    Migration Name
+--------------------------------------------------
+   up     20261116070447  Create articles
+
+mysql> SELECT * FROM schema_migrations;
++----------------+
+| version        |
++----------------+
+| 20261116070447 |
++----------------+
+1 row in set (0.01 sec)
+`}
+          />
+          <p>
+            新しいマイグレーションのファイルを足して db:migrate を実行すると、まだ記録されていないファイルだけが実行されます。マイグレーションを実行した後、Rails はその時点のテーブルの構造を
+            db/schema.rb に書き出します
+            <Ref n={20} />。
+          </p>
+          <Code
+            lang="ruby"
+            title="db/schema.rb（コメントを除く）"
+            code={`
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_070447) do
+  create_table "articles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "title"
+    t.text "body"
+    t.boolean "published"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+end
+`}
+          />
+          <p>
+            デモの articles テーブルは、このマイグレーションの後に列を追加するマイグレーションを実行して、前の節で見た13列になっています。<code>add_reference</code> は著者の id を入れる
+            author_id の列と、その列の索引を、<code>add_column</code> は列を、<code>add_index</code> は索引を追加します。<code>null: false</code> は NULL を入れられない列にする指定、
+            <code>default: 0</code> は Default の値です。
+          </p>
+          <Code
+            lang="ruby"
+            title="db/migrate/20261111100002_extend_articles.rb（デモ）"
+            code={`
+class ExtendArticles < ActiveRecord::Migration[8.1]
+  def change
+    add_reference :articles, :author, foreign_key: true
+    add_column :articles, :status, :integer, null: false, default: 0
+    add_column :articles, :views_count, :integer, null: false, default: 0
+    add_column :articles, :comments_count, :integer, null: false, default: 0
+    add_column :articles, :price, :decimal, precision: 10, scale: 2
+    add_column :articles, :published_at, :datetime
+    add_column :articles, :lock_version, :integer, null: false, default: 0
+    add_index :articles, [:status, :published_at]
+  end
+end
+`}
+          />
+        </>
+      ),
+    },
+    {
+      id: 'model',
+      title: 'テーブルに対応するモデルのクラス',
+      body: (
+        <>
+          <p>generate model が作った app/models/article.rb は、次の2行だけです。</p>
+          <Code
+            lang="ruby"
+            title="app/models/article.rb（生成されたファイル）"
+            code={`
+class Article < ApplicationRecord
+end
+`}
+          />
+          <p>
+            ApplicationRecord を継承したクラスを<Term en="model">モデル</Term>と呼びます。ApplicationRecord は ActiveRecord::Base を継承したクラスで、ActiveRecord は Rails
+            のうちデータベースとのやり取りを受け持つ部分です。モデルのクラスは1つのテーブルに対応し、Article は articles テーブルを扱います。テーブル名はクラス名を小文字にして複数形にしたもので、クラスに書かなくても
+            Rails が決めます
+            <Ref n={13} />。
+          </p>
+          <p>
+            デモのアプリケーションで Article のメソッドを呼び、送られた SQL を確かめました。<code>bin/rails runner</code>（アプリケーションを読み込んだ状態で Ruby のスクリプトを実行するコマンド）でスクリプトを実行し、ActiveRecord
+            がログに書く SQL を画面に表示しています。
+          </p>
+          <Code
+            lang="text"
+            title="bin/rails runner で実行（インスタンスの表示とログの一部を省略）"
+            code={`
+Article.table_name       # => "articles"
+  Article Load (0.5ms)  SELECT \`articles\`.* FROM \`articles\` ORDER BY \`articles\`.\`id\` ASC LIMIT 1
+a = Article.first        # => #<Article id: 1, title: "変更後のタイトル", ...>
+a.id                     # => 1
+a.title                  # => "変更後のタイトル"
+a.published              # => true
+a.created_at             # => 2026-11-11 07:53:47.260464000 UTC +00:00
+Article.column_names     # => ["id", "title", "body", "published", "created_at", "updated_at",
+                         #     "author_id", "status", "views_count", "comments_count", "price", ...]
+  Article Count (1.7ms)  SELECT COUNT(*) FROM \`articles\`
+Article.count            # => 10004
+  Article Load (0.6ms)  SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`id\` = 3 LIMIT 1
+b = Article.find(3)      # => #<Article id: 3, title: "記事3", ...>
+b.title                  # => "記事3"
+b.published              # => false
+`}
+          />
+          <p>
+            <code>Article.first</code> は主キーの小さい順に並べた最初の1行を取り出す SELECT を送り、その行の値から Article のインスタンスを作って返しました。ログの Article Load
+            は Article の行を読み込んだことを、括弧の中はかかった時間を表します。<code>`articles`.*</code> は articles のすべての列、<code>ORDER BY … ASC LIMIT 1</code>{' '}
+            は id の小さい順に並べた先頭の1行という意味です（<ChapterLink n={12} section="where-order-limit" />
+            ）。<code>find(3)</code> は WHERE で id が 3 の行を取り出し、<code>count</code> は行の数を数える <code>COUNT(*)</code> を送りました。
+          </p>
+          <p>
+            インスタンスの <code>title</code> や <code>published</code> は、その行の列の値を返します。article.rb には title というメソッドを書いていませんが、Rails
+            がデータベースから列の一覧を読み、列と同じ名前のメソッドを用意します。<code>column_names</code> は Rails が読んだ列の名前です。このように列に対応してインスタンスが持つ値を
+            <Term en="attribute">属性</Term>と呼び、<code>title</code> や <code>title=</code> のように属性を読み書きするメソッドを属性メソッドと呼びます。
+          </p>
+          <p>
+            MySQL では published の値は 1 と 0 でしたが、Article のインスタンスでは true と false になっています。Rails は列の型に合わせて、データベースの値を Ruby
+            の値に変換します（「列の型と型変換」の節）。ここまでのマイグレーション・テーブル・モデルの関係を図 11-2 にまとめます。
+          </p>
+          <Figure n="11-2" title="マイグレーション・テーブル・モデル" caption="この節と前の節の実行結果をもとにした模式図。">
+            <ModelFigure />
+          </Figure>
+          <p>
+            次の節からはデモの Article を使います。デモの Article には関連（<ChapterLink n={13} />
+            ）などの宣言を足してありますが、列を読み書きするメソッドは書いていません。まず、行を作成・取得・更新・削除する Rails のメソッドと、それぞれが送る SQL を確かめます。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'crud',
       title: '基本操作と使い分け',
@@ -247,7 +808,8 @@ end
 `}
           />
           <p>
-            内部の仕組みを見る前に、レコードを作成・取得・更新・削除する基本のメソッドについて、戻り値と実行される SQL、失敗したときの動作を確かめます。この節では、モデルに{' '}
+            belongs_to と has_many は関連（<ChapterLink n={13} />）、enum は列の整数に名前を付ける宣言（「attribute API と enum」の節）、scope は検索条件に名前を付ける宣言（
+            <ChapterLink n={12} section="chain" />）です。内部の仕組みを見る前に、レコードを作成・取得・更新・削除する基本のメソッドについて、戻り値と実行される SQL、失敗したときの動作を確かめます。この節では、モデルに{' '}
             <code>validates :title, presence: true</code>（タイトルが空なら保存しないための検証。<ChapterLink n={14} section="validations" />）を加えて実行しました。コメントに書いた SQL
             は、デモのアプリケーションが実行したものです。
           </p>
@@ -287,7 +849,7 @@ Article.create!(title: "")      # ActiveRecord::RecordInvalid: Validation failed
           />
           <p>
             <code>save</code> は、検証に失敗すると SQL を実行せずに false を返し、失敗の理由を <code>errors</code> に入れます。名前が <code>!</code> で終わる <code>save!</code> は、false
-            を返す代わりに ActiveRecord::RecordInvalid という例外を投げます。<code>create</code> は <code>new</code> と <code>save</code> を続けて行うメソッドで、保存できたかどうかに関係なく、作ったオブジェクトを返します
+            を返す代わりに ActiveRecord::RecordInvalid という例外を投げます（例外は処理を途中で止めて失敗を呼び出し元に知らせる Ruby の仕組みです。rescue で受け止めなければ、それより後の処理は実行されません）。<code>create</code> は <code>new</code> と <code>save</code> を続けて行うメソッドで、保存できたかどうかに関係なく、作ったオブジェクトを返します
             <Ref n={13} />。そのため <code>if Article.create(...)</code> と書いても、失敗を判定できません。結果を確かめるには <code>persisted?</code> を使うか、<code>create!</code> を使います。
           </p>
           <h3>取得：find・find_by・where</h3>
@@ -309,7 +871,7 @@ r.to_a.size                             # => 1
 `}
           />
           <p>
-            <code>find</code> は主キー（id）で1件を取り出し、見つからなければ ActiveRecord::RecordNotFound を投げます。コントローラーの中でこの例外が起きると、Rails は 404
+            <code>find</code> は主キー（id）で1件を取り出し、見つからなければ ActiveRecord::RecordNotFound を投げます。コントローラーの中でこの例外が起きると、Rails は 404（ページが見つからないことを表す HTTP の状態コード）
             の応答を返します（<ChapterLink n={10} section="exceptions" />）。<code>find_by</code> は条件に合う最初の1件を返し、見つからなければ nil を返します。<code>where</code>{' '}
             は条件に合うすべての行を表す Relation（検索条件を保存したオブジェクト）を返し、<code>each</code> や <code>to_a</code> で中身を使うときに初めて SQL を実行します（
             <ChapterLink n={12} />）。
@@ -333,7 +895,7 @@ a.update!(title: "")   # ActiveRecord::RecordInvalid: Validation failed: Title c
           />
           <p>
             <code>update</code> は、渡した値を代入してから <code>save</code> します。UPDATE に入るのは、変更した列と <code>updated_at</code> だけです（<ChapterLink n={11} section="dirty">この章の「変更の追跡」</ChapterLink>）。
-            <code>lock_version</code> は<ChapterLink n={15} section="optimistic" />の楽観的ロックに使う列で、デモの articles テーブルにあるため一緒に更新されています。検証に失敗すると false
+            <code>lock_version</code> は<ChapterLink n={15} section="optimistic" />の楽観的ロック（同じ行を2つの処理が同時に書き換えたとき、後から保存したほうを失敗させる仕組み）に使う列で、デモの articles テーブルにあるため一緒に更新されています。検証に失敗すると false
             を返しますが、オブジェクトには代入した値が残ります。データベースの値に戻すには <code>reload</code> を使います。
           </p>
           <h3>削除：destroy</h3>
@@ -355,8 +917,8 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
             の添付ファイル（<ChapterLink n={19} />）を調べる SELECT も実行されましたが、上では省略しています。<code>destroy</code> はコールバック（保存や削除の前後に実行するように登録しておく処理。<ChapterLink n={14} />）を実行してから削除します。コールバックを実行しない{' '}
             <code>delete</code> との違いは<ChapterLink n={14} section="skip" />で扱います。
           </p>
-          <p>ここまでの結果をまとめると、図 11-1 と次の表のようになります。</p>
-          <Figure n="11-1" title="レコードの状態と、状態を変えるメソッド" caption="この節の実行結果をまとめた模式図。破線は、検証に失敗して状態が変わらない場合を表す。">
+          <p>ここまでの結果をまとめると、図 11-3 と次の表のようになります。</p>
+          <Figure n="11-3" title="レコードの状態と、状態を変えるメソッド" caption="この節の実行結果をまとめた模式図。破線は、検証に失敗して状態が変わらない場合を表す。">
             <RecordStateFigure />
           </Figure>
           <div className="table-wrap">
@@ -476,10 +1038,10 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
         <>
           <p>
             モデルの情報はクラスとインスタンスに分かれて保存されています。クラスはテーブルの列の情報（<code>columns_hash</code>）、属性ごとの型（<code>attribute_types</code>
-            ）、新しいレコードの初期値（<code>_default_attributes</code>）を持ち、祖先には <code>title</code> などのメソッドを定義したモジュールがあります。インスタンスは、属性の値の集合（<Term en="attribute set">AttributeSet</Term>）である{' '}
+            ）、新しいレコードの初期値（<code>_default_attributes</code>）を持ち、祖先（メソッドを探すときに Ruby が順にたどるクラスとモジュールの並び。<ChapterLink n={2} section="method-lookup" />）には <code>title</code> などのメソッドを定義したモジュールがあります。インスタンスは、属性の値の集合（<Term en="attribute set">AttributeSet</Term>）である{' '}
             <code>@attributes</code> と、保存済みかどうかなどの状態を持ちます。
           </p>
-          <Figure n="11-2" title="クラス側とインスタンス側が持つもの" caption="模式図。Rails 8.1.4.1 の model_schema.rb・attributes.rb・core.rb を読んでまとめた。">
+          <Figure n="11-4" title="クラス側とインスタンス側が持つもの" caption="模式図。Rails 8.1.4.1 の model_schema.rb・attributes.rb・core.rb を読んでまとめた。">
             <ClassInstanceFigure />
           </Figure>
           <p>この章では、これらがいつ、どのように作られるかを順に見ていきます。</p>
@@ -517,9 +1079,9 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
 `}
           />
           <p>
-            列の情報は接続プールごとのスキーマキャッシュ（<code>schema_cache</code>）から取り出します。キャッシュに無ければ、MySQL では <code>SHOW FULL FIELDS</code>{' '}
+            列の情報は、接続プール（データベースとの接続をためておき、使い回す仕組み。<ChapterLink n={15} section="pool" />）ごとのスキーマキャッシュ（<code>schema_cache</code>）から取り出します。キャッシュに無ければ、MySQL では <code>SHOW FULL FIELDS</code>{' '}
             で問い合わせます。<code>ignored_columns</code> や <code>only_columns</code> で指定した列は、ここで取り除かれます
-            <Ref n={1} />。<code>load_schema</code> は Monitor で排他しており（同じファイルの 550〜562 行目）、複数のスレッドから同時に呼ばれても読み込みは1回です。
+            <Ref n={1} />。<code>load_schema</code> は Monitor（あるスレッドが処理している間、ほかのスレッドを待たせて1つずつ実行させる Ruby の仕組み）で排他しており（同じファイルの 550〜562 行目）、複数のスレッドから同時に呼ばれても読み込みは1回です。
           </p>
           <p>
             <code>load_schema</code> を呼ぶのは、属性メソッドを定義する <code>define_attribute_methods</code> などです。
@@ -556,7 +1118,7 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
           <p>
             <code>define_attribute_methods</code> は、レコードを初期化するとき（<code>core.rb</code> の <code>init_internals</code>）や、定義前のメソッドが呼ばれた{' '}
             <code>method_missing</code> から呼ばれます
-            <Ref n={2} />。デモのアプリケーション（development）で、起動直後に <code>Article.first</code> を実行したときの SQL を記録しました。
+            <Ref n={2} />。デモのアプリケーション（development。開発用の設定で動かす環境）で、起動直後に <code>Article.first</code> を実行したときの SQL を記録しました。
           </p>
           <Code
             lang="text"
@@ -643,7 +1205,7 @@ Article.method_defined?(:title)   # => true
             属性が読まれたときに初めて、その列の型の <code>deserialize</code> で Ruby の値に変換し、<code>@casted_values</code> に保存します
             <Ref n={5} />。1万件のレコードを読み込んでも、表示に使ういくつかの列しか読まなければ、残りの列の変換は行われません。
           </p>
-          <Figure n="11-3" title="行から値を読むまで" caption="Rails 8.1.4.1 の persistence.rb・core.rb・attribute_set/builder.rb を読んでまとめた図。">
+          <Figure n="11-5" title="行から値を読むまで" caption="Rails 8.1.4.1 の persistence.rb・core.rb・attribute_set/builder.rb を読んでまとめた図。">
             <LazyFigure />
           </Figure>
         </>
@@ -693,7 +1255,7 @@ Article.ancestors.index(m.owner)  # => 3
           />
           <p>
             属性メソッドは Article クラス自身ではなく、祖先に入った <code>Article::GeneratedAttributeMethods</code> モジュールに定義されます（<ChapterLink n={2} section="rails-ancestors" />
-            の図 2-4 では添字 2 でしたが、第3部の Article には enum を定義したので、enum のメソッドを入れる無名のモジュールが添字 1 に入り、1つずれています）。そのため、モデルで <code>def title</code>{' '}
+            の図 2-6 では添字 2 でしたが、第3部の Article には enum を定義したので、enum のメソッドを入れる無名のモジュールが添字 1 に入り、1つずれています）。そのため、モデルで <code>def title</code>{' '}
             を書いて上書きし、その中で <code>super</code> を呼ぶと、生成されたメソッドに処理を渡せます（<ChapterLink n={3} />）。関連のメソッドを入れる GeneratedAssociationMethods
             と同じ考え方です（<ChapterLink n={5} />）。
           </p>
@@ -706,7 +1268,7 @@ Article.ancestors.index(m.owner)  # => 3
       body: (
         <>
           <p>
-            属性の型は列の <code>sql_type</code> から接続アダプターの型の対応表で決まります。デモのアプリケーションでの結果は次のとおりです。
+            属性の型は列の <code>sql_type</code> から、接続アダプター（ActiveRecord の中で、MySQL など特定のデータベースとのやり取りを受け持つ部分）の型の対応表で決まります。デモのアプリケーションでの結果は次のとおりです。
           </p>
           <div className="table-wrap">
             <table>
@@ -779,7 +1341,7 @@ Article.ancestors.index(m.owner)  # => 3
             で Ruby の値になり、保存するときは <code>serialize</code> で戻します
             <Ref n={5} />。
           </p>
-          <Figure n="11-4" title="3つの値と変換" caption="模式図。ActiveModel::Attribute の FromDatabase は deserialize、FromUser は cast を使う（attribute.rb の 181〜208 行目）。">
+          <Figure n="11-6" title="3つの値と変換" caption="模式図。ActiveModel::Attribute の FromDatabase は deserialize、FromUser は cast を使う（attribute.rb の 181〜208 行目）。">
             <ThreeValuesFigure />
           </Figure>
           <p>デモのアプリケーションで、読み込んだレコードの値と、代入したときの変換を調べました。</p>
@@ -834,12 +1396,12 @@ status      = "unknown"           -> ArgumentError: 'unknown' is not a valid sta
           <p>
             空文字列は nil、FALSE_VALUES に含まれる値は false、それ以外はすべて true です
             <Ref n={9} />。<code>"yes"</code> だけでなく <code>"no"</code> も true になります。Integer の変換は文字列に <code>to_i</code> を呼ぶので、<code>"12abc"</code> は 12、
-            <code>"abc"</code> は 0 になります（<code>type/integer.rb</code> の 112〜122 行目）。フォームから来た数値を検証するときは、numericality のバリデーションが{' '}
+            <code>"abc"</code> は 0 になります（<code>type/integer.rb</code> の 112〜122 行目）。フォームから来た数値を検証するときは、numericality のバリデーション（値が数値かどうかを確かめる検証）が{' '}
             <code>value_before_type_cast</code> を見るので、<code>"abc"</code> を誤りとして検出できます（<ChapterLink n={14} />）。
           </p>
           <Callout kind="warn">
             <p>
-              日時の列は、既定では UTC で保存され、読み込むと <code>config.time_zone</code> のタイムゾーンの ActiveSupport::TimeWithZone になります。デモのアプリケーションは{' '}
+              日時の列は、既定では UTC（世界の時刻の基準。日本時間は UTC より9時間進んでいる）で保存され、読み込むと <code>config.time_zone</code> のタイムゾーンの ActiveSupport::TimeWithZone になります。デモのアプリケーションは{' '}
               <code>config.time_zone</code> を設定していないので UTC のままです。業務のアプリケーションで <code>config.time_zone = "Tokyo"</code> としている場合も、MySQL に入る値は UTC
               です（<code>config.active_record.default_timezone</code> の既定は <code>:utc</code>）。MySQL のクライアントで直接 SELECT するときは9時間ずれて見えます。
             </p>
@@ -919,11 +1481,11 @@ status      = "unknown"           -> ArgumentError: 'unknown' is not a valid sta
 `}
           />
           <p>
-            <code>changed?</code> は、代入による変更か、読み出した値そのものを書き換えた変更（<code>title &lt;&lt; "!"</code> のような操作）があれば真になります。後者は、元のデータベースの値と現在の値を型の{' '}
+            <code>changed?</code> は、代入による変更か、読み出した値そのものを書き換えた変更（<code>title &lt;&lt; "!"</code> で文字列の末尾に直接 ! を足すような操作）があれば真になります。後者は、元のデータベースの値と現在の値を型の{' '}
             <code>changed_in_place?</code> で比べて検出します
             <Ref n={5} />。
           </p>
-          <Figure n="11-5" title="代入と変更の検出" caption="模式図。save に成功すると changes_applied が呼ばれ、forgetting_assignment で現在の値を元の値とする属性に置き換わる。">
+          <Figure n="11-7" title="代入と変更の検出" caption="模式図。save に成功すると changes_applied が呼ばれ、forgetting_assignment で現在の値を元の値とする属性に置き換わる。">
             <DirtyFigure />
           </Figure>
           <p>デモのアプリケーションで、変更から保存までを確かめました。</p>
@@ -977,9 +1539,9 @@ a.changes.keys        # => ["body"]（その場での書き換えも検出され
           </p>
           <Callout kind="note">
             <p>
-              Rails 8.1 の新規アプリケーションの production では <code>config.active_record.attributes_for_inspect = [ :id ]</code> が設定されており、デモのアプリケーションでも{' '}
+              Rails 8.1 の新規アプリケーションの production（本番環境）では <code>config.active_record.attributes_for_inspect = [ :id ]</code> が設定されており、デモのアプリケーションでも{' '}
               <code>Article.first.inspect</code> は <code>#&lt;Article id: 1&gt;</code> だけを表示しました。ログやエラー通知に属性の値が出るのを減らす設定です。また、
-              <code>config.filter_parameters</code> に入っている <code>:email</code> などに一致する属性は、<code>inspect</code> で <code>[FILTERED]</code> と表示されます。
+              <code>config.filter_parameters</code>（ログに値を出さないパラメーター名の一覧）に入っている <code>:email</code> などに一致する属性は、<code>inspect</code> で <code>[FILTERED]</code> と表示されます。
             </p>
           </Callout>
           <Callout kind="v72">
@@ -997,6 +1559,10 @@ a.changes.keys        # => ["body"]（その場での書き換えも検出され
       title: 'まとめ',
       body: (
         <ul>
+          <li>データベース（MySQL）はデータをテーブルに保存します。1行が1件のデータ、列が項目で、列ごとに型が決まっています。主キー（id）は行を1つに特定する列です。</li>
+          <li>SQL の SELECT・INSERT・UPDATE・DELETE で、行を取り出し・追加し・書き換え・削除します。UPDATE と DELETE は、WHERE を省くとすべての行が対象になります。</li>
+          <li>Rails ではマイグレーションでテーブルを作ります。db:migrate は CREATE TABLE などの SQL を送り、実行したバージョンを schema_migrations に記録します。</li>
+          <li>モデルのクラスは1つのテーブルに対応します。Article.first は SELECT を送り、返ってきた行の値を属性として持つインスタンスを返します。</li>
           <li>
             new は SQL を実行せず、save・update・destroy がトランザクションの中で INSERT・UPDATE・DELETE を実行します。検証に失敗すると、save と update は false を返し、名前が ! で終わるメソッドは例外を投げます。create
             は失敗しても保存していないオブジェクトを返すので、結果は persisted? か create! で確かめます。
@@ -1026,6 +1592,14 @@ a.changes.keys        # => ["body"]（その場での書き換えも検出され
     { title: 'activerecord/lib/active_record/attribute_methods/dirty.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/attribute_methods/dirty.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '部分更新・部分挿入と changes_applied、saved_changes。' },
     { title: 'activerecord/CHANGELOG.md', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/CHANGELOG.md`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '8.1.0 で ActiveRecord::Base.only_columns が追加されたこと。' },
     { title: 'Active Record Basics（CRUD・Validations）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_basics.html', accessed: '2026-11-13', version: 'Rails 8.1', note: 'new と create、find・find_by・where、update・destroy の使い方。検証に失敗したとき save・update が false を返し、save!・create!・update! が RecordInvalid を投げ、create は常にモデルを返すこと。' },
+    { title: 'String Data Type Syntax', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/string-type-syntax.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'VARCHAR(M) の M が文字数で表した最大の長さであること。TEXT 型。' },
+    { title: 'Date and Time Data Type Syntax', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/date-and-time-type-syntax.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'DATETIME(fsp) の fsp が秒の小数点以下の桁数（0〜6）であること。' },
+    { title: 'CREATE TABLE Statement', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/create-table.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'PRIMARY KEY は一意な索引で、列は NOT NULL であること。AUTO_INCREMENT の列に NULL か 0 を入れると次の番号が入ること。' },
+    { title: 'INSERT Statement', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/insert.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'INSERT INTO … (列) VALUES (値) の書き方と、値を指定しない列に既定値が入ること。実行例は MySQL 8.4.13 で実測。' },
+    { title: 'UPDATE Statement', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/update.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'WHERE が無ければすべての行が更新されること。' },
+    { title: 'DELETE Statement', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/delete.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'WHERE が無ければすべての行が削除されること。' },
+    { title: 'Active Record Migrations', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_migrations.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'generate model が作るマイグレーション、create_table が主キーの id を加えること、t.timestamps、schema_migrations に実行済みのバージョンを記録すること、db/schema.rb の更新。実行例は Rails 8.1.4.1 で実測。' },
+    { title: 'SELECT Statement', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/select.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'SELECT の列の指定、FROM、WHERE、* がすべての列を表すこと。' },
   ],
 }
 

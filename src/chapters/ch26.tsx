@@ -6,7 +6,59 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 26-1 リクエスト全体のシーケンス ---------- */
+/* ---------- 図 26-1 要求が通る部品 ---------- */
+function PartsFigure() {
+  const front = [
+    { x: 20, t: 'ブラウザー', s: 'URL を開く' },
+    { x: 220, t: 'ロードバランサー', s: '第25章' },
+    { x: 420, t: 'Nginx', s: '第24章' },
+    { x: 620, t: 'Puma', s: '第23章' },
+  ]
+  const rails = [
+    { x: 34, t: 'ミドルウェア', s: '第6章' },
+    { x: 174, t: 'ルーティング', s: '第9章' },
+    { x: 314, t: 'コントローラー', s: '第10章' },
+    { x: 454, t: 'モデル', s: '第11〜13章' },
+  ]
+  return (
+    <Svg
+      id="26-1"
+      w={780}
+      h={330}
+      label="GET /articles/1 が通る部品を順に並べた図。ブラウザーの要求は、ロードバランサー（第25章）、Nginx（第24章）、Puma（第23章）の順に届く。Puma が呼ぶ Rails のアプリケーションの中では、ミドルウェア（第6章）、ルーティング（第9章）、コントローラー（第10章）の順に進み、コントローラーはモデル（第11〜13章）を通して MySQL（第12・15章）から記事を読み、ビュー（第16章）で HTML を作る。応答は同じ経路を逆にたどってブラウザーに戻る"
+    >
+      {front.map((b, i) => (
+        <g key={b.t}>
+          <Box x={b.x} y={20} w={150} h={56} lines={[b.t, b.s]} fs={12} bold fill={i === 0 ? 'bg' : 'box'} subTone="muted" />
+          {i < front.length - 1 && <Arrow x1={b.x + 150} y1={48} x2={front[i + 1].x - 2} y2={48} />}
+        </g>
+      ))}
+      <rect x={20} y={110} width={580} height={180} rx={8} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      <Arrow d="M695,76 L695,96 L94,96 L94,144" />
+      <T x={340} y={126} fs={11} tone="muted">
+        Rails のアプリケーション（Puma が呼ぶ）
+      </T>
+      {rails.map((b, i) => (
+        <g key={b.t}>
+          <Box x={b.x} y={146} w={120} h={52} lines={[b.t, b.s]} fs={12} bold fill="box5" subTone="muted" />
+          {i < rails.length - 1 && <Arrow x1={b.x + 120} y1={172} x2={rails[i + 1].x - 2} y2={172} />}
+        </g>
+      ))}
+      <Arrow x1={374} y1={198} x2={374} y2={224} />
+      <Box x={314} y={226} w={120} h={52} lines={['ビュー', '第16章']} fs={12} bold fill="box5" subTone="muted" />
+      <Arrow x1={574} y1={172} x2={628} y2={172} both />
+      <Box x={630} y={146} w={130} h={52} lines={['MySQL', '第12・15章']} fs={12} bold fill="box4" subTone="muted" />
+      <T x={600} y={160} fs={10} tone="muted" mono>
+        SQL
+      </T>
+      <T x={20} y={314} fs={11} tone="muted">
+        応答（HTML）は、ビュー → コントローラー → ミドルウェア → Puma → Nginx → ロードバランサー → ブラウザーの順に戻る
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 26-2 リクエスト全体のシーケンス ---------- */
 function SequenceFigure() {
   const lanes = [
     { x: 44, t: 'ブラウザー' },
@@ -36,7 +88,7 @@ function SequenceFigure() {
   ]
   return (
     <Svg
-      id="26-1"
+      id="26-2"
       w={790}
       h={520}
       label="GET /articles/1 は、ブラウザーから ALB に HTTPS で届き、ALB が TLS を終端して Nginx に HTTP で送る。Nginx は location / の try_files でファイルが無いことを確かめ、@app から Puma に送る。Puma の reactor が要求を読み切ってスレッドに渡し、Rails のミドルウェア（AssumeSSL、SSL、Executor、RequestId、RemoteIp、Logger など）を通ってルーティングが articles#show を選ぶ。コントローラーが Article.find(1) で SQL を送り、ビューがレイアウトとパーシャルを描画する途中で関連の SQL を送る。応答は Puma のスレッドが Nginx に書き込み、Nginx がバッファーして ALB を通ってブラウザーに返す。その後、ブラウザーはアセットを Nginx から直接取得し、/cable に WebSocket で接続する。各段の横の数字は、その段を扱った章の番号"
@@ -76,7 +128,7 @@ function SequenceFigure() {
   )
 }
 
-/* ---------- 図 26-2 段階とログの対応 ---------- */
+/* ---------- 図 26-3 段階とログの対応 ---------- */
 function LogsFigure() {
   const rows = [
     { s: 'ALB', log: 'アクセスログ：elb_status_code・target_status_code・target_processing_time', demo: '172.29.0.1 "GET /articles/1" 200 lb_time=0.008 upstream_status=200' },
@@ -88,7 +140,7 @@ function LogsFigure() {
   ]
   return (
     <Svg
-      id="26-2"
+      id="26-3"
       w={790}
       h={rows.length * 58 + 30}
       label="段階ごとに見るログを並べた。ALB はアクセスログの elb_status_code・target_status_code・target_processing_time、Nginx は request_id と処理時間を入れた access.log と error.log、Puma は /stats の backlog と busy_threads と標準出力、Rails は Started から Completed までの行（request_id の印付き）、ActiveRecord は SQL の行とスロークエリログ、ビューは Rendered の行。下段はデモで GET /articles/1 を1回送ったときの値"
@@ -116,8 +168,9 @@ const ch26: Chapter = {
   part: 5,
   title: '総まとめ：1リクエストを LB から DB まで追う',
   summary:
-    'GET /articles/1 を、ロードバランサー・Nginx・Puma・ミドルウェア・ルーティング・コントローラー・ActiveRecord・ビューの順に追い、各段で何が起きるか、どの章で扱ったか、起きうる問題、確かめるログをまとめます。デモの3段の構成に実際に1回要求を送り、各層のログを同じ ID で並べます。',
+    '記事のページを1回開いたときに、要求がどの部品をどの順に通り、それぞれの部品が何をするかを、各部品を扱った章とあわせて確かめます。そのうえで、GET /articles/1 を、ロードバランサー・Nginx・Puma・ミドルウェア・ルーティング・コントローラー・ActiveRecord・ビューの順に追い、各段で何が起きるか、どの章で扱ったか、起きうる問題、確かめるログをまとめます。デモの3段の構成に実際に1回要求を送り、各層のログを同じ ID で並べます。',
   goals: [
+    '記事のページを開いたときに動く部品（ロードバランサー・Nginx・Puma・ミドルウェア・ルーティング・コントローラー・モデル・DB・ビュー）と、それぞれがすることを順に言える',
     '1つの要求が ALB から DB まで通る段階を順に挙げ、それぞれを扱った章を参照できる',
     '各段で起きうる問題と、そのときに見るログを対応させられる',
     'X-Request-Id を使って、ALB・Nginx・Rails のログを1つの要求で並べられる',
@@ -125,6 +178,74 @@ const ch26: Chapter = {
   ],
   prerequisites: [6, 9, 10, 12, 16, 23, 24, 25],
   sections: [
+    {
+      id: 'parts',
+      title: '要求が通る部品',
+      body: (
+        <>
+          <p>
+            記事のページ（/articles/1）をブラウザーで開くと、ブラウザーには HTML が1つ届きます。デモの構成に、curl で同じ要求を送りました（<code>-k</code> は自己署名の証明書の確認を省く指定です。
+            <ChapterLink n={25} section="tls" />）。
+          </p>
+          <Code
+            lang="text"
+            code={`
+$ curl -sk -o /dev/null -w '%{http_code} %{size_download} bytes %{time_total}s\\n' https://127.0.0.1:8443/articles/1
+200 2391 bytes 0.131696s
+`}
+          />
+          <p>
+            状態コード 200 で、2391 バイトの HTML が約 0.13 秒で届きました。ブラウザーから見れば、URL を1つ開いて HTML を受け取っただけです。この間に、次の部品が順に動いています（図 26-1）。
+          </p>
+          <ol>
+            <li>
+              ロードバランサー：HTTPS の接続を受けて暗号を解き（TLS の終端）、後ろの複数のサーバーのうち1台に要求を送ります（<ChapterLink n={25} section="load-balancer" />
+              ）。
+            </li>
+            <li>
+              Nginx：パスを見て、public にファイルがあればそれを返し、無ければ Puma に転送します（<ChapterLink n={24} section="reverse-proxy" />
+              ）。/articles/1 にあたるファイルは無いので、Puma に送られます。
+            </li>
+            <li>
+              Puma：要求を最後まで読み取り、空いているスレッドで Rails のアプリケーションを呼びます（<ChapterLink n={23} section="app-server" />
+              ）。
+            </li>
+            <li>
+              ミドルウェア：Rails がすべての要求に同じ順で行う処理の並びです。https で届いたかの確認、要求 ID の付与、ログの書き出し、Cookie の読み書きなどを1つずつ行います（<ChapterLink n={6} />
+              ）。
+            </li>
+            <li>
+              ルーティング：GET というメソッドと /articles/1 というパスから、ArticlesController の show アクションを選び、パスから id の 1 を取り出します（<ChapterLink n={9} />
+              ）。
+            </li>
+            <li>
+              コントローラー：show アクションのメソッドを実行し、モデルを使って記事を読み、ビューに渡します（<ChapterLink n={10} />
+              ）。
+            </li>
+            <li>
+              モデル（ActiveRecord）：<code>Article.find(1)</code> を SELECT の SQL に変えて MySQL に送り、返ってきた行を Article のオブジェクトにします（<ChapterLink n={11} />・
+              <ChapterLink n={12} />
+              ）。記事のコメントのような関連するデータも、使う時点で SQL を送って読みます（<ChapterLink n={13} />
+              ）。
+            </li>
+            <li>
+              MySQL：SQL を実行して、条件に合う行を返します。Rails はスレッドごとに、接続プールから MySQL への接続を借りて使います（<ChapterLink n={15} />
+              ）。
+            </li>
+            <li>
+              ビュー：テンプレートに記事の値を埋め込んで HTML を作ります（<ChapterLink n={16} />
+              ）。
+            </li>
+          </ol>
+          <p>
+            できた HTML はミドルウェアを逆の順に通り、Puma、Nginx、ロードバランサーを経てブラウザーに届きます。途中の部品は応答にヘッダーを付け足します（「応答のヘッダー」の節）。次の節から、この1件の要求を各部品がどう処理し、どんなログと時間を残したかを順に読みます。
+          </p>
+          <Figure n="26-1" title="要求が通る部品" caption="デモの構成（Rails 8.1.4.1・Puma 8.0.2・Nginx 1.30.6・MySQL 8.4）で記事のページを開いたときに動く部品と、それを扱った章。">
+            <PartsFigure />
+          </Figure>
+        </>
+      ),
+    },
     {
       id: 'setup',
       title: '追いかける要求',
@@ -145,9 +266,9 @@ const ch26: Chapter = {
           </ul>
           <p>
             記事のページは、記事を読み、最新のコメント2件をパーシャルで描画し、<code>turbo_stream_from</code> を出力するビューです（<ChapterLink n={17} section="overview" />
-            ）。要求が通る段階の全体を図 26-1 に示します。各段の横の数字が、その段を扱った章です。
+            ）。要求が通る段階の全体を図 26-2 に示します。各段の横の数字が、その段を扱った章です。
           </p>
-          <Figure n="26-1" title="リクエスト全体のシーケンス" caption="デモの3段の構成（Rails 8.1.4.1・Puma 8.0.2・Nginx 1.30.6）で GET /articles/1 を処理したときの流れ。括弧の中は参照する章。">
+          <Figure n="26-2" title="リクエスト全体のシーケンス" caption="デモの3段の構成（Rails 8.1.4.1・Puma 8.0.2・Nginx 1.30.6）で GET /articles/1 を処理したときの流れ。括弧の中は参照する章。">
             <SequenceFigure />
           </Figure>
         </>
@@ -443,10 +564,10 @@ X-Served-By: lb                                           ← デモのロード
           </div>
           <p>
             どの段でも、最初に確かめるのは「その要求がどの層まで届いたか」です。X-Request-Id（ALB では X-Amzn-Trace-Id も）で各層のログを並べると、届いていない層と、時間がかかった層がわかります（図
-            26-2）。Rails のログの ID は、ActionDispatch::RequestId が受け取った X-Request-Id をそのまま使ったものです
+            26-3）。Rails のログの ID は、ActionDispatch::RequestId が受け取った X-Request-Id をそのまま使ったものです
             <Ref n={1} />。
           </p>
-          <Figure n="26-2" title="段階とログの対応" caption="各段で見るログと、デモで GET /articles/1 を1回送ったときの値。">
+          <Figure n="26-3" title="段階とログの対応" caption="各段で見るログと、デモで GET /articles/1 を1回送ったときの値。">
             <LogsFigure />
           </Figure>
         </>
@@ -457,6 +578,7 @@ X-Served-By: lb                                           ← デモのロード
       title: 'まとめ',
       body: (
         <ul>
+          <li>ブラウザーから見えるのは URL と届いた HTML だけで、その間に各部品が1つずつ仕事をします。ロードバランサーは TLS の終端と振り分け、Nginx はファイルを返すか Puma への転送、Puma はスレッドでの Rails の呼び出し、ミドルウェアは共通の処理、ルーティングはアクションの選択、モデルは SQL での読み出し、ビューは HTML の作成です。</li>
           <li>GET /articles/1 は、ALB（TLS の終端）→ Nginx（try_files・proxy_pass）→ Puma（reactor・スレッド）→ ミドルウェア → ルーティング → コントローラー → ActiveRecord → ビューの順に処理され、同じ経路を戻ります。</li>
           <li>Logger より前のミドルウェアと、Nginx・ALB が返した応答は、Rails のログに出ません。Rails のログに無いときは、前段のログを見ます。</li>
           <li>Rails のログの Views と ActiveRecord の時間、Nginx の rt と urt、ALB の lb_time の差から、どの層で時間がかかったかがわかります。</li>

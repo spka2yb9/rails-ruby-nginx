@@ -1,13 +1,13 @@
 import type { Chapter } from '../content/types'
 import { withExplanations } from '../explanations/shared'
 import { explanation17 } from '../explanations/features'
-import { Callout, ChapterLink, Code, Figure, Ref } from '../components/content'
+import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const TR = 'https://github.com/hotwired/turbo-rails/blob/v2.0.23'
 
-/* ---------- 図 17-1 Turbo の要求と応答 ---------- */
+/* ---------- 図 17-3 Turbo の要求と応答 ---------- */
 function RequestsFigure() {
   const rows = [
     { what: 'Turbo Drive', act: 'リンクのクリック', req: ['Accept: text/html, …'], res: ['200 HTML（ページ全体）'], turbo: ['<body> を入れ替え、', '<head> を合わせる'] },
@@ -17,7 +17,7 @@ function RequestsFigure() {
   const rowH = 74
   return (
     <Svg
-      id="17-1"
+      id="17-3"
       w={796}
       h={rows.length * rowH + 50}
       label="Turbo Drive はリンクのクリックを Accept: text/html の要求に変え、応答のページ全体から body を入れ替える。Turbo Frames は Turbo-Frame ヘッダーにフレームの id を入れて要求し、応答から同じ id の turbo-frame 要素だけを取り出して入れ替える。Turbo Streams は POST などのフォーム送信の Accept に text/vnd.turbo-stream.html を加え、応答の turbo-stream 要素の action と target に従ってページの一部を変更する"
@@ -43,11 +43,11 @@ function RequestsFigure() {
   )
 }
 
-/* ---------- 図 17-2 Turbo Frame の置き換え ---------- */
+/* ---------- 図 17-4 Turbo Frame の置き換え ---------- */
 function FrameFigure() {
   return (
     <Svg
-      id="17-2"
+      id="17-4"
       w={760}
       h={300}
       label="記事のページには id が comment_form の turbo-frame があり、中に「コメントを書く」のリンクがある。クリックすると Turbo-Frame: comment_form を付けて /articles/1/comments/new を要求する。応答の HTML には h1 の「コメントの作成」と、同じ id の turbo-frame に入ったフォームがある。Turbo は同じ id の turbo-frame の中身だけを取り出してページのフレームを入れ替え、h1 は捨てる。URL は /articles/1 のまま変わらない"
@@ -95,11 +95,11 @@ function FrameFigure() {
   )
 }
 
-/* ---------- 図 17-3 ActionCable の構成 ---------- */
+/* ---------- 図 17-5 ActionCable の構成 ---------- */
 function CableFigure() {
   return (
     <Svg
-      id="17-3"
+      id="17-5"
       w={800}
       h={420}
       label="ブラウザーは /cable に WebSocket で接続する。Puma のスレッドは Rack の hijack でソケットを ActionCable に渡し、すぐに次の要求の処理に戻る。ActionCable のサーバーは、ソケットを監視するイベントループのスレッド、チャネルの処理を実行するワーカープール（既定で4スレッド）、3秒ごとの ping を持つ。stream_from はサブスクリプションアダプターで購読し、コントローラーなどのブロードキャストはアダプター経由で全プロセスに届く。アダプターが async の場合は同じプロセスの中にしか届かず、Redis や Solid Cable の場合は Puma の別のワーカーや Sidekiq などの他のプロセスにも届く"
@@ -144,7 +144,7 @@ function CableFigure() {
   )
 }
 
-/* ---------- 図 17-4 ブロードキャストの流れ ---------- */
+/* ---------- 図 17-6 ブロードキャストの流れ ---------- */
 function BroadcastFigure() {
   const lanes = [
     { x: 80, t: 'ブラウザー A' },
@@ -162,7 +162,7 @@ function BroadcastFigure() {
   ]
   return (
     <Svg
-      id="17-4"
+      id="17-6"
       w={760}
       h={330}
       label="ブラウザー A がコメントを POST する。Rails は INSERT と COMMIT の後の after_create_commit で broadcast_append_to を呼び、Redis にチャネル demo_development:Z2lk… で PUBLISH する。Redis は購読している Rails のプロセスに配送し、ActionCable が WebSocket でブラウザー B と A に turbo-stream の append を送る。その後で A に POST の応答が返る。A では同じ id の要素が既にあれば置き換えられるので、コメントは1件だけ表示される"
@@ -192,13 +192,134 @@ function BroadcastFigure() {
   )
 }
 
+/* ---------- 図 17-1 通常の移動と Turbo Drive の移動 ---------- */
+function NavigationFigure() {
+  const col = (x: number, title: string, steps: { t: string[]; fill: 'box' | 'box4' | 'box5' | 'bg' }[], result: string) => (
+    <g>
+      <T x={x} y={20} bold fs={12.5}>
+        {title}
+      </T>
+      {steps.map((s, i) => (
+        <g key={s.t[0]}>
+          <Box x={x} y={34 + i * 62} w={350} h={46} lines={s.t} fs={11.5} fill={s.fill} subTone="muted" />
+          {i < steps.length - 1 && <Arrow x1={x + 175} y1={80 + i * 62} x2={x + 175} y2={94 + i * 62} />}
+        </g>
+      ))}
+      <T x={x} y={34 + steps.length * 62 + 6} fs={11.5} tone="acc">
+        {result}
+      </T>
+    </g>
+  )
+  return (
+    <Svg
+      id="17-1"
+      w={780}
+      h={300}
+      label="左は data-turbo=false のリンクによる通常の移動。ブラウザーは表示中のページを捨て、GET /articles をページの読み込み（Document）として要求し、CSS と JavaScript を読み込み直して最初から実行する。window.__marker の値は消える。右は Turbo Drive の移動。Turbo がクリックを受け取って fetch で GET /articles を要求し、応答の body を入れ替え、head を合わせる。JavaScript は動き続け、window.__marker の値は残る。どちらもサーバーが返す HTML は同じ"
+    >
+      {col(
+        20,
+        '通常の移動（data-turbo="false"）',
+        [
+          { t: ['リンクをクリック', 'ブラウザーが表示中のページを捨てる'], fill: 'bg' },
+          { t: ['GET /articles（Document）', 'ページとして読み込む'], fill: 'box4' },
+          { t: ['CSS・JavaScript を読み込み直す', 'JavaScript を最初から実行'], fill: 'box' },
+        ],
+        'window.__marker → undefined（消える）'
+      )}
+      {col(
+        410,
+        'Turbo Drive の移動',
+        [
+          { t: ['リンクをクリック', 'Turbo がクリックを受け取る'], fill: 'bg' },
+          { t: ['GET /articles（Fetch）', 'JavaScript から要求する'], fill: 'box4' },
+          { t: ['応答の <body> を入れ替え', '<head> を合わせる'], fill: 'box5' },
+        ],
+        'window.__marker → 残る'
+      )}
+      <T x={20} y={270} fs={11} tone="muted">
+        どちらも URL は /articles に変わり、サーバーが返す HTML は同じ。違うのは、ブラウザーが HTML を画面に反映する方法
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 17-2 HTTP の要求と応答、WebSocket ---------- */
+function WebSocketFigure() {
+  const lane = (x: number, label: string) => (
+    <g>
+      <T x={x} y={50} anchor="middle" bold fs={12}>
+        {label}
+      </T>
+      <line x1={x} y1={60} x2={x} y2={330} stroke="var(--fig-line)" strokeDasharray="3 4" />
+    </g>
+  )
+  const msg = (x1: number, x2: number, y: number, t: string, opt: { dashed?: boolean; accent?: boolean } = {}) => (
+    <g>
+      <Arrow x1={x1} y1={y} x2={x2 + (x2 > x1 ? -3 : 3)} y2={y} dashed={opt.dashed} accent={opt.accent} />
+      <T x={(x1 + x2) / 2} y={y - 9} anchor="middle" fs={10.5} mono tone={opt.accent ? 'acc' : undefined}>
+        {t}
+      </T>
+    </g>
+  )
+  return (
+    <Svg
+      id="17-2"
+      w={780}
+      h={360}
+      label="左は HTTP。ブラウザーが要求を送り、サーバーが応答を返すと1回のやり取りが終わる。サーバーは要求が来なければ何も送れない。右は WebSocket。ブラウザーが Upgrade: websocket を付けた GET /cable を送り、サーバーが 101 Switching Protocols を返すと、同じ接続が開いたままになる。サーバーは welcome、confirm_subscription、3秒ごとの ping、別のプロセスが送った turbo-stream のメッセージを、ブラウザーの要求を待たずに送る。ブラウザーも subscribe を送れる"
+    >
+      <T x={20} y={20} bold fs={12.5}>
+        HTTP の要求と応答
+      </T>
+      {lane(80, 'ブラウザー')}
+      {lane(300, 'サーバー')}
+      {msg(80, 300, 90, 'GET /articles/1')}
+      {msg(300, 80, 126, '200 HTML', { dashed: true })}
+      <T x={190} y={168} anchor="middle" fs={11} tone="muted">
+        ここでやり取りは終わる
+      </T>
+      <T x={190} y={210} anchor="middle" fs={11} tone="muted">
+        サーバーは要求が来ないと
+      </T>
+      <T x={190} y={228} anchor="middle" fs={11} tone="muted">
+        何も送れない
+      </T>
+      {msg(80, 300, 280, 'GET /articles/1（次の要求）')}
+      {msg(300, 80, 314, '200 HTML', { dashed: true })}
+
+      <T x={410} y={20} bold fs={12.5}>
+        WebSocket
+      </T>
+      {lane(470, 'ブラウザー')}
+      {lane(720, 'サーバー（/cable）')}
+      {msg(470, 720, 82, 'GET /cable  Upgrade: websocket')}
+      {msg(720, 470, 112, '101 Switching Protocols', { dashed: true })}
+      <rect x={462} y={124} width={266} height={206} rx={6} fill="none" stroke="var(--fig-accent)" strokeDasharray="5 4" />
+      <T x={595} y={140} anchor="middle" fs={10.5} tone="acc">
+        同じ接続が開いたまま
+      </T>
+      {msg(720, 470, 168, '{"type":"welcome"}', { dashed: true })}
+      {msg(470, 720, 198, '{"command":"subscribe", …}')}
+      {msg(720, 470, 228, '{"type":"confirm_subscription"}', { dashed: true })}
+      {msg(720, 470, 262, '{"type":"ping"}（3秒ごと）', { dashed: true })}
+      {msg(720, 470, 300, '<turbo-stream action="append" …>', { dashed: true, accent: true })}
+      <T x={595} y={348} anchor="middle" fs={10.5} tone="muted">
+        サーバーから要求を待たずに送れる
+      </T>
+    </Svg>
+  )
+}
+
 const ch17: Chapter = {
   number: 17,
   part: 4,
   title: 'Hotwire と ActionCable',
   summary:
-    'Turbo Drive・Frames・Streams がサーバーにどんな要求を送り、どんな応答を期待するかを、ブラウザーで記録した通信をもとに説明します。Stimulus の役割、ActionCable の WebSocket の処理とスレッド、Turbo Streams のブロードキャストがアダプターを通って各ブラウザーに届くまでも扱います。',
+    'ページ全体を読み込み直す移動と、JavaScript で画面の一部を書き換える方式の違い、Hotwire（Turbo と Stimulus）が受け持つこと、HTTP の要求と応答と WebSocket の違いを、ブラウザーでの記録とデモの出力で確かめてから、Turbo Drive・Frames・Streams がサーバーにどんな要求を送り、どんな応答を期待するかを、ブラウザーで記録した通信をもとに説明します。Stimulus の役割、ActionCable の WebSocket の処理とスレッド、Turbo Streams のブロードキャストがアダプターを通って各ブラウザーに届くまでも扱います。',
   goals: [
+    '通常のページの移動と Turbo の移動の違いを、要求の種類と JavaScript の変数が残るかどうかで説明できる',
+    'HTTP ではサーバーから送れないことと、WebSocket の接続が 101 の応答の後も開いたままになることを説明できる',
     'Turbo Drive・Frames・Streams が送るヘッダーと、サーバーが返すべき応答（303・422・turbo_stream 形式）を説明できる',
     'Turbo Frame の要求で turbo-rails が使うレイアウトと、応答から取り出される部分を説明できる',
     'Stimulus が data-controller 属性で JavaScript を HTML に結び付ける仕組みを説明できる',
@@ -209,13 +330,221 @@ const ch17: Chapter = {
   prerequisites: [10, 14, 16],
   sections: [
     {
+      id: 'page-update',
+      title: 'ページの読み込み直しと一部の書き換え',
+      body: (
+        <>
+          <p>
+            ブラウザーでリンクをクリックすると、ブラウザーは通常、表示中のページを捨てて、リンク先の URL に GET の要求を送ります。届いた HTML を最初から読み、CSS と JavaScript も読み込み直して、画面を描き直します（
+            <ChapterLink n={16} section="asset-requests" />
+            ）。このとき、ページの中で JavaScript が持っていた値（変数など）も、ページと一緒に消えます。
+          </p>
+          <p>
+            もう1つの方式では、ページの中で動いている JavaScript が要求を送り、受け取った内容で画面の一部だけを書き換えます。JavaScript から HTTP の要求を送るには、ブラウザーの fetch という機能を使います
+            <Ref n={12} />。ブラウザーは読み込んだ HTML を要素の木の形でメモリーに持っていて、これを <Term en="Document Object Model">DOM</Term> と呼びます。JavaScript は DOM
+            の要素を探したり、別の要素に置き換えたりでき、置き換えた部分の表示はすぐに変わります
+            <Ref n={11} />。
+          </p>
+          <p>
+            記事1のページ（/articles/1）を開いた状態で、ブラウザーの中で次の JavaScript を実行しました。記事2のページの HTML を fetch で取得し、その中の h1 要素で、表示中のページの h1 要素を置き換えます。
+          </p>
+          <Code
+            lang="js"
+            title="/articles/1 を開いたブラウザーで実行した JavaScript"
+            code={`
+window.__marker = "入れ替える前の値"          // ページの変数に値を入れておく
+const res = await fetch("/articles/2")      // 記事2のページの HTML を取得する
+const html = await res.text()
+const doc = new DOMParser().parseFromString(html, "text/html")
+document.querySelector("h1").replaceWith(doc.querySelector("h1")) // h1 だけを置き換える
+`}
+          />
+          <Code
+            lang="text"
+            title="実行の前後の状態（Chrome を Playwright で操作して記録）"
+            code={`
+前 {"h1":"変更後のタイトル","url":"/articles/1"}
+  要求: GET /articles/2 (fetch)
+後 {"status":200,"h1":"タイトル2改","url":"/articles/1","marker":"入れ替える前の値","comments":2}
+`}
+          />
+          <p>
+            見出しだけが記事2のもの（タイトル2改）に変わり、URL とコメントの一覧（comments の2件）は記事1のままです。ページを読み込み直していないので、実行の前に入れた <code>window.__marker</code>{' '}
+            も残っています。window はブラウザーがページごとに用意するオブジェクトで、その属性にはページの JavaScript のどこからでも参照できます。
+          </p>
+          <p>
+            デモのアプリケーションには Turbo という JavaScript のライブラリが入っていて、リンクのクリックをこの方式に変えています。記事のページの「一覧へ」のリンクで、2つの方式を比べました。リンクに{' '}
+            <code>data-turbo="false"</code> という属性を付けると、Turbo はそのリンクを扱わないので、ブラウザーの通常の移動になります。どちらもクリックの前に <code>window.__marker</code> に値を入れておきました。
+          </p>
+          <Code
+            lang="text"
+            title="「一覧へ」をクリックしたときの要求（Chrome の記録。type は要求の種類。一部を省略）"
+            code={`
+--- data-turbo="false" のリンク（通常の移動）
+  GET /articles                           type=Document   status=200
+  GET /assets/application-8b441ae0.css    type=Stylesheet status=200  ← ブラウザーのキャッシュから
+  GET /assets/application-bfcdf840.js     type=Script     status=200  ← キャッシュから
+  GET /assets/turbo.min-9fd88cd5.js       type=Script     status=200  ← キャッシュから
+  …（JavaScript があと5つ、アイコンが2つ。どれもキャッシュから）
+  移動後: URL=/articles window.__marker=undefined
+
+--- Turbo Drive のリンク
+  GET /articles                           type=Fetch      status=200
+  GET /icon.svg                           type=Other      status=200  ← キャッシュから
+  GET /icon.png                           type=Other      status=200  ← キャッシュから
+  移動後: URL=/articles window.__marker=移動前に入れた値
+`}
+          />
+          <p>
+            通常の移動では、/articles を Document（ページとしての読み込み）で要求し、CSS と JavaScript もキャッシュから読み込み直して、<code>window.__marker</code> は消えました。Turbo の移動では、/articles
+            を Fetch で取得しただけで、JavaScript の変数は残りました。どちらも URL は /articles に変わり、サーバーが返した HTML も同じです。違うのは、ブラウザーが受け取った HTML を画面に反映する方法です（図 17-1）。
+          </p>
+          <Figure n="17-1" title="通常の移動と Turbo Drive の移動" caption="デモのアプリケーションで「一覧へ」をクリックしたときの記録（Chrome、turbo-rails 2.0.23）をもとにした模式図。">
+            <NavigationFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'hotwire-role',
+      title: 'Hotwire が受け持つこと',
+      body: (
+        <>
+          <p>
+            画面の一部を書き換える方式のアプリケーションには、大きく2つの作り方があります。1つは、サーバーが JSON（データだけを決まった形式で書いた文字列）を返し、ブラウザーの JavaScript がそのデータから HTML
+            の要素を組み立てる作り方です。画面を作る処理のほとんどがブラウザー側の JavaScript になり、サーバーはデータを返すだけになります。もう1つは、サーバーが HTML を返し、ブラウザーの JavaScript
+            はそれを画面に入れるだけにする作り方です。前の節の fetch の例はこちらで、置き換えた h1 の HTML を作ったのは Rails のテンプレートでした。
+          </p>
+          <p>
+            <Term>Hotwire</Term> は後者の作り方のための JavaScript のライブラリ群です。サーバーが返す HTML で画面を更新するので、権限の確認やデータベースの読み書き、HTML
+            を作る処理は、サーバー側の Ruby のコードに残ります
+            <Ref n={10} />
+            <Ref n={9} />。Hotwire の中心は次の2つです。
+          </p>
+          <ul>
+            <li>
+              Turbo：同じサイトの中のリンクのクリックやフォームの送信を fetch に置き換え、返ってきた HTML でページの全体か一部を入れ替える。前の節の移動を行ったのは Turbo です。
+            </li>
+            <li>
+              Stimulus：ボタンを押したらメニューを開くといった、サーバーに問い合わせずにブラウザーの中だけで済む動きを、HTML の要素に JavaScript を結び付けて書く（「Stimulus の役割」の節）。
+            </li>
+          </ul>
+          <p>
+            rails new で作ったアプリケーションには、初めから両方が入っています。デモのアプリケーションでは、次のファイルがそれぞれを読み込んでいます。importmap.rb の <code>pin</code> は、
+            <code>import</code> で使う名前と JavaScript のファイルを対応させる設定です（<ChapterLink n={16} section="assets" />
+            ）。
+          </p>
+          <Code
+            lang="ruby"
+            title="Gemfile・config/importmap.rb・app/javascript/application.js（デモ。rails new が作ったもの、一部を省略）"
+            code={`
+# Gemfile
+gem "turbo-rails"
+gem "stimulus-rails"
+
+# config/importmap.rb
+pin "application"
+pin "@hotwired/turbo-rails", to: "turbo.min.js"
+pin "@hotwired/stimulus", to: "stimulus.min.js"
+pin_all_from "app/javascript/controllers", under: "controllers"
+
+// app/javascript/application.js
+import "@hotwired/turbo-rails"
+import "controllers"
+`}
+          />
+          <p>
+            application.js で Turbo を読み込むだけで、Turbo はページのリンクとフォームを扱い始めます。前の節の比較でも、Rails のコントローラーとテンプレートは何も変えていません。サーバーから見ると、Turbo
+            の移動の要求も普通の GET です。Turbo が要求にどんなヘッダーを付け、サーバーにどんな応答を求めるかは「Turbo Drive」の節から扱います。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'http-websocket',
+      title: 'HTTP の要求と応答と WebSocket',
+      body: (
+        <>
+          <p>
+            ここまでの通信は、どれもブラウザーが要求を送り、サーバーが応答を返す HTTP のやり取りでした（<ChapterLink n={6} section="http-message" />
+            ）。HTTP では、やり取りを始めるのは常にブラウザー（クライアント）の側で、サーバーは要求が来なければ何も送れません
+            <Ref n={13} />。そのため、ほかの利用者がコメントを投稿しても、表示中のページには、ブラウザーが次に要求を送るまで届きません。数秒ごとに要求を送って確かめる方法（ポーリング）もありますが、変化が無いときも要求と応答が続きます。
+          </p>
+          <p>
+            <Term>WebSocket</Term> は1本の接続を開いたままにして、ブラウザーとサーバーのどちらからでもメッセージを送れるようにする通信の方式です。接続は HTTP の要求から始まります。ブラウザーが{' '}
+            <code>Upgrade: websocket</code> ヘッダーを付けた GET を送り、サーバーが <code>101 Switching Protocols</code> を返すと、その接続は HTTP のやり取りをやめ、WebSocket のメッセージのやり取りに使われます
+            <Ref n={14} />。Rails では ActionCable という機能がこの接続を受け持ち、/cable というパスで受け付けます。
+          </p>
+          <p>
+            デモのアプリケーションの /cable に、Node.js（ブラウザーの外で JavaScript を実行するプログラム）から WebSocket の接続を開きました。接続の後、記事1のコメントの更新を受け取る登録（購読）をしてから、別のプロセスの{' '}
+            <code>bin/rails runner</code> で、記事1を購読している接続へメッセージを送りました。
+          </p>
+          <Code
+            lang="text"
+            title="WebSocket の接続と届いたメッセージ（Node.js で /cable に接続して記録。identifier の中身と subscribe の後半を省略）"
+            code={`
+--- 送った要求
+GET /cable HTTP/1.1
+Host: localhost:3300
+Connection: Upgrade
+Upgrade: websocket
+Sec-WebSocket-Version: 13
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+Sec-WebSocket-Protocol: actioncable-v1-json
+Origin: http://localhost:3300
+
+--- 受け取った応答のヘッダー
+HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+Sec-WebSocket-Protocol: actioncable-v1-json
+
+--- その後のメッセージ（接続してからの秒数）
+ 0.0s  受信 {"type":"welcome"}
+ 0.0s  送信 {"command":"subscribe","identifier":"{\\"channel\\":\\"Turbo::StreamsChannel\\",\\"signed_strea…
+ 0.0s  受信 {"identifier":"{…}","type":"confirm_subscription"}
+ 0.0s  （別のプロセスで bin/rails runner を起動）
+ 0.3s  受信 {"type":"ping","message":1794812791}
+ 1.8s  受信 {"identifier":"{…}","message":"<turbo-stream action=\\"append\\" target=\\"comments\\"><template><li>runner から送信</li></template></turbo-stream>"}
+ 3.3s  受信 {"type":"ping","message":1794812794}
+ 6.3s  受信 {"type":"ping","message":1794812797}
+ 9.3s  受信 {"type":"ping","message":1794812800}
+`}
+          />
+          <Code
+            lang="ruby"
+            title="別のプロセスで実行したコード（bin/rails runner）"
+            code={`
+Turbo::StreamsChannel.broadcast_append_to(Article.find(1), target: "comments", html: "<li>runner から送信</li>")
+`}
+          />
+          <ul>
+            <li>101 の応答の後も接続は切れず、サーバーは welcome と confirm_subscription（購読を受け付けたという知らせ）を送ってきました。</li>
+            <li>ping はサーバーが3秒ごとに送るメッセージで、クライアントは何も要求していません。message の数値は送った時刻（1970年1月1日からの秒数）です。</li>
+            <li>
+              1.8 秒の行は、runner が送ったメッセージです。中身は <code>{'<turbo-stream action="append" target="comments">'}</code> の HTML で、Turbo を読み込んだページなら、id が comments
+              の要素の末尾に <code>{'<li>runner から送信</li>'}</code> を追加します（「Turbo Streams」の節）。
+            </li>
+          </ul>
+          <p>
+            サーバーはクライアントの要求を待たずにメッセージを送れました（図 17-2）。Hotwire では HTTP の応答として返る HTML と、WebSocket で届く HTML の両方で画面を更新します。次の節から、Turbo
+            の3つの働きと、それぞれがサーバーに送る要求を順に確かめます。WebSocket の接続を Rails の中で処理する仕組みは「ActionCable の WebSocket」の節で扱います。
+          </p>
+          <Figure n="17-2" title="HTTP の要求と応答、WebSocket" caption="デモのアプリケーションの /cable に接続して記録したメッセージをもとにした模式図。">
+            <WebSocketFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
       id: 'overview',
       title: 'Hotwire の構成',
       body: (
         <>
           <p>
             Hotwire は、サーバーが返す HTML でページを更新するための JavaScript のライブラリ群で、主に Turbo と Stimulus からなります。Rails では turbo-rails と stimulus-rails の gem
-            がヘルパーと設定を提供します。Turbo には次の3つの働きがあり、どれもサーバーには HTML を要求します（図 17-1）
+            がヘルパーと設定を提供します。Turbo には次の3つの働きがあり、どれもサーバーには HTML を要求します（図 17-3）
             <Ref n={1} />。
           </p>
           <ul>
@@ -241,7 +570,7 @@ const ch17: Chapter = {
 <p><%= link_to "一覧へ", articles_path %></p>
 `}
           />
-          <Figure n="17-1" title="Turbo の要求と応答" caption="Chrome で記録した要求ヘッダーと応答をもとにまとめた。turbo-rails 2.0.23、Rails 8.1.4.1。">
+          <Figure n="17-3" title="Turbo の要求と応答" caption="Chrome で記録した要求ヘッダーと応答をもとにまとめた。turbo-rails 2.0.23、Rails 8.1.4.1。">
             <RequestsFigure />
           </Figure>
         </>
@@ -357,7 +686,7 @@ end
 `}
           />
           <p>
-            turbo_rails/frame のレイアウトは、<code>{'<head>'}</code> に CSRF のメタタグなどだけを出力します。同じ URL を curl で要求すると、ヘッダーがある場合は 981 バイト、無い場合は 2541
+            turbo_rails/frame のレイアウトは、<code>{'<head>'}</code> に CSRF のメタタグ（フォームの送信がこのアプリケーションのページからであることを確かめるための値を入れたタグ。<ChapterLink n={21} section="csrf" />）などだけを出力します。同じ URL を curl で要求すると、ヘッダーがある場合は 981 バイト、無い場合は 2541
             バイトでした。<code>etag</code> の行は、フレーム用の応答と通常の応答で ETag を変え、HTTP のキャッシュが混ざらないようにするものです（ETag は<ChapterLink n={22} />
             ）。サーバーのログにも、使ったレイアウトが出ます。
           </p>
@@ -372,9 +701,9 @@ Started GET "/articles/1/comments/new" for 172.29.0.1 at 2026-11-11 09:57:42 +00
           <p>
             応答の new.html.erb には <code>{'<h1>コメントの作成</h1>'}</code> がありますが、ページの見出しは変わっていません。Turbo は応答から同じ id の <code>{'<turbo-frame>'}</code>{' '}
             だけを取り出して入れ替え、それ以外は使いません
-            <Ref n={3} />（図 17-2）。応答に同じ id のフレームが無いと、フレームには「Content missing」と表示されます。
+            <Ref n={3} />（図 17-4）。応答に同じ id のフレームが無いと、フレームには「Content missing」と表示されます。
           </p>
-          <Figure n="17-2" title="Turbo Frame の置き換え" caption="デモアプリケーションでの実測（Chrome、turbo-rails 2.0.23）をもとにした模式図。">
+          <Figure n="17-4" title="Turbo Frame の置き換え" caption="デモアプリケーションでの実測（Chrome、turbo-rails 2.0.23）をもとにした模式図。">
             <FrameFigure />
           </Figure>
           <p>
@@ -483,7 +812,7 @@ export default class extends Controller {
         <>
           <p>
             記事のページを開くと、ブラウザーは <code>ws://localhost:3100/cable</code> に WebSocket で接続しました。<code>/cable</code> は、ActionCable のエンジンがルーティングの先頭に追加する
-            mount です。
+            mount（URL のパスに Rack のアプリケーションを割り当てるルーティングの書き方。<ChapterLink n={9} section="mount" />）です。
           </p>
           <Code
             lang="ruby"
@@ -555,7 +884,7 @@ export default class extends Controller {
 [A] ws← {"identifier":"{…}","type":"confirm_subscription"}
 `}
           />
-          <Figure n="17-3" title="ActionCable の構成" caption="Rails 8.1.4.1 の actioncable（server/base.rb・client_socket.rb・stream_event_loop.rb・subscription_adapter）を読んでまとめた模式図。">
+          <Figure n="17-5" title="ActionCable の構成" caption="Rails 8.1.4.1 の actioncable（server/base.rb・client_socket.rb・stream_event_loop.rb・subscription_adapter）を読んでまとめた模式図。">
             <CableFigure />
           </Figure>
         </>
@@ -651,7 +980,7 @@ Turbo::StreamsChannel transmitting "<turbo-stream action=\\"append\\" …
             <code>broadcasts_to</code> は、描画と送信を ActiveJob のジョブにします（<ChapterLink n={18} />
             ）。
           </p>
-          <Figure n="17-4" title="ブロードキャストの流れ" caption="Redis のアダプターを使った場合。デモアプリケーションでの実測をもとにした模式図。">
+          <Figure n="17-6" title="ブロードキャストの流れ" caption="Redis のアダプターを使った場合。デモアプリケーションでの実測をもとにした模式図。">
             <BroadcastFigure />
           </Figure>
         </>
@@ -692,7 +1021,7 @@ _action_cable_internal
           </p>
           <p>
             Nginx を前段に置く場合、WebSocket の接続には Upgrade ヘッダーを転送する設定が要ります（<ChapterLink n={24} />
-            ）。ALB や Nginx のアイドルタイムアウトより ping の間隔（3秒）が短いので、通常は接続が切られません。
+            ）。ALB（AWS が提供する、要求を複数のサーバーに振り分ける装置）や Nginx のアイドルタイムアウト（データが流れない接続を切るまでの時間）より ping の間隔（3秒）が短いので、通常は接続が切られません。
           </p>
           <Callout kind="v72">
             <p>
@@ -708,6 +1037,9 @@ _action_cable_internal
       title: 'まとめ',
       body: (
         <ul>
+          <li>通常の移動では、ブラウザーがページを捨てて読み込み直します。Turbo は fetch で HTML を取得して body を入れ替えるので、JavaScript の変数が残ります。</li>
+          <li>Hotwire はサーバーが返す HTML で画面を更新します。Turbo がページの更新を、Stimulus がブラウザーの中だけで済む動きを受け持ちます。</li>
+          <li>HTTP ではクライアントが要求を送らないとサーバーは何も送れません。WebSocket は 101 の応答の後も接続を開いたままにし、サーバーから要求を待たずにメッセージを送れます。</li>
           <li>Turbo Drive は普通の GET と POST を送ります。フォームの送信には 303 のリダイレクトか、入力の誤りなら 422 を返します。</li>
           <li>Turbo Frames の要求には Turbo-Frame ヘッダーが付き、turbo-rails は簡略化したレイアウトを使います。応答のうち同じ id のフレームだけが使われます。</li>
           <li>Turbo Streams は Accept の text/vnd.turbo-stream.html で選ばれ、*.turbo_stream.erb の turbo-stream 要素でページの一部を変更します。</li>
@@ -728,6 +1060,12 @@ _action_cable_internal
     { title: 'Action Cable Overview', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/action_cable_overview.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'allowed_request_origins、ワーカープール（既定4）とデータベース接続、async アダプターは同じプロセスの中だけで動くこと。' },
     { title: 'Turbo Reference: Streams', publisher: 'Hotwire（37signals）', url: 'https://turbo.hotwired.dev/reference/streams', accessed: '2026-11-11', version: 'Turbo 8', note: 'append・prepend で、同じ id の子要素が既にあれば置き換えること。' },
     { title: 'railties CHANGELOG（8.0.0）', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v8.0.0/railties/CHANGELOG.md', accessed: '2026-11-11', version: 'Rails 8.0.0', note: '本番環境の Action Cable のアダプターの既定を Solid Cable にしたこと。' },
+    { title: 'Turbo Handbook: Introduction', publisher: 'Hotwire（37signals）', url: 'https://turbo.hotwired.dev/handbook/introduction', accessed: '2026-11-16', version: 'Turbo 8', note: 'Turbo Drive が同じドメインのリンクのクリックを fetch に置き換え、body を入れ替えて head を合わせ、window と document が残ること。サーバーが HTML を返し、権限の確認などのロジックをサーバー側に置けること。' },
+    { title: 'Hotwire', publisher: 'Hotwire（37signals）', url: 'https://hotwired.dev/', accessed: '2026-11-16', note: 'JSON ではなく HTML を送ってアプリケーションを作る方法であること。Turbo と Stimulus。' },
+    { title: 'Document Object Model (DOM)', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model', accessed: '2026-11-16', note: 'DOM が HTML の文書の構造をメモリーの中に木として表し、プログラムから構造や内容を変えられること。' },
+    { title: 'Fetch API', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API', accessed: '2026-11-16', note: 'JavaScript からネットワークの要求を送る API。実行例はデモ（Chrome）で実測。' },
+    { title: 'An overview of HTTP', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview', accessed: '2026-11-16', note: 'HTTP がクライアントとサーバーの間の取り決めで、要求はクライアントの側から始めること。' },
+    { title: 'RFC 6455: The WebSocket Protocol', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc6455.html', accessed: '2026-11-16', note: 'HTTP の Upgrade で始まるハンドシェイクと 101 の応答、その後の双方向のメッセージ。HTTP のポーリングの代わりになること。接続の記録はデモで実測。' },
   ],
 }
 

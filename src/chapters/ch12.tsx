@@ -6,11 +6,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 12-1 Relation の値から SQL まで ---------- */
+/* ---------- 図 12-3 Relation の値から SQL まで ---------- */
 function ArelFigure() {
   return (
     <Svg
-      id="12-1"
+      id="12-3"
       w={760}
       h={330}
       label="Article.where(status: :published).order(published_at: :desc).limit(3) は、Relation の @values に where、order、limit の値を保存する。build_arel はそれを Arel の構文木に変換する。構文木の根は SelectStatement で、SelectCore の中に FROM と SELECT で取り出す列と WHERE の Equality があり、SelectStatement に ORDER の Descending と Limit がある。Equality の右辺は QueryAttribute で、enum の型により :published が 1 に変換される。MySQL 用の visitor が構文木をたどって SQL の文字列にする"
@@ -63,11 +63,11 @@ function ArelFigure() {
   )
 }
 
-/* ---------- 図 12-2 Relation の組み立てと読み込み ---------- */
+/* ---------- 図 12-4 Relation の組み立てと読み込み ---------- */
 function LifecycleFigure() {
   return (
     <Svg
-      id="12-2"
+      id="12-4"
       w={760}
       h={270}
       label="Article.where(author_id: 3) や limit(2) は、そのたびに Relation を複製して値を追加するだけで、SQL を実行しない。each や to_a などでレコードが必要になると load が呼ばれ、exec_queries が SQL を作って select_all で実行し、結果の行からレコードを作って @records に保存する。読み込み済みの Relation でもう一度 to_a を呼んでも SQL は実行されない。読み込み済みの Relation に where! で条件を追加しようとすると UnmodifiableRelation になる"
@@ -106,11 +106,11 @@ function LifecycleFigure() {
   )
 }
 
-/* ---------- 図 12-3 Relation からクラスメソッドを呼ぶ ---------- */
+/* ---------- 図 12-5 Relation からクラスメソッドを呼ぶ ---------- */
 function DelegationFigure() {
   return (
     <Svg
-      id="12-3"
+      id="12-5"
       w={760}
       h={230}
       label="Article.published は Relation を返す。その Relation で popular を呼ぶと、Relation には popular が無いので、Article::ActiveRecord_Relation の method_missing が Article クラスに popular があるかを調べ、GeneratedRelationMethods に委譲メソッドを定義する。委譲メソッドは scoping のブロックの中で Article.popular を呼ぶ。scoping の間は Article.where などが今の Relation から始まるので、popular の where は status = 1 の条件に追加される"
@@ -130,7 +130,7 @@ function DelegationFigure() {
   )
 }
 
-/* ---------- 図 12-4 複合索引 (status, published_at) ---------- */
+/* ---------- 図 12-6 複合索引 (status, published_at) ---------- */
 function CompositeIndexFigure() {
   const rows = [
     ['0', 'NULL'],
@@ -143,7 +143,7 @@ function CompositeIndexFigure() {
   ]
   return (
     <Svg
-      id="12-4"
+      id="12-6"
       w={760}
       h={300}
       label="索引 index_articles_on_status_and_published_at は、status の順に並び、同じ status の中では published_at の順に並んでいる。WHERE status = 1 ORDER BY published_at DESC LIMIT 10 は、status = 1 の範囲の末尾から逆向きに10件読めばよいので、並べ替えが要らない。EXPLAIN では type が ref、Extra が Backward index scan になった。WHERE published_at 以上の条件だけの場合は、published_at が索引の先頭の列ではないので索引を使えず、type が ALL の全件走査と filesort になった"
@@ -198,13 +198,90 @@ function CompositeIndexFigure() {
   )
 }
 
+/* ---------- 図 12-1 WHERE・ORDER BY・LIMIT ---------- */
+function WhereOrderLimitFigure() {
+  const steps = [
+    { x: 20, lines: ['articles', '10004 行', '（すべての行）'], fill: 'box4' as const },
+    { x: 220, lines: ['author_id = 3 の行', '482 行', '並びは決まっていない'], fill: 'box' as const },
+    { x: 420, lines: ['views_count の大きい順', '482 行', '996, 996, 994, 993, …'], fill: 'box' as const },
+    { x: 620, lines: ['先頭の 3 行', 'id 5200・5085・4874'], fill: 'box5' as const },
+  ]
+  const labels = ['WHERE', 'ORDER BY', 'LIMIT 3']
+  return (
+    <Svg
+      id="12-1"
+      w={780}
+      h={230}
+      label="articles テーブルの10004行から、WHERE author_id = 3 で条件に合う482行を選び、ORDER BY views_count DESC で views_count の大きい順に並べ、LIMIT 3 で先頭の3行を取り出す。結果は id が 5200・5085・4874 の3行。SQL の中では WHERE・ORDER BY・LIMIT の順に書く"
+    >
+      {steps.map((st, i) => (
+        <Box key={i} x={st.x} y={40} w={150} h={76} lines={st.lines} fs={i === 3 ? 12 : 11.5} fill={st.fill} subTone="muted" />
+      ))}
+      {labels.map((l, i) => (
+        <g key={l}>
+          <Arrow x1={172 + i * 200} y1={78} x2={218 + i * 200} y2={78} />
+          <line x1={195 + i * 200} y1={34} x2={195 + i * 200} y2={72} stroke="var(--fig-accent)" strokeDasharray="2 3" />
+          <T x={195 + i * 200} y={26} fs={11} mono anchor="middle" tone="acc">
+            {l}
+          </T>
+        </g>
+      ))}
+      <T x={20} y={150} fs={11.5} mono>
+        SELECT id, title, author_id, views_count FROM articles
+      </T>
+      <T x={20} y={172} fs={11.5} mono>
+        WHERE author_id = 3 ORDER BY views_count DESC LIMIT 3
+      </T>
+      <T x={20} y={206} fs={11} tone="muted">
+        条件で行を選び、選んだ行を並べ、先頭から指定した数の行を取る。値が同じ行（996 の2行）の順番は決まっていない
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 12-2 メソッドチェーンと SQL ---------- */
+function ChainFigure() {
+  const rows = [
+    { code: 'Article.where(author_id: 3)', sql: 'WHERE `articles`.`author_id` = 3' },
+    { code: '.order(views_count: :desc)', sql: '+ ORDER BY `articles`.`views_count` DESC' },
+    { code: '.limit(3)', sql: '+ LIMIT 3' },
+  ]
+  return (
+    <Svg
+      id="12-2"
+      w={780}
+      h={300}
+      label="Article.where(author_id: 3) は WHERE の条件を持つ Relation を返す。それに order を続けると ORDER BY が加わった Relation が、さらに limit を続けると LIMIT 3 が加わった Relation が返る。ここまで SQL は送られない。each や to_a で中身を使うと、ためた条件から1つの SELECT を作って MySQL に1回だけ送り、返ってきた3行から Article のインスタンスを3つ作る"
+    >
+      {rows.map((r, i) => (
+        <g key={i}>
+          <Box x={20} y={20 + i * 60} w={240} h={40} lines={r.code} mono fs={12} align="start" fill="bg" />
+          <Arrow x1={260} y1={40 + i * 60} x2={318} y2={40 + i * 60} />
+          <Box x={320} y={20 + i * 60} w={440} h={40} lines={['Relation', r.sql]} mono fs={11} subTone="muted" />
+        </g>
+      ))}
+      <T x={290} y={196} fs={11} tone="muted" anchor="middle">
+        ここまで SQL は送らない
+      </T>
+      <Box x={20} y={214} w={240} h={40} lines=".each・.to_a・.map" mono fs={12} align="start" fill="box5" />
+      <Arrow x1={260} y1={234} x2={318} y2={234} />
+      <Box x={320} y={208} w={440} h={52} lines={['MySQL に SELECT を1回送る', '… WHERE … ORDER BY … LIMIT 3 → Article のインスタンス3つ']} fs={11.5} fill="box4" subTone="muted" />
+      <T x={20} y={284} fs={11} tone="muted">
+        where・order・limit は、条件を加えた新しい Relation を返す。元の Relation は変わらない
+      </T>
+    </Svg>
+  )
+}
+
 const ch12: Chapter = {
   number: 12,
   part: 3,
   title: 'Relation と Arel による SQL 生成',
   summary:
-    'where や order が SQL をすぐに実行せずに Relation へ条件をためる仕組みと、Arel の構文木から MySQL の SQL が作られ、実行されてレコードになるまでを追います。スコープとクラスメソッドの委譲、find のステートメントキャッシュ、クエリキャッシュ、EXPLAIN による実行計画の読み方も扱います。',
+    'SQL の WHERE・ORDER BY・LIMIT で行を選んで並べることと、where・order・limit をつなげると Relation が返り、中身を使うときに SQL が送られることを、MySQL とデモで確かめます。そのうえで、where や order が SQL をすぐに実行せずに Relation へ条件をためる仕組みと、Arel の構文木から MySQL の SQL が作られ、実行されてレコードになるまでを追います。スコープとクラスメソッドの委譲、find のステートメントキャッシュ、クエリキャッシュ、EXPLAIN による実行計画の読み方も扱います。',
   goals: [
+    'WHERE・ORDER BY・LIMIT で行を選び、並べ、取り出す行の数を決める SQL を書ける',
+    'where・order・limit・first・count などが返すものと、SQL が送られる時点を説明できる',
     'Relation が条件を保存するだけで、必要になったときに SQL を実行することを説明できる',
     'メソッドチェーンのたびに Relation が複製される仕組みを説明できる',
     'Relation の値が Arel の構文木になり、MySQL 用の SQL になるまでを説明できる',
@@ -214,6 +291,281 @@ const ch12: Chapter = {
   ],
   prerequisites: [4, 11],
   sections: [
+    {
+      id: 'where-order-limit',
+      title: 'WHERE・ORDER BY・LIMIT で行を選んで並べる',
+      body: (
+        <>
+          <p>
+            SELECT は FROM の後に書いたテーブルから行を取り出す SQL の文です（<ChapterLink n={11} section="sql" />
+            ）。デモの articles テーブルには約1万件の記事があり、一覧のページにすべてを表示することはありません。SELECT では WHERE で条件に合う行を選び、ORDER BY で並べ、LIMIT
+            で先頭から何行を取り出すかを決めます
+            <Ref n={14} />。MySQL のクライアント（mysql コマンド）で、著者の id が 3 の記事を選びました。
+          </p>
+          <Code
+            lang="text"
+            title="mysql コマンドで実行（MySQL 8.4.13。行の一部を省略）"
+            code={`
+mysql> SELECT id, title, author_id, views_count FROM articles WHERE author_id = 3;
++------+------------+-----------+-------------+
+| id   | title      | author_id | views_count |
++------+------------+-----------+-------------+
+|   11 | 記事11     |         3 |         241 |
+|   13 | 記事13     |         3 |          80 |
+|   71 | 記事71     |         3 |         372 |
+（中略）
+| 9987 | 記事9987   |         3 |         298 |
+| 9992 | 記事9992   |         3 |         381 |
++------+------------+-----------+-------------+
+482 rows in set (0.00 sec)
+`}
+          />
+          <p>
+            <code>WHERE author_id = 3</code> は、author_id 列の値が 3 の行だけを選ぶ条件です。482行が条件に合いました。この結果は id の小さい順に見えますが、ORDER BY
+            を書かない場合の行の並びは決まっていません
+            <Ref n={12} />。
+          </p>
+          <p>
+            条件は <code>=</code> のほかに、<code>&gt;=</code>（以上）、<code>&lt;</code>（より小さい）、<code>!=</code>（等しくない）などで書けます。AND
+            で2つの条件をつなぐと、両方に合う行だけが選ばれます。
+          </p>
+          <Code
+            lang="text"
+            code={`
+mysql> SELECT id, title, author_id, views_count FROM articles
+    ->   WHERE author_id = 3 AND views_count >= 990;
++------+------------+-----------+-------------+
+| id   | title      | author_id | views_count |
++------+------------+-----------+-------------+
+| 1073 | 記事1073   |         3 |         993 |
+| 2886 | 記事2886   |         3 |         992 |
+| 4874 | 記事4874   |         3 |         994 |
+| 5085 | 記事5085   |         3 |         996 |
+| 5200 | 記事5200   |         3 |         996 |
+| 6177 | 記事6177   |         3 |         991 |
+| 9879 | 記事9879   |         3 |         992 |
++------+------------+-----------+-------------+
+7 rows in set (0.00 sec)
+`}
+          />
+          <p>次に、ORDER BY で views_count（記事が読まれた回数）の大きい順に並べました。</p>
+          <Code
+            lang="text"
+            title="（行の一部を省略）"
+            code={`
+mysql> SELECT id, title, author_id, views_count FROM articles
+    ->   WHERE author_id = 3 ORDER BY views_count DESC;
++------+------------+-----------+-------------+
+| id   | title      | author_id | views_count |
++------+------------+-----------+-------------+
+| 5085 | 記事5085   |         3 |         996 |
+| 5200 | 記事5200   |         3 |         996 |
+| 4874 | 記事4874   |         3 |         994 |
+| 1073 | 記事1073   |         3 |         993 |
+（中略）
+| 2915 | 記事2915   |         3 |           3 |
+| 4705 | 記事4705   |         3 |           0 |
++------+------------+-----------+-------------+
+482 rows in set (0.00 sec)
+`}
+          />
+          <p>
+            <code>ORDER BY views_count DESC</code> は、views_count の大きい順（降順）に並べる指定です。DESC を ASC にするか省くと、小さい順（昇順）になります。最後に LIMIT
+            を加えました。
+          </p>
+          <Code
+            lang="text"
+            code={`
+mysql> SELECT id, title, author_id, views_count FROM articles
+    ->   WHERE author_id = 3 ORDER BY views_count DESC LIMIT 3;
++------+------------+-----------+-------------+
+| id   | title      | author_id | views_count |
++------+------------+-----------+-------------+
+| 5200 | 記事5200   |         3 |         996 |
+| 5085 | 記事5085   |         3 |         996 |
+| 4874 | 記事4874   |         3 |         994 |
++------+------------+-----------+-------------+
+3 rows in set (0.00 sec)
+`}
+          />
+          <p>
+            <code>LIMIT 3</code> は並べた結果の先頭から3行だけを返す指定です。SQL の中では WHERE・ORDER BY・LIMIT の順に書き、結果は「条件で行を選び、選んだ行を並べ、先頭から3行を取る」とした場合と同じになります（図
+            12-1）。
+          </p>
+          <p>
+            views_count が 996 の記事は2件あり、LIMIT の無い結果では 5085 が先、LIMIT 3 の結果では 5200 が先でした。ORDER BY で指定した列の値が同じ行の順番は決まっておらず、MySQL
+            の実行のしかたによって変わります
+            <Ref n={13} />。順番を決めたいときは、<code>ORDER BY views_count DESC, id DESC</code> のように2つ目の並べ方を加えます。こうすると、views_count が同じ行は id の大きい順に並びます。
+          </p>
+          <p>行の中身ではなく、条件に合う行の数が必要なときは、列の代わりに COUNT(*) を書きます。</p>
+          <Code
+            lang="text"
+            code={`
+mysql> SELECT COUNT(*) FROM articles WHERE author_id = 3;
++----------+
+| COUNT(*) |
++----------+
+|      482 |
++----------+
+1 row in set (0.01 sec)
+`}
+          />
+          <Figure n="12-1" title="WHERE・ORDER BY・LIMIT" caption="この節の実行結果をもとにした模式図。行の数はデモの articles テーブル（10004行）での値。">
+            <WhereOrderLimitFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'chain',
+      title: 'where・order・limit をつなげて書く',
+      body: (
+        <>
+          <p>ActiveRecord では同じ条件を where・order・limit のメソッドで書きます。前の節の SQL と同じ条件の記事を、デモのアプリケーションで取り出しました。</p>
+          <Code
+            lang="text"
+            title="bin/rails runner で実行"
+            code={`
+Article.where(author_id: 3).order(views_count: :desc).limit(3).map(&:id)
+  Article Load (2.3ms)  SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`author_id\` = 3 ORDER BY \`articles\`.\`views_count\` DESC LIMIT 3
+# => [5200, 5085, 4874]
+`}
+          />
+          <p>
+            <code>where</code> には「列の名前: 値」の形で条件を、<code>order</code> には「列の名前: <code>:desc</code>（大きい順）か <code>:asc</code>（小さい順）」を、
+            <code>limit</code> には行の数を渡します。<code>Article.where(...)</code> の戻り値に <code>.order(...)</code> を続け、その戻り値に <code>.limit(...)</code>{' '}
+            を続けています。このように、メソッドの戻り値に続けて次のメソッドを呼ぶ書き方を<Term en="method chain">メソッドチェーン</Term>と呼びます。<code>map(&amp;:id)</code>{' '}
+            は取り出した記事の id を集めて配列にします。ログのとおり、Rails は3つのメソッドの条件をまとめた1つの SELECT を MySQL に送りました。
+          </p>
+          <p>それぞれのメソッドが何を返し、いつ SQL を送るかを、1つずつ確かめました。</p>
+          <Code
+            lang="text"
+            title="bin/rails runner で実行（SQL の一部を … で省略）"
+            code={`
+r1 = Article.where(author_id: 3); r1.class   # => Article::ActiveRecord_Relation
+r1.to_sql     # => "SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`author_id\` = 3"
+r2 = r1.order(views_count: :desc); r2.class  # => Article::ActiveRecord_Relation
+r2.to_sql     # => "SELECT … WHERE \`articles\`.\`author_id\` = 3 ORDER BY \`articles\`.\`views_count\` DESC"
+r3 = r2.limit(3); r3.class                   # => Article::ActiveRecord_Relation
+r3.to_sql     # => "SELECT … ORDER BY \`articles\`.\`views_count\` DESC LIMIT 3"
+r3.loaded?    # => nil
+
+r3.each { |a| puts "#{a.id} #{a.title} #{a.views_count}" }
+  Article Load (3.2ms)  SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`author_id\` = 3 ORDER BY \`articles\`.\`views_count\` DESC LIMIT 3
+5200 記事5200 996
+5085 記事5085 996
+4874 記事4874 994
+r3.loaded?        # => true
+r3.map(&:title)   # => ["記事5200", "記事5085", "記事4874"]
+r1.to_sql     # => "SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`author_id\` = 3"
+`}
+          />
+          <p>
+            where・order・limit は、どれも Article::ActiveRecord_Relation のオブジェクトを返しました。このオブジェクトを <Term>Relation</Term> と呼びます。Relation
+            は記事の配列ではなく、「articles テーブルから、どの条件で、どの順に、何行を取り出すか」を覚えておくオブジェクトです。<code>to_sql</code> はその Relation から作られる SQL
+            を返すメソッドで、order や limit を続けるたびに、SQL に ORDER BY と LIMIT が加わりました（図 12-2）
+            <Ref n={15} />。
+          </p>
+          <p>
+            r1・r2・r3 を作っている間、ログに SQL は出ていません。<code>each</code> で記事を1件ずつ使おうとした時点で、SELECT が1回だけ送られました。<code>loaded?</code>{' '}
+            は、その Relation が SQL を実行して結果を受け取ったかどうかを返すメソッドで、受け取る前は nil、受け取った後は true でした。結果を受け取った後の <code>r3.map(&amp;:title)</code>{' '}
+            では、SQL は送られていません。r3 を作った後も <code>r1.to_sql</code> は WHERE だけのままで、order や limit は元の r1 を書き換えていません。
+          </p>
+          <p>メソッドによって、戻り値と SQL を送る時点が違います。</p>
+          <Code
+            lang="text"
+            title="bin/rails runner で実行（ログの一部を省略）"
+            code={`
+Article.all.class          # => Article::ActiveRecord_Relation
+Article.all.to_sql         # => "SELECT \`articles\`.* FROM \`articles\`"
+Article.recent.class       # => Article::ActiveRecord_Relation
+Article.recent.limit(2).to_sql
+# => "SELECT \`articles\`.* FROM \`articles\` ORDER BY \`articles\`.\`published_at\` DESC LIMIT 2"
+Article.where(author_id: 3).first.class
+  Article Load (0.8ms)  SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`author_id\` = 3 ORDER BY \`articles\`.\`id\` ASC LIMIT 1
+# => Article(id: integer, title: string, body: text, published: boolean, …)
+Article.where(author_id: 3).count
+  Article Count (0.9ms)  SELECT COUNT(*) FROM \`articles\` WHERE \`articles\`.\`author_id\` = 3
+# => 482
+Article.where(author_id: 3).order(views_count: :desc).limit(3).to_a.class   # => Array
+`}
+          />
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>メソッド</th>
+                  <th>戻り値</th>
+                  <th>SQL を送る時点</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <code>all</code>・<code>where</code>・<code>order</code>・<code>limit</code>・scope
+                  </td>
+                  <td>Relation</td>
+                  <td>中身を使うとき</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>each</code>・<code>map</code>・<code>to_a</code>
+                  </td>
+                  <td>ブロックの結果・配列</td>
+                  <td>呼んだとき（読み込み済みなら送らない）</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>first</code>・<code>find</code>
+                  </td>
+                  <td>モデルのインスタンス</td>
+                  <td>呼んだとき</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>count</code>
+                  </td>
+                  <td>整数</td>
+                  <td>呼んだとき</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code>all</code> は条件の無い Relation を返します。デモの Article には <code>scope :recent, -&gt; {'{'} order(published_at: :desc) {'}'}</code> が書いてあります。scope
+            は検索条件に名前を付ける宣言で、<code>Article.recent</code> は published_at の新しい順に並べる Relation を返し、続けて limit などを呼べます。<code>first</code> と{' '}
+            <code>count</code> は呼んだ時点で SQL を送り、インスタンスや数を返しました。
+          </p>
+          <p>
+            <code>bin/rails console</code>（Ruby の式を1行ずつ入力して実行できる Rails のコマンド）では、Relation を代入しただけでも SQL が送られることがあります。コンソールは入力した式の結果を表示するので、表示のために
+            Relation の中身を読み込むからです。
+          </p>
+          <Code
+            lang="text"
+            title="bin/rails console での入力と出力（記事の表示とログの末尾のコメントを省略。長い行は折り返した）"
+            code={`
+r = Article.where(author_id: 3).order(views_count: :desc); nil
+# => nil
+r
+  Article Load (2.4ms)  SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`author_id\` = 3 /* loading for pp */
+                        ORDER BY \`articles\`.\`views_count\` DESC LIMIT 11
+# => [#<Article id: 5200, …>, …, "..."]
+`}
+          />
+          <p>
+            行の末尾に <code>; nil</code> を付けて結果の表示を nil にした1行目では SQL が送られず、r を表示させた2行目で送られました。表示用の SQL は最大11件を読み、10件より多ければ最後に{' '}
+            <code>"..."</code> を表示します（<code>relation.rb</code> の <code>pretty_print</code>）
+            <Ref n={1} />。コンソールで SQL を送る時点を確かめるときは、<code>to_sql</code> や <code>loaded?</code> を使います。
+          </p>
+          <Figure n="12-2" title="メソッドチェーンと SQL" caption="この節の実行結果をもとにした模式図。">
+            <ChainFigure />
+          </Figure>
+          <p>
+            次の節からは、Rails のソースコードを読みながら、<code>Article.where</code> がどこに定義されているか、Relation が条件をどう保存し、いつ SQL にして送るかを確かめます。
+          </p>
+        </>
+      ),
+    },
     {
       id: 'lazy',
       title: 'Relation は SQL をすぐに実行しない',
@@ -394,7 +746,7 @@ Equality の右辺: ActiveRecord::Relation::QueryAttribute
   value=:published  value_for_database=1
 `}
           />
-          <Figure n="12-1" title="Relation の値から SQL まで" caption="上の実行結果を図にしたもの。構文木は主な節点だけを描いている。">
+          <Figure n="12-3" title="Relation の値から SQL まで" caption="上の実行結果を図にしたもの。構文木は主な節点だけを描いている。">
             <ArelFigure />
           </Figure>
           <p>
@@ -406,7 +758,7 @@ Equality の右辺: ActiveRecord::Relation::QueryAttribute
           <Callout kind="note">
             <p>
               <code>r.arel.to_sql</code> は <code>... WHERE `articles`.`status` = ? ... LIMIT ?</code> のように値の位置を <code>?</code> にした SQL を返します。mysql2
-              アダプターは、値の位置を空けた SQL を事前に準備し、実行時に値を渡す仕組み（プリペアドステートメント）を既定で使わないので（<code>mysql2_adapter.rb</code> の <code>default_prepared_statements</code> が false）、実行時には値をクォートして SQL
+              アダプターは、値の位置を空けた SQL を事前に準備し、実行時に値を渡す仕組み（プリペアドステートメント）を既定で使わないので（<code>mysql2_adapter.rb</code> の <code>default_prepared_statements</code> が false）、実行時には値をクォートして（文字列の値を ' で囲み、中の ' などを SQL の区切りとして読まれない形に置き換えて）SQL
               の文字列に埋め込みます。ログに値が入った SQL が出るのはこのためです
               <Ref n={4} />。
             </p>
@@ -467,7 +819,7 @@ Equality の右辺: ActiveRecord::Relation::QueryAttribute
             <ChapterLink n={13} />で扱います
             <Ref n={1} />。
           </p>
-          <Figure n="12-2" title="Relation の組み立てと読み込み" caption="Rails 8.1.4.1 の relation.rb・query_methods.rb・spawn_methods.rb を読んでまとめた図。">
+          <Figure n="12-4" title="Relation の組み立てと読み込み" caption="Rails 8.1.4.1 の relation.rb・query_methods.rb・spawn_methods.rb を読んでまとめた図。">
             <LifecycleFigure />
           </Figure>
         </>
@@ -551,7 +903,7 @@ Equality の右辺: ActiveRecord::Relation::QueryAttribute
           </div>
           <p>
             文字列で条件を書いた場合、Rails はその中身を解釈せず、括弧で囲んでそのまま SQL に入れます。<code>?</code> を使えば値はクォートされますが、文字列の式展開（
-            <code>{'"title = \'#{params[:q]}\'"'}</code>）で値を入れると SQL インジェクションになります。安全な書き方は<ChapterLink n={21} />で扱います。
+            <code>{'"title = \'#{params[:q]}\'"'}</code>）で値を入れると SQL インジェクション（入力した文字列が SQL の一部として解釈され、意図しない SQL が実行される攻撃）になります。安全な書き方は<ChapterLink n={21} />で扱います。
           </p>
         </>
       ),
@@ -563,7 +915,7 @@ Equality の右辺: ActiveRecord::Relation::QueryAttribute
         <>
           <p>
             <code>Article.published.recent</code> のように、Relation に対してスコープやクラスメソッドを続けて呼べます。Relation に無いメソッドが呼ばれると、モデルごとの Relation
-            のサブクラスの <code>method_missing</code> が、モデルにそのメソッドがあれば委譲メソッドを生成して呼びます。
+            のサブクラスの <code>method_missing</code>（呼ばれたメソッドが見つからないときに Ruby が呼ぶメソッド。<ChapterLink n={2} section="method-missing" />）が、モデルにそのメソッドがあれば委譲メソッドを生成して呼びます。
           </p>
           <Code
             lang="ruby"
@@ -603,7 +955,7 @@ Article.published.popular.to_sql
 Article.where(nil).class.ancestors[1]   # => Article::GeneratedRelationMethods
 `}
           />
-          <Figure n="12-3" title="Relation からクラスメソッドを呼ぶ" caption="Rails 8.1.4.1 の relation/delegation.rb を読んでまとめた図。">
+          <Figure n="12-5" title="Relation からクラスメソッドを呼ぶ" caption="Rails 8.1.4.1 の relation/delegation.rb を読んでまとめた図。">
             <DelegationFigure />
           </Figure>
           <p>
@@ -634,10 +986,10 @@ where(author_id: 3).limit(3).pluck(:id, :title)
           />
           <ul>
             <li>
-              <code>first</code> は主キーの順に並べますが、<code>take</code> は並べません。順序が要らないなら <code>take</code> のほうが負荷の小さい SQL です。
+              <code>first</code> は主キーの順に並べますが、<code>take</code> は並べません（ORDER BY の無い結果の並びは決まっていません）。順序が要らないなら <code>take</code> のほうが負荷の小さい SQL です。
             </li>
             <li>
-              <code>count</code> は常に COUNT の SQL を実行します。<code>size</code> は、読み込み前なら COUNT を、読み込み後なら <code>@records</code> の数を返します。デモでは、読み込み前の{' '}
+              <code>exists?</code> の <code>SELECT 1 AS one … LIMIT 1</code> は、列の値を読まずに、条件に合う行が1つあるかだけを確かめる SQL です。<code>count</code> は常に COUNT の SQL を実行します。<code>size</code> は、読み込み前なら COUNT を、読み込み後なら <code>@records</code> の数を返します。デモでは、読み込み前の{' '}
               <code>size</code> で COUNT が1回、<code>load</code> の後の <code>size</code> では SQL が実行されませんでした。<code>length</code> は必ず全件を読み込みます。
             </li>
             <li>
@@ -704,7 +1056,7 @@ Article.find(1); Article.find(1)    # Executor の外
 `}
           />
           <p>
-            Executor の中では2回目に CACHE と記録され、外では2回とも実行されました。キャッシュは接続プールごとに、さらにスレッド（またはファイバー）ごとに分けて保存され（<code>connection_adapters/abstract/query_cache.rb</code> の QueryCacheRegistry）、INSERT・UPDATE・DELETE を実行すると消えます。この実測の「外」は、config/environment を require しただけのスクリプトで取りました。このようなスクリプトや自分で作ったスレッドで動かすコードでは、Executor
+            Executor の中では2回目に CACHE と記録され、外では2回とも実行されました。キャッシュは接続プールごとに、さらにスレッド（またはファイバー。1つのスレッドの中で、処理を途中で止めて別の処理に切り替えるための Ruby の仕組み）ごとに分けて保存され（<code>connection_adapters/abstract/query_cache.rb</code> の QueryCacheRegistry）、INSERT・UPDATE・DELETE を実行すると消えます。この実測の「外」は、config/environment を require しただけのスクリプトで取りました。このようなスクリプトや自分で作ったスレッドで動かすコードでは、Executor
             で包まない限りクエリキャッシュは効きません（<code>rails runner</code> は既定で Executor で包みます。<code>-w</code> を付けると包みません）。
           </p>
         </>
@@ -759,7 +1111,7 @@ type=ALL  key=NULL  rows=9838  filtered=33.33  Extra=Using where; Using filesort
             <Ref n={8} />。④ は published_at だけを条件にしているので、(status, published_at) の索引を使えず全件走査になりました。複合索引は先頭の列から順に使えるもので、先頭の列を含まない条件では原則として検索に使えません（MySQL の Skip Scan のように条件付きで使える例外はあります）
             <Ref n={9} />。③ は title に索引が無いので全件走査です。
           </p>
-          <Figure n="12-4" title="複合索引 (status, published_at)" caption="模式図。索引の並びは単純化している。右の結果はデモのアプリケーション（MySQL 8.4.13）の EXPLAIN による。">
+          <Figure n="12-6" title="複合索引 (status, published_at)" caption="模式図。索引の並びは単純化している。右の結果はデモのアプリケーション（MySQL 8.4.13）の EXPLAIN による。">
             <CompositeIndexFigure />
           </Figure>
           <p>
@@ -793,6 +1145,8 @@ type=ALL  key=NULL  rows=9838  filtered=33.33  Extra=Using where; Using filesort
       title: 'まとめ',
       body: (
         <ul>
+          <li>SQL では WHERE で条件に合う行を選び、ORDER BY で並べ、LIMIT で先頭から取り出す行の数を決めます。ORDER BY の値が同じ行の順番は決まっていません。</li>
+          <li>where・order・limit は Relation を返すので、メソッドチェーンでつなげて書けます。SQL は each・to_a などで中身を使うときに1回だけ送られ、first や count は呼んだ時点で送られます。</li>
           <li>Article.where などは all に委譲され、条件を保存した Relation を返します。SQL は each・to_a・first などでレコードが必要になったときに実行されます。</li>
           <li>チェーンのたびに Relation は複製され、元の Relation は変わりません。読み込み済みの Relation は変更できません。</li>
           <li>Relation の値は build_arel で Arel の構文木になり、MySQL 用の visitor が SQL の文字列にします。enum などの値は列の型で変換されます。</li>
@@ -815,6 +1169,10 @@ type=ALL  key=NULL  rows=9838  filtered=33.33  Extra=Using where; Using filesort
     { title: 'Multiple-Column Indexes', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/multiple-column-indexes.html', accessed: '2026-11-11', version: 'MySQL 8.4', note: '複合索引は左端からの列の組み合わせ（leftmost prefix）でだけ検索に使えること。' },
     { title: 'EXPLAIN Statement', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/explain.html', accessed: '2026-11-11', version: 'MySQL 8.4', note: 'EXPLAIN ANALYZE の構文と、TREE 形式が常に使われること。' },
     { title: 'activerecord/lib/active_record/relation.rb', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.4/activerecord/lib/active_record/relation.rb', accessed: '2026-11-11', version: 'Rails 7.2.4', note: '7.2 の Relation が klass 属性を持つこと（8.1.4.1 の model と alias :klass との差分で確認）。' },
+    { title: 'Sorting Rows', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/sorting-rows.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'ORDER BY が無い結果の行は決まった順に並ばないこと。ORDER BY と DESC・ASC。' },
+    { title: 'LIMIT Query Optimization', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/limit-optimization.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'ORDER BY の列の値が同じ行は、どの順で返してもよく、実行計画によって順が変わること。' },
+    { title: 'SELECT Statement', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/select.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'WHERE・ORDER BY・LIMIT の書き方と、書く順。実行例は MySQL 8.4.13 で実測。' },
+    { title: 'Active Record Query Interface', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_querying.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'where・order・limit と all が ActiveRecord::Relation を返し、続けてメソッドを呼べること。scope。実行例は Rails 8.1.4.1 で実測。' },
   ],
 }
 

@@ -8,11 +8,80 @@ const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const RC = 'https://github.com/rspec/rspec/blob/rspec-core-v3.13.7/rspec-core/lib/rspec/core'
 const RR = 'https://github.com/rspec/rspec-rails/blob/v8.1.0/lib/rspec/rails'
 
-/* ---------- 図 20-1 RSpec の DSL が作るもの ---------- */
-function DslFigure() {
+/* ---------- 図 20-1 期待する結果と実際の結果を比べる ---------- */
+function CompareFigure() {
   return (
     <Svg
       id="20-1"
+      w={780}
+      h={300}
+      label="上段は1つのテストの中身。準備で入力の文字列を用意し、実行で short_title を呼び、比較で実際の結果と期待する結果を == で比べる。下段はテストを使う流れ。コードを書き換えたらテストを実行し、すべての比較が等しければ成功、1つでも違えば失敗として、期待した値と実際の値が表示されるので、変更で動作が変わったことに気付ける"
+    >
+      <T x={20} y={20} bold>
+        1つのテストの中身
+      </T>
+      <Box x={20} y={34} w={220} h={56} lines={['準備', '入力 "RSpecでテストを書く方法"']} fs={11.5} fill="box" subTone="muted" />
+      <Arrow x1={240} y1={62} x2={278} y2={62} />
+      <Box x={280} y={34} w={200} h={56} lines={['実行', 'short_title(入力)']} fs={11.5} fill="box" subTone="muted" />
+      <Arrow x1={480} y1={62} x2={518} y2={62} />
+      <Box x={520} y={34} w={240} h={56} lines={['比較（==）', '期待 "RSpecでテストを…" と実際']} fs={11.5} fill="box5" subTone="muted" />
+      <T x={20} y={130} bold>
+        テストを使う流れ
+      </T>
+      <Box x={20} y={150} w={180} h={56} lines={['コードを書き換える', 'title[0, max - 1] など']} fs={11.5} fill="bg" subTone="muted" />
+      <Arrow x1={200} y1={178} x2={248} y2={178} />
+      <Box x={250} y={150} w={180} h={56} lines={['テストを実行する', 'rspec short_title_spec.rb']} fs={11.5} fill="box" subTone="muted" />
+      <Arrow d="M430,170 L480,170 L480,150 L518,150" />
+      <Arrow d="M430,186 L480,186 L480,222 L518,222" />
+      <Box x={520} y={126} w={240} h={48} lines={['すべて等しい → 成功', '2 examples, 0 failures']} fs={11.5} fill="box4" subTone="muted" />
+      <Box x={520} y={196} w={240} h={56} lines={['1つでも違う → 失敗', 'expected（期待）と got（実際）、', '失敗した行を表示']} fs={11} fill="bg" subTone="danger" />
+      <T x={20} y={282} fs={11} tone="muted">
+        一度書いたテストは、コードを書き換えるたびに何度でも同じ確認を繰り返せる
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 20-2 環境ごとの設定とデータベース ---------- */
+function EnvFigure() {
+  const cols = [
+    { x: 20, key: 'development', name: 'development（開発）', run: 'bin/rails server など', file: 'development.rb', db: 'demo_development', fill: 'box' as const },
+    { x: 280, key: 'test', name: 'test（テスト）', run: 'bundle exec rspec など', file: 'test.rb', db: 'demo_test', fill: 'box5' as const },
+    { x: 540, key: 'production', name: 'production（本番）', run: '本番のサーバー', file: 'production.rb', db: 'demo_production', fill: 'box' as const },
+  ]
+  return (
+    <Svg
+      id="20-2"
+      w={780}
+      h={300}
+      label="Rails には development・test・production の3つの環境があり、環境変数 RAILS_ENV でどれを使うかが決まる。bin/rails server は development、bundle exec rspec は test で動く。環境ごとに config/environments の設定ファイルと、config/database.yml に書いたデータベースが別々で、テストは demo_test を使うので、開発用の demo_development のデータは変わらない"
+    >
+      <T x={390} y={20} anchor="middle" bold>
+        環境変数 RAILS_ENV で環境を選ぶ
+      </T>
+      {cols.map((c) => (
+        <g key={c.name}>
+          <rect x={c.x} y={36} width={220} height={236} rx={8} fill="var(--fig-bg)" stroke={c.fill === 'box5' ? 'var(--fig-accent)' : 'var(--fig-line)'} strokeWidth={c.fill === 'box5' ? 2 : 1} />
+          <T x={c.x + 110} y={56} anchor="middle" bold fs={12.5}>
+            {c.name}
+          </T>
+          <Box x={c.x + 14} y={72} w={192} h={44} lines={['起動の例', c.run]} fs={11} fill={c.fill} subTone="muted" />
+          <Box x={c.x + 14} y={128} w={192} h={44} lines={['設定ファイル', `config/environments/${c.file}`]} fs={10.5} fill={c.fill} subTone="muted" />
+          <Box x={c.x + 14} y={184} w={192} h={68} lines={['データベース', `database.yml の ${c.key}:`, c.db]} fs={11} fill="box4" subTone="muted" />
+        </g>
+      ))}
+      <T x={20} y={290} fs={11} tone="muted">
+        データベースの名前は rails new demo -d mysql が作る config/database.yml のもの。テストで作った行は開発用のデータベースに入らない
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 図 20-3 RSpec の DSL が作るもの ---------- */
+function DslFigure() {
+  return (
+    <Svg
+      id="20-3"
       w={780}
       h={290}
       label="RSpec.describe Article は RSpec::Core::ExampleGroup の子クラス RSpec::ExampleGroups::Article を作る。入れ子の describe はさらにその子クラス RSpec::ExampleGroups::Article::Comments になる。let は LetDefinitions モジュールにメソッドを定義し、クラスにはメモ化するメソッドを定義する。it は Example のオブジェクトを作ってブロックを保存する。実行時には例ごとにクラスの新しいインスタンスが作られ、before とブロックがそのインスタンスを self として実行される"
@@ -47,7 +116,7 @@ function DslFigure() {
   )
 }
 
-/* ---------- 図 20-2 テストの種類と通る層 ---------- */
+/* ---------- 図 20-4 テストの種類と通る層 ---------- */
 function LayersFigure() {
   const layers = ['ブラウザー（JavaScript）', 'HTTP サーバー（Puma）', 'ミドルウェア', 'ルーティング', 'コントローラー', 'ビュー', 'モデル・DB']
   const kinds = [
@@ -58,7 +127,7 @@ function LayersFigure() {
   const rowH = 34
   return (
     <Svg
-      id="20-2"
+      id="20-4"
       w={760}
       h={layers.length * rowH + 70}
       label="model spec はモデルとデータベースだけを通る。request spec は Rails.application をミドルウェアから呼ぶので、ミドルウェア、ルーティング、コントローラー、ビュー、モデルを通るが、HTTP サーバーとブラウザーは通らない。system spec は Capybara がブラウザーを操作し、テストのプロセスの中で起動した Puma に HTTP で要求するので、JavaScript を含むすべての層を通る"
@@ -81,11 +150,11 @@ function LayersFigure() {
   )
 }
 
-/* ---------- 図 20-3 テストのトランザクション ---------- */
+/* ---------- 図 20-5 テストのトランザクション ---------- */
 function RollbackFigure() {
   return (
     <Svg
-      id="20-3"
+      id="20-5"
       w={780}
       h={260}
       label="実行の最初に fixtures が投入され、COMMIT される。各例の前に、接続を固定して BEGIN し、例の中の保存は SAVEPOINT と RELEASE SAVEPOINT になる。外側のトランザクションが参加不可なので、RELEASE の時点で after_commit が実行される。例が終わると ROLLBACK し、次の例は fixtures だけがある状態から始まる。同じプロセスの別のスレッドも固定された接続を使うのでデータが見えるが、Sidekiq などの別のプロセスからは見えない"
@@ -120,8 +189,10 @@ const ch20: Chapter = {
   part: 4,
   title: 'テスト（RSpec 中心）',
   summary:
-    'RSpec で最初の model spec と request spec を書き、実行して結果を読むところから始め、describe・it・let がどんなクラスとメソッドを作るかを、実行時の出力で確かめます。model・request・system の各テストが通る層、例ごとのトランザクションによるデータの巻き戻しとその例外、fixtures と FactoryBot の違い、ジョブとメールのテスト、Minitest との対応も扱います。',
+    '期待する結果と実際の結果をプログラムで比べるというテストの考え方と、テスト用の環境とデータベースを、実際に動かして確かめます。続いて RSpec で最初の model spec と request spec を書いて実行結果を読み、describe・it・let がどんなクラスとメソッドを作るかを、実行時の出力で確かめます。model・request・system の各テストが通る層、例ごとのトランザクションによるデータの巻き戻しとその例外、fixtures と FactoryBot の違い、ジョブとメールのテスト、Minitest との対応も扱います。',
   goals: [
+    'テストが期待する結果と実際の結果をプログラムで比べるコードであることを、RSpec の expect と eq の例で説明できる',
+    'development・test・production の環境と、テストが開発用と別のデータベースを使う理由を説明できる',
     'rspec-rails を準備し、準備・実行・確認に分けた model spec を書いて実行できる',
     '失敗したときの表示から、失敗した expect・期待した値・実際の値・再実行のコマンドを読み取れる',
     'describe がクラス、it がそのインスタンスで実行されるブロック、let がメモ化されたメソッドであることを説明できる',
@@ -133,6 +204,273 @@ const ch20: Chapter = {
   ],
   prerequisites: [3, 10, 15, 18],
   sections: [
+    {
+      id: 'why-test',
+      title: '期待する結果と実際の結果をプログラムで比べる',
+      body: (
+        <>
+          <p>
+            プログラムを書き換えたときは、前から動いていた機能が変わっていないかを確かめる必要があります。ブラウザーで画面を開いて確かめる方法では、機能が増えるほど時間がかかり、確かめ忘れも起きます。テストは「この入力ならこの結果になるはず」という期待する結果と、実際にプログラムを動かした結果を、プログラムで比べるコードです。一度書けば、同じ確認を何度でも短い時間で繰り返せます。
+          </p>
+          <p>一覧のページで長いタイトルを短くして表示するメソッドを例にします。</p>
+          <Code
+            lang="ruby"
+            title="short_title.rb"
+            code={`
+# 一覧に表示するために、長いタイトルを短くする
+def short_title(title, max = 10)
+  title.length > max ? title[0, max] + "…" : title
+end
+`}
+          />
+          <p>
+            このメソッドを確かめるプログラムを、Ruby だけで書きました。<code>check</code> は期待する結果と実際の結果を <code>==</code> で比べ、等しければ OK を、違えば NG と両方の値を表示します。
+          </p>
+          <Code
+            lang="ruby"
+            title="check_short_title.rb"
+            code={`
+require_relative "short_title"
+
+def check(name, expected, actual)
+  if actual == expected
+    puts "OK  #{name}"
+  else
+    puts "NG  #{name}: 期待 #{expected.inspect}、実際 #{actual.inspect}"
+  end
+end
+
+check("短いタイトルはそのまま", "Rails入門", short_title("Rails入門"))
+check("長いタイトルは10文字で切る", "RSpecでテストを…", short_title("RSpecでテストを書く方法"))
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+OK  短いタイトルはそのまま
+OK  長いタイトルは10文字で切る
+`}
+          />
+          <p>
+            後で誰かが short_title を書き換え、10文字ではなく9文字で切るようにしてしまったとします（<code>title[0, max]</code> を <code>title[0, max - 1]</code>{' '}
+            に変更）。同じプログラムを実行すると、2つ目の確認が NG になりました。
+          </p>
+          <Code
+            lang="text"
+            title="書き換えた後の実行結果"
+            code={`
+OK  短いタイトルはそのまま
+NG  長いタイトルは10文字で切る: 期待 "RSpecでテストを…"、実際 "RSpecでテスト…"
+`}
+          />
+          <p>
+            確認をプログラムにしておくと、変更で動作が変わったことに、実行するだけで気付けます（図 20-1）。確認が数百、数千と増えると、どの確認が失敗したか、期待した値と実際の値は何か、どのファイルの何行目かを見やすく表示する仕組みが欲しくなります。これをまとめた道具がテストのフレームワークで、Ruby
+            では RSpec と Minitest がよく使われます。同じ確認を RSpec で書きました。
+          </p>
+          <Code
+            lang="ruby"
+            title="short_title_spec.rb"
+            code={`
+require_relative "short_title"
+
+RSpec.describe "short_title" do
+  it "短いタイトルはそのまま返す" do
+    expect(short_title("Rails入門")).to eq("Rails入門")
+  end
+
+  it "10文字より長いタイトルは10文字で切って…を付ける" do
+    expect(short_title("RSpecでテストを書く方法")).to eq("RSpecでテストを…")
+  end
+end
+`}
+          />
+          <p>
+            <code>RSpec.describe</code> は確認をまとめるグループ、<code>it</code> は1つの確認（RSpec では例と呼びます）です。<code>expect(実際の値).to eq(期待する値)</code> は、
+            <code>check</code> と同じく <code>==</code> で比べます
+            <Ref n={10} />。rspec コマンドにファイルを渡して実行しました
+            <Ref n={11} />。
+          </p>
+          <Code
+            lang="text"
+            title="rspec short_title_spec.rb の出力（rspec-core 3.13.7）"
+            code={`
+..
+
+Finished in 0.01454 seconds (files took 1.18 seconds to load)
+2 examples, 0 failures
+`}
+          />
+          <p>
+            <code>.</code> は成功した例が1つあるごとに1文字表示されます。<code>2 examples, 0 failures</code> は、2つの例を実行して失敗が0件だったことを表します。9文字で切るように書き換えたコードで実行すると、次のようになりました。
+          </p>
+          <Code
+            lang="text"
+            title="書き換えた後の rspec の出力"
+            code={`
+.F
+
+Failures:
+
+  1) short_title 10文字より長いタイトルは10文字で切って…を付ける
+     Failure/Error: expect(short_title("RSpecでテストを書く方法")).to eq("RSpecでテストを…")
+
+       expected: "RSpecでテストを…"
+            got: "RSpecでテスト…"
+
+       (compared using ==)
+     # ./short_title_spec.rb:9:in 'block (2 levels) in <top (required)>'
+
+Finished in 0.03575 seconds (files took 0.43348 seconds to load)
+2 examples, 1 failure
+
+Failed examples:
+
+rspec ./short_title_spec.rb:8 # short_title 10文字より長いタイトルは10文字で切って…を付ける
+`}
+          />
+          <p>
+            失敗した例は <code>F</code> で表示され、その後に、失敗した expect の行、期待した値（expected）と実際の値（got）、失敗した行の番号（short_title_spec.rb の9行目）が並びます。自分で書いた{' '}
+            <code>check</code> と同じ内容を、RSpec が決まった形で表示しています。表示の読み方は「RSpec で最初のテストを書く」の節でも確かめます。
+          </p>
+          <Figure n="20-1" title="期待する結果と実際の結果を比べる" caption="short_title の例（Ruby 4.0.9・rspec-core 3.13.7 で実行）をもとにした模式図。">
+            <CompareFigure />
+          </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'test-db',
+      title: 'テスト用の環境とデータベース',
+      body: (
+        <>
+          <p>
+            Rails のアプリケーションのテストでは、モデルを保存したり記事を数えたりと、データベースを使う確認が多くなります。開発中に使っているデータベースでテストをすると、テストが作ったり消したりした記事が開発用のデータに混ざります。逆に、開発用のデータが残っているせいで、記事の数を数えるテストの結果が変わることもあります。そのため、Rails
+            はテスト専用のデータベースを使います。
+          </p>
+          <p>
+            Rails には、development（開発）、test（テスト）、production（本番）の3つの環境があります。環境は同じアプリケーションを目的に合わせた設定で動かすための区別です。どの環境で動かすかは環境変数（プログラムの外から渡す設定の値）の
+            RAILS_ENV で決まり、テストは test の環境で動きます。環境ごとの設定は config/environments/ の development.rb・test.rb・production.rb に、環境ごとの接続先のデータベースは
+            config/database.yml に書きます
+            <Ref n={2} />。<code>rails new demo -d mysql</code> で作ったアプリケーションの database.yml は次のとおりです。
+          </p>
+          <Code
+            lang="yaml"
+            title="config/database.yml（rails new demo -d mysql で作ったもの。一部を省略）"
+            href={`${GH}/railties/lib/rails/generators/rails/app/templates/config/databases/mysql.yml.tt`}
+            code={`
+default: &default
+  adapter: mysql2
+  encoding: utf8mb4
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  username: root
+  password:
+  host: <%= ENV.fetch("DB_HOST") { "127.0.0.1" } %>
+
+development:
+  <<: *default
+  database: demo_development
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+test:
+  <<: *default
+  database: demo_test
+`}
+          />
+          <p>
+            開発用は demo_development、テスト用は demo_test という別のデータベースです。test の上のコメントには、test のデータベースは rake を実行したときに消して作り直されるので、開発用や本番用と同じデータベースにしてはいけないと書かれています
+            <Ref n={12} />。
+          </p>
+          <p>
+            デモのアプリケーションで、2つの環境の接続先と記事の数を確かめました（デモでは、同じ名前のデータベースを環境変数 DATABASE_URL で指定しています）。<code>bin/rails runner</code>{' '}
+            はアプリケーションを読み込んで Ruby のコードを実行するコマンドで、RAILS_ENV=test を付けるとテスト環境で動きます。
+          </p>
+          <Code
+            lang="text"
+            title="bin/rails runner で環境・データベース・記事の数を表示した結果"
+            code={`
+環境=development データベース=demo_development 記事の数=10004
+環境=test データベース=demo_test 記事の数=0
+`}
+          />
+          <p>次に、記事を3件作る例と、その後で記事を数える例を書き、テスト環境で実行しました。</p>
+          <Code
+            lang="ruby"
+            title="spec/models/basics20_spec.rb（デモ）"
+            code={`
+require "rails_helper"
+
+RSpec.describe "テスト用のデータベース" do
+  it "記事を3件作る" do
+    puts "環境=#{Rails.env} データベース=#{ActiveRecord::Base.connection.current_database}"
+    puts "作る前の記事の数=#{Article.count}"
+    3.times { |i| Article.create!(title: "テストの記事#{i + 1}") }
+    puts "作った後の記事の数=#{Article.count}"
+  end
+
+  it "前の例で作った記事は残っていない" do
+    puts "次の例での記事の数=#{Article.count}"
+  end
+end
+`}
+          />
+          <Code
+            lang="text"
+            title="bundle exec rspec spec/models/basics20_spec.rb --format documentation の出力"
+            code={`
+テスト用のデータベース
+環境=test データベース=demo_test
+作る前の記事の数=0
+作った後の記事の数=3
+  記事を3件作る
+次の例での記事の数=0
+  前の例で作った記事は残っていない
+
+Finished in 0.19226 seconds (files took 1.73 seconds to load)
+2 examples, 0 failures
+`}
+          />
+          <p>
+            テストは demo_test で動き、1つ目の例で作った3件の記事は、2つ目の例では0件に戻っていました。実行した後も、テスト用のデータベースの記事は0件、開発用のデータベースの記事は 10004
+            件のままでした。rspec-rails が作る rails_helper.rb には、例が終わるたびにデータベースの変更を取り消す設定が入っているので、どの例も同じ状態のデータベースから始まります。この仕組みは「トランザクションによる巻き戻し」の節で扱います。
+          </p>
+          <p>テスト環境の設定ファイルにはテストのための設定も入っています。</p>
+          <Code
+            lang="ruby"
+            title="config/environments/test.rb（rails new demo -d mysql で作ったもの。一部を省略）"
+            href={`${GH}/railties/lib/rails/generators/rails/app/templates/config/environments/test.rb.tt`}
+            code={`
+  config.cache_store = :null_store
+
+  # Render exception templates for rescuable exceptions and raise for other exceptions.
+  config.action_dispatch.show_exceptions = :rescuable
+
+  # Disable request forgery protection in test environment.
+  config.action_controller.allow_forgery_protection = false
+
+  # Store uploaded files on the local file system in a temporary directory.
+  config.active_storage.service = :test
+
+  # Tell Action Mailer not to deliver emails to the real world.
+  # The :test delivery method accumulates sent emails in the
+  # ActionMailer::Base.deliveries array.
+  config.action_mailer.delivery_method = :test
+`}
+          />
+          <p>
+            <code>delivery_method = :test</code> はメールを実際には送らずに <code>ActionMailer::Base.deliveries</code> という配列に入れる設定です。<code>cache_store = :null_store</code>{' '}
+            はキャッシュに何も保存しない設定で、<code>active_storage.service = :test</code> は添付したファイルを一時的なディレクトリに保存する設定です
+            <Ref n={13} />。テストの結果が、メールの送信先や、前のテストが残したキャッシュやファイルに左右されないようにしています（図 20-2）。
+          </p>
+          <p>次の節では Rails のアプリケーションに RSpec を入れて、テスト環境で Article のモデルを確かめるテストを書きます。</p>
+          <Figure n="20-2" title="環境ごとの設定とデータベース" caption="rails new demo -d mysql（Rails 8.1.4.1）が作る database.yml・config/environments と、デモでの実測をもとにした模式図。">
+            <EnvFigure />
+          </Figure>
+        </>
+      ),
+    },
     {
       id: 'first-spec',
       title: 'RSpec で最初のテストを書く',
@@ -429,7 +767,7 @@ end
           />
           <p>
             <code>it</code> はブロックを Example のオブジェクトに保存するだけで、実行はしません。実行するときは、例ごとにクラスの新しいインスタンスを作り、そのインスタンスを self として before とブロックを実行します（上の出力の object_id
-            が例ごとに違う）。そのため、ある例で代入したインスタンス変数や let の値は、次の例には残りません（図 20-1）。
+            が例ごとに違う）。そのため、ある例で代入したインスタンス変数や let の値は、次の例には残りません（図 20-3）。
           </p>
           <Code
             lang="ruby"
@@ -450,7 +788,7 @@ end
       end
 `}
           />
-          <Figure n="20-1" title="RSpec の DSL が作るもの" caption="rspec-core 3.13.7 の example_group.rb・memoized_helpers.rb を読み、デモの出力で確かめてまとめた模式図。">
+          <Figure n="20-3" title="RSpec の DSL が作るもの" caption="rspec-core 3.13.7 の example_group.rb・memoized_helpers.rb を読み、デモの出力で確かめてまとめた模式図。">
             <DslFigure />
           </Figure>
         </>
@@ -463,7 +801,7 @@ end
         <>
           <p>
             rspec-rails は、spec の <code>type:</code>（model・request・system など）に応じて、Rails のテスト用のモジュールを include します。どのモジュールを include するかで、テストがアプリケーションのどの層から処理を呼び出すかが決まります（図
-            20-2）。
+            20-4）。
           </p>
           <ul>
             <li>model spec：モデルのクラスを直接呼ぶ。コントローラーやルーティングは通らない</li>
@@ -505,12 +843,12 @@ end
 `}
           />
           <p>
-            Accept ヘッダーで Turbo Stream が選ばれ、ミドルウェアからビューまでを通った応答が返っています。存在しない記事の要求が例外ではなく 404 になったのは、テスト環境の設定ファイルに{' '}
+            Accept ヘッダー（受け取れる応答の形式をサーバーに伝えるヘッダー）で Turbo Stream が選ばれ、ミドルウェアからビューまでを通った応答が返っています。存在しない記事の要求が例外ではなく 404 になったのは、テスト環境の設定ファイルに{' '}
             <code>config.action_dispatch.show_exceptions = :rescuable</code> があり、ShowExceptions のミドルウェアが RecordNotFound を 404 に変えたからです（
             <ChapterLink n={10} section="exceptions" />
             ）。一方、HTTP サーバーを通らないので、Puma の設定や Nginx は request spec では確かめられません。
           </p>
-          <Figure n="20-2" title="テストの種類と通る層" caption="rspec-rails 8.1.0 の example グループのモジュールと、Testing Rails Applications（ガイド）をもとにまとめた図。">
+          <Figure n="20-4" title="テストの種類と通る層" caption="rspec-rails 8.1.0 の example グループのモジュールと、Testing Rails Applications（ガイド）をもとにまとめた図。">
             <LayersFigure />
           </Figure>
         </>
@@ -593,9 +931,9 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
           />
           <p>
             実際には COMMIT されていませんが、after_commit は実行されました。別のスレッドからも作成した行が見えたのは、固定された接続を共有しているからです。system spec でテストのスレッドと Puma
-            のスレッドが同じデータを見られるのも、この仕組みによります（図 20-3）。
+            のスレッドが同じデータを見られるのも、この仕組みによります（図 20-5）。
           </p>
-          <Figure n="20-3" title="テストのトランザクション" caption="Rails 8.1.4.1 の test_fixtures.rb・connection_pool.rb・transaction.rb を読み、デモのテストのログで確かめてまとめた模式図。">
+          <Figure n="20-5" title="テストのトランザクション" caption="Rails 8.1.4.1 の test_fixtures.rb・connection_pool.rb・transaction.rb を読み、デモのテストのログで確かめてまとめた模式図。">
             <RollbackFigure />
           </Figure>
           <p>トランザクションによる巻き戻しが適用されない、または期待どおりに動かない場合があります。</p>
@@ -798,6 +1136,8 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
       title: 'まとめ',
       body: (
         <ul>
+          <li>テストは、期待する結果と実際の結果をプログラムで比べるコードです。RSpec の expect(実際の値).to eq(期待する値) は == で比べ、失敗すると expected と got を表示します。</li>
+          <li>Rails は RAILS_ENV で環境を選び、テストは test の環境で、開発用とは別のデータベース（demo_test など）を使います。テスト環境の設定はメールを送らずに配列に入れるなど、テストのための値になっています。</li>
           <li>
             spec は describe（グループ）・it（1つの例）・expect とマッチャー（確認）で書きます。成功する入力だけでなく、失敗するはずの入力の例も書き、コードに意図的な誤りを加えてテストが失敗することを確かめます。
           </li>
@@ -822,6 +1162,9 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
     { title: 'rspec-rails: lib/generators/rspec/install/install_generator.rb・model/templates/model_spec.rb', publisher: 'rspec/rspec-rails（GitHub）', url: 'https://github.com/rspec/rspec-rails/blob/v8.1.0/lib/generators/rspec/install/install_generator.rb', accessed: '2026-11-13', version: 'rspec-rails 8.1.0', note: 'rspec:install が .rspec・spec_helper.rb・rails_helper.rb を作ること。rspec:model が pending だけの spec を作ること。rails_helper の maintain_test_schema! と use_transactional_fixtures。' },
     { title: 'Model specs', publisher: 'RSpec（rspec.info）', url: 'https://rspec.info/features/8-0/rspec-rails/model-specs/', accessed: '2026-11-13', version: 'rspec-rails 8.x', note: 'model spec は type: :model で指定し、ActiveSupport::TestCase の機能を含むこと。' },
     { title: 'Built in matchers', publisher: 'RSpec（rspec.info）', url: 'https://rspec.info/features/3-13/rspec-expectations/built-in-matchers/', accessed: '2026-11-13', version: 'rspec-expectations 3.13', note: 'be は equal?、eq は == で比べること。include などの組み込みのマッチャー。' },
+    { title: 'RSpec Core 3.13（rspec コマンド）', publisher: 'RSpec（rspec.info）', url: 'https://rspec.info/features/3-13/rspec-core/', accessed: '2026-11-16', version: 'rspec-core 3.13', note: 'rspec コマンドに spec のファイルを渡して実行すること。short_title の例は rspec-core 3.13.7（Ruby 4.0.9）で実測。' },
+    { title: 'railties/lib/rails/generators/rails/app/templates/config/databases/mysql.yml.tt', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/app/templates/config/databases/mysql.yml.tt`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'development・test・production のデータベース名（アプリケーション名_development など）と、test のデータベースは作り直されるので開発用・本番用と同じにしないという注意書き。rails new demo -d mysql で生成して確認。' },
+    { title: 'railties/lib/rails/generators/rails/app/templates/config/environments/test.rb.tt', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/app/templates/config/environments/test.rb.tt`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'テスト環境の cache_store = :null_store、active_storage.service = :test、delivery_method = :test（deliveries の配列に入れる）。' },
   ],
 }
 
