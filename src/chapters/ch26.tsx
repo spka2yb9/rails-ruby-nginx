@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation26 } from '../explanations/operations'
 import { ChapterLink, Code, Figure, Ref } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -472,4 +474,4 @@ X-Served-By: lb                                           ← デモのロード
   ],
 }
 
-export default ch26
+export default withExplanations(ch26, explanation26)

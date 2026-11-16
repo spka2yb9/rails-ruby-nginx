@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation23 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -548,4 +550,4 @@ u=carol class_var=carol current=carol
   ],
 }
 
-export default ch23
+export default withExplanations(ch23, explanation23)

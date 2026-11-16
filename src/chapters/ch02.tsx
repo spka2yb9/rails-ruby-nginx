@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation02 } from '../explanations/ruby'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -532,7 +534,7 @@ a.title               # => "Rails入門"
       title: 'オブジェクトが持っているもの',
       body: (
         <>
-          <p>ここからは、Rails を使わず、Ruby だけで書いたクラスでオブジェクトの構造を見ていきます。次のクラスを例にします。</p>
+          <p>同じ構造の Article クラスで、インスタンスが持つ変数と、クラスが持つメソッドの定義を実際に取り出します。この例は Rails を使わず、Ruby だけで実行できます。</p>
           <Code
             lang="ruby"
             code={`
@@ -1084,4 +1086,4 @@ a.last(6)
   ],
 }
 
-export default ch02
+export default withExplanations(ch02, explanation02)

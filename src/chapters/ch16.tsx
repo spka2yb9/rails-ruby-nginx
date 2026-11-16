@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation16 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -1214,4 +1216,4 @@ $ head -c 120 public/assets/.manifest.json
   ],
 }
 
-export default ch16
+export default withExplanations(ch16, explanation16)

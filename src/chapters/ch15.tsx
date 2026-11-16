@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation15 } from '../explanations/database'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -637,8 +639,7 @@ Article.where(id: 6..8).lock("FOR UPDATE SKIP LOCKED").pluck(:id)
       body: (
         <>
           <p>
-            ActiveRecord は、データベースへの接続を<Term en="connection pool">接続プール</Term>にためておき、スレッドに貸し出します。Rails 8.1 の新規アプリケーションの database.yml
-            には次の行があります。
+            ActiveRecord の<Term en="connection pool">接続プール</Term>が貸し出せる接続数は、database.yml で設定します。Rails 8.1 の新規アプリケーションには次の行があります。
           </p>
           <Code
             lang="yaml"
@@ -758,4 +759,4 @@ pool.stat => {size: 2, connections: 2, busy: 2, dead: 0, idle: 0, waiting: 1, ch
   ],
 }
 
-export default ch15
+export default withExplanations(ch15, explanation15)

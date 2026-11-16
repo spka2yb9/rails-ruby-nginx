@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation24 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -621,4 +623,4 @@ socketerror Error during WebSocket handshake: Unexpected response code: 404
   ],
 }
 
-export default ch24
+export default withExplanations(ch24, explanation24)

@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation12 } from '../explanations/database'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -816,4 +818,4 @@ type=ALL  key=NULL  rows=9838  filtered=33.33  Extra=Using where; Using filesort
   ],
 }
 
-export default ch12
+export default withExplanations(ch12, explanation12)

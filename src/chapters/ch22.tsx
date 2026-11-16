@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation22 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Box, Svg, T } from '../components/diagram'
 
@@ -457,4 +459,4 @@ store.fetch("ranking/top", expires_in: 10.minutes) { Article.order(views_count: 
   ],
 }
 
-export default ch22
+export default withExplanations(ch22, explanation22)

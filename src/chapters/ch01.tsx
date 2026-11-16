@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation01 } from '../explanations/ruby'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -693,13 +695,9 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
     },
     {
       id: 'conventions',
-      title: '本書の読み方と図の凡例',
+      title: 'コードと図の表記',
       body: (
         <>
-          <h3>章の構成</h3>
-          <p>
-            各章は「この章で学ぶこと」と前提となる章から始まり、基本的な概念、内部の仕組み、具体例と図解、例外や比較の順に進みます。最後に要点をまとめ、参考資料を載せます。確認問題や演習はありません。
-          </p>
           <h3>コードの表記</h3>
           <ul>
             <li>
@@ -771,4 +769,4 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
   ],
 }
 
-export default ch01
+export default withExplanations(ch01, explanation01)

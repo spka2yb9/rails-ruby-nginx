@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation04 } from '../explanations/ruby'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -889,4 +891,4 @@ Page.new.build2 # => ["GET /Page のタイトル → x#y"]
   ],
 }
 
-export default ch04
+export default withExplanations(ch04, explanation04)

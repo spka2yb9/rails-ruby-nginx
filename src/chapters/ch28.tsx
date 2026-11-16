@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation28 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg } from '../components/diagram'
 
@@ -323,4 +325,4 @@ end
     { title: 'Honeybadger for Ruby', publisher: 'Honeybadger Docs', url: 'https://docs.honeybadger.io/lib/ruby/', accessed: '2026-11-12', note: '例外通知、context、機密情報のフィルタリングへの案内。外部送信は未実施。' },
   ],
 }
-export default ch28
+export default withExplanations(ch28, explanation28)

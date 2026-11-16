@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation09 } from '../explanations/request'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -731,4 +733,4 @@ res = Rack::MockRequest.new(t3).get("/nothing")
   ],
 }
 
-export default ch09
+export default withExplanations(ch09, explanation09)

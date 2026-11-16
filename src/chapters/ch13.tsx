@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation13 } from '../explanations/database'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -331,9 +333,8 @@ const ch13: Chapter = {
       body: (
         <>
           <p>
-            記事には著者がいて、1人の著者は複数の記事を書きます。このような1対多のつながりは、テーブルでは「多」の側（記事）に相手の id を入れる列を作って表します。この列を
-            <Term en="foreign key">外部キー</Term>と呼びます。デモの articles テーブルでは <code>author_id</code> が外部キーで、MySQL の外部キー制約（存在しない著者の id を入れられないようにする
-            データベースの仕組み）も付けてあります。
+            著者と記事も、1人の著者が複数の記事を書く1対多の関係です。デモの articles テーブルでは、記事側の <code>author_id</code> が著者の id を保存する<Term en="foreign key">外部キー</Term>です。
+            MySQL の外部キー制約も付け、存在しない著者の id を入れられないようにしています。
           </p>
           <Code
             lang="ruby"
@@ -1044,4 +1045,4 @@ Article.strict_loading.first.author
   ],
 }
 
-export default ch13
+export default withExplanations(ch13, explanation13)

@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation27 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -59,7 +61,7 @@ const ch27: Chapter = {
   prerequisites: [11, 14, 15, 23],
   sections: [
     { id: 'basics', title: 'マイグレーションはDBの構造を変更するコード', body: <>
-      <p><Term en="schema">スキーマ</Term>は、テーブル、列、型、索引、制約などのDBの構造です。Railsのマイグレーションは、その構造を変更するRubyのコードです。ファイルを保存しただけではDBは変わらず、対象の環境で実行するとSQLが送られます。本章では「何を変更するか」に加え「いつ、どのコードと組み合わせて変更するか」を扱います。</p>
+      <p>テーブル、列、型、索引、制約などのDBの構造を<Term en="schema">スキーマ</Term>と呼びます。マイグレーションはこの構造を変更するSQLを対象の環境で実行します。変更を適用する際は、「何を変更するか」に加え「いつ、どのコードと組み合わせて変更するか」が重要になります。</p>
       <p>Railsは、適用が完了したマイグレーションの番号を schema_migrations テーブルに記録します。番号は通常、ファイル名の先頭の日時です。db/schema.rb はDBの構造をRubyで表した記録で、業務データそのものを保存したバックアップではありません。DB固有の機能を記録したい場合はSQL形式の structure.sql も選べます。<Ref n={1} /></p>
       <Code lang="bash" title="開発用DBで適用状況と構造の変更を確認する" code={`
 bin/rails generate migration AddDisplayTitleToArticles display_title:string
@@ -198,4 +200,4 @@ end
     { title: 'Server System Variables — lock_wait_timeout', publisher: 'MySQL Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_lock_wait_timeout', accessed: '2026-11-12', version: 'MySQL 8.4', note: 'メタデータロックの待ち時間。' },
   ],
 }
-export default ch27
+export default withExplanations(ch27, explanation27)

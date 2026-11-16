@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation03 } from '../explanations/ruby'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -822,4 +824,4 @@ end
   ],
 }
 
-export default ch03
+export default withExplanations(ch03, explanation03)

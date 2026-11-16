@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation25 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -629,4 +631,4 @@ upstream timed out (110: Connection timed out) while reading response header fro
   ],
 }
 
-export default ch25
+export default withExplanations(ch25, explanation25)

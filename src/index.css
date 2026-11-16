@@ -190,6 +190,7 @@ img, svg { max-width: 100%; height: auto; }
 .callout-v72 { border-color: var(--v72-line); background: var(--v72-bg); }
 .callout-unverified { border-color: var(--unverified-line); background: var(--unverified-bg); }
 
+
 /* 図 */
 .fig { margin: 1.8em 0; padding: 0; }
 .fig-body { background: var(--fig-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; }

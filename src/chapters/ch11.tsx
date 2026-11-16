@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation11 } from '../explanations/database'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -1027,4 +1029,4 @@ a.changes.keys        # => ["body"]（その場での書き換えも検出され
   ],
 }
 
-export default ch11
+export default withExplanations(ch11, explanation11)

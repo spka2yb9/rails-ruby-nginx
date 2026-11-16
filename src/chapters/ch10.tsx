@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation10 } from '../explanations/request'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -709,4 +711,4 @@ set-cookie: _demo_session=oKbhi2j91UHJi9RL01Jh…; path=/; secure; httponly; sam
   ],
 }
 
-export default ch10
+export default withExplanations(ch10, explanation10)

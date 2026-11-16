@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation06 } from '../explanations/request'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -291,7 +293,7 @@ const ch06: Chapter = {
       body: (
         <>
           <p>
-            <Term>Rack</Term> は、Ruby の Web サーバーと Web アプリケーションの間の受け渡し方を決めた仕様と、その仕様に沿った部品をまとめた gem です。仕様の要点は次のとおりです
+            <Term>Rack</Term> はこの受け渡しの仕様と、それに沿った部品をまとめた gem の両方を指します。Ruby の Web サーバーからアプリケーションを呼ぶ取り決めは次のとおりです
             <Ref n={1} />。
           </p>
           <ul>
@@ -1097,4 +1099,4 @@ Rack::MockRequest.new(Rack::Lint.new(bad)).get("/")
   ],
 }
 
-export default ch06
+export default withExplanations(ch06, explanation06)

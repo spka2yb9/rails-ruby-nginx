@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation19 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -528,4 +530,4 @@ variant_records: 1 blobs: 2
   ],
 }
 
-export default ch19
+export default withExplanations(ch19, explanation19)

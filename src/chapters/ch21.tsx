@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation21 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -442,4 +444,4 @@ Confidence: Weak   Check: Redirect            Message: Possible unprotected redi
   ],
 }
 
-export default ch21
+export default withExplanations(ch21, explanation21)

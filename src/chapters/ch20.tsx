@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation20 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -137,8 +139,7 @@ const ch20: Chapter = {
       body: (
         <>
           <p>
-            テストは、コードが期待どおりに動くことを、別のコードで確かめるものです。<ChapterLink n={11} section="crud" />で使った「タイトルが空なら保存しない」検証を例に、RSpec
-            でテストを書いて実行し、失敗したときの表示を読むところまで進めます。
+            モデルの具体例として、<ChapterLink n={11} section="crud" />で使った「タイトルが空なら保存しない」検証を取り上げます。RSpec で入力と期待値を記述して実行すると、失敗した場合は実際の値との差も表示されます。
           </p>
           <h3>準備</h3>
           <p>
@@ -824,4 +825,4 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
   ],
 }
 
-export default ch20
+export default withExplanations(ch20, explanation20)

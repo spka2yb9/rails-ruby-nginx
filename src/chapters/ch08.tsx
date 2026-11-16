@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation08 } from '../explanations/request'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -244,9 +246,8 @@ const ch08: Chapter = {
       body: (
         <>
           <p>
-            Rails のアプリケーションでは、<code>app/models/article.rb</code> に書いた <code>Article</code> を、<code>require</code> を書かずにどこからでも使えます。これは{' '}
-            <Term>Zeitwerk</Term> という gem のローダーが、定数が初めて参照されたときに対応するファイルを読み込むためです。この仕組みを<Term en="autoload">オートロード</Term>と呼びます。Rails
-            は2つのローダーを用意しています。<code>Rails.autoloaders.main</code> は再読み込みの対象になるコードを、<code>Rails.autoloaders.once</code> は一度だけ読み込むコードを扱います
+            この命名規則に基づく<Term en="autoload">オートロード</Term>を管理するのが、<Term>Zeitwerk</Term>という gem のローダーです。
+            Rails は2つのローダーを用意しています。<code>Rails.autoloaders.main</code> は再読み込みの対象になるコードを、<code>Rails.autoloaders.once</code> は一度だけ読み込むコードを扱います
             <Ref n={1} />。
           </p>
           <p>
@@ -849,4 +850,4 @@ a.class.name                         # => "Article"
   ],
 }
 
-export default ch08
+export default withExplanations(ch08, explanation08)

@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation05 } from '../explanations/ruby'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -995,4 +997,4 @@ Article.const_get(:GeneratedAssociationMethods).instance_methods(false).sort
   ],
 }
 
-export default ch05
+export default withExplanations(ch05, explanation05)

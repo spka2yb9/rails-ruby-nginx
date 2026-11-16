@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation07 } from '../explanations/request'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -852,4 +854,4 @@ Rails.application.config.active_record.table_name_prefix = "app_"
   ],
 }
 
-export default ch07
+export default withExplanations(ch07, explanation07)

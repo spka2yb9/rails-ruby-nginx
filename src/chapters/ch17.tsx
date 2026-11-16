@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation17 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -729,4 +731,4 @@ _action_cable_internal
   ],
 }
 
-export default ch17
+export default withExplanations(ch17, explanation17)

@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation18 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -128,7 +130,7 @@ const ch18: Chapter = {
       body: (
         <>
           <p>
-            ActiveJob はジョブの書き方（<code>perform</code>・<code>perform_later</code>・<code>retry_on</code> など）を共通にする仕組みです。ジョブを保存して実行する仕組み（キューのバックエンド）は、それぞれの仕組みに合わせて呼び出しを変換する部品（アダプター）で切り替えます。この章のデモでは、開発環境の設定に{' '}
+            ジョブを保存して実行する仕組みを、キューのバックエンドと呼びます。アダプターはActiveJob の共通API（<code>perform</code>・<code>perform_later</code>・<code>retry_on</code> など）から、バックエンドに合わせた呼び出しへ変換します。デモでは開発環境の設定に{' '}
             <code>config.active_job.queue_adapter = :sidekiq</code> を書き、Redis 8.10 と Sidekiq 8.1.7 を Docker で動かしました。
           </p>
           <Code
@@ -622,4 +624,4 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
   ],
 }
 
-export default ch18
+export default withExplanations(ch18, explanation18)

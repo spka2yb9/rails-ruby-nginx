@@ -1,4 +1,6 @@
 import type { Chapter } from '../content/types'
+import { withExplanations } from '../explanations/shared'
+import { explanation29 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
@@ -677,4 +679,4 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
   ],
 }
 
-export default ch29
+export default withExplanations(ch29, explanation29)
