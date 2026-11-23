@@ -1,0 +1,25 @@
+/* 広い画面では手順の右に、上部バーの下から画面の下端までの高さで固定する。
+   上端の位置（top）は #case-view の上の余白と同じなので、スクロールしても動かない。狭い画面では本文の流れに沿って表示する。 */
+.case-right {
+  position: sticky; top: calc(var(--topbar-h) + var(--term-gap)); align-self: start;
+  height: calc(100dvh - var(--topbar-h) - 2 * var(--term-gap)); min-height: 360px;
+}
+.term-wrap { display: flex; flex-direction: column; height: 100%; background: #0b0f14; border: 1px solid #263646; border-radius: 9px; overflow: hidden; }
+.term-head, .term-foot { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: #17232f; color: #c9d5e1; }
+.term-head { justify-content: space-between; border-bottom: 1px solid #2d3a47; }
+.term-title { font-size: 13px; font-weight: 600; }
+.term-title > span { margin-right: 5px; color: #96cfe0; font-family: var(--mono); }
+.term-note { color: #bfceda; font-size: 12px; }
+.term-note.on { color: #a9e8bc; }
+#term { flex: 1; min-height: 0; padding: 8px; }
+#term .xterm { height: 100%; }
+#term .xterm-viewport { background: transparent !important; }
+.term-foot { gap: 6px; flex-wrap: wrap; border-top: 1px solid #2d3a47; }
+.term-foot button { min-height: 34px; padding: 3px 9px; cursor: pointer; font-size: 13px; color: #e0eaf1; background: #243546; border: 1px solid #44586b; border-radius: 5px; }
+.term-foot button:hover { background: #30485a; }
+.term-foot #term-enter { background: #cce4ed; color: #132d3c; font-weight: 600; }
+.term-foot kbd { margin-left: 4px; font-family: var(--mono); font-size: 11px; }
+@media (max-width: 680px) {
+  .case-right { position: static; height: auto; min-height: 0; }
+  #term { flex: none; height: clamp(200px, 35dvh, 340px); }
+}

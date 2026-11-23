@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Railsエンジニアのためのサーバ運用 | Railsアプリの仕組みと設計・運用</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="vendor/xterm.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/terminal.css">
+<link rel="stylesheet" href="css/lesson.css">
+<!-- 教科書の第6部として埋め込まれたとき（?embed）。教科書の上部バーと目次が外側にある -->
+<script>if (location.search.indexOf('embed') >= 0) document.documentElement.classList.add('embed');</script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../">Railsアプリの仕組みと設計・運用</a>
+  <label class="exercise-picker" for="exercise-select">演習を選ぶ
+    <select id="exercise-select"></select>
+  </label>
+  <div class="top-actions">
+    <button class="top-btn" id="btn-concepts">用語集</button>
+    <button class="top-btn" id="btn-sheet">コマンド早見表</button>
+  </div>
+</header>
+
+<main class="main" id="case-view">
+  <div id="case-head"></div>
+  <div id="case-work">
+    <div class="case-left" id="case-left"></div>
+    <div class="case-right">
+      <div class="term-wrap">
+        <div class="term-head">
+          <span class="term-title"><span aria-hidden="true">›_</span> 練習用ターミナル</span>
+          <span class="term-note" role="status">ブラウザ内で実行</span>
+        </div>
+        <div id="term"></div>
+        <div class="term-foot">
+          <button id="term-enter">実行 <kbd>Enter</kbd></button>
+          <button id="term-cancel">中断 <kbd>Ctrl+C</kbd></button>
+        </div>
+      </div>
+    </div>
+    <div id="case-resources"></div>
+    <section id="case-quiz" aria-label="回答と解説"></section>
+  </div>
+  <footer class="progress-foot">
+    <span id="course-progress"></span>
+    <button class="text-btn" id="reset-progress" hidden>学習記録をリセット</button>
+  </footer>
+</main>
+
+<dialog class="overlay" id="overlay" aria-labelledby="reference-title">
+  <div class="overlay-box">
+    <button class="ov-close" id="overlay-close" aria-label="閉じる">✕</button>
+    <div id="overlay-body"></div>
+  </div>
+</dialog>
+
+<!-- ライブラリ（すべてローカル。CDNもサーバーも使わない） -->
+<script src="vendor/xterm.js"></script>
+<script src="vendor/xterm-addon-fit.js"></script>
+<script src="vendor/lifo.min.js"></script>
+<!-- AWS CLI のシミュレーター（aws-learning。作り方は tools/aws-sim/vite.config.ts）。AWS のCASEだけが使う -->
+<script src="vendor/aws-sim.min.js"></script>
+
+<!-- 共通 -->
+<script src="js/ui/util.js"></script>
+<script src="js/progress/progress-store.js"></script>
+
+<!-- CASEデータ（新しい演習はここに1行足すだけ） -->
+<script src="js/scenarios/base.js"></script>
+<script src="js/scenarios/index.js"></script>
+<script src="js/scenarios/case00.js"></script>
+<script src="js/scenarios/case00b.js"></script>
+<script src="js/scenarios/case01.js"></script>
+<script src="js/scenarios/case02.js"></script>
+<script src="js/scenarios/case03.js"></script>
+<script src="js/scenarios/case04.js"></script>
+<script src="js/scenarios/case05.js"></script>
+<script src="js/scenarios/case06.js"></script>
+<script src="js/scenarios/case07.js"></script>
+<script src="js/scenarios/case08.js"></script>
+<script src="js/scenarios/case09.js"></script>
+<script src="js/scenarios/case10.js"></script>
+<script src="js/scenarios/case11.js"></script>
+<script src="js/scenarios/case12.js"></script>
+<script src="js/scenarios/case13.js"></script>
+<script src="js/scenarios/case14.js"></script>
+<script src="js/scenarios/case15.js"></script>
+<script src="js/scenarios/case16.js"></script>
+<script src="js/scenarios/case17.js"></script>
+<script src="js/scenarios/final.js"></script>
+<script src="js/scenarios/case18.js"></script>
+<script src="js/scenarios/case19.js"></script>
+<script src="js/scenarios/case20.js"></script>
+<script src="js/scenarios/case21.js"></script>
+<script src="js/scenarios/case22.js"></script>
+<script src="js/scenarios/case23.js"></script>
+<script src="js/scenarios/case24.js"></script>
+<script src="js/scenarios/case25.js"></script>
+<script src="js/scenarios/case26.js"></script>
+<script src="js/scenarios/case27.js"></script>
+<script src="js/scenarios/case28.js"></script>
+<script src="js/scenarios/case29.js"></script>
+<script src="js/scenarios/case30.js"></script>
+<script src="js/scenarios/case31.js"></script>
+<script src="js/scenarios/case32.js"></script>
+<script src="js/scenarios/case33.js"></script>
+<script src="js/scenarios/case34.js"></script>
+<script src="js/scenarios/case35.js"></script>
+<script src="js/scenarios/case36.js"></script>
+<script src="js/scenarios/case37.js"></script>
+<script src="js/scenarios/case38.js"></script>
+<script src="js/scenarios/case39.js"></script>
+<script src="js/scenarios/case40.js"></script>
+<script src="js/scenarios/case41.js"></script>
+<script src="js/scenarios/case42.js"></script>
+<script src="js/scenarios/case43.js"></script>
+<script src="js/scenarios/case44.js"></script>
+<script src="js/scenarios/case45.js"></script>
+<script src="js/scenarios/case46.js"></script>
+<script src="js/scenarios/case47.js"></script>
+<script src="js/scenarios/case48.js"></script>
+<script src="js/scenarios/case49.js"></script>
+<script src="js/scenarios/case50.js"></script>
+
+<!-- Linux環境 -->
+<script src="js/linux/lifo-adapter.js"></script>
+<script src="js/linux/scenario-commands.js"></script>
+<script src="js/linux/linux-runtime.js"></script>
+
+<!-- Terminal -->
+<script src="js/terminal/terminal-controller.js"></script>
+
+<!-- 教材UI -->
+<script src="js/ui/hint.js"></script>
+<script src="js/ui/score.js"></script>
+<script src="js/ui/quiz.js"></script>
+<script src="js/ui/cheatsheet.js"></script>
+<script src="js/ui/concepts.js"></script>
+<script src="js/ui/commands.js"></script>
+<script src="js/lessons/lessons.js"></script>
+<script src="js/lessons/lesson-controller.js"></script>
+
+<script src="js/app.js"></script>
+</body>
+</html>

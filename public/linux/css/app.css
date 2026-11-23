@@ -1,0 +1,192 @@
+/* 全体レイアウト / 配色
+   教科書本体（src/index.css）と同じ配色・書体に合わせている。
+   ライト／ダークは OS の設定に従う。Terminal だけは常に暗い配色（terminal.css）。 */
+:root {
+  color-scheme: light dark;
+  --bg: #fbfaf7;
+  --bg-elev: #ffffff;
+  --fg: #1f2328;
+  --fg-muted: #5c6370;
+  --line: #d9d6cf;
+  --accent: #1f5f8b;
+  --accent-soft: #e6eff6;
+  --code-bg: #f4f3ef;
+  --warn-bg: #fff6e5;
+  --warn-line: #e3a94c;
+  --warn-fg: #8a5a12;
+  --ok-bg: #eef5ee;
+  --ok-line: #5c8f63;
+  --ok-fg: #2f6b38;
+  --danger-bg: #fbeeee;
+  --danger-line: #c46a6a;
+  --danger-fg: #b23b3b;
+  --purple: #8a4f87;
+
+  /* 元の教材の変数名を教科書の配色へ割り当てる */
+  --bg-2: var(--bg);
+  --panel: var(--bg-elev);
+  --panel-2: var(--code-bg);
+  --line-2: var(--line);
+  --fg-dim: var(--fg-muted);
+  --fg-mute: var(--fg-muted);
+  --green: var(--ok-fg);
+  --yellow: var(--warn-fg);
+  --red: var(--danger-fg);
+
+  --topbar-h: 52px;
+  --mono: 'SFMono-Regular', Menlo, Consolas, 'Noto Sans Mono CJK JP', monospace;
+  --sans: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic', 'Meiryo', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181c;
+    --bg-elev: #1e2126;
+    --fg: #e6e4df;
+    --fg-muted: #a0a4ad;
+    --line: #353a42;
+    --accent: #7fb3dc;
+    --accent-soft: #223241;
+    --code-bg: #1b1e23;
+    --warn-bg: #3a3020;
+    --warn-line: #c9964a;
+    --warn-fg: #e0b468;
+    --ok-bg: #22312a;
+    --ok-line: #6fa676;
+    --ok-fg: #8fcf97;
+    --danger-bg: #3a2426;
+    --danger-line: #b06262;
+    --danger-fg: #e88a8a;
+    --purple: #c79ac4;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+h1, h2, h3, h4 { line-height: 1.5; }
+code, pre { font-family: var(--mono); }
+
+[hidden] { display: none !important; }
+html { scroll-padding-top: calc(var(--topbar-h) + 12px); }
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 16px; height: var(--topbar-h); padding: 0 clamp(12px, 3vw, 32px);
+  background: var(--bg-elev); border-bottom: 1px solid var(--line);
+}
+.brand { color: var(--fg); font-weight: 600; font-size: 14px; text-decoration: none; }
+.exercise-picker { display: flex; align-items: center; gap: 10px; min-width: 0; white-space: nowrap; font-size: 14px; font-weight: 600; }
+.exercise-picker select {
+  min-width: 0; width: min(36vw, 31rem); padding: 5px 8px; min-height: 36px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--bg-elev); color: var(--fg); font: inherit;
+}
+.top-actions { display: flex; gap: 6px; margin-left: auto; }
+.top-btn {
+  background: transparent; border: 1px solid var(--line); border-radius: 6px;
+  padding: 4px 10px; min-height: 36px; cursor: pointer; color: var(--fg); font-size: 13px; white-space: nowrap;
+}
+.top-btn:hover { background: var(--accent-soft); }
+html.embed .brand { display: none; }
+.main { max-width: 1240px; margin: 0 auto; padding: clamp(20px, 3vw, 36px) clamp(14px, 3vw, 36px) 48px; }
+
+/* ---------- 共通パーツ ---------- */
+.panel {
+  background: var(--bg-elev); border: 1px solid var(--line);
+  border-radius: 8px; padding: 14px 20px; margin: 0 0 16px;
+}
+.panel h3 { margin: 0 0 8px; font-size: 1rem; color: var(--fg); }
+.panel h4 { margin: 14px 0 6px; font-size: 14px; color: var(--fg-muted); }
+.panel.danger { border-left: 4px solid var(--danger-line); border-color: var(--danger-line); background: var(--danger-bg); border-radius: 0 8px 8px 0; }
+.panel.danger h3 { color: var(--danger-fg); }
+
+.muted { color: var(--fg-muted); }
+.small { font-size: 13px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg-elev);
+  color: var(--fg); font-family: var(--sans); font-size: 14px; text-decoration: none;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg-elev); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.1); color: var(--bg-elev); }
+.btn.primary:disabled { background: var(--code-bg); border-color: var(--line); color: var(--fg-muted); cursor: not-allowed; filter: none; font-weight: normal; }
+.btn.ghost { background: transparent; }
+.btn.small { padding: 3px 10px; font-size: 13px; }
+
+button.cmd {
+  display: inline-block; margin: 2px 6px 2px 0; padding: 2px 10px;
+  background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px;
+  color: var(--fg); font-family: var(--mono); font-size: 13px; cursor: pointer;
+  text-align: left; overflow-wrap: anywhere;
+}
+button.cmd:hover { border-color: var(--accent); color: var(--accent); }
+button.cmd::before { content: "$ "; color: var(--fg-muted); }
+
+.btn { min-height: 40px; justify-content: center; }
+.text-btn { padding: 7px 0; background: none; border: 0; color: var(--accent); cursor: pointer; font-weight: 600; }
+.text-btn:hover { text-decoration: underline; }
+.step-number { display: inline-grid; flex: none; place-items: center; width: 28px; height: 28px;
+  border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 650 14px var(--sans); }
+.reference > summary, .guide-step > summary {
+  display: flex; align-items: center; gap: 10px; list-style: none; cursor: pointer; padding: 12px 16px;
+}
+.reference > summary::-webkit-details-marker, .guide-step > summary::-webkit-details-marker { display: none; }
+.reference > summary::after, .guide-step > summary::after {
+  content: ''; display: block; flex: none; margin-left: auto; width: 7px; height: 7px; border: solid var(--fg-muted);
+  border-width: 0 1.5px 1.5px 0; transform: rotate(45deg);
+}
+.reference[open] > summary::after, .guide-step[open] > summary::after { transform: rotate(225deg); }
+.progress-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-top: 24px; font-size: 13px; color: var(--fg-muted); }
+
+.overlay {
+  width: min(850px, calc(100% - 24px)); max-height: 86dvh; padding: 0; overflow: auto;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--bg-elev); color: var(--fg);
+  box-shadow: 0 20px 65px #0004;
+}
+.overlay::backdrop { background: #0b162396; }
+.overlay-box { padding: 18px clamp(14px, 3vw, 28px) 28px; }
+.ov-close {
+  float: right; position: sticky; top: 10px; z-index: 1;
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 6px; width: 36px; height: 36px; cursor: pointer;
+}
+.ov-close:hover { border-color: var(--accent); }
+.example-cmd { display: inline-block; padding: 2px 8px; border-radius: 4px; background: var(--code-bg); overflow-wrap: anywhere; font-size: 13px; }
+.sheet-head h2 { margin: 0 0 4px; font-size: 1.4rem; }
+.sheet-head input {
+  width: 100%; margin-top: 12px; padding: 10px 12px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  color: var(--fg); font: inherit;
+}
+.sheet-body { margin-top: 18px; }
+.sheet-group h3 {
+  margin: 18px 0 8px; padding-bottom: 4px; font-size: 1rem; color: var(--fg);
+  border-bottom: 1px solid var(--line);
+}
+.sheet-group ul { list-style: none; margin: 0; padding: 0; }
+.sheet-group li {
+  display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  gap: 12px; align-items: center; padding: 3px 0;
+}
+.sheet-group .want { color: var(--fg-muted); font-size: 14px; }
+
+@media (max-width: 670px) {
+  .topbar { gap: 8px; }
+  .brand { display: none; }
+  .sheet-group li { grid-template-columns: 1fr; gap: 0; padding: 6px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

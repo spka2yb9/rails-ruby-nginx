@@ -1,0 +1,73 @@
+/* SQL 教材（public/sql/sql-learning.css）が使う配色の変数を、本書の配色に対応させる */
+.sql-lab {
+  --panel: var(--bg-elev);
+  --accent-w: var(--accent-soft);
+  --ink: var(--fg);
+  --code: var(--code-bg);
+  --sub: var(--fg-muted);
+  --open: #b25f00;
+  --open-w: #fdf0e0;
+  --warn: #a8341f;
+  margin: 1.6rem 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  .sql-lab {
+    --open: #ffb45c;
+    --open-w: #332512;
+    --warn: #ff9a86;
+  }
+}
+.sql-lab-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.sql-lab-host {
+  min-height: 3rem;
+}
+.sql-lab h2,
+.sql-lab h3,
+.sql-lab h4 {
+  font-size: 15px;
+  margin: 1.2em 0 0.5em;
+}
+.sql-lab .card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.sql-lab .badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.7;
+}
+.sql-lab .b-genre {
+  background: var(--accent-w);
+  color: var(--accent);
+}
+.sql-lab .b-open {
+  background: var(--open-w);
+  color: var(--open);
+}
+.sql-lab .b-plain {
+  background: var(--code);
+  color: var(--sub);
+}
+.sql-lab .small {
+  font-size: 12.5px;
+}
+.sql-lab .muted {
+  color: var(--sub);
+}
+.sql-lab pre {
+  overflow: auto;
+}
