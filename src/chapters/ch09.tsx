@@ -286,21 +286,158 @@ function MountFigure() {
   )
 }
 
+/* ---------- ルーティングの各オブジェクトが変数で指す先 ---------- */
+function RouteObjectsFigure() {
+  const items = [
+    ['routes', '登録順の Journey::Route'],
+    ['anchored_routes', '通常のルート'],
+    ['custom_routes', 'mount したルートなど'],
+    ['simulator', 'anchored_routes の状態遷移表'],
+  ]
+  return (
+    <Svg
+      id="ch09-route-objects"
+      w={780}
+      h={306}
+      label="routes.rb のブロックの self である Mapper は、@set で RouteSet を指す。RouteSet は Rails.application.routes で、@set で Journey::Routes を、@router で Journey::Router を、named_routes で NamedRouteCollection を指す。Mapper の @set と RouteSet の @set は名前が同じだが、指すオブジェクトが違う。Journey::Routes は Rails.application.routes.routes で、登録順の Journey::Route の配列 routes、通常のルートの anchored_routes、mount したルートなどの custom_routes、anchored_routes の状態遷移表 simulator を持つ。Journey::Router は要求に合うルートを探すときに Journey::Routes を使う。NamedRouteCollection は名前から Journey::Route を引き、URL ヘルパーを定義する"
+    >
+      <Box x={20} y={20} w={220} h={52} lines={['Mapper', 'routes.rb のブロックの self']} fs={12.5} subTone="muted" />
+      <Arrow x1={240} y1={46} x2={298} y2={46} dashed />
+      <T x={269} y={34} anchor="middle" mono fs={11.5} tone="acc">
+        @set
+      </T>
+      <Box x={300} y={20} w={260} h={52} lines={['RouteSet', 'Rails.application.routes']} fs={12.5} subTone="muted" />
+
+      <Arrow d="M320,72 L320,106 L180,106 L180,138" dashed />
+      <T x={250} y={96} anchor="middle" mono fs={11.5} tone="acc">
+        @set
+      </T>
+      <Arrow x1={500} y1={72} x2={500} y2={138} dashed />
+      <T x={492} y={104} anchor="end" mono fs={11.5}>
+        @router
+      </T>
+      <Arrow d="M550,72 L550,106 L680,106 L680,138" dashed />
+      <T x={615} y={96} anchor="middle" mono fs={11.5}>
+        named_routes
+      </T>
+
+      <Box x={20} y={140} w={320} h={156} fill="box" lines={[]} />
+      <T x={34} y={160} bold fs={12.5}>
+        Journey::Routes
+      </T>
+      <T x={34} y={180} fs={11.5} tone="muted">
+        Rails.application.routes.routes
+      </T>
+      {items.map(([k, v], i) => (
+        <g key={k}>
+          <T x={34} y={210 + i * 22} mono fs={11.5} tone="muted">
+            {k}
+          </T>
+          <T x={150} y={210 + i * 22} fs={11.5}>
+            {v}
+          </T>
+        </g>
+      ))}
+
+      <Box x={420} y={140} w={160} h={52} lines={['Journey::Router', '要求に合うルートを探す']} fs={12.5} subTone="muted" />
+      <Arrow x1={420} y1={166} x2={342} y2={166} dashed />
+      <T x={381} y={182} anchor="middle" fs={11.5} tone="muted">
+        照合に使う
+      </T>
+
+      <Box x={600} y={140} w={160} h={76} lines={['NamedRouteCollection', '名前 → Journey::Route', 'URL ヘルパーを定義']} fs={12.5} subTone="muted" />
+    </Svg>
+  )
+}
+
+/* ---------- ルートを書く位置と、GET /articles/search で選ばれるルート ---------- */
+function OrderSearchFigure() {
+  const base = [
+    ['GET', '/articles', 'index'],
+    ['POST', '/articles', 'create'],
+    ['GET', '/articles/new', 'new'],
+    ['GET', '/articles/:id/edit', 'edit'],
+    ['GET', '/articles/:id', 'show'],
+    ['PATCH', '/articles/:id', 'update'],
+    ['PUT', '/articles/:id', 'update'],
+    ['DELETE', '/articles/:id', 'destroy'],
+  ]
+  const search = ['GET', '/articles/search', 'search']
+  const cols = [
+    { x: 20, title: 'resources の後に書いた場合', code: 'get "articles/search"', rows: [...base, search], chosen: 'show' },
+    { x: 400, title: 'resources のブロックの中に書いた場合', code: 'get :search, on: :collection', rows: [search, ...base], chosen: 'search' },
+  ]
+  return (
+    <Svg
+      id="ch09-order-search"
+      w={780}
+      h={410}
+      label={'GET /articles/search を送ったときに選ばれるルートを、2つの書き方で比べた図。左は resources :articles の後に get "articles/search" を書いた場合で、ルートは index、create、new、edit、show、update、destroy、search の順に登録される。パスとメソッドが合うのは show と search で、先に登録された show が選ばれる。params[:id] は search という文字列になり、記事が見つからず 404 になる。右は resources のブロックの中に get :search, on: :collection を書いた場合で、ブロックが先に実行されるので search が index より前に登録され、search が選ばれる'}
+    >
+      <Box x={20} y={12} w={220} h={30} lines="GET /articles/search" mono fs={12.5} fill="box4" />
+      <T x={256} y={27} fs={11.5} tone="muted">
+        上の行ほど先に登録されたルート。合う行のうち一番上が選ばれる
+      </T>
+      {cols.map((c) => (
+        <g key={c.x}>
+          <T x={c.x} y={64} bold fs={12.5}>
+            {c.title}
+          </T>
+          <T x={c.x} y={84} mono fs={11.5} tone="muted">
+            {c.code}
+          </T>
+          {c.rows.map(([v, p, a], i) => {
+            const y = 100 + i * 28
+            const hit = a === 'show' || a === 'search'
+            const chosen = a === c.chosen
+            return (
+              <g key={v + p}>
+                <Box
+                  x={c.x}
+                  y={y}
+                  w={360}
+                  h={24}
+                  lines={`${v.padEnd(7)}${p.padEnd(19)}${a}`}
+                  mono
+                  fs={11.5}
+                  align="start"
+                  fill={chosen ? 'box5' : 'bg'}
+                  accent={chosen}
+                  dashed={hit && !chosen}
+                />
+                {hit && (
+                  <T x={c.x + 296} y={y + 12} fs={11.5} tone={chosen ? 'acc' : 'muted'}>
+                    {chosen ? '選ばれる' : '合う'}
+                  </T>
+                )}
+              </g>
+            )
+          })}
+        </g>
+      ))}
+      <T x={20} y={372} fs={11.5}>
+        show が呼ばれ、params[:id] は "search"
+      </T>
+      <T x={20} y={392} fs={11.5} tone="danger">
+        記事が見つからず 404 になる
+      </T>
+      <T x={400} y={372} fs={11.5}>
+        search が呼ばれる
+      </T>
+    </Svg>
+  )
+}
+
 const ch09: Chapter = {
   number: 9,
   part: 2,
   title: 'ルーティング',
   summary:
-    'URL のパスと HTTP のメソッドから、どのコントローラーのどのアクションを呼ぶかを決めるルーティングの役割と、routes.rb の get・resources の書き方、bin/rails routes の読み方、パスの :id が params に入ること、URL ヘルパーの使い方を確かめます。そのうえで、routes.rb の定義が Journey::Route のオブジェクトになるまでと、リクエストのパスから候補のルートを絞り込んでコントローラーに渡すまでを、ActionDispatch のソースで追います。ルートの順序、URL ヘルパーの定義、Rack アプリのマウントの仕組みも扱います。',
+    '記事を開く要求と削除する要求は、同じパスでも別のアクションに届きます。routes.rb の1行を、ルートの一覧、受け取るパラメーター、リンクに使う URL と照らし合わせます。',
   goals: [
-    'URL のパスと HTTP のメソッドから、ルーティングが呼ぶアクションを決めることと、パスの :id が params に入ることを説明できる',
-    'resources が作る7つのルートを bin/rails routes で確かめ、only や入れ子、article_path などの URL ヘルパーを使える',
-    'resources などの DSL が Mapper から Journey::Route の登録までどう進むかを説明できる',
-    'Journey::Route が持つ情報（パターン、条件、defaults、precedence、app）を説明できる',
-    'リクエストを受けたルーティングが候補を絞り込み、パラメーターを取り出して app を呼ぶ流れを説明できる',
-    'ルートの定義順が結果を変える理由と、制約による回避を説明できる',
-    'article_path のような URL ヘルパーが定義される仕組みを理解する',
-    'mount したアプリに SCRIPT_NAME と PATH_INFO がどう渡るかを説明できる',
+    'HTTP メソッドとパスから、呼ばれるアクションと params に入る値を読み取れる',
+    'resources が登録するルートを bin/rails routes で調べ、画面のリンクを作れる',
+    '複数のルートに合うパスでは、定義の順番がどのように結果に影響するか説明できる',
   ],
   prerequisites: [4, 6],
   sections: [
@@ -605,7 +742,7 @@ new_article_comment GET  /articles/:article_id/comments/new(.:format) comments#n
           />
           <p>
             記事の id はパスの <code>:article_id</code> の部分に入り、CommentsController の中では <code>params[:article_id]</code> で取り出せます。
-            <code>/articles/1/comments/new</code> を認識させると <code>{'{controller: "comments", action: "new", article_id: "1"}'}</code> になりました。Rails ガイドは入れ子を1段までにすることを勧めています
+            <code>/articles/1/comments/new</code> に合うルートを探させると、結果は <code>{'{controller: "comments", action: "new", article_id: "1"}'}</code> でした（確かめ方は「ルートの順序」の節で使う <code>recognize_path</code> です）。Rails ガイドは入れ子を1段までにすることを勧めています
             <Ref n={5} />。
           </p>
         </>
@@ -671,10 +808,145 @@ article_url(a)              # => "http://example.com/articles/1"（ホストを 
       ),
     },
     {
+      id: 'resource-design',
+      title: "URL に表すリソースを選ぶ",
+      body: (
+        <>
+          <p>
+            記事やコメントのように、URL で識別して取得・変更する対象をリソースと呼びます。<code>/articles/42</code> が「42番の記事」を表し、GET なら表示、PATCH なら変更という形にすると、対象と操作を別々に読み取れます。GET は取得用にし、更新は更新用のメソッドへ寄せると、リンクの再表示や検索ロボットの巡回で状態が動く事故を防げます。<Ref n={11} />
+          </p>
+          <h3>単数リソースと親子の URL</h3>
+          <p>
+            同じ記事に公開記録が最大1件なら、<code>resource :publication</code> のように単数形にできます。子自身の <code>:id</code> を URL に含めず、親の記事で対象が決まります。Rails は単数リソースでも複数形のコントローラー名を使います。<Ref n={11} />
+          </p>
+          <Code
+            lang="ruby"
+            title={"config/routes.rb"}
+            code={`
+resources :articles do
+  resource :publication, only: %i[create destroy], module: :articles
+  resources :comments, only: %i[index create show update destroy], shallow: true
+end
+`}
+          />
+          <p>
+            公開の作成と取り消しは <code>POST /articles/:article_id/publication</code> と <code>DELETE /articles/:article_id/publication</code> で、<code>Articles::PublicationsController</code> に渡ります。<code>module: :articles</code> は、コントローラーを <code>Articles</code> という名前空間の中から探す指定です（ファイルは <code>app/controllers/articles/publications_controller.rb</code> に置きます）。 URL を生成するヘルパーはどちらも <code>article_publication_path(article)</code> です。ArticlesController に <code>publish</code> のようなアクションを増やす場合と比べ、公開の条件・記録・権限を置く場所が明確になります。対象の単位を考えると、「記事へのいいねを作る・消す」「検索結果の一覧を GET で取得する」といった設計にも同じ考え方を使えます。
+          </p>
+          <p>
+            子の一覧や作成では、どの記事のコメントかを <code>/articles/:article_id/comments</code> で受け取ります。<code>shallow: true</code> を付けると、既存のコメントを参照・更新・削除するパスは <code>/comments/:id</code> になります。コメントの ID だけで行を特定できるためです。深いネストは URL・ヘルパー・取得処理を長くするので、親が必要な操作に絞ります。短い URL でも、誰が子を操作できるかは認可で確かめます（<ChapterLink n={21} section="object-authorization">レコード単位の認可</ChapterLink>）。<Ref n={11} />
+          </p>
+          <h3>標準の操作を越えるルート</h3>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">書き方</th>
+                  <th scope="col">パスと振り分け</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>get :preview, on: :member</code></th>
+                  <td><code>/articles/:id/preview</code>。1件が対象</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>get :search, on: :collection</code></th>
+                  <td><code>/articles/search</code>。集合が対象</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>namespace :admin</code></th>
+                  <td><code>/admin/articles</code>、<code>admin_articles_path</code>、<code>Admin::ArticlesController</code></td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>scope module: :admin</code></th>
+                  <td>URL を <code>/articles</code> のままにして <code>Admin::ArticlesController</code> へ渡す</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>scope "/admin", as: :admin</code></th>
+                  <td>パスとヘルパー名に接頭辞を付け、コントローラーの名前空間は増やさない</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            管理画面の名前空間は URL とコードの置き場所をまとめます。<code>namespace :admin</code> と書いても、<code>/admin/articles</code> を開ける利用者は制限されません。管理者しか操作できないという条件は、Admin のコントローラーの側に、認証・認可の処理として書きます。<Ref n={11} />
+          </p>
+          <h3>生成されたルートを確認する</h3>
+          <p>
+            <code>bin/rails routes -g comment</code> で名前・パスなどに <code>comment</code> を含むルートを探せます。開発環境の <code>/rails/info/routes</code> にはルート一覧の画面があります。パスの形式に加えて、<code>constraints subdomain: "staff" do ... end</code> などで要求のサブドメイン（<code>staff.example.com</code> の <code>staff</code> の部分）を条件にできます。パスの形式を満たすことと、レコードが存在したり利用者に権限があったりすることは別々に判定します。<code>/articles/999</code> は <code>/articles/:id</code> のルートに合いますが、id が 999 の記事があるかどうかは、アクションの中で <code>Article.find</code> を呼ぶまで分かりません。<Ref n={11} />
+          </p>
+          <p>
+            <code>polymorphic_path([:admin, @article])</code> のように名前空間とモデルを並べると、その組から登録済みのヘルパーを選べます。この例は <code>admin_article_path(@article)</code> を呼んだ場合と同じパスを返します。記事に属するコメントの新規フォームなら <code>form_with model: [@article, @comment]</code> が親子の作成先を選びます。<code>@comment</code> が保存前のオブジェクトなら、送信先は <code>article_comments_path(@article)</code> と同じパスになります。<Ref n={11} />
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'dsl',
       title: 'routes.rb の定義が登録されるまで',
       body: (
         <>
+          <p>
+            routes.rb に書いた1行がルートとして登録されるまでを、この節と次の節で追います。ここから「URL ヘルパーの定義」の節までに出てくる Rails の内部のクラスは、次の6つです。
+            <Term>Journey</Term>（<code>ActionDispatch::Journey</code>）は ActionDispatch の中のモジュールで、パスのパターンの解析と、要求のパスとの照合を受け持ちます。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">クラス</th>
+                  <th scope="col">持っているもの・すること</th>
+                  <th scope="col">コードから見える所</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>ActionDispatch::Routing::RouteSet</code></th>
+                  <td>アプリケーションのルート全体を持つ。ルートの登録（<code>add_route</code>）と、要求の受け付け（<code>call</code>）の両方を受け持つ</td>
+                  <td><code>Rails.application.routes</code></td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>ActionDispatch::Routing::Mapper</code></th>
+                  <td><code>get</code>・<code>resources</code>・<code>namespace</code> などのメソッドを持ち、routes.rb の内容を1つずつのルートに展開する</td>
+                  <td>routes.rb のブロックの中の self</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>Mapper::Mapping</code></th>
+                  <td>1つのルートの定義（パス、コントローラーとアクション、HTTP メソッド、制約）を、登録の前にまとめたもの</td>
+                  <td>登録の途中だけで使われる</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>Journey::Routes</code></th>
+                  <td>登録されたルートの配列と、照合に使う状態遷移表を持つ</td>
+                  <td><code>Rails.application.routes.routes</code></td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>Journey::Route</code></th>
+                  <td>登録された1つのルート。<code>bin/rails routes</code> の1行に当たる</td>
+                  <td>上の配列の要素</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>Journey::Router</code></th>
+                  <td>要求のパスに合うルートを探し、見つけたルートの呼び出し先を呼ぶ</td>
+                  <td>RouteSet の <code>@router</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Journey の3つは名前が似ています。Routes はルートの一覧、Route は1件のルート、Router は要求に合うルートを探すクラスです。routes.rb の1行は Mapper、Mapping、RouteSet、Journey::Routes の順に渡り、Journey::Route
+            になります。図 9-3 の左の列が、この順を上から並べたものです。
+          </p>
+          <p>
+            次の図はこれらのオブジェクトがどの変数でほかのオブジェクトを指しているかを示したものです。左上の Mapper から矢印の順に見ます。この後の引用に出てくる <code>@set</code>・
+            <code>named_routes</code>・<code>@router</code> は、図の破線の矢印に当たります。
+          </p>
+          <Figure
+            title="ルーティングの各オブジェクトが変数で指す先"
+            caption="Rails 8.1.4.1 の route_set.rb・mapper.rb・journey/routes.rb をもとにした模式図。破線の矢印の先は、矢印の横に書いた変数が指すオブジェクト。強調色の @set は2つあり、Mapper の @set は RouteSet を、RouteSet の @set は Journey::Routes を指す。登録の途中だけで使う Mapping は省略した。"
+          >
+            <RouteObjectsFigure />
+          </Figure>
           <p>
             <code>config/routes.rb</code> のブロックは、<code>ActionDispatch::Routing::Mapper</code> のインスタンスを self として <code>instance_exec</code> されます（<ChapterLink n={4} />
             ）。デモのアプリケーションの routes.rb は次のとおりです。
@@ -703,7 +975,53 @@ rails_health_check GET  /up(.:format)           rails/health#show
           />
           <p>
             <code>resources</code> は、Mapper の中で <code>collection do get :index end</code> や、member のスコープでの <code>get :show</code> などに展開されます（<code>mapper.rb</code> の
-            1663〜1694 行目）。最終的に、1つのルートごとに次の <code>add_route</code> が呼ばれます。
+            1663〜1694 行目）。<code>resources</code> の中で、ルートを登録している部分は次のとおりです。<code>resources</code> が特別な登録の方法を持っているのか、<code>get</code> などを呼んでいるだけなのかを確かめます。
+          </p>
+          <Code
+            lang="ruby"
+            title="actionpack/lib/action_dispatch/routing/mapper.rb（1676〜1689行目。resources メソッドの中）"
+            href={`${GH}/actionpack/lib/action_dispatch/routing/mapper.rb#L1676-L1689`}
+            code={`
+              yield if block_given?
+
+              concerns(*concerns) if concerns
+
+              collection do
+                get  :index if parent_resource.actions.include?(:index)
+                post :create if parent_resource.actions.include?(:create)
+              end
+
+              new do
+                get :new
+              end if parent_resource.actions.include?(:new)
+
+              set_member_mappings_for_resource
+`}
+          />
+          <ul>
+            <li>
+              <code>yield if block_given?</code>：<code>resources :articles do ... end</code> のようにブロックを渡したときは、最初にそのブロックを実行します。入れ子の <code>resources</code>{' '}
+              や追加のルートは、ここで登録されます。
+            </li>
+            <li>
+              <code>collection do ... end</code>：<code>/articles</code> を対象にして <code>get :index</code> と <code>post :create</code> を呼びます。
+              <code>parent_resource.actions</code> は、<code>only:</code> や <code>except:</code> で絞った後のアクションの一覧です。<code>only: [:index, :show]</code> なら{' '}
+              <code>post :create</code> は呼ばれません。
+            </li>
+            <li>
+              <code>new do ... end</code>：<code>/articles/new</code> を対象にして <code>get :new</code> を呼びます。
+            </li>
+            <li>
+              <code>set_member_mappings_for_resource</code>：同じファイルの 2108〜2118 行目にあるメソッドです。<code>member do ... end</code> の中で、<code>/articles/:id</code>{' '}
+              を対象にして <code>get :edit</code>、<code>get :show</code>、<code>patch :update</code>、<code>put :update</code>、<code>delete :destroy</code> をこの順に呼びます。
+            </li>
+          </ul>
+          <p>
+            <code>resources</code> の中身は、routes.rb に自分で書けるものと同じ <code>get</code>・<code>post</code>・<code>patch</code>・<code>put</code>・<code>delete</code>{' '}
+            の呼び出しでした。呼ぶ順は index、create、new、edit、show、update、destroy で、「resources と7つのアクション」の節の <code>bin/rails routes</code> の行の並びと一致します。
+          </p>
+          <p>
+            <code>get</code> などのメソッドは、最終的に1つのルートごとに次の <code>add_route</code> を呼びます。この引用では、routes.rb の1行から取り出した値が、どの順で加工されて RouteSet に渡るかを確かめます。
           </p>
           <Code
             lang="ruby"
@@ -736,8 +1054,45 @@ rails_health_check GET  /up(.:format)           rails/health#show
           <p>
             パスの文字列（<code>/articles/:id(.:format)</code>）を <code>Journey::Parser</code> で構文木にし、スコープ（namespace や scope の設定）やコントローラー名、HTTP メソッドの指定とまとめて{' '}
             <code>Mapping</code> を作り、RouteSet に渡します
-            <Ref n={1} />。RouteSet の側は次のとおりです。
+            <Ref n={1} />。行ごとに読むと次のとおりです。
           </p>
+          <ul>
+            <li>
+              引数は12個ありますが、追うのは5つです。<code>action</code> は <code>get</code> の最初の引数（<code>"up"</code> のようなパスか、<code>:show</code>{' '}
+              のようなアクション名）、<code>controller</code> はコントローラーの名前、<code>as</code> はルートの名前、<code>to</code> は <code>"rails/health#show"</code>{' '}
+              のような呼び出し先、<code>via</code> は HTTP メソッドです。
+            </li>
+            <li>
+              <code>path = path_for_action(action, _path)</code>：ルートのパスを作ります。<code>@scope</code> は、外側の <code>resources</code> や <code>namespace</code>{' '}
+              が設定した値（パスの前に付ける部分、コントローラーの名前など）を持つオブジェクトです。<code>path_for_action</code> は <code>@scope[:path]</code> を前に付けるので、
+              <code>namespace :admin</code> の中に書いた <code>get "dashboard"</code> のパスは <code>/admin/dashboard</code> になります。
+            </li>
+            <li>
+              <code>default_action = ...</code> から <code>end</code> まで：アクションの名前の既定値を決めます。<code>get :show</code> のようにアクション名で書いたルートでは{' '}
+              <code>"show"</code> になります。<code>to:</code> に <code>"rails/health#show"</code> のように書いたルートでは、後の <code>Mapping.build</code> の中で <code>#</code>{' '}
+              の前後に分けた値が使われます（同じファイルの 230〜233 行目）。
+            </li>
+            <li>
+              <code>as = name_for_action(as, action) if as</code>：ルートの名前を決めます。<code>resources</code> の中では、リソースの名前と組み合わせて <code>articles</code>・
+              <code>article</code>・<code>new_article</code> のような名前にします。
+            </li>
+            <li>
+              <code>path = Mapping.normalize_path URI::RFC2396_PARSER.escape(path), formatted</code>：Ruby はメソッドの引数の括弧を省けるので、この行は{' '}
+              <code>Mapping.normalize_path(URI::RFC2396_PARSER.escape(path), formatted)</code> と同じです。<code>escape</code> は URL にそのまま書けない文字を <code>%E3</code>{' '}
+              のような形に変えます。<code>normalize_path</code> は先頭にスラッシュを付けて連続するスラッシュを1つにまとめ、既定では末尾に <code>(.:format)</code> を付けます。<code>bin/rails routes</code> の URI Pattern に{' '}
+              <code>(.:format)</code> が付くのは、この行の結果です。
+            </li>
+            <li>
+              <code>ast = Journey::Parser.parse path</code>：パスの文字列を構文木にします。結果は、この節の初めに見た Cat や Symbol の木です。
+            </li>
+            <li>
+              <code>mapping = Mapping.build(...)</code>：ここまでに決めたパスの構文木、コントローラー、アクション、HTTP メソッド、制約を1つの Mapping にまとめます。
+            </li>
+            <li>
+              <code>@set.add_route(mapping, as)</code>：Mapper の <code>@set</code> は RouteSet（<code>Rails.application.routes</code>）です。Mapping とルートの名前を渡します。
+            </li>
+          </ul>
+          <p>RouteSet の側の <code>add_route</code> は次のとおりです。ここでは、ルートの名前の確認と、ルートの一覧への追加を確かめます。</p>
           <Code
             lang="ruby"
             title="actionpack/lib/action_dispatch/routing/route_set.rb（643〜655行目）"
@@ -758,10 +1113,37 @@ rails_health_check GET  /up(.:format)           rails/health#show
         named_routes[name] = route if name
 `}
           />
+          <ul>
+            <li>
+              1行目の <code>raise ... unless ...</code>：名前が付いているのに、その名前が <code>/^[_a-z]\w*$/i</code>{' '}
+              に合わないときに ArgumentError にします。この正規表現は、英字かアンダースコアで始まり、英数字とアンダースコアだけが続く語を表します。<code>as: "my-page"</code>{' '}
+              のようにハイフンを含む名前は、ここで止まります。ルートの名前は、後で <code>my_page_path</code> のようなメソッドの名前に使われます。
+            </li>
+            <li>
+              <code>if name &amp;&amp; named_routes[name]</code>：同じ名前のルートが登録済みなら ArgumentError にします。メッセージは{' '}
+              <code>Invalid route name, already in use: 'article'</code> で始まります。
+            </li>
+            <li>
+              <code>route = @set.add_route(name, mapping)</code>：RouteSet の <code>@set</code> は <code>Journey::Routes</code> のインスタンスです（同じファイルの 400 行目で{' '}
+              <code>Journey::Routes.new</code> を代入しています）。Mapper の <code>@set</code> は RouteSet でしたが、変数の名前が同じだけで別のオブジェクトです。戻り値の{' '}
+              <code>route</code> は、次の節で見る <code>Journey::Route</code> です。
+            </li>
+            <li>
+              <code>named_routes[name] = route if name</code>：名前があるルートを <code>named_routes</code> に登録します。
+            </li>
+          </ul>
+          <p>
+            引用したのはメソッドの途中までです。この後には、非推奨の書き方への警告と、<code>route</code> を返す行が続きます。
+          </p>
           <p>
             <code>@set</code> は <code>Journey::Routes</code> のインスタンスで、ルートの配列を持ちます。名前（<code>as</code>）が付いたルートは <code>named_routes</code>{' '}
             にも登録され、ここで URL ヘルパーが定義されます（後述）。同じ名前を2回使うと、この時点で例外になります
             <Ref n={2} />。
+          </p>
+          <p>
+            この例外は、<code>resources :articles</code> を書いた routes.rb に <code>get "articles/:id", to: "articles#show", as: :article</code>{' '}
+            のような行を足したときに出ます。<code>resources</code> が <code>article</code> という名前のルートを先に登録しているためです。メッセージの後半には、<code>resources</code> が作るルートを <code>only:</code> や <code>except:</code>{' '}
+            で減らす方法を説明した Rails ガイドの URL が書かれています。足す行の <code>as:</code> を別の名前にしても、例外は出なくなります。
           </p>
           <Figure n="9-3" title="routes.rb の1行から Journey::Route まで" caption="Rails 8.1.4.1 の mapper.rb・route_set.rb・journey/routes.rb を読んでまとめた図。">
             <DefineFigure />
@@ -775,7 +1157,9 @@ rails_health_check GET  /up(.:format)           rails/health#show
       body: (
         <>
           <p>
-            <Term>Journey</Term> は ActionDispatch の中にあるルーティングの実装です。<code>Journey::Routes#add_route</code> は Mapping から <code>Journey::Route</code> を作り、配列に追加します。
+            Journey は ActionDispatch の中にあるルーティングの実装です。前の節の最後で RouteSet が呼んだ <code>Journey::Routes#add_route</code> は、Mapping から{' '}
+            <code>Journey::Route</code> を作り、配列に追加します。次の引用では、1つのルートが何番目として、どの入れ物に保存されるかを確かめます。メソッドは3つあり、呼ばれる順は下の{' '}
+            <code>add_route</code>、上の <code>partition_route</code>、中央の <code>simulator</code> です。
           </p>
           <Code
             lang="ruby"
@@ -808,6 +1192,31 @@ rails_health_check GET  /up(.:format)           rails/health#show
       end
 `}
           />
+          <ul>
+            <li>
+              <code>route = mapping.make_route name, routes.length</code>：Mapping から Journey::Route を作ります。<code>routes</code> は登録済みのルートの配列なので、
+              <code>routes.length</code> は最初のルートで 0、次のルートで 1 になります。
+            </li>
+            <li>
+              <code>routes &lt;&lt; route</code>：作ったルートを配列の末尾に足します。
+            </li>
+            <li>
+              <code>partition_route(route)</code>：ルートを <code>anchored_routes</code> と <code>custom_routes</code> のどちらかの配列にも入れます。<code>route.path.anchored</code>{' '}
+              は、パターン全体がパスと一致する必要があるルートで true になります。<code>requirements_anchored?</code> は、パターンの <code>articles</code> や <code>:id</code>{' '}
+              のような部品が <code>/</code> か <code>.</code> で区切られていて、固定の文字列と直接つながっていないかを調べます（<code>journey/path/pattern.rb</code> の 36〜56 行目）。<code>/articles/:id(.:format)</code> は両方とも true で、<code>anchored_routes</code>{' '}
+              に入ります。
+            </li>
+            <li>
+              <code>clear_cache!</code>：前に作った <code>@ast</code> と <code>@simulator</code> を nil に戻します（同じファイルの 83〜86 行目）。ルートが増えると、全ルートをまとめた状態遷移表は作り直す必要があるためです。
+            </li>
+            <li>
+              <code>simulator</code> の <code>@simulator ||= begin ... end</code>：<code>@simulator</code> が nil のときだけ <code>begin</code> から <code>end</code>{' '}
+              までを実行し、結果を <code>@simulator</code> に入れる書き方です。2回目からは、入っている値をそのまま返します。<code>simulator</code>{' '}
+              が呼ばれるのは、次の節で見る、要求のパスを照合するときです。中では、引用で省略した <code>ast</code>{' '}
+              メソッドが <code>anchored_routes</code> すべての構文木を1つにまとめ、<code>GTG::Builder</code> がそこから状態遷移表（<code>transition_table</code>）を作ります。
+              <code>GTG::Simulator</code> は、その表に従って要求のパスを先頭から読むオブジェクトです。
+            </li>
+          </ul>
           <p>
             <code>make_route</code> の2つ目の引数 <code>routes.length</code> がルートの <code>precedence</code> になります。つまり precedence は登録された順の番号です
             <Ref n={3} />。ルートは、パターン全体がパスと一致する必要がある通常のルート（<code>anchored_routes</code>）と、mount のようにパスの先頭だけ一致すればよいルートなど（
@@ -827,9 +1236,18 @@ end
 `}
           />
           <p>
+            <code>Rails.application.routes.routes</code> は Journey::Routes で、<code>each</code> のブロックの <code>r</code> が1つの Journey::Route です。出力の配列は左から、名前（
+            <code>r.name</code>）、HTTP メソッド（<code>r.verb</code>）、パスのパターン（<code>r.path.spec.to_s</code>）、<code>defaults</code>、<code>precedence</code>、
+            <code>app</code> のクラス名です。初めの3つは、<code>bin/rails routes</code> の Prefix・Verb・URI Pattern の列と同じ値です。Controller#Action の列は、<code>defaults</code> の{' '}
+            <code>controller</code> と <code>action</code> を <code>#</code> でつないだものに当たります。
+          </p>
+          <p>
             precedence が 8 から始まっているのは、development では Rails が <code>/rails/info</code> や <code>/rails/mailers</code> などの内部用ルート（<code>internal</code>
-            ）を先頭に追加しているためです（production ではこれらが無く、<code>articles</code> の precedence は 1 でした。0 でないのは、ActionCable のエンジンが <code>/cable</code> の mount（internal）をどの環境でも先頭に追加するためです）。<code>defaults</code> の <code>controller</code> と{' '}
-            <code>action</code> が、どのコントローラーのどのアクションを呼ぶかを表します。<code>app</code> は、ルートが選ばれたときに <code>serve</code> を呼ばれるオブジェクトで、通常のルートでは{' '}
+            ）を先頭に追加しているためです。コードの <code>next if r.internal</code> は、この内部用ルートを表示から除いています。production ではこれらが無く、<code>articles</code> の
+            precedence は 1 でした。0 でないのは、ActionCable のエンジンが <code>/cable</code> の mount（internal）をどの環境でも先頭に追加するためです。
+          </p>
+          <p>
+            <code>defaults</code> の <code>controller</code> と <code>action</code> が、どのコントローラーのどのアクションを呼ぶかを表します。<code>app</code> は、ルートが選ばれたときに <code>serve</code> を呼ばれるオブジェクトで、通常のルートでは{' '}
             <code>RouteSet::Dispatcher</code> です。
           </p>
         </>
@@ -856,7 +1274,12 @@ end
 `}
           />
           <p>
-            <code>normalize_path</code> は、連続するスラッシュをまとめる、末尾のスラッシュを取り除くなどしてパスを正規化します。<code>@router</code> は <code>Journey::Router</code> です。
+            <code>make_request(env)</code> は、env を <code>ActionDispatch::Request</code> のオブジェクトで包みます。<code>req.path_info</code> は env の <code>PATH_INFO</code>
+            （要求のパス）を読み書きするメソッドです。<code>normalize_path</code> は、連続するスラッシュをまとめる、末尾のスラッシュを取り除くなどしてパスを正規化します。<code>@router</code> は <code>Journey::Router</code> です。
+          </p>
+          <p>
+            Journey::Router の <code>serve</code> と、<code>serve</code> が呼ぶ <code>recognize</code> の前半は次のとおりです。<code>serve</code>{' '}
+            では候補のルートを1つずつ試す形を、<code>recognize</code> では候補の絞り込み方を確かめます。
           </p>
           <Code
             lang="ruby"
@@ -901,8 +1324,33 @@ end
 `}
           />
           <p>
+            <code>serve</code> から読みます。
+          </p>
+          <ul>
+            <li>
+              <code>recognize(req) do |route, parameters| ... end</code>：<code>recognize</code> は、要求に合う候補のルートごとにこのブロックを呼びます。<code>route</code> は
+              Journey::Route、<code>parameters</code> は <code>{'{controller: "articles", action: "show", id: "1"}'}</code> のようなハッシュです。
+            </li>
+            <li>
+              <code>req.path_parameters = parameters</code> と <code>req.route = route</code>：選んだルートと、パスから取り出した値を要求のオブジェクトに保存します。
+            </li>
+            <li>
+              <code>_, headers, _ = response = route.app.serve(req)</code>：右から読みます。<code>route.app.serve(req)</code> がルートの呼び出し先を実行し、状態コード、ヘッダー、本文の配列を返します。その配列を{' '}
+              <code>response</code> に入れ、同時に2番目の要素を <code>headers</code> に取り出しています。<code>_</code> は、使わない値を受け取るための変数の名前です。
+            </li>
+            <li>
+              <code>return response unless headers[Constants::X_CASCADE] == "pass"</code>：<code>Constants::X_CASCADE</code> は <code>"x-cascade"</code>{' '}
+              という文字列の定数です。ブロックの中の <code>return</code> は <code>serve</code> メソッドから戻るので、ヘッダーの値が pass でなければ、応答を返して <code>serve</code>{' '}
+              が終わります。pass なら何もせずにブロックが終わり、<code>recognize</code> が次の候補でブロックをもう一度呼びます。
+            </li>
+            <li>
+              最後の <code>[404, ...]</code>：候補が1つも無かったときと、すべての候補が pass を返したときに、ここへ進みます。
+            </li>
+          </ul>
+          <p>
             <code>recognize</code> は候補のルートを次の順で絞り込みます
-            <Ref n={4} />。
+            <Ref n={4} />。引用の初めの3行は、要求が持つ値を変数に取っておく行です。<code>path_info</code> はこの後の照合に使い、ほかの2つは 66 行目から後で使います。引用は <code>recognize</code>{' '}
+            の途中までで、候補ごとにブロックを呼ぶ部分も 66 行目から後にあります。
           </p>
           <ol>
             <li>
@@ -923,15 +1371,40 @@ end
           </p>
           <p>
             デモのアプリケーションで <code>filter_routes</code> の結果を見ると、全21ルートのうち、<code>/articles/1</code> の候補は <code>article</code>（GET）だけ、<code>/articles</code>{' '}
-            の候補は <code>articles</code>（GET）だけでした。<code>recognize_path("/articles/1")</code> は <code>{'{controller: "articles", action: "show", id: "1"}'}</code> を返しました。
+            の候補は <code>articles</code>（GET）だけでした。<code>Rails.application.routes.recognize_path("/articles/1")</code> は <code>{'{controller: "articles", action: "show", id: "1"}'}</code> を返しました。<code>recognize_path</code>{' '}
+            は RouteSet のメソッドで、同じ <code>recognize</code> を使ってパスに合うルートを探し、呼び出し先は実行せずに <code>path_parameters</code> に当たるハッシュだけを返します。
+          </p>
+          <p>
+            図 9-4 は、<code>RouteSet#call</code> からルートの <code>app</code> の呼び出しまでを、上から処理の順に並べたものです。右の枠は、上の <code>filter_routes</code>{' '}
+            の結果です。
           </p>
           <Figure n="9-4" title="リクエストの認識" caption="Rails 8.1.4.1 の route_set.rb と journey/router.rb を読んでまとめた図。右の数値はデモのアプリケーション（ルート21個）での実測。">
             <RecognizeFigure />
           </Figure>
           <p>
             応答の <code>x-cascade</code> ヘッダーが <code>pass</code> の場合、ルーティングはその応答を捨てて次の候補を試します。候補が尽きると、<code>x-cascade: pass</code>{' '}
-            付きの 404 を返します。ミドルウェアの DebugExceptions はこの応答を見つけると <code>ActionController::RoutingError</code>（<code>No route matches [GET] "/..."</code>）を投げ、外側の ShowExceptions がそれを 404 の応答に変えます（<code>debug_exceptions.rb</code> の 31〜36 行目。<ChapterLink n={10} />）。
+            付きの 404 を返します。ミドルウェアの DebugExceptions はこの応答を見つけると <code>ActionController::RoutingError</code>（<code>No route matches [GET] "/..."</code>）を投げます（<code>debug_exceptions.rb</code> の 31〜36 行目）。この例外は同じ DebugExceptions の rescue で受け取られ、その後は環境で分かれます。詳しいエラーページを出す設定の development では、DebugExceptions が No route matches のエラーページを 404 で返します。production では例外をそのまま外へ投げ直し、外側の ShowExceptions が public/404.html の内容で 404 の応答を作ります（<ChapterLink n={10} section="exceptions" />）。「ルーティングが決めること」の節で DELETE の要求を送ったときのログの{' '}
+            <code>No route matches [DELETE] "/articles/1"</code> は、この経路で出たものです。
           </p>
+          <p>
+            業務で <code>No route matches</code> のログを調べるときは、この節の絞り込みの順に確かめます。
+          </p>
+          <ol>
+            <li>
+              エラーの <code>[DELETE] "/articles/1"</code> の部分から、届いた要求のメソッドとパスを読む。フォームやリンクが意図したメソッドで送っているかは、ここで分かる。
+            </li>
+            <li>
+              <code>bin/rails routes -g articles</code> で、そのパスに合う URI Pattern の行があるかを見る。行が無ければ、routes.rb にルートが無いか、<code>only:</code> で除かれている。
+            </li>
+            <li>
+              パスが合う行があれば、その行の Verb を見る。パスが合っても Verb が違うルートは、<code>matches?</code> の段階で候補から外れる。デモのアプリケーションの <code>/articles/1</code>{' '}
+              には GET の行だけがあり、DELETE の行が無いので 404 になった。
+            </li>
+            <li>
+              Verb も合っているなら、ルートに <code>constraints</code> が付いていないかを見る。条件を満たさない要求はそのルートでは処理されず、候補から外れるか、<code>x-cascade: pass</code>{' '}
+              で次の候補に回される。
+            </li>
+          </ol>
         </>
       ),
     },
@@ -979,6 +1452,26 @@ t2.recognize_path("/articles/new")
             のようなルートを追加すると、<code>show</code> のルートが選ばれます。Rails ガイドの例も同じ状況です
             <Ref n={5} />。
           </p>
+          <p>
+            この状態で <code>GET /articles/search</code> を送ると、ログの <code>Processing by</code> の行は <code>ArticlesController#show</code> に、<code>Parameters</code> の行の{' '}
+            <code>id</code> は <code>"search"</code> になります。show アクションの <code>Article.find(params[:id])</code> は記事を見つけられず、検索の画面の代わりに 404
+            が返ります。ルートを足したのに別のアクションが動いているときは、ログのこの2行で、選ばれたルートを確かめられます。
+          </p>
+          <p>
+            直すには、足すルートを <code>resources</code> より前に書くか、<code>resources :articles do get :search, on: :collection end</code> のように <code>resources</code>{' '}
+            のブロックの中に書きます。「routes.rb の定義が登録されるまで」の節で見たとおり、<code>resources</code> は <code>yield if block_given?</code> でブロックを先に実行してから index や show
+            を登録するので、ブロックの中のルートは show より前に登録されます。<code>bin/rails routes</code> は、ルートを登録された順（precedence の小さい順）に表示します。同じパスに合う行が2つあるときは、上の行のルートが選ばれます
+            <Ref n={5} />。
+          </p>
+          <p>
+            次の図は <code>GET /articles/search</code> を送ったときに選ばれるルートを、2つの書き方で比べたものです。左の列が search のルートを <code>resources</code> の後に書いた場合、右の列が <code>resources</code> のブロックの中に書いた場合です。どちらの列もルートを登録された順に上から並べています。
+          </p>
+          <Figure
+            title="ルートを書く位置と選ばれるルート"
+            caption="resources :articles のルートに、search のルートを1つ足した場合の模式図。パスの末尾の (.:format) は省略した。強調色の枠が選ばれるルート、破線の枠はパスとメソッドが合うが選ばれないルート。PATCH・PUT・DELETE の行もパスは合うが、メソッドが GET でないので候補から外れる。"
+          >
+            <OrderSearchFigure />
+          </Figure>
         </>
       ),
     },
@@ -988,7 +1481,8 @@ t2.recognize_path("/articles/new")
       body: (
         <>
           <p>
-            通常のルートの <code>app</code> である Dispatcher は、<code>path_parameters</code> からコントローラーのクラスを求め、そのクラスに処理を渡します。
+            通常のルートの <code>app</code> である Dispatcher は、<code>path_parameters</code> からコントローラーのクラスを求め、そのクラスに処理を渡します。Journey::Router の{' '}
+            <code>serve</code> が <code>route.app.serve(req)</code> で呼んでいたのが、次の <code>serve</code> です。
           </p>
           <Code
             lang="ruby"
@@ -1018,12 +1512,42 @@ t2.recognize_path("/articles/new")
           end
 `}
           />
+          <ul>
+            <li>
+              <code>params = req.path_parameters</code>：前の節で Journey::Router が要求に設定した <code>{'{controller: "articles", action: "show", id: "1"}'}</code> のようなハッシュです。
+            </li>
+            <li>
+              <code>controller = controller req</code>：左辺の <code>controller</code> はローカル変数、右辺の <code>controller req</code> は下の private メソッド{' '}
+              <code>controller(req)</code> の呼び出しです（引数の括弧を省いています）。メソッドは <code>req.controller_class</code> を返すので、変数には ArticlesController
+              のクラスが入ります。
+            </li>
+            <li>
+              <code>res = controller.make_response! req</code>：応答のオブジェクトを作ります。
+            </li>
+            <li>
+              <code>dispatch(controller, params[:action], req, res)</code>：下の private メソッド <code>dispatch</code> を通して、<code>ArticlesController.dispatch("show", req, res)</code>{' '}
+              を呼びます。
+            </li>
+            <li>
+              <code>rescue ActionController::RoutingError</code> から後：上の4行の途中でこの例外が起きたときの処理です。<code>@raise_on_name_error</code> が true なら例外をそのまま上げ、false なら{' '}
+              <code>x-cascade: pass</code> の 404 を返して、ルーティングに次の候補を試させます。<code>"articles#show"</code> や <code>resources</code>{' '}
+              のようにコントローラーが決まっているルートでは true です（Mapping が <code>defaults.key?(:controller)</code> の結果を渡します。<code>mapper.rb</code> の 290〜300 行目）。
+            </li>
+          </ul>
           <p>
             <code>req.controller_class</code> は、<code>"articles"</code> を <code>"ArticlesController"</code> に変換して <code>constantize</code>{' '}
-            します（<code>action_dispatch/http/request.rb</code> の 87〜105 行目）。ここで初めて ArticlesController が参照されるので、development ではこの時点で Zeitwerk が{' '}
+            します（<code>action_dispatch/http/request.rb</code> の 87〜105 行目）。ここで初めて ArticlesController が参照されるので、development ではこの時点で Zeitwerk（オートロードを受け持つ gem）が{' '}
             <code>app/controllers/articles_controller.rb</code> を読み込みます（<ChapterLink n={8} />）。<code>make_response!</code> で応答のオブジェクトを作り、クラスメソッドの{' '}
             <code>dispatch</code> にアクション名、リクエスト、応答を渡します。ここから先は<ChapterLink n={10} />で扱います
             <Ref n={2} />。
+          </p>
+          <p>
+            ルートを登録するとき、Rails はコントローラーのクラスを参照しません。Journey::Route が持つのは <code>"articles"</code> という文字列です。そのため、
+            <code>app/controllers/articles_controller.rb</code> が無くても <code>bin/rails routes</code> にはルートが表示され、要求が届いて <code>controller_class</code> が{' '}
+            <code>constantize</code> を呼んだ時点で初めて例外になります。例外のクラスは <code>ActionDispatch::MissingController</code> で、メッセージには <code>constantize</code>{' '}
+            が出した NameError のメッセージ（<code>uninitialized constant ArticlesController</code>）がそのまま入ります（<code>request.rb</code> の 97〜101 行目）。
+            <code>bin/rails routes</code> にルートがあるのに要求がこの例外で失敗するときは、コントローラーのファイルがあるかと、ファイルの名前がルートの controller の名前に合っているか（<code>"articles"</code> なら{' '}
+            <code>articles_controller.rb</code>）を確かめます。
           </p>
           <Callout kind="v72">
             <p>
@@ -1043,7 +1567,9 @@ t2.recognize_path("/articles/new")
       body: (
         <>
           <p>
-            名前（<code>as</code>）を持つルートを<Term en="named route">名前付きルート</Term>と呼びます。名前付きルートを登録すると、<code>NamedRouteCollection#add</code> が <code>article_path</code> と <code>article_url</code> を定義します。
+            名前（<code>as</code>）を持つルートを<Term en="named route">名前付きルート</Term>と呼びます。名前付きルートを登録すると、<code>NamedRouteCollection#add</code> が <code>article_path</code> と <code>article_url</code> を定義します。「routes.rb の定義が登録されるまで」の節で見た RouteSet の{' '}
+            <code>named_routes[name] = route</code> が、この <code>add</code> の呼び出しです（<code>named_routes</code> は NamedRouteCollection のインスタンスで、<code>[]=</code> は{' '}
+            <code>add</code> の別名です）。次の引用では、1つの名前から2つのメソッドがどこに定義されるかを確かめます。
           </p>
           <Code
             lang="ruby"
@@ -1070,6 +1596,29 @@ t2.recognize_path("/articles/new")
         end
 `}
           />
+          <ul>
+            <li>
+              初めの3行：<code>name</code> が <code>"article"</code> のとき、<code>key</code> は <code>:article</code>、<code>path_name</code> は <code>:article_path</code>、
+              <code>url_name</code> は <code>:article_url</code> になります。<code>{':"#{name}_path"'}</code> は、文字列に値を埋め込んでからシンボルにする書き方です。
+            </li>
+            <li>
+              <code>if routes.key? key</code> の3行：同じ名前が既に登録されていれば、前に定義したメソッドを <code>undef_method</code> で取り除きます。
+            </li>
+            <li>
+              <code>routes[key] = route</code>：名前から Journey::Route を引けるように、ハッシュに保存します。
+            </li>
+            <li>
+              <code>helper = UrlHelper.create(route, route.defaults, name)</code>：ルートのパターンに値を当てはめてパスを作る処理を持つオブジェクトを作ります。
+            </li>
+            <li>
+              <code>define_url_helper</code> の2行：引数は、定義先のモジュール、メソッドの名前、上の <code>helper</code>、結果の組み立て方の4つです。<code>PATH</code> はパスだけを返す
+              lambda、<code>UNKNOWN</code> はホスト名を含む URL を返す lambda で、同じファイルの 349〜350 行目に定数として定義されています。<code>article_path</code> と{' '}
+              <code>article_url</code> は同じ <code>helper</code> を使い、最後の組み立て方だけが違います。
+            </li>
+            <li>
+              最後の2行：定義したメソッドの名前を記録します。
+            </li>
+          </ul>
           <p>
             <code>define_url_helper</code> は、無名のモジュール（<code>@path_helpers_module</code> など）に <code>define_method</code>（<ChapterLink n={5} />
             ）でメソッドを定義します（同じファイルの 333〜345 行目）。定義されたメソッドは、最後の引数がハッシュならオプションとして取り出し、<code>UrlHelper</code>{' '}
@@ -1087,6 +1636,12 @@ Rails.application.routes.named_routes.path_helpers_module.instance_method(:artic
 # => #<Module:0x00007f068edaf480>（無名のモジュール）
 `}
           />
+          <p>
+            1行目の <code>include</code> で、コントローラーやビューの外でも URL ヘルパーを呼べるようにしています。4行目は、<code>path_helpers_module</code> から{' '}
+            <code>article_path</code> のメソッドを取り出し、<code>owner</code> でそのメソッドが定義されているモジュールを表示しています。結果は名前の無いモジュールで、
+            <code>add</code> が <code>@path_helpers_module</code> に定義したことを確かめられます。図 9-5 は、左上の <code>named_routes</code>{' '}
+            への登録から、2つのモジュールへのメソッドの定義、コントローラーとビューへの include までを、矢印の順に示しています。
+          </p>
           <Figure n="9-5" title="名前付きルートとヘルパーメソッド" caption="模式図。コントローラーとビューには、routes.url_helpers を通してヘルパーのモジュールが include される。">
             <HelperFigure />
           </Figure>
@@ -1094,6 +1649,24 @@ Rails.application.routes.named_routes.path_helpers_module.instance_method(:artic
             <code>article_path(@article)</code> のようにモデルを渡せるのは、引数に <code>to_param</code> を呼んで <code>:id</code> の値にするためです。ActiveRecord の{' '}
             <code>to_param</code> は既定で主キーの値を文字列にして返します。
           </p>
+          <p>この節の内容は、業務では次の3つの場面で使います。</p>
+          <ul>
+            <li>
+              モデルやジョブなど、コントローラーとビュー以外のクラスで <code>article_path(1)</code> と書くと NoMethodError になります。ヘルパーのモジュールが include
+              されていないためです。上の例のように <code>Rails.application.routes.url_helpers</code> を include するか、<code>Rails.application.routes.url_helpers.article_path(1)</code>{' '}
+              と書きます。
+            </li>
+            <li>
+              <code>article_path(@article)</code> の <code>@article</code> が nil のときは、<code>ActionController::UrlGenerationError</code> になります。メッセージは{' '}
+              <code>No route matches</code> で始まり、<code>missing required keys: [:id]</code> で終わります（同じファイルの 258〜268 行目）。要求に合うルートが無いときの{' '}
+              <code>ActionController::RoutingError</code> と書き出しが同じですが、こちらは URL を作るときに <code>:id</code> に入れる値が無かったことを表します。この例外が出たときは、初めにヘルパーに渡した値が nil でないかを確かめます。
+            </li>
+            <li>
+              <code>article_url</code> はホスト名を必要とします。コントローラーとビューでは、処理中の要求のホスト名が使われます。メーラーやジョブには要求が無いので、ホスト名を設定していないと{' '}
+              <code>Missing host to link to!</code> で始まる ArgumentError になります（<code>action_dispatch/http/url.rb</code> の 162〜164 行目）。メッセージに書かれているとおり、
+              <code>default_url_options[:host]</code> を設定するか、<code>host:</code> を引数で渡します。
+            </li>
+          </ul>
         </>
       ),
     },
@@ -1103,7 +1676,8 @@ Rails.application.routes.named_routes.path_helpers_module.instance_method(:artic
       body: (
         <>
           <p>
-            ルートの <code>app</code> は Dispatcher に限りません。Mapping はルートの指定に応じて <code>app</code> を選びます。
+            ルートの <code>app</code> は Dispatcher に限りません。Mapping はルートの指定に応じて <code>app</code> を選びます。次の引用では、routes.rb の <code>to:</code> と{' '}
+            <code>constraints</code> の書き方によって、Journey::Router が <code>serve</code> を呼ぶ相手がどう変わるかを確かめます。
           </p>
           <Code
             lang="ruby"
@@ -1123,6 +1697,23 @@ Rails.application.routes.named_routes.path_helpers_module.instance_method(:artic
           end
 `}
           />
+          <p>
+            <code>to</code> は routes.rb の <code>to:</code> に渡した値、<code>respond_to?(:action)</code> は「action というメソッドを持っているか」を調べる呼び出しです。4つの分岐は、上から次の場合に当たります。
+          </p>
+          <ol>
+            <li>
+              <code>to:</code> にコントローラーのクラスそのものを渡した場合。<code>StaticDispatcher</code> は Dispatcher のサブクラスで、名前からクラスを探す代わりに、渡されたクラスを使います（
+              <code>route_set.rb</code> の 69〜77 行目）。
+            </li>
+            <li>
+              <code>to:</code> に lambda などの Rack アプリを渡した場合。<code>Constraints::CALL</code> は「内側のオブジェクトの <code>call(env)</code> を呼ぶ」という指定です。
+            </li>
+            <li>
+              <code>"articles#show"</code> のような通常の指定に、ラムダやオブジェクトの <code>constraints</code> を付けた場合。<code>Constraints::SERVE</code> は「内側の Dispatcher の{' '}
+              <code>serve(req)</code> を呼ぶ」という指定です。
+            </li>
+            <li>それ以外の場合。「コントローラーへの受け渡し」の節で見た Dispatcher をそのまま使います。</li>
+          </ol>
           <p>
             <code>to:</code> に <code>call</code> を持つオブジェクト（Rack アプリ）を渡すと、そのオブジェクトの <code>call</code> を呼ぶ Constraints になります。<code>blocks</code>{' '}
             は <code>constraints</code> に渡したラムダやオブジェクトで、これがあると、条件を満たしたときだけ内側を呼ぶ Constraints で包まれます。条件を満たさないとき、Constraints は{' '}
@@ -1149,6 +1740,21 @@ res = Rack::MockRequest.new(t3).get("/nothing")
 [t3.routes.anchored_routes.size, t3.routes.custom_routes.size]  # => [0, 1]
 `}
           />
+          <p>結果は3つあります。</p>
+          <ul>
+            <li>
+              <code>/status/db/ping</code> への GET は 200 になり、lambda が受け取った <code>SCRIPT_NAME</code> は <code>/status</code>、<code>PATH_INFO</code> は{' '}
+              <code>/db/ping</code> でした。要求のパスが、mount の <code>at:</code> に書いた部分と残りに分かれています（図 9-6）。
+            </li>
+            <li>
+              <code>/nothing</code> への GET は、<code>/status</code> で始まらないので lambda は呼ばれません。<code>x-cascade: pass</code> の付いた 404 は、Journey::Router の{' '}
+              <code>serve</code> の最後の行が返したものです。<code>t3</code> は RouteSet を直接呼んでいて、外側に DebugExceptions が無いので、この応答がそのまま見えています。
+            </li>
+            <li>
+              最後の行は、mount したルートが <code>anchored_routes</code> に 0 個、<code>custom_routes</code> に 1 個入っていることを示します。mount
+              したルートは状態遷移表を使わず、<code>recognize</code> の中で1つずつ <code>match?</code> で試されます。
+            </li>
+          </ul>
           <Figure n="9-6" title="mount による SCRIPT_NAME と PATH_INFO の分割" caption="上の実行結果を図にしたもの。Journey::Router#recognize が、パターンの先頭だけが一致するルートについてこの分割を行う。">
             <MountFigure />
           </Figure>
@@ -1157,6 +1763,12 @@ res = Rack::MockRequest.new(t3).get("/nothing")
             <code>router.rb</code> の 85〜96 行目）
             <Ref n={4} />。<ChapterLink n={6} />で見た Rack の取り決めのとおり、マウントされたアプリは <code>PATH_INFO</code>{' '}
             だけを見れば自分の中のルーティングができ、URL を作るときは <code>SCRIPT_NAME</code> を前に付ければよいことになります。
+          </p>
+          <p>
+            mount に <code>constraints</code> を付けたルートを調べるときは、この節の初めに見た Constraints の動作を使います。管理者だけに見せる画面を{' '}
+            <code>{'mount Sidekiq::Web => "/sidekiq", constraints: ->(req) { ... }'}</code> のように書くと、条件を満たさない要求には Constraints が <code>x-cascade: pass</code> の 404
+            を返します。ほかに合うルートが無ければ、ログは <code>No route matches [GET] "/sidekiq"</code> になり、ルートを書いていないときと同じ表示になります。mount
+            した画面でこのログが出たときは、<code>bin/rails routes</code> でルートがあることを確かめたうえで、<code>constraints</code> の条件を満たす要求だったかを確かめます。
           </p>
           <Callout kind="note">
             <p>
@@ -1197,6 +1809,7 @@ res = Rack::MockRequest.new(t3).get("/nothing")
     { title: 'What is a URL?', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_URL', accessed: '2026-11-16', note: 'URL のスキーム、ホスト、ポート、パス、クエリ文字列（パラメーター）。' },
     { title: 'HTTP request methods', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods', accessed: '2026-11-16', note: 'GET・POST・PUT・PATCH・DELETE の意味。' },
     { title: 'Action View Form Helpers', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/form_helpers.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'HTML のフォームは GET と POST しか送れないので、Rails は _method という隠れた入力欄で PATCH・PUT・DELETE を表すこと。' },
+    { title: "Rails Routing from the Outside In", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/routing.html", accessed: "2026-11-20", version: "Rails 8.1", note: "リソース、名前空間、条件、ネストと URL ヘルパー。" },
   ],
 }
 

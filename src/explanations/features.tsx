@@ -168,131 +168,6 @@ Digest::SHA1.hexdigest("body { color: blue; }")[0, 8] # => "a1d2ece7"`} />
   },
 }
 
-export const explanation17: Explanations = {
-  sources: [
-    primarySource('Using custom elements', 'MDN Web Docs', 'https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements'),
-    primarySource('HTTP response status codes', 'MDN Web Docs', 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status'),
-    primarySource('Stimulus Reference: Lifecycle Callbacks', 'Hotwire', 'https://stimulus.hotwired.dev/reference/lifecycle-callbacks', 'Stimulus 3'),
-    primarySource('ActiveSupport::MessageVerifier', 'Ruby on Rails API', 'https://api.rubyonrails.org/classes/ActiveSupport/MessageVerifier.html', 'Rails 8.1'),
-    primarySource('Redis Pub/Sub', 'Redis', 'https://redis.io/docs/latest/develop/pubsub/', 'Redis 8'),
-  ],
-  sections: {
-    overview: cite => <>
-      <p>
-        ここまでの3つの節で、Turbo が fetch で取得した HTML で画面を書き換えることと、WebSocket ではサーバーが要求を待たずに HTML を送れることを見ました。
-        この章の後の節はブラウザーで記録した通信をもとに進みます。記録は次の形で書いています。
-      </p>
-      <Code lang="text" title="この章の通信の記録の読み方" code={`[A] → GET /articles  accept=text/html, …        ← ブラウザー A が送った要求と、そのヘッダー
-[A] ← 200 text/html; charset=utf-8  /articles   ← ブラウザー A が受け取った応答（状態コードと Content-Type）
-[A] ws→ {"command":"subscribe", …}              ← ブラウザー A が WebSocket で送ったメッセージ
-[B] ws← {"type":"welcome"}                      ← ブラウザー B が WebSocket で受け取ったメッセージ`} />
-      <p>
-        <code>{'<turbo-frame>'}</code> や <code>{'<turbo-stream>'}</code> は HTML にもともとある要素ではなく、Turbo が JavaScript で定義した要素（カスタム要素）です。
-        ブラウザーは知らない名前の要素も DOM に入れ、その要素の動きは定義した JavaScript が決めます。{cite}
-      </p>
-    </>,
-    drive: cite => <>
-      <p>
-        この節では、フォームを送信した後の応答の状態コードが問題になります。
-        リダイレクトは応答で別の URL を指示し、ブラウザーにその URL を取得し直させることです。302 Found と 303 See Other はどちらもリダイレクトで、移動先は Location ヘッダーに入ります。
-        303 は移動先を GET で取得すると決まっていて、フォームを POST で送った後の移動に使います。
-        422 Unprocessable Content は、送られた内容に誤りがあって処理できなかったことを表します。
-      </p>
-      <p>
-        この節の記録にある console.error は、ブラウザーの開発者ツールのコンソール（ページの JavaScript が出したメッセージやエラーを表示する画面）に出たエラーです。{cite}
-      </p>
-    </>,
-    frames: () => <>
-      <p>
-        Turbo Frames ではページの一部を <code>{'<turbo-frame id="comment_form">'}</code> のように id を付けた要素で囲みます。
-        この要素の中のリンクをクリックすると、Turbo はリンク先の HTML を取得し、その中から同じ id の <code>{'<turbo-frame>'}</code> を探して、中身だけを入れ替えます。ページのほかの部分と URL は変わりません。
-      </p>
-      <p>
-        このとき Turbo は要求に Turbo-Frame ヘッダーを付けて、どのフレームからの要求かをサーバーに伝えます。サーバーはこのヘッダーを見て、フレームの中身だけで足りる応答を返せます。
-        応答に同じ id のフレームが無ければ、入れ替える中身が見つからないので、フレームの中身を表示できません。
-      </p>
-    </>,
-    streams: () => <>
-      <p>
-        コメントを投稿した後に、「一覧の末尾に1件足す」と「フォームを元のリンクに戻す」の2か所を同時に変えたい場合、1つのフレームの入れ替えでは足りません。
-        Turbo Streams では <code>{'<turbo-stream action="append" target="comments">'}</code> のように、操作（action）と対象の要素の id（target）を書いた HTML を使い、1つの応答に複数の操作を入れられます。
-      </p>
-      <p>
-        MIME タイプは <code>text/html</code> のように、データの種類を「大分類/小分類」の形で表す名前です。要求の Accept ヘッダーには受け取れる種類を、応答の Content-Type ヘッダーには本文の種類を書きます。
-        Turbo Streams の応答は <code>text/vnd.turbo-stream.html</code> という種類で返し、Turbo はこの種類の本文を、表示するページではなく変更の指示として扱います。
-        同じ形式は WebSocket のメッセージでも使えます。逆に、Turbo Streams を使うのに WebSocket が必須なわけではありません。
-      </p>
-    </>,
-    stimulus: cite => <>
-      <p>
-        HTML の属性のうち、<code>data-</code> で始まるもの（<code>data-controller</code>、<code>data-turbo</code> など）は、ページの作者が自由に名前を付けて値を入れられる属性です。
-        ブラウザーは表示には使わず、JavaScript が読み取って使います。Stimulus は <code>data-controller</code> の値を見て、要素に結び付ける JavaScript のクラスを決めます。
-      </p>
-      <p>
-        JavaScript の class も、Ruby のクラスと同じように new でインスタンスを作れます。<code>export default</code> はこのファイルを import した側にクラスを渡す書き方です。
-        <code>connect</code> は要素がページの DOM に現れたときに Stimulus が呼ぶメソッドで、<code>this.element</code> は結び付いた要素です。{cite}
-      </p>
-    </>,
-    actioncable: () => <>
-      <p>
-        「HTTP の要求と応答と WebSocket」の節では、/cable に WebSocket の接続を開き、記事1の更新を購読してから、別のプロセスが送ったメッセージを受け取りました。
-        ActionCable では1本の WebSocket の接続の上で、チャネルとストリームを使ってメッセージの行き先を分けます。
-        チャネルは購読の受け付けやメッセージの処理を書くクラスで、Turbo が使うのは Turbo::StreamsChannel です。ストリームはメッセージを配る宛先の名前で、例では記事1のストリームを購読しました。
-        購読（subscribe）はあるストリームに送られたメッセージを受け取る登録で、ブロードキャストはあるストリームを購読しているすべての接続にメッセージを送ることです。
-      </p>
-      <p>
-        この節には次の用語も出てきます。Rack は Puma と Rails の間で要求と応答の受け渡し方を決めた取り決めです（<ChapterLink n={6} section="rack-contract" />）。
-        hijack はこの取り決めの中で、アプリケーションが Puma からソケット（ネットワークの接続を読み書きするために OS が用意するもの）を受け取り、自分で読み書きするための機能です。
-        ワーカープールはあらかじめ作っておいたスレッドの集まりで、処理が来ると空いているスレッドに渡します（スレッドは<ChapterLink n={23} section="thread" />）。
-      </p>
-    </>,
-    broadcast: cite => <>
-      <p>
-        この節では、ストリームの名前が Base64 と署名で作られていることを確かめます。
-        Base64 はどんなデータも英数字と <code>+</code>・<code>/</code>・<code>=</code> だけの文字列に変える変換で、元に戻せます。暗号ではないので、だれでも元の内容を読めます。
-        署名は内容と秘密の鍵から計算した値を内容に付けたもので、受け取った側は同じ鍵で計算し直して、内容が書き換えられていないかを確かめます。Rails の MessageVerifier で試しました。
-      </p>
-      <Code lang="ruby" title="Base64 と MessageVerifier（bin/rails runner で実行。Rails 8.1.4.1）" code={`Base64.strict_encode64("gid://demo/Article/1")         # => "Z2lkOi8vZGVtby9BcnRpY2xlLzE="
-Base64.strict_decode64("Z2lkOi8vZGVtby9BcnRpY2xlLzE=") # => "gid://demo/Article/1"
-
-verifier = ActiveSupport::MessageVerifier.new("secret")
-signed = verifier.generate("gid://demo/Article/1")
-# => "ImdpZDovL2RlbW8vQXJ0aWNsZS8xIg==--80cf00c3d45dffac1c47125e01a349106c4700a7"
-verifier.verified(signed)   # => "gid://demo/Article/1"
-
-# -- の前を Article/2 のものに書き換え、署名はそのままにする
-tampered = "ImdpZDovL2RlbW8vQXJ0aWNsZS8yIg==--80cf00c3d45dffac1c47125e01a349106c4700a7"
-verifier.verified(tampered) # => nil`} />
-      <p>
-        <code>--</code> の前が内容を（JSON の文字列にしてから）Base64 にしたもの、後ろが署名です。内容を書き換えると署名と合わなくなり、<code>verified</code> は nil を返しました。
-        秘密の鍵はサーバーにだけあるので、ブラウザーの側では合う署名を作れません。{cite}
-      </p>
-    </>,
-    adapter: cite => <>
-      <p>
-        Puma のワーカーや Sidekiq は、それぞれ別のプロセスです（<ChapterLink n={23} section="process" />）。プロセスのメモリーは別々なので、あるプロセスが持っている購読の一覧に、別のプロセスからメッセージを入れることはできません。
-        プロセスの間でメッセージを配るには、どのプロセスからも接続できる別のプログラムを使います。Redis の Pub/Sub はその1つで、SUBSCRIBE でチャネルを購読した接続に、別の接続が PUBLISH で送ったメッセージが届きます。
-      </p>
-      <Code lang="text" title="Redis の SUBSCRIBE と PUBLISH（redis-cli。Redis 8.10.3）" code={`（端末1）$ redis-cli SUBSCRIBE news
-subscribe
-news
-1
-message          ← 端末2の PUBLISH が届いた
-news
-hello
-
-（端末2）$ redis-cli PUBLISH news hello
-1                ← 届いた購読者の数
-（端末2）$ redis-cli PUBLISH nobody hello
-0                ← 購読者がいなければ、だれにも届かない`} />
-      <p>
-        PUBLISH したメッセージは、その時点で購読している接続にだけ届き、Redis には残りません。
-        サブスクリプションアダプターは ActionCable のブロードキャストと購読を、こうしたプロセスの外の仕組みにつなぐ部品です。{cite}
-      </p>
-    </>,
-  },
-}
-
 export const explanation18: Explanations = {
   sources: [
     primarySource('Sidekiq — The Basics', 'Sidekiq', 'https://github.com/sidekiq/sidekiq/wiki/The-Basics'),
@@ -360,8 +235,8 @@ $ redis-cli ZRANGEBYSCORE demo18:at -inf 1794812900   # スコアが 1794812900 
     </>,
     transaction: () => <>
       <p>
-        トランザクションは複数の SQL をまとめて、全部を確定する（COMMIT）か全部を取り消す（ROLLBACK）かのどちらかにする仕組みです（<ChapterLink n={15} section="transaction" />）。
-        COMMIT する前の変更は、同じ接続からは見えますが、別の接続からは見えません。Sidekiq は Rails のプロセスとは別の接続でデータベースを読むので、Rails の側で COMMIT する前の記事を読めません。
+        トランザクションは複数の SQL をまとめて、全部を確定する（COMMIT）か全部を取り消す（ROLLBACK）かのどちらかにする仕組みです（<ChapterLink n={38} section="transaction" />）。
+        このデモの MySQL の設定では、COMMIT する前の変更は、その変更を行った接続から読めます。Sidekiq が別の接続で記事を探しても、まだ見つかりません。
       </p>
       <p>
         また、Redis へのジョブの投入はデータベースのトランザクションとは別の処理なので、後で ROLLBACK しても、投入したジョブは取り消されません。記事が存在しないまま、ジョブだけが残ることになります。
@@ -415,7 +290,7 @@ puts "locate: #{a.class} id=#{a.id} title=#{a.title}"
 # => locate: Article id=1 title=変更後のタイトル`} />
       <p>
         この節のコードの <code>@mail_message ||= …</code> は、<code>@mail_message</code> が nil のときだけ右辺を実行して代入する書き方で、2回目からは代入済みの値を返します。
-        トランザクションは複数の SQL の変更をまとめて確定（COMMIT）するか取り消す仕組みで、COMMIT するまでは、ほかのデータベースの接続から変更が見えません（<ChapterLink n={15} section="transaction" />）。{cite}
+        トランザクションは複数の SQL の変更をまとめて確定（COMMIT）するか取り消す仕組みで、COMMIT するまでは、ほかのデータベースの接続から変更が見えません（<ChapterLink n={38} section="transaction" />）。{cite}
       </p>
     </>,
     tables: cite => <>
@@ -445,7 +320,7 @@ puts "locate: #{a.class} id=#{a.id} title=#{a.title}"
       <p>
         「ファイルのアップロードと保存先」の節の方法では、ファイルの中身がいったん Rails に届き、Rails がそれを保存先へ送ります。
         Nginx は Puma の前で要求を受け取るサーバーで、受け付ける要求の本文の大きさに上限があります（<ChapterLink n={24} section="body-size" />）。
-        直接アップロードでは、ブラウザーの JavaScript が保存先へファイルを送り、Rails には小さな JSON（データを文字列で表す形式）だけが届きます。PUT は URL の場所にデータを置く HTTP のメソッドです。
+        直接アップロードでは、ブラウザーの JavaScript が保存先にファイルを送る操作と、記事のフォームを送る操作を分けます。ファイルを送るときの PUT は、指定した URL の場所にデータを置く HTTP のメソッドです。
       </p>
       <p>
         最初の要求の checksum はファイルの中身から計算した短い文字列です。中身が少しでも違えばほぼ確実に別の値になるので、受け取った側で同じ計算をして、ファイルが途中で壊れていないかを確かめられます。
@@ -521,7 +396,7 @@ puts Example.new.article
     transaction: cite => <>
       <p>
         「テスト用の環境とデータベース」の節では、1つ目の例で作った記事が、2つ目の例では0件に戻っていました。これはデータベースのトランザクションを使っています。
-        トランザクションは複数の SQL の変更をまとめて扱う仕組みで、BEGIN で始め、COMMIT で変更を確定し、ROLLBACK で BEGIN からの変更をすべて取り消します（<ChapterLink n={15} section="transaction" />）。
+        トランザクションは複数の SQL の変更をまとめて扱う仕組みで、BEGIN で始め、COMMIT で変更を確定し、ROLLBACK で BEGIN からの変更をすべて取り消します（<ChapterLink n={38} section="transaction" />）。
         テスト環境で、記事を作った後に ROLLBACK しました。
       </p>
       <Code lang="ruby" title="RAILS_ENV=test bin/rails runner で実行（SQL のログを表示）" code={`puts "記事の数: #{Article.count}"
@@ -592,7 +467,7 @@ export const explanation21: Explanations = {
       <p>
         Rails のアプリケーションが要求を受け取ると、要求はまずミドルウェアを順に通ります。ミドルウェアは要求の前後に処理を挟む部品で、Cookie やセッションの読み書きもここで行います（<ChapterLink n={6} section="middleware" />）。
         その後、ルーティングがコントローラーのアクションを呼び、アクションがモデルで SQL を実行し、ビューで HTML を作ります。
-        前の3つの節で見た攻撃は、それぞれ別の段階で起きます。CSRF はコントローラーが要求を受け付けるとき、一括代入はモデルに値を渡すとき、SQL インジェクションは SQL を作るとき、XSS はビューで HTML を作るときです。{cite}
+        Cookie と入力の節で見た攻撃は、それぞれ別の段階で起きます。CSRF はコントローラーが要求を受け付けるとき、一括代入はモデルに値を渡すとき、SQL インジェクションは SQL を作るとき、XSS はビューで HTML を作るときです。{cite}
       </p>
     </>,
     csrf: cite => <>
@@ -715,8 +590,8 @@ puts "GC にかかった時間の合計: #{GC.stat(:time)} ms"
 # => GC が動いた回数: 307 回
 # => GC にかかった時間の合計: 76 ms`} />
       <p>
-        EXPLAIN は、MySQL が SQL をどう実行するか（どの索引を使うか）を表示する命令で、索引は、列の値から行をすばやく探すためにデータベースが持つ表です（<ChapterLink n={12} section="explain" />）。
-        ロックは、ある行を同時に1つの処理だけが書き換えられるようにする仕組みで、ほかの処理はロックが外れるまで待ちます（<ChapterLink n={15} section="pessimistic" />）。
+        EXPLAIN は、MySQL が SQL をどう実行するか（どの索引を使うか）を表示する命令で（<ChapterLink n={37} section="explain-rails" />）、索引は、列の値から行をすばやく探すためにデータベースが持つ表です（<ChapterLink n={37} section="what-is-index" />）。
+        ロックは、ある行を同時に1つの処理だけが書き換えられるようにする仕組みで、ほかの処理はロックが外れるまで待ちます（<ChapterLink n={38} section="lock" />）。
         YJIT は Ruby の JIT コンパイラーで、プログラムの実行中に、よく実行される Ruby のコードを CPU が直接実行できる命令に変換して、次からはそれを実行します。{cite}
       </p>
     </>,

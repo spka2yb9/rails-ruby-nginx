@@ -1,10 +1,23 @@
 // 各章を静的HTMLに描画し、節ごとの本文テキストを検索索引 JSON に書き出す。章の情報（chapter-meta.json）も書き出す。
 // 実行: npm run build:index
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { runInNewContext } from 'node:vm'
 import { createServer } from 'vite'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createElement } from 'react'
 import type { Chapter } from '../src/content/types'
+
+// 教科書の目次には実習の選択欄と同じ並びを使い、検索用に元のレベル名も残す。
+type ExerciseGroup = { name: string; cases: { id: string; title: string; learn: string; intro?: string }[] }
+const sandbox = { window: {} as { LFR?: { Lessons: { curriculum: ExerciseGroup[]; groups: ExerciseGroup[] } } } }
+runInNewContext(readFileSync(new URL('../public/linux/js/lessons/lessons.js', import.meta.url), 'utf8'), sandbox)
+const lessons = sandbox.window.LFR!.Lessons
+const levelNames = new Map(lessons.curriculum.flatMap(({ name, cases }) => cases.map((c) => [c.id, name] as const)))
+const groups = lessons.groups.map(({ name, cases }) => ({
+  name,
+  cases: cases.map((c) => ({ ...c, levelName: levelNames.get(c.id) })),
+}))
+writeFileSync(new URL('../src/content/linux-meta.json', import.meta.url), JSON.stringify({ groups }))
 
 const server = await createServer({
   server: { middlewareMode: true },
@@ -40,8 +53,12 @@ try {
   }
   writeFileSync(new URL('../src/content/search-index.json', import.meta.url), JSON.stringify(entries))
   // 目次などに使う章の情報（節の本文を除く）。アプリは本文を章ごとに遅れて読み込む。
-  const meta = mod.chapters.map(({ sections, ...rest }) => ({ ...rest, sections: sections.map(({ id, title }) => ({ id, title })) }))
+  // 出典は参考資料の一覧のページだけが使うので、別のファイル（sources-index.json）にしてそのページで読み込む
+  const meta = mod.chapters.map(({ sections, sources: _sources, ...rest }) => ({ ...rest, sections: sections.map(({ id, title }) => ({ id, title })) }))
   writeFileSync(new URL('../src/content/chapter-meta.json', import.meta.url), JSON.stringify(meta))
+  // 出典の note は画面に出さない（章のファイルと check-chapter だけが使う）ので外す
+  const sources = mod.chapters.map(({ number, sources }) => ({ number, sources: sources.map(({ note: _note, ...s }) => s) }))
+  writeFileSync(new URL('../src/content/sources-index.json', import.meta.url), JSON.stringify(sources))
   console.log(`search index: ${entries.length} sections from ${mod.chapters.length} chapters`)
 } finally {
   await server.close()

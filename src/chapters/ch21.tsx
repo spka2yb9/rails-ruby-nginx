@@ -3,10 +3,11 @@ import { withExplanations } from '../explanations/shared'
 import { explanation21 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { AuthorizationFigure } from '../visuals/rails-figures'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 21-1 要求の中の値はすべて送る側が決める ---------- */
+/* ---------- 図 24-1 要求の中の値はすべて送る側が決める ---------- */
 function RequestPartsFigure() {
   const parts: [string, string][] = [
     ['URL・パス', 'POST /probe/echo/hello'],
@@ -16,7 +17,7 @@ function RequestPartsFigure() {
   ]
   return (
     <Svg
-      id="21-1"
+      id="24-1"
       w={780}
       h={250}
       label="ブラウザーのフォームから送る場合も、curl やプログラムから送る場合も、要求の URL・ヘッダー・Cookie・フォームの値は、すべて送る側が自由に決められる。フォームに無い article[status] の欄も送れる。サーバーは届いた値をそのまま信用せず、受け取る値を決めて確かめる"
@@ -46,7 +47,7 @@ function RequestPartsFigure() {
   )
 }
 
-/* ---------- 図 21-2 Cookie によるログイン状態と、別のサイトからの要求 ---------- */
+/* ---------- 図 24-2 Cookie によるログイン状態と、別のサイトからの要求 ---------- */
 function CookieFlowFigure() {
   const msgs = [
     { y: 70, t: '① GET /probe/login（ログインの代わり）', back: false },
@@ -56,7 +57,7 @@ function CookieFlowFigure() {
   ]
   return (
     <Svg
-      id="21-2"
+      id="24-2"
       w={780}
       h={330}
       label="ログインすると、Rails は user_id を入れたセッションを暗号化し、set-cookie で _demo_session としてブラウザーに渡す。ブラウザーはその後の同じサイトへの要求に Cookie ヘッダーで自動で付け、Rails は復号して user_id 42 の利用者として処理する。別のサイトのページがこのサイトへ POST を送らせた場合、samesite=lax の Cookie は付かないが、同じドメインの別のサブドメインのページからなら付く。そのため Rails は CSRF のトークンでも確かめる"
@@ -87,11 +88,11 @@ function CookieFlowFigure() {
   )
 }
 
-/* ---------- 図 21-3 入力が SQL や HTML として解釈される ---------- */
+/* ---------- 図 24-4 入力が SQL や HTML として解釈される ---------- */
 function InjectionFigure() {
   return (
     <Svg
-      id="21-3"
+      id="24-4"
       w={780}
       h={300}
       label="SQL の例では、WHERE (article_id = の後ろに入力を埋め込む。入力が 1 なら article_id = 1 で8件、入力が 1 OR 1=1 なら条件が常に真になり2975件が返る。値として渡すと article_id = 1 のままで8件。HTML の例では、入力の script タグを <%= %> で出すと &lt;script&gt; に変わって文字として表示され、raw で出すと script タグのまま出力されてブラウザーが実行する"
@@ -136,11 +137,11 @@ function InjectionFigure() {
   )
 }
 
-/* ---------- 図 21-5 CSRF トークンの発行と検証 ---------- */
+/* ---------- 図 24-6 CSRF トークンの発行と検証 ---------- */
 function CsrfFigure() {
   return (
     <Svg
-      id="21-5"
+      id="24-6"
       w={780}
       h={330}
       label="ページを描画するとき、Rails はセッションに保存した32バイトのトークンを取り出す（無ければ作る）。毎回新しい32バイトのランダムなパッドを作り、トークンとの XOR を取ってパッドの後ろにつなぎ、Base64 にしてフォームの隠しフィールドと csrf-token のメタタグに入れる。POST を受けると、パラメーターの authenticity_token か X-CSRF-Token ヘッダーの値を Base64 で戻し、前半のパッドと後半の XOR を取ってトークンを復元し、セッションのトークンと比べる。Origin ヘッダーがあれば、要求の URL のオリジンと一致するかも確かめる。一致しなければ 422 になる。攻撃者のサイトはセッションのトークンを読めないので、正しい値を送れない"
@@ -172,7 +173,7 @@ function CsrfFigure() {
   )
 }
 
-/* ---------- 図 21-4 セキュリティ対策の適用箇所 ---------- */
+/* ---------- 図 24-5 セキュリティ対策の適用箇所 ---------- */
 function WhereFigure() {
   const rows = [
     { t: 'ミドルウェア', items: 'HostAuthorization（Host ヘッダー）、SSL（HTTPS への転送・HSTS・secure 属性）', fill: 'box' as const },
@@ -184,7 +185,7 @@ function WhereFigure() {
   ]
   return (
     <Svg
-      id="21-4"
+      id="24-5"
       w={780}
       h={rows.length * 48 + 30}
       label="要求が通る順に、セキュリティ対策の適用箇所を並べた。ミドルウェアでは HostAuthorization が Host ヘッダーを、SSL が HTTPS への転送と HSTS と Cookie の secure 属性を受け持つ。セッションと Cookie は secret_key_base から作った鍵で署名・暗号化される。コントローラーでは CSRF の検証と Strong Parameters、モデルではプレースホルダーと order の列名の検査、ビューでは自動エスケープ、応答ヘッダーでは Content-Security-Policy を使う。CSP は既定では設定されていない"
@@ -205,21 +206,183 @@ function WhereFigure() {
   )
 }
 
+/* ---------- 図 24-3 DB のセッションを使うログイン ---------- */
+function AuthenticationSessionFigure() {
+  return (
+    <Svg
+      id="24-3"
+      w={740}
+      h={194}
+      label="Rails 8.1 の認証ジェネレーターの構成。ログイン時にパスワードの照合が成功すると、Rails が DB に Session の行を作り、その ID を署名付き Cookie としてブラウザーに返す。次の要求では Cookie の署名を検証し、ID で DB の Session を取得して Current.session を設定する"
+    >
+      <T x={14} y={51} bold>ログイン時</T>
+      <Box x={128} y={20} w={172} h={62} lines={['パスワードを照合', 'SessionsController']} fill="box" subTone="muted" />
+      <Arrow x1={300} y1={51} x2={332} y2={51} />
+      <Box x={334} y={20} w={172} h={62} lines={['DB に Session を作成', 'セッション ID ができる']} fill="box4" subTone="muted" />
+      <Arrow x1={506} y1={51} x2={538} y2={51} />
+      <Box x={540} y={20} w={184} h={62} lines={['ブラウザーへ返す', 'ID を入れた署名付き Cookie']} fill="box5" subTone="muted" />
+
+      <T x={14} y={137} bold>次の要求</T>
+      <Box x={128} y={106} w={172} h={62} lines={['Cookie を受け取る', '署名を検証して ID を読む']} fill="box" subTone="muted" />
+      <Arrow x1={300} y1={137} x2={332} y2={137} />
+      <Box x={334} y={106} w={172} h={62} lines={['DB から Session を読む', 'ID で対象の行を探す']} fill="box4" subTone="muted" />
+      <Arrow x1={506} y1={137} x2={538} y2={137} />
+      <Box x={540} y={106} w={184} h={62} lines={['要求の認証状態を設定', 'Current.session を使う']} fill="box5" subTone="muted" />
+    </Svg>
+  )
+}
+
+/* ---------- CookieStore と DB のセッションで、サーバーが失効させられるもの（番号なし） ---------- */
+function SessionRevokeFigure() {
+  return (
+    <Svg
+      id="ch21-session-revoke"
+      w={780}
+      h={290}
+      label="左は CookieStore。ブラウザーの Cookie に暗号化したセッションの中身（user_id 42 など）が入り、Rails は鍵で復号して読むだけで、サーバーには利用者ごとの行が無い。その利用者だけを止めるには別の仕組みが必要で、secret_key_base を変えると全員がログアウトする。右は認証ジェネレーターの DB のセッション。Cookie には署名付きの session_id だけが入り、Rails は Session.find_by で sessions テーブルの行を探す。行を削除すると、その利用者だけを失効させられ、次の要求では行が見つからずログインを求める"
+    >
+      <T x={20} y={18} bold fs={12.5}>
+        CookieStore（Rails の既定）
+      </T>
+      <T x={410} y={18} bold fs={12.5}>
+        DB のセッション（認証ジェネレーター）
+      </T>
+
+      <Box x={20} y={34} w={350} h={48} lines={['ブラウザーの Cookie（_demo_session）', '暗号化したセッションの中身（user_id 42 など）']} fs={11.5} fill="box4" subTone="muted" />
+      <Arrow x1={195} y1={82} x2={195} y2={104} />
+      <Box x={20} y={106} w={350} h={48} lines={['Rails', '鍵で復号して中身を読む']} fs={11.5} fill="box" subTone="muted" />
+      <Box x={20} y={178} w={350} h={48} lines={['利用者ごとの行は無い', 'サーバーで消せるものが無い']} fs={11.5} fill="bg" dashed subTone="muted" />
+      <T x={20} y={250} fs={11.5}>
+        その利用者だけを止めるには、別の仕組みが必要
+      </T>
+      <T x={20} y={272} fs={11.5} tone="muted">
+        secret_key_base を変えると全員がログアウトする
+      </T>
+
+      <Box x={410} y={34} w={350} h={48} lines={['ブラウザーの Cookie（session_id）', '署名付きの ID だけが入る']} fs={11.5} fill="box4" subTone="muted" />
+      <Arrow x1={585} y1={82} x2={585} y2={104} />
+      <Box x={410} y={106} w={350} h={48} lines={['Rails', 'Session.find_by(id: …) で行を探す']} fs={11.5} fill="box" subTone="muted" />
+      <Arrow x1={585} y1={154} x2={585} y2={176} />
+      <Box x={410} y={178} w={350} h={48} lines={['DB の sessions テーブル', 'ログインごとに1行。行を削除できる']} fs={11.5} fill="box4" subTone="muted" accent />
+      <T x={410} y={250} fs={11.5} tone="acc">
+        行を削除すると、その利用者だけを失効させられる
+      </T>
+      <T x={410} y={272} fs={11.5} tone="muted">
+        次の要求では行が見つからず、ログインを求める
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 認可コード方式でログインするときの往復（番号なし） ---------- */
+function OidcCodeFlowFigure() {
+  const B = 70
+  const A = 390
+  const S = 710
+  const msgs: { y: number; from: number; to: number; t: string; sub?: string }[] = [
+    { y: 60, from: B, to: A, t: '① 外部サービスでのログインを始める' },
+    { y: 130, from: A, to: B, t: '② 認証サービスへ移動させる応答', sub: '戻り先 URI・state・nonce・PKCE の値を付ける' },
+    { y: 186, from: B, to: S, t: '③ 認証サービスへ移動する' },
+    { y: 256, from: S, to: B, t: '④ 登録済みの戻り先 URI へ移動させる', sub: '短命のコードと state を付ける' },
+    { y: 312, from: B, to: A, t: '⑤ コードと state をアプリに届ける' },
+    { y: 382, from: A, to: S, t: '⑥ コードと PKCE の検証値を送る', sub: 'アプリのサーバーから直接送る' },
+    { y: 484, from: S, to: A, t: '⑦ ID トークンとアクセストークン' },
+  ]
+  return (
+    <Svg
+      id="ch21-oidc-flow"
+      w={780}
+      h={556}
+      label="認可コード方式でログインするときの往復。① ブラウザーがアプリで外部サービスでのログインを始め、アプリは state・nonce・PKCE の検証値を作る。② アプリは戻り先 URI・state・nonce・PKCE の値を付けて、ブラウザーを認証サービスへ移動させる。③ ブラウザーが認証サービスへ移動し、利用者がログインして許可する。④ 認証サービスは短命のコードと state を付けて、ブラウザーを登録済みの戻り先 URI へ移動させる。⑤ ブラウザーがコードと state をアプリに届け、アプリは state を開始時の値と比べる。⑥ アプリのサーバーがコードと PKCE の検証値を認証サービスへ直接送り、認証サービスは検証値が ② の値と対応するか確かめる。⑦ 認証サービスが ID トークンとアクセストークンを返し、アプリは ID トークンの発行者・署名・受信対象・期限・nonce を検証する"
+    >
+      {(
+        [
+          [B, 'ブラウザー'],
+          [A, 'Rails アプリ'],
+          [S, '認証サービス'],
+        ] as const
+      ).map(([x, name]) => (
+        <g key={name}>
+          <T x={x} y={18} anchor="middle" bold fs={12.5}>
+            {name}
+          </T>
+          <line x1={x} y1={30} x2={x} y2={546} stroke="var(--fig-line)" strokeDasharray="3 4" />
+        </g>
+      ))}
+      {msgs.map((m) => {
+        const right = m.from < m.to
+        const lx = Math.min(m.from, m.to) === B ? B + 14 : A + 14
+        return (
+          <g key={m.t}>
+            <Arrow x1={m.from + (right ? 4 : -4)} y1={m.y} x2={m.to + (right ? -4 : 4)} y2={m.y} />
+            <T x={lx} y={m.y - 10} fs={11.5}>
+              {m.t}
+            </T>
+            {m.sub && (
+              <T x={lx} y={m.y + 14} fs={11.5} tone="muted">
+                {m.sub}
+              </T>
+            )}
+          </g>
+        )
+      })}
+      <Box x={255} y={72} w={270} h={28} lines="state・nonce・PKCE の検証値を作る" fs={11.5} />
+      <Box x={600} y={198} w={170} h={28} lines="利用者がログインして許可" fs={11.5} />
+      <Box x={255} y={324} w={270} h={28} lines="state を開始時の値と比べる" fs={11.5} />
+      <Box x={575} y={408} w={195} h={44} lines={['PKCE の検証値が', '② の値と対応するか確かめる']} fs={11.5} />
+      <Box x={250} y={496} w={280} h={44} lines={['ID トークンを検証する', '発行者・署名・受信対象・期限・nonce']} fs={11.5} subTone="muted" />
+    </Svg>
+  )
+}
+
+/* ---------- secret_key_base の出どころと、そこから作られる鍵（番号なし） ---------- */
+function SecretKeyBaseFigure() {
+  const xs = [20, 275, 530]
+  const sources = [
+    ['tmp/local_secret.txt', '開発・テスト環境で自動で作られる'],
+    ['環境変数 SECRET_KEY_BASE', '本番環境'],
+    ['credentials（本番環境）', 'config/credentials.yml.enc', '鍵は master.key か RAILS_MASTER_KEY'],
+  ]
+  const uses = [['署名・暗号化した Cookie', '"authenticated encrypted cookie" など'], ['署名付きの ID', 'Active Storage の URL'], ['Turbo のストリーム名']]
+  return (
+    <Svg
+      id="ch21-secret-key-base"
+      w={780}
+      h={346}
+      label="上の段は secret_key_base の出どころ。開発・テスト環境では自動で作られる tmp/local_secret.txt、本番環境では環境変数 SECRET_KEY_BASE か、master.key か RAILS_MASTER_KEY で復号する config/credentials.yml.enc の credentials を使う。secret_key_base から Rails.application.key_generator が PBKDF2 で用途ごとに鍵を作り、下の段の署名・暗号化した Cookie、Active Storage の URL の署名付きの ID、Turbo のストリーム名に使う。secret_key_base を変えると下の段の鍵がすべて変わり、配った Cookie・URL・ストリーム名は使えなくなる"
+    >
+      {sources.map((lines, i) => (
+        <Box key={lines[0]} x={xs[i]} y={20} w={230} h={62} lines={lines} fs={11.5} fill="box4" subTone="muted" />
+      ))}
+      <Arrow x1={135} y1={82} x2={340} y2={110} />
+      <Arrow x1={390} y1={82} x2={390} y2={110} />
+      <Arrow x1={645} y1={82} x2={440} y2={110} />
+      <Box x={290} y={112} w={200} h={44} lines={['secret_key_base', '1つの秘密の値']} fs={12} bold fill="box5" subTone="muted" />
+      <Arrow x1={390} y1={156} x2={390} y2={180} />
+      <Box x={240} y={182} w={300} h={44} lines={['Rails.application.key_generator', 'PBKDF2 で用途ごとに鍵を作る']} fs={11.5} fill="box" subTone="muted" />
+      <Arrow x1={330} y1={226} x2={135} y2={256} />
+      <Arrow x1={390} y1={226} x2={390} y2={256} />
+      <Arrow x1={450} y1={226} x2={645} y2={256} />
+      {uses.map((lines, i) => (
+        <Box key={lines[0]} x={xs[i]} y={258} w={230} h={46} lines={lines} fs={11.5} fill="box4" subTone="muted" />
+      ))}
+      <T x={20} y={328} fs={11.5} tone="muted">
+        secret_key_base を変えると下の段の鍵がすべて変わり、配った Cookie・URL・ストリーム名は使えなくなる
+      </T>
+    </Svg>
+  )
+}
+
 const ch21: Chapter = {
   number: 21,
   part: 4,
   title: 'セキュリティ',
   summary:
-    '利用者が送る値は自由に作れることと、Cookie とセッションでログイン状態を保つ仕組みを確かめ、一括代入・CSRF・XSS・SQL インジェクションがどんな攻撃かをデモで見てから、それらへの Rails の対策が、要求を処理するどの段階で適用されるかを、デモアプリケーションでの実測とソースで確かめます。secret_key_base と credentials、Host Authorization・force_ssl・CSP、Brakeman などの検査ツールも扱います。',
+    'ログインできた利用者が、どの記事を編集してよいかは別に確認します。記事の編集を例に、本人の確認、操作の許可、フォームから受け取った値の扱いを、Rails のどの処理が受け持つかを調べます。',
   goals: [
-    '要求の URL・ヘッダー・Cookie・フォームの値を送る側が自由に作れることと、一括代入で起きることを説明できる',
-    'Cookie とセッションでログイン状態を保つ仕組みと、それを利用する CSRF、入力が HTML や SQL として解釈される XSS と SQL インジェクションを、例を挙げて説明できる',
-    'CSRF トークンの発行・マスク・検証の流れと、Origin の検査を説明できる',
-    'link_to の href や to_json など、自動エスケープの外側で XSS を防ぐ方法を説明できる',
-    'プレースホルダーと文字列への埋め込みの違い、order に生の文字列を渡したときの例外を説明できる',
-    'secret_key_base から Cookie などの鍵が作られることと、credentials の仕組みを説明できる',
-    'Host Authorization・force_ssl・CSP がどのミドルウェアや設定で有効になるかを説明できる',
-    'Brakeman と bundler-audit で検出できるものを説明できる',
+    'ログイン状態を確認する処理と、対象の記事を更新してよいかを決める処理を区別できる',
+    'フォームに付けるトークンの役割と、受け取った値を保存・表示・検索に使うときの扱いを説明できる',
+    'セッションを失効させる方法と、ログやリポジトリに秘密の値を残さない方法を説明できる',
   ],
   prerequisites: [6, 10, 12, 16],
   sections: [
@@ -251,7 +414,7 @@ Processing by ProbeController#echo as */*
           />
           <p>
             フォームに status（公開の状態）の欄が無くても、<code>article[status]=published</code> を送ればサーバーに届きます。User-Agent（使っているブラウザーの名前を伝えるヘッダー）や
-            Referer（どのページから来たかを伝えるヘッダー）も、送る側が決めた値です。要求の URL・ヘッダー・Cookie・フォームの値はどれも、送る側が自由に作れます（図 21-1）。
+            Referer（どのページから来たかを伝えるヘッダー）も、送る側が決めた値です。要求の URL・ヘッダー・Cookie・フォームの値はどれも、送る側が自由に作れます（図 24-1）。
           </p>
           <p>
             受け取った値をまとめてモデルに渡すことを一括代入と呼びます。一括代入では、作り手が変えさせるつもりのない列まで変わることがあります。デモの Article には status（draft・published・archived）の列があります。下書きを作るフォームに
@@ -288,7 +451,7 @@ title だけを許可:     status=draft
             だけにすると、status は既定値の draft のままでした。受け取る属性をコントローラーで1つずつ決めるこの仕組みを Strong Parameters と呼びます（<ChapterLink n={10} section="params" />
             ）。
           </p>
-          <Figure n="21-1" title="要求の中の値はすべて送る側が決める" caption="デモで curl から送った要求と、そのときのログをもとにした模式図。">
+          <Figure n="24-1" title="要求の中の値はすべて送る側が決める" caption="デモで curl から送った要求と、そのときのログをもとにした模式図。">
             <RequestPartsFigure />
           </Figure>
         </>
@@ -342,8 +505,7 @@ Cookie の値の長さ: 372 バイト
 `}
           />
           <p>
-            ログインした状態はこの仕組みで保ちます。ログインに成功したら、サーバーは利用者を区別する値を Cookie に入れ、その後の要求では Cookie の値から利用者を決めます（図
-            21-2）。Rails 8 の <code>bin/rails generate authentication</code> が作るコードも、ログインのたびにデータベースの sessions テーブルに行を作り、その id を署名付きの Cookie
+            ログインした状態はこの仕組みで保ちます。ログインに成功したら、サーバーは利用者を区別する値を Cookie に入れ、その後の要求では Cookie の値から利用者を決めます（図 24-2）。Rails 8 の <code>bin/rails generate authentication</code> が作るコードも、ログインのたびにデータベースの sessions テーブルに行を作り、その id を署名付きの Cookie
             に入れます
             <Ref n={10} />。
           </p>
@@ -388,9 +550,158 @@ Cookie の値の長さ: 372 バイト
             を読めないようにする属性です
             <Ref n={7} />。
           </p>
-          <Figure n="21-2" title="Cookie によるログイン状態と、別のサイトからの要求" caption="デモでの curl の実測（set-cookie、Cookie の復号）と、MDN の Set-Cookie の説明をもとにした模式図。">
+          <Figure n="24-2" title="Cookie によるログイン状態と、別のサイトからの要求" caption="デモでの curl の実測（set-cookie、Cookie の復号）と、MDN の Set-Cookie の説明をもとにした模式図。">
             <CookieFlowFigure />
           </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'authentication',
+      title: "ログインを実装するときの認証とセッション",
+      body: (
+        <>
+          <p>
+            <strong>認証</strong>で「誰か」を確かめ、<strong>認可</strong>で「その人にこの操作を許すか」を判定します。ログイン済みでも、記事の閲覧・編集・削除の権限は操作ごとに変わります。API では一般に、利用できる認証情報がない要求に 401、認証されたが許可されない要求に 403 を返します。対象が存在すること自体を知らせたくないときは、見つからない対象と同じ 404 にできます。<Ref n={12} />
+          </p>
+          <h3>パスワードの照合</h3>
+          <p>
+            <code>has_secure_password</code> を宣言した Rails のモデルは、平文のパスワードの代わりに bcrypt で計算した <code>password_digest</code> を保存します。bcrypt はパスワードごとのソルト（ハッシュに加える値）と計算コストを使うため、同じパスワードの出力を一律に使い回せません。<code>user.authenticate(password)</code> で照合でき、成功するとユーザー自身、失敗すると <code>false</code> が返ります。ユーザーの検索を含むログインでは <code>User.authenticate_by(email_address: ..., password: ...)</code> を使うと、対象が見つからなかった場合にも照合に近い処理を行い、検索結果による応答時間の差を小さくできます。<Ref n={13} /><Ref n={14} />
+          </p>
+          <p>
+            ログインとパスワード再設定には、アカウントと接続元の両方を考慮した頻度制限を設けます。Rails の <code>rate_limit</code> や Rack::Attack で制限する場合、複数台ではカウントを共有できるストアを使い、プロキシ配下では接続元の IP の取り方も確認します。既知・未知のメールアドレスで「受付けました」のような同じ応答を返し、応答時間も揃えると、登録の有無を推測されにくくなります。パスワードを変更したときは古いセッションを失効させ、再設定の URL やトークンをログに出さないようにします。<Ref n={15} /><Ref n={16} /><Ref n={14} />（<ChapterLink n={25} section="client-ip">プロキシを通る IP</ChapterLink>）。
+          </p>
+          <h3>Rails 8 の認証ジェネレーター</h3>
+          <p>
+            <code>bin/rails generate authentication</code> は、モデル・ログイン画面・コントローラー・パスワード再設定メールなどの土台を生成します。Rails 8.1 系では、認証が成功すると <code>Session</code> の行を作り、ブラウザーに <code>session_id</code> の署名付き Cookie を返します。次の要求では <code>Authentication</code> の Concern が Cookie を読み、<code>Session.find_by</code> で行を探して <code>Current.session</code> と <code>Current.user</code> を使えるようにします。これにより、セッションの行を消せばサーバー側で失効させられます。生成されたコードをアプリに取り込む方式なので、ユーザー登録、ログイン保持期間、権限の規則は用途に応じて決めます。<Ref n={17} /><Ref n={18} />
+          </p>
+          <p>
+            <code>Current</code> は、処理中のリクエストで利用者やセッションを参照するための <code>CurrentAttributes</code> のクラスです。リクエストごとに値がどのように管理されるかは、<ChapterLink n={23} section="thread-safety">Executor とスレッド安全性</ChapterLink>で扱います。
+          </p>
+          <p>
+            再設定では <code>password_reset_token</code> をメールで送り、<code>find_by_password_reset_token!</code> で期限と対象を確認します。<code>has_secure_password</code> の既定の再設定トークンは15分で期限が切れ、パスワードを変更すると以前のトークンを使えなくなります。<code>Authentication</code> は原則としてログインを要求し、公開するアクションには <code>allow_unauthenticated_access</code> を明示できます。<Ref n={13} /><Ref n={18} />
+          </p>
+          <Figure n="24-3" title="Cookie の ID と DB の Session の対応" caption="Rails 8.1 の認証ジェネレーターをもとにした模式図。上段で作った行を、下段の要求で ID を使って読みます。">
+            <AuthenticationSessionFigure />
+          </Figure>
+          <h3>Devise を使う構成</h3>
+          <p>
+            Devise は複数の認証機能を組み合わせられる gem です。利用者の自己登録、メール確認、再設定、長期ログイン、ロックなどが必要なら、既存チームの運用や必要な機能を見て選びます。既存アプリではモデルの <code>devise</code> 宣言を読むと、有効な機能がわかります。<Ref n={19} />
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">モジュール</th>
+                  <th scope="col">担当すること</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>database_authenticatable</code>、<code>validatable</code></th>
+                  <td>パスワードの照合、メールやパスワードの基本検証</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>registerable</code>、<code>confirmable</code>、<code>recoverable</code></th>
+                  <td>登録、確認メールと確認状態、再設定</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>rememberable</code>、<code>timeoutable</code></th>
+                  <td>ログイン状態を再開する Cookie、無操作時間による期限</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>lockable</code>、<code>trackable</code>、<code>omniauthable</code></th>
+                  <td>失敗によるロック、ログインの記録、外部認証との連携</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code>authenticate_user!</code> でログインを要求し、<code>current_user</code> と <code>user_signed_in?</code> で状態を参照します。<code>confirmable</code> の確認画面はメールのリンクでトークンを検証し、確認時刻を保存します。<code>rememberable</code> は長く残る認証用 Cookie を扱うため、共有端末での利用や失効条件も設計に含めます。画面だけ変更する場合は Devise のビューを生成して編集し、ログイン後の遷移先などは提供されるフック（<code>after_sign_in_path_for</code> など）から変更できます。処理を上書きする場合は元の処理とテストも確認します。<Ref n={19} />
+          </p>
+          <p>Devise の confirmable を使う例では、登録時に確認用トークンを発行してメールを送り、リンクの検証が済んだアカウントに confirmed_at を記録します。再送・期限切れ・すでに確認済みの場合も画面から追います。登録項目を加えるときは、生成したビューだけでなく Devise のパラメータ許可にも追加し、利用者が選べる項目を限定します。</p>
+        </>
+      ),
+    },
+    {
+      id: 'object-authorization',
+      title: "所有者・ロールとレコードの認可",
+      body: (
+        <>
+          <p>
+            「全員が公開記事を読めるが、書き換えられるのは自分の記事だけ」という画面を考えます。ログインで分かるのは誰が操作しているかです。編集を受け付けるアクションでは、その記事が本人のものかも確かめます。対象の ID だけで行を選び、この権限の確認が抜ける問題を IDOR と呼びます。
+          </p>
+          <p>
+            <code>Current.user.articles.find(params.expect(:id))</code> は2段階に読めます。<code>Current.user.articles</code> で本人の記事だけに絞り、その中から <code>find</code> で該当する1件を探します。新規作成では <code>Current.user.articles.build(article_params)</code> とすると、ログイン中の利用者が記事の所有者になります。一覧やダウンロードなど、別の経路にもそれぞれの操作に合う規則を適用します。<Ref n={12} /><Ref n={20} />
+          </p>
+          <p>
+            条件が増えたら、Pundit では <code>ArticlePolicy#update?</code> のように利用者と対象の組から操作を判定し、<code>authorize @article</code> で使えます。<code>policy_scope(Article)</code> は一覧に含めてよい行を選びます。スコープで読める行の中にも編集できないものがあるので、更新のときは操作のポリシーも適用します。似た選択肢の CanCanCan は、<code>Ability</code> に許可の規則をまとめ、<code>authorize!</code> や <code>accessible_by</code> で参照できます。<Ref n={20} /><Ref n={21} />
+          </p>
+          <p>
+            <code>Admin::BaseController</code> を用意すれば、管理画面の入口に認証と管理者の条件を置けます。個々の操作には、所属や担当範囲など必要な条件を足します。ロールや所有者 ID のような権限に関わる属性は、一般利用者の一括代入の許可リストから外し、権限を変更する操作を専用の認可と記録の対象にします。未認証、権限のない利用者、許可された利用者で同じエンドポイントを検証すると、経路ごとの確認漏れを見つけられます。<Ref n={12} /><Ref n={20} />
+          </p>
+          <AuthorizationFigure />
+          <p>利用者やプロセスに必要な権限だけを渡す考え方（最小権限の原則）は、<ChapterLink n={85} /> で扱います。</p>
+        </>
+      ),
+    },
+    {
+      id: 'session-protection',
+      title: "セッションを守り、失効させる",
+      body: (
+        <>
+          <p>
+            ログイン前に知られていた識別子を使う攻撃を、セッション固定と呼びます。<ChapterLink n={10} section="cookie-session">ログイン時のセッションの切り替え</ChapterLink> はこのために行います。<code>HttpOnly</code> で読み取りを制限した Cookie も、ブラウザーは条件が合えばリクエストに付けます。Cookie 認証を採用する API でも、要求元と CSRF の検証を確認します。GET は取得に使い、状態を変える操作は別のメソッドで受け付けます。<Ref n={12} /><Ref n={27} />
+          </p>
+          <p>
+            CookieStore のセッションデータはクライアント側にあるので、サーバーでその利用者のセッションだけを即座に止めるには別の仕組みが必要です。DB のセッションなら行の削除で失効させられます。どの方式でも期限を設け、パスワード変更や不審なログイン時には関連セッションを確認します。重要な変更は再認証を要求し、失効の動作をテストします。<Ref n={12} /><Ref n={27} />
+          </p>
+          <p>次の図は、CookieStore と DB のセッションを左右に並べ、セッションの中身がどこにあり、サーバーが何を消せるかを比べたものです。上からブラウザーの Cookie、Rails、DB の順に見てください。</p>
+          <Figure title="CookieStore と DB のセッションで、サーバーが失効させられるもの" caption="図 24-2 と図 24-3 をもとにした模式図。破線の箱は CookieStore には無いものを示します。secret_key_base を変えたときの動作は「secret_key_base と credentials」の節で扱います。">
+            <SessionRevokeFigure />
+          </Figure>
+          <p>
+            機密設定は暗号化された credentials、または配備先の秘密情報管理機能から渡します。利用者ごとの外部サービス連携トークンは別のデータなので、必要なら Active Record Encryption の <code>encrypts :refresh_token</code> などで保管し、ログの <code>filter_parameters</code> にも指定します。漏えい時は値を失効・再発行し、利用状況を調査します。履歴や出力から値を取り除く作業と、値そのものを使えなくする作業がそれぞれ必要です。<Ref n={12} /><Ref n={28} />
+          </p>
+          <p>
+            漏えいの検査は、<code>gitleaks</code> などでリポジトリや CI の差分にも適用できます。既存の Brakeman と bundler-audit に加え、Dependabot などで依存の見直しを継続し、検出時は該当バージョンとアプリの利用経路を確かめます。OWASP ASVS のような基準を使うと、認証やセッションの確認項目をレビューへ落とし込めます。<Ref n={29} /><Ref n={30} /><Ref n={31} />
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'mfa-and-federation',
+      title: "多要素認証と外部サービスでのログイン",
+      body: (
+        <>
+          <p>
+            パスワード以外の要素を要求する MFA（多要素認証）には、一時コードの TOTP やパスキーなどがあります。TOTP は登録時に共有した秘密と現在時刻から短いコードを作ります。許容する時刻差を狭くし、使用済みコードを再利用できないようにし、試行回数を制限します。QR コードに含まれる秘密や復旧用コードを保護し、端末をなくしたときの本人確認も決めます。SMS は通信契約や番号の移管に依存し、WebAuthn を使うパスキーは登録先のサイトに認証が結び付くためフィッシングに強くなります。<Ref n={32} /><Ref n={33} />
+          </p>
+          <p>
+            カレンダーアプリに「自分の予定を読む」ことを許可する場面を考えます。このように外部アプリへ API の利用権限を渡す仕組みが OAuth 2.0 です。「ほかのサービスのアカウントでログインする」場面では、OpenID Connect（OIDC）を使うと、本人確認の結果を ID トークンとして受け取れます。
+          </p>
+          <p>
+            認可コード方式では、認証サービスから戻るブラウザーが短命のコードをアプリに届け、アプリのサーバーがそのコードをトークンに交換します。戻り先には事前に登録した URI を使います。<code>state</code> は開始した要求と戻ってきた応答を、<code>nonce</code> は開始した認証と ID トークンを対応付けます。PKCE は、コードの交換時に開始時の検証値と対応することを確かめる仕組みです。受け取った ID トークンの発行者・署名・受信対象・期限も検証します。<Ref n={34} /><Ref n={35} />
+          </p>
+          <p>
+            次の図は、認可コード方式でログインするときの要求と応答を、上から時間の順に並べたものです。② で付けた3つの値は、state を ⑤ の後にアプリが、PKCE を ⑥ で認証サービスが、nonce を ⑦ の後にアプリが確かめます。
+          </p>
+          <Figure title="認可コード方式でログインするときの往復" caption="OpenID Connect Core 1.0 と RFC 9700 をもとにした模式図。灰色の箱は、その時点でアプリや認証サービスが行う処理です。③ と ④ はブラウザーの移動で、アプリを通りません。エラーの場合の流れは省略しています。">
+            <OidcCodeFlowFigure />
+          </Figure>
+          <p>
+            Rails で OmniAuth を使う場合も、外部サービスのアクセストークンは API の利用に使い、本人の識別には検証済みの ID トークンやプロバイダーが指定する手順を使います。外部アカウントは発行元とそのサービス内の利用者 ID の組でひも付け、メールアドレスの一致だけで既存アカウントへ結合しません。登録や結合の開始は CSRF から保護し、接続解除時には保持しているトークンも扱います。<Ref n={36} /><Ref n={34} />
+          </p>
+          <h3>JWT を認証に使うとき</h3>
+          <p>
+            署名付き JWT はヘッダー、ペイロード、署名からなり、ペイロードは読めます。署名によって内容が改変されていないことを調べ、許可する署名方式と鍵を受け手側で指定します。用途ごとに発行者 <code>iss</code>、受信者 <code>aud</code>、期限 <code>exp</code> などを検証します。ブラウザーでの保存先は JavaScript からの読み取りや Cookie の自動送信の性質を考えて決めます。<Ref n={37} />
+          </p>
+          <p>
+            JWT が有効期限まで単独で使える構成では、個別失効に失効リストなどの状態が必要です。短命のアクセストークンと更新用トークンを使う場合は、更新時のローテーションや失効を設計します。一つの Rails アプリのブラウザーログインでは、サーバー側セッションで要件を満たせることもあります。<Ref n={37} /><Ref n={27} />
+          </p>
+          <p>
+            既存の Rails アカウントに外部ログインを追加するときは、そのアカウントの本人が連携を承認する手順を設けます。多要素認証の復旧コードを発行する場合は、使ったコードを記録して1回限りにします。
+          </p>
         </>
       ),
     },
@@ -456,12 +767,12 @@ puts "値として渡す: #{rel.to_sql} 件数: #{rel.count}"
             は常に真なので、すべての行が条件に当てはまって、全部のコメント（2975件）が返りました。同じ条件で <code>delete_all</code> を呼べば、すべてのコメントが消えます。入力が SQL
             の命令の一部として解釈されたためで、この攻撃を SQL インジェクションと呼びます
             <Ref n={1} />。<code>where(article_id: 入力)</code> のように値として渡すと、Rails は入力を article_id の値として扱います。article_id は整数の列なので、入力は整数に変換されて 1
-            になり、条件の形は変わりませんでした（図 21-3）。
+            になり、条件の形は変わりませんでした（図 24-4）。
           </p>
           <p>
             一括代入、CSRF、XSS、SQL インジェクションのどれも、利用者から届いた値や要求を、アプリケーションが確かめずに使うことで起きます。Rails はそれぞれに対策を用意していて、多くは既定で有効です。次の節では、それらの対策が要求を処理するどの段階で行われるかを見ます。
           </p>
-          <Figure n="21-3" title="入力が SQL や HTML として解釈される" caption="デモ（Rails 8.1.4.1、MySQL 8.4）での bin/rails runner の実測をもとにした模式図。">
+          <Figure n="24-4" title="入力が SQL や HTML として解釈される" caption="デモ（Rails 8.1.4.1、MySQL 8.4）での bin/rails runner の実測をもとにした模式図。">
             <InjectionFigure />
           </Figure>
         </>
@@ -473,11 +784,11 @@ puts "値として渡す: #{rel.to_sql} 件数: #{rel.count}"
       body: (
         <>
           <p>
-            Rails の主なセキュリティ対策は、要求の処理の各段に分かれています（図 21-4）。多くは既定で有効ですが、設定が必要なものや、コードの書き方によって保護が働かなくなるものもあります。この章では、デモのアプリケーション（開発環境）で、攻撃を防げる例と、保護が働かなくなるコードの書き方を確かめます。全体はセキュリティのガイド
+            Rails の主なセキュリティ対策は、要求の処理の各段に分かれています（図 24-5）。多くは既定で有効ですが、設定が必要なものや、コードの書き方によって保護が働かなくなるものもあります。この章では、デモのアプリケーション（開発環境）で、攻撃を防げる例と、保護が働かなくなるコードの書き方を確かめます。全体はセキュリティのガイド
             <Ref n={1} />
             にまとめられています。
           </p>
-          <Figure n="21-4" title="セキュリティ対策の適用箇所" caption="Rails 8.1.4.1 の default_middleware_stack.rb・request_forgery_protection.rb などと Securing Rails Applications（ガイド）をもとにまとめた図。">
+          <Figure n="24-5" title="セキュリティ対策の適用箇所" caption="Rails 8.1.4.1 の default_middleware_stack.rb・request_forgery_protection.rb などと Securing Rails Applications（ガイド）をもとにまとめた図。">
             <WhereFigure />
           </Figure>
           <div className="table-wrap">
@@ -577,8 +888,7 @@ puts "値として渡す: #{rel.to_sql} 件数: #{rel.count}"
           <p>
             毎回値を変えるのは、HTTPS の圧縮を利用して秘密の値を推測する攻撃（BREACH）への対策です（ソースのコメント）。GET と HEAD は検証されないので、GET で状態を変える処理を作ると CSRF の対策が効きません。
             <code>forgery_protection_origin_check</code> は <code>load_defaults 5.0</code> 以降で true になり、Origin ヘッダーがあれば要求の URL のオリジンと一致するかも確かめます
-            <Ref n={2} />。Turbo（<ChapterLink n={17} />
-            ）は、メタタグのトークンを X-CSRF-Token ヘッダーに入れて送ります。
+            <Ref n={2} />。Turbo（リンクやフォームの送信を JavaScript で処理するライブラリ）は、メタタグのトークンを X-CSRF-Token ヘッダーに入れて送ります。
           </p>
           <p>
             検証に失敗すると、<code>load_defaults 5.2</code> 以降の既定（<code>default_protect_from_forgery</code> により ActionController::Base に <code>protect_from_forgery with: :exception</code> が付く）により InvalidAuthenticityToken になり、ShowExceptions が 422
@@ -586,7 +896,7 @@ puts "値として渡す: #{rel.to_sql} 件数: #{rel.count}"
             ）。ALB（AWS のロードバランサー）などで HTTPS を終端していて Rails が要求を http と判断すると、ブラウザーの Origin（https://…）と <code>request.base_url</code>（http://…）が一致せず、正しいトークンでも 422 になります。この切り分けは
             <ChapterLink n={25} />で扱います。
           </p>
-          <Figure n="21-5" title="CSRF トークンの発行と検証" caption="Rails 8.1.4.1 の request_forgery_protection.rb を読み、デモでの実測で確かめてまとめた模式図。">
+          <Figure n="24-6" title="CSRF トークンの発行と検証" caption="Rails 8.1.4.1 の request_forgery_protection.rb を読み、デモでの実測で確かめてまとめた模式図。">
             <CsrfFigure />
           </Figure>
           <Callout kind="note" title="開発中のバージョンでの Sec-Fetch-Site の検査">
@@ -666,6 +976,26 @@ x = "' OR '1'='1"
       ),
     },
     {
+      id: 'input-boundaries',
+      title: "外部コマンド・ファイル・外向き通信を守る",
+      body: (
+        <>
+          <p>
+            利用者から届く値は、表示や DB の条件以外にも渡ります。どの処理がその値を解釈するかを決め、受け持つ境界で入力と出力を制限します。<Ref n={12} />
+          </p>
+          <ul>
+            <li><strong>SQL の列や並び順</strong>を利用者が選ぶ場合は、受け取るキーとアプリが用意した列・順序の対応表から選びます。値に使えるプレースホルダーを、列名や SQL の並び順指定にも使えるとは限りません。<code>select</code>、<code>order</code>、<code>group</code>、<code>pluck</code> などに断片を渡す箇所を見ます。<Ref n={22} /><Ref n={12} /></li>
+            <li><strong>OS コマンド</strong>が必要なら、実行するプログラムを固定し、<code>Open3.capture3(command, arg1, arg2)</code> などで引数を区別します。コマンド自身がオプションやファイル名をどう扱うかも検査します。<code>--</code> でオプションの終端を指定できるものではそれを使い、対応は各コマンドの仕様を確認します。ファイルを読む処理には <code>File.open</code> など、用途が限定された API を選べます。<Ref n={23} /></li>
+            <li><strong>ファイルの取得や描画</strong>では、URL にファイルパスを持たせる代わりにレコードの ID を受け取り、認可済みのレコードから保管場所を解決します。入力からパスを組み立てる必要があれば、正規化やシンボリックリンクの解決後に許可ディレクトリの子であることを確かめます。接頭辞だけが同じ別ディレクトリにも注意し、書き換え可能なディレクトリを不用意に参照しません。テンプレート名も既知の値から選びます。<Ref n={12} /><Ref n={24} /></li>
+            <li><strong>外部 URL の取得</strong>に利用者が入力できる場合、SSRF（サーバー自身から意図しない接続先へ要求を出させる問題）を防ぎます。対象が決まっていれば HTTPS の許可リストを使い、URL の構文、名前解決された接続先、リダイレクト先に同じ制約を適用します。内部ネットワークへ到達できない出口制御や、タイムアウト、応答サイズの上限も合わせます。<Ref n={25} /></li>
+          </ul>
+          <p>
+            リダイレクトの戻り先はルートヘルパーで決めるか、同一ホストを確かめる <code>url_from(params[:return_to])</code> と既定の移動先を組み合わせます。外部サイトへの移動を許す場合は、対象をアプリの設定で管理します。アップロードはサイズ・許可した形式・ファイルの実データを検査し、公開するか、認可付きで配信するかをアプリで決めます（<ChapterLink n={19} section="attachment-lifecycle">添付と配信権限</ChapterLink>）。<Ref n={26} /><Ref n={24} />
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'secrets',
       title: 'secret_key_base と credentials',
       body: (
@@ -674,8 +1004,7 @@ x = "' OR '1'='1"
             <ChapterLink n={10} section="cookies-session" />
             の署名・暗号化された Cookie の鍵は、<code>secret_key_base</code> から <code>Rails.application.key_generator</code>（PBKDF2）で用途ごとに作られます。署名付きの ID（ActiveStorage の
             URL、<ChapterLink n={19} section="serving" />
-            ）や Turbo のストリーム名（<ChapterLink n={17} section="broadcast" />
-            ）も同じ鍵から作られます。
+            ）や Turbo のストリーム名も同じ鍵から作られます。
           </p>
           <Code
             lang="text"
@@ -693,6 +1022,12 @@ x = "' OR '1'='1"
           <p>
             secret_key_base を変えると、それから作られたすべての鍵が変わります。既存のセッションの Cookie は読めなくなって全員がログアウトし、すでに配った署名付きの URL やストリーム名も無効になります。
           </p>
+          <p>
+            次の図は、secret_key_base の出どころを上の段に、そこから作られる鍵の使い道を下の段に並べたものです。開発・テスト環境では上の段の左を、本番環境では中央か右を使います。
+          </p>
+          <Figure title="secret_key_base の出どころと、そこから作られる鍵" caption="デモ（開発環境）での bin/rails runner の実測と、Securing Rails Applications（ガイド）をもとにした模式図。下の段の鍵は用途ごとの文字列を変えて別々に作られます。">
+            <SecretKeyBaseFigure />
+          </Figure>
         </>
       ),
     },
@@ -802,7 +1137,9 @@ Confidence: Weak   Check: Redirect            Message: Possible unprotected redi
       body: (
         <ul>
           <li>要求の URL・ヘッダー・Cookie・フォームの値は、送る側が自由に作れます。受け取った値をまとめてモデルに渡すと、作り手が変えさせるつもりのない列まで変わるので、Strong Parameters で受け取る属性を決めます。</li>
-          <li>Rails はセッションを暗号化して Cookie に入れ、ブラウザーはその Cookie を同じサイトへの要求に自動で付けます。別のサイトのページから送らせた要求にも Cookie が付く場合があり、これを利用するのが CSRF です。</li>
+          <li>CookieStore はセッションを暗号化して Cookie に入れます。Rails 8 の認証ジェネレーターでは、DB に保存したセッションを Cookie の ID で参照し、サーバー側で失効させられます。</li>
+          <li>認証で利用者を確認し、認可ではその利用者が対象のレコードを読んだり変更したりできるかを確かめます。</li>
+          <li>別のサイトから送らせた要求にも Cookie が付く場合があり、これを利用するのが CSRF です。</li>
           <li>入力の記号が HTML のタグや SQL の命令として解釈されると、XSS や SQL インジェクションになります。&lt;%= %&gt; のエスケープと、SQL に値として渡す書き方で防ぎます。</li>
           <li>CSRF のトークンはセッションの値を毎回違うパッドで隠して出力され、POST などで送り返された値と Origin ヘッダーが検証されます。GET は検証されません。</li>
           <li>自動エスケープは HTML の本文の対策です。link_to の href の javascript: は防がないので、URL は自分で確かめます。CSP は既定では設定されていません。</li>
@@ -826,6 +1163,32 @@ Confidence: Weak   Check: Redirect            Message: Possible unprotected redi
     { title: 'Configuring Rails Applications（cookies_same_site_protection）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/configuring.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'load_defaults 6.1 で config.action_dispatch.cookies_same_site_protection が :lax になること。デモの set-cookie にも samesite=lax が付いた。' },
     { title: 'railties/lib/rails/generators/rails/authentication/templates/app/controllers/concerns/authentication.rb.tt', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/authentication/templates/app/controllers/concerns/authentication.rb.tt`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'start_new_session_for が sessions テーブルに行を作り、その id を cookies.signed.permanent[:session_id] に入れること。' },
     { title: 'Action Controller Overview（Strong Parameters）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/action_controller_overview.html', accessed: '2026-11-16', version: 'Rails 8.1', note: '許可せずに一括代入すると ActiveModel::ForbiddenAttributesError になること、expect と permit!。デモで実測。' },
+    { title: "Securing Rails Applications", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/security.html", accessed: "2026-11-20", version: "Rails 8.1", note: "認証、セッション、CSRF、入力、アップロードの安全性。" },
+    { title: "ActiveModel::SecurePassword", publisher: "Rails API", url: "https://api.rubyonrails.org/v8.1.3/classes/ActiveModel/SecurePassword/ClassMethods.html", accessed: "2026-11-20", version: "Rails 8.1", note: "bcrypt と再設定用トークン、既定の有効期限。" },
+    { title: "Authentication Cheat Sheet", publisher: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html", accessed: "2026-11-20", note: "レート制限、応答の統一、再認証。" },
+    { title: "ActionController::RateLimiting", publisher: "Rails API", url: "https://api.rubyonrails.org/v8.1/classes/ActionController/RateLimiting/ClassMethods.html", accessed: "2026-11-20", version: "Rails 8.1", note: "rate_limit の適用範囲、キャッシュと IP。" },
+    { title: "Rack::Attack", publisher: "rack/rack-attack", url: "https://github.com/rack/rack-attack", accessed: "2026-11-20", note: "ミドルウェアでの頻度制限とキャッシュストア。" },
+    { title: "Getting Started with Rails", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/getting_started.html", accessed: "2026-11-20", version: "Rails 8.1", note: "認証ジェネレーターと生成されるファイル。" },
+    { title: "Rails Authentication generator", publisher: "rails/rails", url: "https://github.com/rails/rails/tree/v8.1.4.1/railties/lib/rails/generators/rails/authentication/templates", accessed: "2026-11-20", note: "生成される Session、Authentication Concern、パスワード再設定。" },
+    { title: "Devise", publisher: "heartcombo/devise", url: "https://github.com/heartcombo/devise", accessed: "2026-11-20", note: "構成モジュール、設定、テストと画面のカスタマイズ。" },
+    { title: "Pundit", publisher: "varvet/pundit", url: "https://github.com/varvet/pundit", accessed: "2026-11-20", note: "ポリシー、スコープ、認可の検査。" },
+    { title: "CanCanCan", publisher: "coorasse/cancancan", url: "https://github.com/coorasse/cancancan", accessed: "2026-11-20", note: "Ability、authorize!、accessible_by。" },
+    { title: "Active Record Querying", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/active_record_querying.html", accessed: "2026-11-20", version: "Rails 8.1", note: "Relation、スコープ、バッチ、一覧と集計の問い合わせ。" },
+    { title: "OS Command Injection Defense Cheat Sheet", publisher: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html", accessed: "2026-11-20", note: "コマンドを直接実行し、プログラムと引数を制限する。" },
+    { title: "File Upload Cheat Sheet", publisher: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html", accessed: "2026-11-20", note: "ファイル形式・サイズと配信の認可。" },
+    { title: "Server Side Request Forgery Prevention Cheat Sheet", publisher: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html", accessed: "2026-11-20", note: "宛先の許可リストとネットワーク制御。" },
+    { title: "ActionController::Redirecting", publisher: "Rails API", url: "https://api.rubyonrails.org/v8.1.0/classes/ActionController/Redirecting.html", accessed: "2026-11-20", version: "Rails 8.1", note: "リダイレクトの HTTP ステータスと url_from。" },
+    { title: "Session Management Cheat Sheet", publisher: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html", accessed: "2026-11-20", note: "セッションの生成、Cookie 属性と失効。" },
+    { title: "Active Record Encryption", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/active_record_encryption.html", accessed: "2026-11-20", version: "Rails 8.1", note: "モデルの属性に対する暗号化の宣言。" },
+    { title: "Gitleaks", publisher: "gitleaks/gitleaks", url: "https://github.com/gitleaks/gitleaks", accessed: "2026-11-20", note: "機密値が変更履歴に含まれないかを検査する。" },
+    { title: "Dependabot version updates", publisher: "GitHub Docs", url: "https://docs.github.com/en/code-security/concepts/supply-chain-security/dependabot-version-updates", accessed: "2026-11-20", note: "依存関係の更新を通知し、変更案を作る。" },
+    { title: "OWASP Application Security Verification Standard", publisher: "OWASP", url: "https://asvs.owasp.org/", accessed: "2026-11-20", note: "アプリケーションのセキュリティを検証するための基準。" },
+    { title: "Multifactor Authentication Cheat Sheet", publisher: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html", accessed: "2026-11-20", note: "各認証要素の特性と復旧手段。" },
+    { title: "RFC 6238: TOTP", publisher: "IETF", url: "https://www.rfc-editor.org/rfc/rfc6238.html", accessed: "2026-11-20", note: "時刻に基づくワンタイムパスワード。" },
+    { title: "OpenID Connect Core 1.0", publisher: "OpenID Foundation", url: "https://openid.net/specs/openid-connect-core-1_0.html", accessed: "2026-11-20", note: "ID トークン、認可コード、nonce と各値の検証。" },
+    { title: "RFC 9700: OAuth 2.0 Security Best Current Practice", publisher: "IETF", url: "https://www.rfc-editor.org/rfc/rfc9700.html", accessed: "2026-11-20", note: "コード交換時の保護、PKCE とリダイレクト URI の検証。" },
+    { title: "OmniAuth", publisher: "omniauth/omniauth", url: "https://github.com/omniauth/omniauth", accessed: "2026-11-20", note: "外部認証の Rack ミドルウェア、要求フェーズの検証。" },
+    { title: "RFC 8725: JSON Web Token Best Current Practices", publisher: "IETF", url: "https://www.rfc-editor.org/rfc/rfc8725.html", accessed: "2026-11-20", note: "アルゴリズム・発行元・受信者を検証する。" },
   ],
 }
 

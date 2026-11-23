@@ -284,22 +284,170 @@ function ClassBodyFigure() {
   )
 }
 
+/* ---------- 呼び出しの引数が届く先（validates と has_many） ---------- */
+function ArgumentDestinationFigure() {
+  const param = (x: number, y: number, w: number, name: string, value: string, passed: boolean) => (
+    <g>
+      <Box x={x} y={y} w={w} h={48} fill={passed ? 'box4' : 'bg'} dashed={!passed} />
+      <T x={x + w / 2} y={y + 16} anchor="middle" mono fs={12.5}>
+        {name}
+      </T>
+      <T x={x + w / 2} y={y + 34} anchor="middle" mono={passed} fs={12} tone={passed ? undefined : 'muted'}>
+        {value}
+      </T>
+    </g>
+  )
+  return (
+    <Svg
+      id="ch02-arg-destination"
+      w={780}
+      h={404}
+      label="呼び出しに書いた引数が、定義のどの引数に入るかの比較。validates :title, presence: true では、validates が def validates(*attributes) と定義されているので、:title と presence: true の両方が attributes という1つの配列に入り、presence: true は配列の最後の Hash になる。has_many :comments, dependent: :destroy では、has_many が def has_many(name, scope = nil, **options, &extension) と定義されているので、:comments は name に、dependent: :destroy は options の Hash に入る。scope は渡していないので nil になり、extension にはブロックを付けていない"
+    >
+      <T x={20} y={20} fs={12} tone="muted">
+        定義
+      </T>
+      <T x={110} y={20} mono fs={12.5}>
+        def validates(*attributes)
+      </T>
+      <T x={20} y={60} fs={12} tone="muted">
+        呼び出し
+      </T>
+      <T x={110} y={60} mono fs={12.5}>
+        validates
+      </T>
+      <Box x={190} y={42} w={100} h={36} lines=":title" mono fs={12.5} fill="bg" />
+      <Box x={320} y={42} w={160} h={36} lines="presence: true" mono fs={12.5} fill="bg" />
+      <T x={20} y={160} fs={12} tone="muted">
+        届く先
+      </T>
+      <Box x={110} y={112} w={540} h={84} fill="box4" />
+      <Arrow x1={240} y1={78} x2={240} y2={140} />
+      <Arrow x1={400} y1={78} x2={400} y2={140} />
+      <Box x={190} y={142} w={100} h={36} lines=":title" mono fs={12.5} fill="bg" />
+      <Box x={310} y={142} w={180} h={36} lines="{presence: true}" mono fs={12.5} fill="bg" />
+      <T x={510} y={150} mono fs={12.5}>
+        attributes
+      </T>
+      <T x={510} y={170} fs={12} tone="muted">
+        1つの配列に入る
+      </T>
+
+      <T x={20} y={240} fs={12} tone="muted">
+        定義
+      </T>
+      <T x={110} y={240} mono fs={12.5}>
+        def has_many(name, scope = nil, **options, &amp;extension)
+      </T>
+      <T x={20} y={280} fs={12} tone="muted">
+        呼び出し
+      </T>
+      <T x={110} y={280} mono fs={12.5}>
+        has_many
+      </T>
+      <Box x={180} y={262} w={110} h={36} lines=":comments" mono fs={12.5} fill="bg" />
+      <Box x={428} y={262} w={164} h={36} lines="dependent: :destroy" mono fs={12.5} fill="bg" />
+      <Arrow x1={235} y1={298} x2={190} y2={340} />
+      <Arrow x1={510} y1={298} x2={510} y2={340} />
+      <T x={20} y={366} fs={12} tone="muted">
+        届く先
+      </T>
+      {param(110, 342, 140, 'name', ':comments', true)}
+      {param(265, 342, 130, 'scope', 'nil（渡していない）', false)}
+      {param(410, 342, 200, 'options', '{dependent: :destroy}', true)}
+      {param(625, 342, 140, 'extension', 'ブロックなし', false)}
+    </Svg>
+  )
+}
+
+/* ---------- find_by_title を呼んだときの流れ（DynamicMatchers） ---------- */
+function DynamicFinderFlowFigure() {
+  const step = (y: number, code: string, note: string, fill: 'box' | 'box5' = 'box') => (
+    <g>
+      <Box x={20} y={y} w={400} h={44} fill={fill} />
+      <T x={220} y={y + 14} anchor="middle" mono fs={12.5}>
+        {code}
+      </T>
+      <T x={220} y={y + 31} anchor="middle" fs={12} tone="muted">
+        {note}
+      </T>
+    </g>
+  )
+  return (
+    <Svg
+      id="ch02-dynamic-finder"
+      w={780}
+      h={570}
+      label={'Article.find_by_title("x") を呼んだときの流れ。まずメソッド探索で find_by_title を探し、見つかればそれを実行する（2回目以降の呼び出し）。見つからなければ（1回目）method_missing が呼ばれ、name に :find_by_title が入る。Method.match(name) で名前が find_by_〜 か find_by_〜! の形かを調べ、違う形なら super で祖先の method_missing を呼び、NoMethodError になる。形が合えば match.valid? で title が Article のテーブルの列の名前かを調べ、列が無ければ同じく NoMethodError になる。列があれば match.define で Article に find_by_title を定義し、send で最初の呼び出しの引数を渡して呼ぶ。find_by_title は find_by(title: "x") に当たる呼び出しを実行する'}
+    >
+      <Box x={90} y={14} w={260} h={34} lines={'Article.find_by_title("x")'} mono fs={12.5} fill="bg" />
+      <Arrow x1={220} y1={48} x2={220} y2={74} />
+      <Box x={20} y={76} w={400} h={40} lines="メソッド探索で find_by_title が見つかるか" fs={12.5} />
+      <Arrow d="M420,96 L760,96 L760,534 L422,534" accent />
+      <T x={440} y={82} fs={12} tone="acc">
+        見つかる（2回目以降の呼び出し）
+      </T>
+      <Arrow x1={220} y1={116} x2={220} y2={150} />
+      <T x={230} y={133} fs={12} tone="muted">
+        見つからない（1回目）
+      </T>
+      {step(152, 'method_missing(name, ...)', 'name に :find_by_title が入る')}
+      <Arrow x1={220} y1={196} x2={220} y2={224} />
+      {step(226, 'Method.match(name)', '名前が find_by_〜 か find_by_〜! の形か')}
+      <Arrow x1={220} y1={270} x2={220} y2={296} />
+      <T x={230} y={283} fs={12} tone="muted">
+        find_by_〜 の形
+      </T>
+      {step(298, 'match.valid?(self, name)', 'title が Article のテーブルの列の名前か')}
+      <Arrow x1={220} y1={342} x2={220} y2={370} />
+      <T x={230} y={356} fs={12} tone="muted">
+        列がある
+      </T>
+      {step(372, 'match.define(self, name)', 'Article にクラスメソッド find_by_title を定義する', 'box5')}
+      <Arrow x1={220} y1={416} x2={220} y2={440} />
+      {step(442, 'send(name, ...)', '定義した find_by_title を、最初の呼び出しの引数で呼ぶ')}
+      <Arrow x1={220} y1={486} x2={220} y2={510} />
+      <Box x={20} y={512} w={400} h={44} />
+      <T x={220} y={526} anchor="middle" fs={12.5}>
+        find_by_title を実行する
+      </T>
+      <T x={220} y={543} anchor="middle" mono fs={12} tone="muted">
+        {'find_by(title: "x") に当たる呼び出し'}
+      </T>
+
+      <Arrow x1={420} y1={248} x2={478} y2={248} />
+      <T x={449} y={236} anchor="middle" fs={12} tone="muted">
+        違う形
+      </T>
+      <Arrow x1={420} y1={320} x2={478} y2={320} />
+      <T x={449} y={308} anchor="middle" fs={12} tone="muted">
+        列が無い
+      </T>
+      <Box x={480} y={226} w={260} h={116} fill="bg" />
+      <T x={610} y={250} anchor="middle" fs={12}>
+        super で祖先の method_missing を呼ぶ
+      </T>
+      <T x={610} y={280} anchor="middle" mono bold tone="danger">
+        NoMethodError
+      </T>
+      <T x={610} y={312} anchor="middle" fs={11.5} tone="muted">
+        {'例：Article.find_by_titel("x")'}
+      </T>
+    </Svg>
+  )
+}
+
 const ch02: Chapter = {
   number: 2,
   part: 1,
   title: 'オブジェクトとクラスの構造',
   summary:
-    'Ruby のオブジェクトとメソッドの呼び出し、クラスとインスタンス、インスタンス変数と継承、クラスの本体で呼ぶメソッド（attr_reader・has_many・before_action）を実行例で確かめます。続いて、Rails のコードでよく見る Ruby の書き方（括弧の省略、シンボル、Hash、キーワード引数、&・->、self. の要る代入）を確かめた後、Ruby のオブジェクトが何を持ち、メソッドがどこにあり、メソッド呼び出しのときにどの順でクラスをたどるかを説明します。Rails のモデルの ancestors に並ぶ78個の要素を読むための準備です。',
+    '同じ title メソッドを呼んでも、記事が違えば別のタイトルが返ります。小さな Ruby クラスで値の保存先とメソッドの定義場所を確かめ、その仕組みで Rails のモデルを読みます。',
   goals: [
-    'メソッドの呼び出しを、レシーバ・メソッド名・引数・戻り値に分けて読める',
-    'クラスから作ったインスタンスがインスタンス変数に値を持つことと、has_many や before_action がクラスの本体で呼ぶクラスメソッドであることを説明できる',
-    'has_many :comments, dependent: :destroy のような Rails のコードを、括弧や {} を省略しない形に書き直して読める',
-    'シンボル・Hash・キーワード引数の違いと、代入で self. を省略できない理由を説明できる',
-    'オブジェクトはインスタンス変数とクラスへの参照を持ち、メソッドはクラスが持つことを説明できる',
-    'クラスもオブジェクトであり、class と superclass が別の関係であることを説明できる',
-    'コードの位置ごとに self が何を指すかを判断できる',
-    'メソッド探索が superclass の連鎖に沿って進み、見つからなければ method_missing が呼ばれることを説明できる',
-    'ActiveSupport がクラスの再オープンで既存クラスにメソッドを追加していることを理解する',
+    '呼び出しを「誰に、どのメソッドを、どの引数で呼ぶか」に分けて読める',
+    'クラスとインスタンスの違いを、2件の記事が別々の値を持つ例で説明できる',
+    'has_many など、括弧や引数の一部の記号を省略した Rails のコードを読める',
+    'self と ancestors を使い、メソッドを呼ばれた相手と、定義を探す順番を確かめられる',
   ],
   prerequisites: [1],
   sections: [
@@ -467,6 +615,11 @@ Note.new("Ruby").respond_to?(:summary)  # => false
 `}
           />
           <p>
+            summary の中の <code>{'"メモ: #{title}"'}</code> は、<code>{'#{}'}</code> の中に書いた式の値を文字列に埋め込む書き方です。ここでは title の戻り値が入ります。この title
+            はレシーバを省略したメソッドの呼び出しで、summary を呼ばれたインスタンス自身の title を呼びます。<code>memo.summary</code> の実行中は、<code>memo.title</code>{' '}
+            と書いたときと同じ値が返ります（レシーバを省略したときの規則は「self の決まり方」の節で扱います）。
+          </p>
+          <p>
             Memo には initialize も title も書いていませんが、親クラスの Note から受け継いでいるので、<code>Memo.new("買い物")</code> で作ったインスタンスで呼べます。反対に、Memo に足した summary
             は Note のインスタンスでは呼べません
             <Ref n={15} />。Rails のモデルの <code>class Article &lt; ApplicationRecord</code> も継承です。rails new が作る app/models/application_record.rb は{' '}
@@ -529,6 +682,10 @@ Module
 `}
           />
           <p>
+            <code>puts</code> は引数の文字列を1行表示するメソッドです。<code>p</code> は引数の値を、文字列なら <code>"Ruby"</code>{' '}
+            のように引用符を付けた形で表示するメソッドで、値が文字列なのかシンボルなのか配列なのかを確かめるときに使います。
+          </p>
+          <p>
             2行目の表示から、クラスの定義を読み込む途中で、本体の <code>puts</code> が実行されたことが分かります。<code>def self.label</code> のように、メソッド名の前に <code>self.</code>{' '}
             を付けて定義したメソッドは、インスタンスではなくクラスに対して <code>Note.label("…")</code> の形で呼ぶメソッドで、<Term en="class method">クラスメソッド</Term>
             と呼びます。これに対して、<code>first.title</code> のようにインスタンスに対して呼ぶメソッドをインスタンスメソッドと呼びます。本体に書いた <code>label "メモ帳"</code>{' '}
@@ -537,8 +694,50 @@ Module
           <p>
             <code>attr_reader :title</code> もメソッドの呼び出しです。<code>instance_methods(false)</code> は、そのクラスに定義したインスタンスメソッドの名前の一覧を返すメソッドで、その結果は attr_reader
             を呼ぶ前は空、呼んだ後は <code>[:title]</code> でした。attr_reader は引数に渡した名前で、同じ名前のインスタンス変数の値を返すメソッドをクラスに追加します。「クラスとインスタンス」の節で
-            def を使って書いた title と同じ働きのメソッドを、1行で作れます。attr_reader は Ruby の Module クラスに定義されたメソッドです
-            <Ref n={5} />。
+            def を使って書いた title と同じ働きのメソッドを、1行で作れます。
+          </p>
+          <p>
+            実行結果の最後の行の <code>Module</code> は、<code>Note.method(:attr_reader).owner</code> の値です。<code>method</code>{' '}
+            はメソッドを表すオブジェクトを返し、その <code>owner</code> はメソッドを定義したクラスかモジュールを返します（
+            <ChapterLink n={1} section="find-source" />
+            ）。attr_reader は Ruby の Module クラスに定義されたメソッドで、Note には書いていません
+            <Ref n={5} />。Note に対して Module のメソッドを呼べる理由は、「クラスもオブジェクトである」の節で確かめます。
+          </p>
+          <p>
+            本体のコードはクラスの定義を読み込むときに実行されるので、本体に書いた呼び出しの誤りも、読み込んだ時点でエラーになります。次の例では label を labl と打ち間違えています。
+          </p>
+          <Code
+            lang="ruby"
+            title="class_body_error.rb"
+            code={`
+puts "1. 読み込みを始めた"
+
+class Note
+  def self.label(text)
+    puts "label: #{text}"
+  end
+
+  labl "メモ帳"
+  puts "2. ここは実行されない"
+end
+
+puts "3. Note の定義の後"
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+1. 読み込みを始めた
+class_body_error.rb:8:in '<class:Note>': undefined method 'labl' for class Note (NoMethodError)
+Did you mean?  label
+	from class_body_error.rb:3:in '<main>'
+`}
+          />
+          <p>
+            Note のインスタンスを1つも作っていなくても、8行目の labl を実行した時点で NoMethodError になり、その後の行は実行されませんでした。メッセージの「in '&lt;class:Note&gt;'」は Note
+            の本体を実行中だったことを、「for class Note」はレシーバが Note クラスだったことを表します。Rails のモデルの本体で has_many を has_meny
+            と打ち間違えたときも、同じ理由で、そのモデルのクラスを読み込んだ時点で NoMethodError になります。
           </p>
           <p>
             Rails のモデルの <code>has_many :comments</code> もクラスの本体で、レシーバと括弧を省略して呼んだクラスメソッドです。デモのアプリケーションで新しいモデルのクラスを定義し、has_many
@@ -563,8 +762,14 @@ ArticlesController.method(:before_action).owner
           <p>
             has_many を呼んだ後に、comments メソッドができました（図 2-2）。has_many は関連するコメントを取り出す comments などのメソッドを、Ch02Article::GeneratedAssociationMethods
             というモジュール（メソッドをまとめて定義し、クラスに組み込んで使うもの。<ChapterLink n={3} />）に定義します
-            <Ref n={17} />。コントローラーに書く <code>before_action :set_article</code> も同じ形で、アクションの前に実行するメソッドを登録するクラスメソッドの呼び出しです
-            <Ref n={18} />。このように、クラスの本体で呼んで、そのクラスにメソッドや設定を加えるクラスメソッドを、クラスマクロと呼びます（<ChapterLink n={5} section="class-macro" />
+            <Ref n={17} />。<code>Ch02Article.instance_method(:comments).owner</code> の結果が、このモジュールの名前です（<code>instance_method</code>{' '}
+            は、クラスからインスタンスメソッドを表すオブジェクトを取り出すメソッドです）。comments は Ch02Article のインスタンスで呼べますが、定義されている場所は Ch02Article
+            そのものではありません。
+          </p>
+          <p>
+            コントローラーに書く <code>before_action :set_article</code> も同じ形で、アクションの前に実行するメソッドを登録するクラスメソッドの呼び出しです
+            <Ref n={18} />。コードの最後の行の結果から、before_action が Rails の AbstractController::Callbacks::ClassMethods
+            というモジュールに定義されていることが分かります。このように、クラスの本体で呼んで、そのクラスにメソッドや設定を加えるクラスメソッドを、クラスマクロと呼びます（<ChapterLink n={5} section="class-macro" />
             ）。
           </p>
           <Figure n="2-2" title="クラスの本体で呼ぶメソッド" caption="class_body.rb と bin/rails runner の実行結果をもとにした模式図。">
@@ -774,15 +979,47 @@ collect_options(:comments, dependent: :destroy)  # => [:comments, {dependent: :d
 `}
           />
           <p>
+            <code>def collect(*args) = args</code> は、<code>def collect(*args); args; end</code> を1行で書いたものです（Ruby 3.0 以降の構文）。この章の後の例でも、短いメソッドはこの形で書きます。1つ目の結果では{' '}
+            <code>presence: true</code> が配列の最後の要素の Hash になり、2つ目の結果では <code>dependent: :destroy</code> が options の Hash になっています。
+          </p>
+          <p>
             Rails 8.1.4.1 の <code>validates</code> は <code>def validates(*attributes)</code> と定義されているので、<code>presence: true</code> は <code>attributes</code>{' '}
             の最後の Hash として届きます。<code>has_many</code> は <code>def has_many(name, scope = nil, **options, &amp;extension)</code> と定義されているので、<code>dependent: :destroy</code> は{' '}
             <code>options</code> に入ります
             <Ref n={11} />。呼び出す側の書き方は同じでも、メソッドの中に届く形は定義によって違います。
           </p>
+          <p>has_many の定義の引数は、左から次のように読みます。</p>
+          <ul>
+            <li>
+              <code>name</code>：1つ目の引数です。<code>has_many :comments</code> では <code>:comments</code> が入ります。
+            </li>
+            <li>
+              <code>scope = nil</code>：2つ目の引数です。<code>= nil</code> は、渡さなかったときに nil になることを表します。<code>has_many :comments, -&gt; {'{'} order(:id) {'}'}</code>{' '}
+              のように、関連を取り出すときの条件を lambda で渡すときに使います。
+            </li>
+            <li>
+              <code>options</code>：名前の前に <code>*</code> を2つ付けた引数で、「名前: 値」の形で渡した引数をまとめた Hash が入ります。<code>dependent: :destroy</code> はここに入ります。
+            </li>
+            <li>
+              <code>&amp;extension</code>：呼び出しに付けたブロックを受け取る引数です。ブロックは次の「&amp; と -&gt;」で説明します。
+            </li>
+          </ul>
+          <p>
+            次の図は validates と has_many の呼び出しに書いた値が、定義のどの引数に入るかを並べたものです。上が validates、下が has_many で、それぞれ「呼び出し」の行から「届く先」の行へ矢印をたどります。
+          </p>
+          <Figure title="呼び出しの引数が届く先" caption="模式図。実線の矢印は呼び出しに書いた値が入る引数を指す。破線の箱はこの呼び出しでは渡していない引数。validates では2つの値が1つの配列に入り、has_many では別々の引数に分かれる。">
+            <ArgumentDestinationFigure />
+          </Figure>
+          <p>
+            メソッドの定義をこのように読めると、<code>wrong number of arguments</code> や <code>unknown keyword</code> の ArgumentError が出たときに、定義と呼び出しのどの引数が合っていないかを照らし合わせられます。Rails
+            のメソッドの定義の場所は、<ChapterLink n={1} section="find-source" />の source_location で調べられます。
+          </p>
           <h3>&amp; と -&gt;</h3>
           <p>
             <code>map(&amp;:title)</code> は、この例では <code>map {'{'} |article| article.title {'}'}</code> と同じ結果になります。<code>{'{'} ... {'}'}</code> や <code>do ... end</code>{' '}
-            で書いてメソッドに渡す処理を<Term en="block">ブロック</Term>と呼びます。呼び出しの <code>&amp;</code> は、後ろに書いたものをブロックとして渡す記号です。シンボルからブロックを作る手順は、
+            で書いてメソッドに渡す処理を<Term en="block">ブロック</Term>と呼びます。<code>map</code> は、要素を1つずつブロックに渡し、ブロックの結果を集めた配列を返すメソッドです。<code>|article|</code>{' '}
+            はブロックが受け取る引数で、ここには要素の Article のインスタンスが1つずつ入ります（<ChapterLink n={4} section="block-basics" />
+            ）。呼び出しの <code>&amp;</code> は、後ろに書いたものをブロックとして渡す記号です。シンボルからブロックを作る手順は、
             <ChapterLink n={4} section="block-to-proc">
               第4章の「ブロックと Proc を受け渡す」
             </ChapterLink>
@@ -793,7 +1030,7 @@ collect_options(:comments, dependent: :destroy)  # => [:comments, {dependent: :d
             <ChapterLink n={4} section="proc-lambda">
               第4章の「Proc と lambda の違い」
             </ChapterLink>
-            ）。<code>scope</code> に lambda を渡すのは、<code>Article.recent</code> を呼ぶたびに <code>order(...)</code> を実行させるためです。lambda にしないで{' '}
+            ）。<code>scope</code> は、検索の条件に名前を付けて、<code>Article.recent</code> のようにクラスメソッドとして呼べるようにするメソッドです。<code>scope</code> に lambda を渡すのは、<code>Article.recent</code> を呼ぶたびに <code>order(...)</code> を実行させるためです。lambda にしないで{' '}
             <code>order(...)</code> を直接書くと、クラスを読み込んだときに1回だけ実行されてしまいます。Rails 8.1.4.1 の <code>scope</code> は、呼び出せない値（<code>call</code>{' '}
             を持たない値）を渡されると例外を投げます
             <Ref n={13} />。
@@ -940,6 +1177,10 @@ a.method(:title).owner           # => Article
 `}
           />
           <p>
+            <code>instance_variables</code> は、そのオブジェクトが持つインスタンス変数の名前の一覧を返します。<code>instance_variable_get</code>{' '}
+            は、名前を指定してインスタンス変数の値を返します。どちらも、クラスに title のような読み取り用のメソッドが無くても使えます。
+          </p>
+          <p>
             <code>instance_methods(false)</code> は、そのクラス自身に定義されたメソッドだけを返します（<code>false</code> を付けないと、親クラスから受け継いだメソッドも含まれます）。
             <code>initialize</code> は private メソッド（レシーバを付けて呼べないメソッド。「self の決まり方」の節で扱います）なので、この一覧には出ません。
           </p>
@@ -962,6 +1203,12 @@ a.method(:title).owner           # => Article
             <code>a.title</code> を呼ぶと、Ruby は <code>a</code> のクラスである <code>Article</code> から <code>title</code> を探し、見つかったメソッドを <code>a</code> を対象にして実行します。メソッドの中の{' '}
             <code>@title</code> は「いま対象になっているオブジェクトのインスタンス変数」を意味するので、<code>a.title</code> と <code>b.title</code>{' '}
             は同じメソッドを実行しながら別の値を返します。インスタンス変数は代入した時点で作られるもので、クラス側で事前に宣言する必要はありません。
+          </p>
+          <p>
+            コントローラーの <code>@article</code> も同じ規則に従います。Rails はリクエストごとにコントローラーのクラスから新しいインスタンスを作り、アクションの中で代入した{' '}
+            <code>@article</code> はそのインスタンスが持ちます（<ChapterLink n={10} section="dispatch" />
+            ）。次のリクエストは別のインスタンスが処理するので、前のリクエストで代入したインスタンス変数は残っていません。まだ代入していないインスタンス変数を読むと nil が返ります。show
+            アクションで代入した <code>@article</code> を、別のリクエストで実行される update アクションの中で読むと nil になるのは、このためです。
           </p>
           <Callout title="ActiveRecord の属性はインスタンス変数ではない">
             <p>
@@ -1003,11 +1250,20 @@ Class.class          # => Class
               <code>Object</code> になります。
             </li>
           </ul>
+          <p>
+            図 2-4 は、この2種類の関係を矢印で描き分けたものです。左上の <code>a</code> から右へたどると、a の class が Article で、Article の superclass が Object、その superclass が
+            BasicObject です。Article から下へたどると、Article の class が Class で、Class の superclass が Module、その superclass が Object です。
+          </p>
           <Figure n="2-4" title="class と superclass の関係" caption="横向きの矢印が superclass、Article から下向きの矢印が class。Class 自身の class も Class だが、図では省略している。">
             <ClassRelationFigure />
           </Figure>
           <p>
-            クラスがオブジェクトであることは、<code>Class.new</code> でクラスを作れることからも確認できます<Ref n={6} />。<code>class</code> キーワードを使わずに作ったクラスでも、定数に代入すると通常のクラスと同じように名前が付きます。
+            「クラスとインスタンス」の節で見たとおり、インスタンスでは、自分のクラスと親クラスのメソッドを呼べます。Article は Class のインスタンスなので、Article に対しては、Class のメソッドと、その親クラスの Module
+            のメソッドを呼べます。<code>Article.new</code> の new は Class に定義されたメソッドです。「クラスの本体で呼ぶメソッド」の節で attr_reader の owner が Module だったのは、attr_reader が Module
+            に定義されていて、Note が Class のインスタンスだからです。
+          </p>
+          <p>
+            クラスがオブジェクトであることは、<code>Class.new</code> でクラスを作れることからも確認できます<Ref n={6} />。<code>Class.new</code> の引数には親クラスを渡します。<code>class</code> キーワードを使わずに作ったクラスでも、定数に代入すると通常のクラスと同じように名前が付きます。
           </p>
           <Code
             lang="ruby"
@@ -1028,6 +1284,12 @@ Book.superclass          # => Article
           <p>
             クラスがオブジェクトなので、クラスに対してもメソッドを呼べます。<code>Article.new</code> の <code>new</code> や、モデルで書く <code>has_many</code>{' '}
             は、クラスというオブジェクトに対するメソッド呼び出しです。クラスに対するメソッドがどこに定義されているかは<ChapterLink n={3} />で説明します。
+          </p>
+          <p>
+            クラスはオブジェクトなので、変数に入れたり、メソッドの引数に渡したりもできます。コントローラーの{' '}
+            <code>rescue_from ActiveRecord::RecordNotFound, with: :not_found</code> は、例外のクラス ActiveRecord::RecordNotFound を1つ目の引数として rescue_from に渡しています（
+            <ChapterLink n={10} section="exceptions" />
+            ）。
           </p>
         </>
       ),
@@ -1084,7 +1346,7 @@ Book.superclass          # => Article
 p self        # => main
 p self.class  # => Object
 
-# 章の冒頭で定義した Article にメソッドを追加する
+# 「オブジェクトが持っているもの」の節で定義した Article にメソッドを追加する
 class Article
   p self      # => Article
   def whoami = self
@@ -1095,8 +1357,68 @@ a.whoami.equal?(a) # => true
 `}
           />
           <p>
+            すでに定義したクラスの名前でもう一度 <code>class Article</code> と書くと、新しいクラスは作られず、既存の Article にメソッドが追加されます（「クラスの再オープンと Rails
+            のコア拡張」の節で扱います）。whoami は self をそのまま返すメソッドです。<code>equal?</code> は2つが同じオブジェクトのときだけ true を返すので、最後の行から、インスタンスメソッドの中の self
+            はレシーバの <code>a</code> だと分かります。
+          </p>
+          <p>
             クラス定義の本体でも Ruby のコードは実行され、そのときの <code>self</code> はクラスです。モデルのクラス本体に <code>has_many :comments</code> と書くと、レシーバを省略しているので{' '}
             <code>self.has_many(:comments)</code>、つまり <code>Article.has_many(:comments)</code> が実行されます。Rails の DSL（クラス本体に宣言のように書く記法）は、この性質を使っています。
+          </p>
+          <p>
+            Rails のコードでは、書く場所ごとに self は次のようになります。右の列のメソッドは、どれもレシーバを省略して書くので、その場所の self に対する呼び出しです。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>書く場所</th>
+                  <th>self</th>
+                  <th>レシーバを省略して呼ぶメソッドの例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>モデルのクラスの本体</td>
+                  <td>モデルのクラス（Article）</td>
+                  <td>
+                    <code>has_many</code>、<code>validates</code>、<code>scope</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    モデルのインスタンスメソッドの中（<code>def publish</code> など）
+                  </td>
+                  <td>
+                    メソッドを呼ばれたレコード（<code>article.publish</code> なら article）
+                  </td>
+                  <td>
+                    <code>title</code>、<code>save</code>、<code>update</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    モデルの <code>def self.〜</code> の中
+                  </td>
+                  <td>モデルのクラス（Article）</td>
+                  <td>
+                    <code>where</code>、<code>order</code>、<code>find_by</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>コントローラーのアクションの中</td>
+                  <td>そのリクエストを処理しているコントローラーのインスタンス</td>
+                  <td>
+                    <code>params</code>、<code>render</code>、<code>redirect_to</code>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            同じ <code>where</code> でも、モデルのインスタンスメソッドの中にレシーバなしで書くと、self はレコードなので、レコードに対する呼び出しになります。where
+            はモデルのクラスに対して呼ぶメソッドなので、この場合は NoMethodError です。インスタンスメソッドの中からは <code>Article.where(...)</code> か{' '}
+            <code>self.class.where(...)</code> のように、クラスをレシーバにして書きます。
           </p>
           <h3>private メソッドとレシーバ</h3>
           <p>
@@ -1128,6 +1450,11 @@ a.normalized_title
 # private method 'normalized_title' called for an instance of Article (NoMethodError)
 `}
           />
+          <p>
+            <code>private</code> だけを書いた行より後に定義したメソッドが private になります。この例で private なのは normalized_title だけです。label の中ではレシーバを省略して
+            normalized_title を呼んでいるので実行でき、<code>a.normalized_title</code> はレシーバを付けているので NoMethodError になりました。このときのメッセージは「private method … called」で始まり、メソッドが無いときの「undefined
+            method」とは先頭が違います。メソッドが無いのか、あるが private なのかを、メッセージの先頭で区別できます。
+          </p>
           <p>
             Rails のコントローラーで <code>before_action</code> に指定するメソッドや、Strong Parameters（フォームから受け取った値のうち、保存してよい項目を指定する仕組み）用の <code>article_params</code> を private にするのは、ルーティングから呼ばれるアクションとして公開しないためです（
             <ChapterLink n={10} />）。
@@ -1168,6 +1495,10 @@ r.method(:frozen?).owner  # => Kernel
             <code>BasicObject</code> の順です。<code>Kernel</code> はクラスではなくモジュールですが、<code>Object</code> に組み込まれているので探索の対象になります。モジュールが ancestors
             のどこに入るかは<ChapterLink n={3} />で説明します。
           </p>
+          <p>
+            図 2-5 は、<code>r.to_s</code> と <code>r.frozen?</code> の探索を、ancestors の順に上から並べたものです。to_s は Report に無く、次の Document で見つかります。<code>frozen?</code>{' '}
+            はオブジェクトが変更を禁止されているかどうかを返すメソッドで、Report・Document・Object には無く、Kernel で見つかります。コードの最後の2行の owner の値が、それぞれの見つかった場所です。
+          </p>
           <Figure n="2-5" title="メソッド探索の順序" caption="r.to_s は Document で見つかり、r.frozen? は Kernel で見つかる。">
             <LookupFigure />
           </Figure>
@@ -1179,6 +1510,13 @@ r.method(:frozen?).owner  # => Kernel
           <p>
             メソッド探索は、メソッドを呼ぶたびに行われます。そのため、クラスにメソッドを後から追加すると、すでに作られているオブジェクトでも、次の呼び出しから新しいメソッドが使われます。Rails
             が実行中にクラスへメソッドを追加できるのは、この性質があるためです。
+          </p>
+          <p>
+            Rails のコントローラーでも同じ規則で探します。<code>class ArticlesController &lt; ApplicationController</code> と書いているので、ArticlesController
+            のインスタンスで呼んだメソッドは、ArticlesController、ApplicationController の順に探されます。ApplicationController に書いた <code>require_login</code>{' '}
+            のようなメソッドを、各コントローラーの <code>before_action :require_login</code> で指定できるのはこのためです。同じ名前のメソッドを ArticlesController
+            にも書くと、そちらが先に見つかり、ApplicationController の定義は実行されません。意図せず同じ名前を付けていないかを確かめるときは、
+            <code>ArticlesController.instance_method(:require_login).owner</code> で、探索で見つかるクラスを調べられます。
           </p>
         </>
       ),
@@ -1218,8 +1556,14 @@ r.method(:puts).owner                              # => Kernel
 `}
           />
           <p>
+            <code>r</code> は「メソッド探索」の節で作った Report のインスタンスです。1つ目の結果は、BasicObject のインスタンスでレシーバを付けて呼べるメソッドの全部で、8個しかありません。
+            <code>private_instance_methods</code> は、そのクラスやモジュールが持つ private メソッドの名前の一覧を返します。それを使った2行から puts と require が Kernel の private
+            メソッドであること、最後の行から、r に対する puts の探索が Kernel で見つかることが分かります。
+          </p>
+          <p>
             クラス本体で <code>puts</code> や <code>require</code> をレシーバなしで呼べるのは、Object を継承したクラスでは、ancestors に <code>Kernel</code>{' '}
-            が含まれているからです。
+            が含まれているからです。モデルやコントローラーのメソッドの中に書く <code>raise</code> や <code>puts</code> も、レシーバを省略した self への呼び出しで、同じように Kernel
+            で見つかります。private メソッドなので、<code>r.puts "x"</code> のようにレシーバを付けて呼ぶと、「private method 'puts' called for an instance of Report」の NoMethodError になります。
           </p>
           <p>
             <code>BasicObject</code> を直接継承すると、Kernel のメソッドを持たない、ほぼ空のクラスを作れます。ほかのオブジェクトへの呼び出しを中継するプロキシ（代理）オブジェクトを作るときに、Kernel
@@ -1242,6 +1586,7 @@ r.method(:puts).owner                              # => Kernel
           </p>
           <p>
             クラスで <code>method_missing</code> を定義すると、存在しないメソッドの呼び出しを受け取って処理できます。次の例は、ハッシュのキーをメソッドのように呼べるようにしたものです。
+            <code>"host" =&gt; "db.example.com"</code> は、文字列の "host" をキーにした Hash の書き方です。
           </p>
           <Code
             lang="ruby"
@@ -1270,6 +1615,25 @@ s.port
 # undefined method 'port' for an instance of Settings (NoMethodError)
 `}
           />
+          <p>この例は次の順に動きます。</p>
+          <ul>
+            <li>
+              <code>s.host</code>：Settings にも、その祖先にも host の定義は無いので、Ruby は <code>method_missing</code> を呼びます。引数の <code>name</code>{' '}
+              には、呼ばれたメソッドの名前がシンボル（<code>:host</code>）で入ります。<code>*args</code> には、呼び出しに付けた引数が配列で入ります（この例では使っていません）。
+            </li>
+            <li>
+              @hash のキーは文字列なので、<code>name.to_s</code> で <code>"host"</code> に変換します。<code>@hash.key?(key)</code> はそのキーがあるかどうかを返し、あれば{' '}
+              <code>@hash[key]</code> の値を戻り値にします。
+            </li>
+            <li>
+              <code>s.port</code>：キー <code>"port"</code> は無いので <code>super</code> を呼びます。super は祖先にある同じ名前のメソッド、ここでは BasicObject の method_missing
+              を呼び、NoMethodError になります。
+            </li>
+            <li>
+              <code>s.respond_to?(:host)</code>：respond_to? は、その名前のメソッドの定義が無いときに <code>respond_to_missing?</code> を呼び、その結果を返します。キーがあれば true
+              を返すように定義したので、true になりました。
+            </li>
+          </ul>
           <p>
             <code>method_missing</code> を定義するときは、対応しない名前を <code>super</code> に渡すことと、<code>respond_to_missing?</code> もあわせて定義することが慣例です。
             <code>respond_to_missing?</code> を定義しないと、実際には呼べるメソッドに対して <code>respond_to?</code> が <code>false</code> を返し、<code>method(:host)</code>{' '}
@@ -1279,7 +1643,7 @@ s.port
           <h3>Rails での例：動的な find_by_〜</h3>
           <p>
             ActiveRecord の <code>Article.find_by_title("…")</code> のような、カラム名を含むメソッドは <code>method_missing</code> で実現されています。次に引用するのは{' '}
-            <code>ActiveRecord::DynamicMatchers</code> の該当部分です<Ref n={7} />。
+            <code>ActiveRecord::DynamicMatchers</code> の該当部分です<Ref n={7} />。<code>def find_by_title</code> はアプリケーションにも Rails のソースにも書かれていません。それでも呼べる理由と、2回目の呼び出しから何が変わるかを、この引用で確かめます。
           </p>
           <Code
             lang="ruby"
@@ -1299,6 +1663,40 @@ s.port
 `}
           />
           <p>
+            ActiveRecord::Base はこのモジュールのメソッドをクラスメソッドとして取り込んでいるので、この method_missing は、モデルのクラスに対する呼び出しが見つからなかったときに呼ばれます。引用の中の{' '}
+            <code>self</code> は、Article のようなモデルのクラスです。上から順に読みます。
+          </p>
+          <ul>
+            <li>
+              <code>def method_missing(name, ...)</code>：<code>name</code> には <code>:find_by_title</code> が入ります。<code>...</code>{' '}
+              は、受け取った引数をすべてそのまま別のメソッドに渡すための書き方で、6行目の <code>send(name, ...)</code> で使っています。
+            </li>
+            <li>
+              <code>Method.match(name)</code>：この <code>Method</code> は Ruby の Method クラスではなく、同じファイルで定義された ActiveRecord::DynamicMatchers::Method です。名前が{' '}
+              <code>find_by_〜</code> か <code>find_by_〜!</code> の形のときに、その形を扱うクラスを返します。どちらの形でもなければ偽の値を返します。
+            </li>
+            <li>
+              <code>match.valid?(self, name)</code>：<code>〜</code> の部分が、そのモデルのテーブルの列の名前かどうかを調べます。
+            </li>
+            <li>
+              <code>match.define(self, name)</code>：モデルのクラスに <code>find_by_title</code> という名前のクラスメソッドを定義します。定義されるメソッドの中身は、
+              <code>find_by(title: 引数)</code> に当たる呼び出しです。
+            </li>
+            <li>
+              <code>send(name, ...)</code>：定義したばかりのメソッドを、最初の呼び出しの引数で呼びます。
+            </li>
+            <li>
+              <code>else</code> の <code>super</code>：名前の形が違うか、列が無いときは、祖先の method_missing に渡します。最後は NoMethodError になります。<code>Article.find_by_titel("x")</code>{' '}
+              のように列の名前を打ち間違えたときは、こちらを通ります。
+            </li>
+          </ul>
+          <p>
+            次の図は <code>Article.find_by_title("x")</code> を呼んだときの流れを、上から順に並べたものです。左の列が1回目の呼び出しで通る流れで、右端の太い青の経路が find_by_title を定義した後の2回目以降の流れです。
+          </p>
+          <Figure title="find_by_title を呼んだときの流れ" caption="模式図。method_missing(name, ...) から send(name, ...) までの5つの箱と、右の NoMethodError の箱が、引用した method_missing の各行に当たる。紫の箱で find_by_title を定義した後の呼び出しは、太い青の経路を通り、method_missing を通らない。">
+            <DynamicFinderFlowFigure />
+          </Figure>
+          <p>
             名前が <code>find_by_〜</code> の形で、<code>〜</code> の部分が実在するカラムであれば、<code>match.define</code> でそのクラスに通常のクラスメソッドを定義してから、<code>send</code>
             （引数で受け取った名前のメソッドを呼ぶメソッド。<ChapterLink n={5} section="send" />）で呼び直します。一度定義されると、2回目以降の呼び出しはメソッド探索で見つかるため、<code>method_missing</code> を通りません。実際に確かめると次のようになります。
           </p>
@@ -1314,6 +1712,41 @@ Article.singleton_class.method_defined?(:find_by_title) # => true
           />
           <p>
             <code>singleton_class</code> は、クラスメソッドが定義される場所（特異クラス）を返します。<ChapterLink n={3} />で説明します。
+          </p>
+          <p>
+            1行目は呼ぶ前で、find_by_title はまだ定義されていません。それでも2行目の respond_to? が true を返すのは、同じファイルの respond_to_missing? が、名前の形と列の有無を method_missing
+            と同じ方法で調べているためです。3行目で1回呼ぶと、4行目では定義済みに変わっています。
+          </p>
+          <p>
+            アプリケーションと gem のソースを検索しても <code>def</code> が見つからないメソッドに出会ったら、このように method_missing で受けているか、実行時にメソッドを定義している（
+            <ChapterLink n={5} section="define-method" />
+            ）可能性があります。
+          </p>
+          <h3>NoMethodError のメッセージからレシーバを読む</h3>
+          <p>
+            NoMethodError のメッセージには、メソッドを探したレシーバが書かれています。「self の決まり方」の節の Article（Rails を使わない、Ruby だけのクラス）で、3通りのメッセージを出しました。
+          </p>
+          <Code
+            lang="ruby"
+            title="Ruby 4.0.9 で実行"
+            code={`
+article = Article.new("Rails入門")
+article.titel
+# undefined method 'titel' for an instance of Article (NoMethodError)
+
+Article.titel
+# undefined method 'titel' for class Article (NoMethodError)
+
+found = nil
+found.title
+# undefined method 'title' for nil (NoMethodError)
+`}
+          />
+          <p>
+            <code>for</code> の後ろがレシーバです。「for an instance of Article」は Article のインスタンスに対して、「for class Article」は Article
+            クラスに対して呼んだことを表します。この2つは、メソッド名の打ち間違いか、インスタンスとクラスの取り違えを疑います。「for nil」は、メソッド名が正しくても、レシーバが nil
+            だったことを表します。Rails では、find_by が行を見つけられずに nil を返した後や、代入していないインスタンス変数をビューで使ったときに出ます。この場合に直すのは title
+            を呼んでいる行ではなく、レシーバに nil が入った箇所です。
           </p>
         </>
       ),
@@ -1359,8 +1792,32 @@ class String
 `}
           />
           <p>
+            引用は String を再オープンしている部分です。途中の行と、blank? の末尾（文字コードが合わないときの処理と <code>end</code>）は省いています。
+          </p>
+          <ul>
+            <li>
+              <code>class String</code>：Ruby の String をもう一度開いています。この中の <code>def blank?</code> は、すべての文字列で呼べるメソッドになります。
+            </li>
+            <li>
+              <code>BLANK_RE = /\A[[:space:]]*\z/</code>：正規表現（文字の並び方の条件を表す値）を定数に入れています。<code>\A</code> は文字列の先頭、<code>[[:space:]]*</code>{' '}
+              は空白文字の0回以上の繰り返し、<code>\z</code> は文字列の末尾を表し、全体で「空文字列か、空白文字だけの文字列」に一致します。
+            </li>
+            <li>
+              <code>empty? ||</code>：レシーバを省略しているので、self、つまり blank? を呼ばれた文字列に対する <code>empty?</code> です。空文字列ならここで true を返します。
+            </li>
+            <li>
+              <code>BLANK_RE.match?(self)</code>：空文字列でなければ、その文字列（self）が正規表現に一致するかどうかを返します。英語のコメントは、正規表現の照合は遅いので、空文字列を empty?
+              で先に判定して速くしている、という説明です。
+            </li>
+          </ul>
+          <p>
             Rails アプリの中では <code>"".method(:blank?).owner</code> が <code>String</code> を返します。Ruby だけのスクリプトで <code>"".respond_to?(:blank?)</code> を調べると{' '}
             <code>false</code> になることから、このメソッドが Rails（ActiveSupport）によって追加されたものだと分かります。
+          </p>
+          <p>
+            Rails のコードで使われているメソッドが Ruby のリファレンスに載っていないときは、コア拡張の可能性があります。<code>"".method(:blank?).source_location</code>{' '}
+            で、定義しているファイルと行を調べられます（<ChapterLink n={1} section="find-source" />
+            ）。同じファイルで定義されている <code>present?</code> も含め、コア拡張のメソッドは Rails を読み込まない Ruby のスクリプトでは使えず、呼ぶと NoMethodError になります。
           </p>
           <Callout kind="warn">
             <p>
@@ -1376,7 +1833,10 @@ class String
       title: 'Rails のモデルで ancestors を確かめる',
       body: (
         <>
-          <p>ここまでの知識を使って、Rails のモデルの ancestors を見てみます。</p>
+          <p>
+            ここまでの知識を使って、Rails のモデルの ancestors を見てみます。次のコードの <code>a</code> は Article のインスタンスではなく、ancestors が返した配列です。<code>first(7)</code>{' '}
+            は先頭の7個、<code>last(6)</code> は末尾の6個を取り出します。
+          </p>
           <Code
             lang="ruby"
             title="bin/rails runner で実行（has_many :comments を持つ Article）"
@@ -1406,12 +1866,22 @@ a.last(6)
               <code>def comments</code> を書くとこのメソッドより先に見つかるので上書きでき、中で <code>super</code> を呼べば元の <code>comments</code> を実行できます。
             </li>
             <li>
+              その次の <code>Article::GeneratedAttributeMethods</code> には、<code>title</code> や <code>title=</code> などの属性のメソッドが定義されます（
+              <ChapterLink n={11} section="accessors" />
+              ）。これも Article より後にあるので、モデルに <code>def title</code> を書くと Article の定義が先に見つかり、その中の <code>super</code> で Rails が定義した title を呼べます。
+            </li>
+            <li>
               <code>ActiveRecord::Base</code> の後には65個のモジュールが並びます。<code>save</code> や <code>valid?</code> など、モデルで使うメソッドのほとんどはこれらのモジュールに定義されています。
             </li>
             <li>
               <code>Object</code> の後にも、ActiveSupport などが組み込んだモジュールがあります。<code>try</code> メソッドを持つ <code>ActiveSupport::Tryable</code> はその1つです。
             </li>
           </ul>
+          <p>
+            あるメソッドがこの78個のどこで見つかるかを知りたいときは、配列を目で追う代わりに <code>Article.instance_method(:save).owner</code>{' '}
+            のように owner を調べます。返るのは、メソッド探索で最初に見つかるクラスかモジュールです（<ChapterLink n={1} section="find-source" />
+            ）。
+          </p>
           <p>
             モジュールがなぜこの位置に入るのか、同じ名前のメソッドが複数のモジュールにあるとどうなるのかを、次の<ChapterLink n={3} />で説明します。
           </p>

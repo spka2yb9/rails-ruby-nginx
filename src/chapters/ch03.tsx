@@ -288,20 +288,187 @@ function ClassMethodFigure() {
   )
 }
 
+/* ---------- include を1行ずつ実行したときの ancestors（include の節） ---------- */
+function IncludeOrderFigure() {
+  const cols: { title: string; code: string; items: string[]; added?: string; notes: { t: string; acc?: boolean }[] }[] = [
+    { title: 'include する前', code: 'class Post', items: ['Post', 'Object'], notes: [] },
+    { title: '1つ目の include の後', code: 'include Publishable', items: ['Post', 'Publishable', 'Object'], added: 'Publishable', notes: [{ t: 'Post の直後に入る', acc: true }] },
+    {
+      title: '2つ目の include の後',
+      code: 'include Searchable',
+      items: ['Post', 'Searchable', 'Publishable', 'Object'],
+      added: 'Searchable',
+      notes: [{ t: 'Post の直後に入る', acc: true }, { t: 'Publishable は1つ後ろになる' }],
+    },
+    { title: 'もう一度 include した後', code: 'include Publishable', items: ['Post', 'Searchable', 'Publishable', 'Object'], notes: [{ t: '並びは変わらない' }] },
+  ]
+  return (
+    <Svg
+      id="ch03-include-order"
+      w={780}
+      h={330}
+      label="Post に Publishable と Searchable を順に include したときの ancestors の変化。include する前は Post、Object の順。include Publishable の後は Post、Publishable、Object の順で、Publishable は Post の直後に入る。include Searchable の後は Post、Searchable、Publishable、Object の順で、Searchable も Post の直後に入り、Publishable は1つ後ろになる。もう一度 include Publishable しても、並びは変わらない"
+    >
+      {cols.map((c, ci) => {
+        const cx = 97 + ci * 195
+        return (
+          <g key={c.title}>
+            <T x={cx} y={18} anchor="middle" bold fs={12.5}>
+              {c.title}
+            </T>
+            <T x={cx} y={38} anchor="middle" fs={12} tone="muted" mono>
+              {c.code}
+            </T>
+            {c.items.map((n, i) => (
+              <g key={n}>
+                <Box x={cx - 75} y={58 + i * 50} w={150} h={34} lines={n} mono fs={12.5} fill={n === 'Post' || n === 'Object' ? 'box' : 'box2'} accent={n === c.added} />
+                {i < c.items.length - 1 && <Arrow x1={cx} y1={92 + i * 50} x2={cx} y2={106 + i * 50} />}
+              </g>
+            ))}
+            {c.notes.map((note, i) => (
+              <T key={note.t} x={cx} y={272 + i * 18} anchor="middle" fs={11.5} tone={note.acc ? 'acc' : 'muted'}>
+                {note.t}
+              </T>
+            ))}
+          </g>
+        )
+      })}
+      <T x={20} y={318} fs={11.5} tone="muted">
+        上から下へ探索する。青い枠はその列の include で入ったモジュール
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- scope を定義する時点と呼び出す時点（class-methods の節） ---------- */
+function ScopeTimingFigure() {
+  return (
+    <Svg
+      id="ch03-scope-timing"
+      w={780}
+      h={430}
+      label="左は定義の時点。Article の本体で scope :published, -> { where(published: true) } を実行すると、self は Article なので、singleton_class.define_method(:published) が Article の特異クラス #<Class:Article(...)> に published を定義する。ブロックが published の本体になる。右は呼び出しの時点。Article.published を呼ぶと、特異クラスで published が見つかり、named.rb の174行目から本体を実行する。all は全件の Relation を返し、_exec_scope は self をその Relation にして lambda を実行する。lambda の中の where(published: true) は Relation に対して呼ばれ、lambda を実行して得た Relation が Article.published の戻り値になる"
+    >
+      <T x={20} y={18} bold>
+        定義の時点
+      </T>
+      <T x={20} y={36} fs={11.5} tone="muted">
+        Article の本体で scope の行を実行する
+      </T>
+      <Box x={20} y={52} w={310} h={48} lines={['scope :published,', '  -> { where(published: true) }']} mono fs={12} fill="bg" align="start" />
+      <Arrow x1={110} y1={100} x2={110} y2={134} />
+      <T x={122} y={117} fs={11.5} tone="muted">
+        self は Article
+      </T>
+      <Box x={20} y={136} w={310} h={34} lines="singleton_class.define_method(:published)" mono fs={11.5} />
+      <Arrow x1={110} y1={170} x2={110} y2={204} />
+      <T x={122} y={187} fs={11.5} tone="muted">
+        ブロックを本体にして定義
+      </T>
+      <Box x={20} y={206} w={310} h={50} lines={['#<Class:Article(...)>', 'published']} mono fill="box3" bold accent />
+
+      <T x={430} y={18} bold>
+        呼び出しの時点
+      </T>
+      <T x={430} y={36} fs={11.5} tone="muted">
+        Article.published を呼ぶたびに実行する
+      </T>
+      <Box x={430} y={52} w={240} h={34} lines="Article.published" mono fill="bg" />
+      <Arrow x1={520} y1={86} x2={290} y2={204} accent />
+      <T x={420} y={150} fs={11.5} tone="acc">
+        特異クラスで見つかる
+      </T>
+      <Arrow x1={330} y1={231} x2={428} y2={231} accent />
+      <T x={379} y={221} anchor="middle" fs={11.5} tone="acc">
+        本体を実行
+      </T>
+      <T x={379} y={245} anchor="middle" fs={11} tone="muted" mono>
+        named.rb:174
+      </T>
+      <Box x={430} y={214} w={240} h={34} lines="all._exec_scope(*args, &body)" mono fs={12} />
+      <T x={680} y={224} fs={11.5} tone="muted">
+        all は全件の
+      </T>
+      <T x={680} y={240} fs={11.5} tone="muted">
+        Relation
+      </T>
+      <Arrow x1={520} y1={248} x2={520} y2={298} />
+      <T x={532} y={273} fs={11.5} tone="muted">
+        self を Relation にして lambda を実行
+      </T>
+      <Box x={430} y={300} w={240} h={34} lines="where(published: true)" mono fs={12} />
+      <Arrow x1={520} y1={334} x2={520} y2={378} />
+      <T x={532} y={356} fs={11.5} tone="muted">
+        lambda を実行して得た Relation を返す
+      </T>
+      <Box x={430} y={380} w={240} h={44} lines={['Relation', 'Article.published の戻り値']} fs={12.5} fill="bg" bold subTone="muted" />
+    </Svg>
+  )
+}
+
+/* ---------- extend したモジュールの位置（extend の節） ---------- */
+function ExtendLookupFigure() {
+  const L = 30
+  const R = 330
+  const left = ['Tool', 'Object', 'Kernel', 'BasicObject']
+  return (
+    <Svg
+      id="ch03-extend-lookup"
+      w={600}
+      h={310}
+      label="左は Tool.new.hello で探す順番で、Tool.ancestors の Tool、Object、Kernel、BasicObject。Greeting は入っていないので hello が見つからず、NoMethodError になる。右は Tool.hello で探す順番で、Tool.singleton_class.ancestors の #<Class:Tool>、Greeting、#<Class:Object>。extend した Greeting が #<Class:Tool> のすぐ後ろに入っていて、そこで hello が見つかる"
+    >
+      <T x={L + 90} y={16} anchor="middle" bold fs={12.5}>
+        Tool.new.hello の探索
+      </T>
+      <T x={L + 90} y={34} anchor="middle" fs={11.5} tone="muted" mono>
+        Tool.ancestors
+      </T>
+      <T x={R + 110} y={16} anchor="middle" bold fs={12.5}>
+        Tool.hello の探索
+      </T>
+      <T x={R + 110} y={34} anchor="middle" fs={11.5} tone="muted" mono>
+        Tool.singleton_class.ancestors
+      </T>
+      {left.map((n, i) => (
+        <g key={n}>
+          <Box x={L} y={50 + i * 56} w={180} h={34} lines={n} mono fill={n === 'Kernel' ? 'box2' : 'box'} />
+          {i < left.length - 1 && <Arrow x1={L + 90} y1={84 + i * 56} x2={L + 90} y2={104 + i * 56} />}
+        </g>
+      ))}
+      <T x={L + 90} y={272} anchor="middle" fs={11.5} tone="danger">
+        hello が見つからず NoMethodError
+      </T>
+
+      <Box x={R} y={50} w={220} h={34} lines="#<Class:Tool>" mono fill="box3" />
+      <Arrow x1={L + 180} y1={67} x2={R - 2} y2={67} dashed />
+      <T x={L + 190} y={57} fs={11} tone="muted">
+        singleton_class
+      </T>
+      <Arrow x1={R + 110} y1={84} x2={R + 110} y2={104} accent />
+      <Box x={R} y={106} w={220} h={44} lines={['Greeting', 'hello']} mono fill="box2" bold accent />
+      <T x={R - 10} y={128} anchor="end" fs={11.5} tone="acc">
+        hello が見つかる
+      </T>
+      <Arrow x1={R + 110} y1={150} x2={R + 110} y2={170} />
+      <Box x={R} y={172} w={220} h={34} lines="#<Class:Object>" mono fill="box3" />
+      <T x={R + 110} y={224} anchor="middle" fs={12} tone="muted">
+        …
+      </T>
+    </Svg>
+  )
+}
+
 const ch03: Chapter = {
   number: 3,
   part: 1,
   title: 'モジュールと特異クラス',
   summary:
-    '継承とモジュールの include によってほかのクラスやモジュールのメソッドを使えることと、クラスに対して呼ぶクラスメソッドを、Rails のコントローラーとモデルで確かめます。そのうえで、モジュールが ancestors のどこに入るか、super が次にどこを探すか、クラスメソッドがどこに定義されるかを説明します。Rails のクラスに数十個のモジュールが並ぶ理由と、その読み方が分かるようになります。',
+    'コントローラーは、自分のファイルに定義されていないメソッドも呼べます。親クラスから受け継ぐ場合と、複数のクラスでメソッドを共有する場合を比べ、同じ名前のメソッドがあるときの呼び出し順を追います。',
   goals: [
-    '継承と include によって、クラスが親クラスやモジュールのメソッドを呼べるようになることを、ancestors を使って説明できる',
-    'クラスメソッドとインスタンスメソッドの違いを、呼び出す相手（クラスかインスタンスか）で説明できる',
-    'include・prepend・extend で、モジュールが ancestors のどこに入るかを説明できる',
-    'super が ancestors の次の要素からメソッドを探すことを理解し、複数のモジュールにまたがる呼び出し順を追える',
-    '特異クラスと特異メソッドを理解し、クラスメソッドが特異クラスに定義されることを説明できる',
-    'クラスメソッドが継承される理由を、特異クラスの superclass の関係で説明できる',
-    'included・inherited などのフックが呼ばれる時点と、Rails での使われ方を理解する',
+    '親クラスやモジュールからどのメソッドを使えるか、ancestors の表示から読み取れる',
+    'include と prepend で呼び出し順がどう変わり、super がどの定義へ進むかを説明できる',
+    '記事1件に対する呼び出しと Article クラスに対する呼び出しを区別し、クラスメソッドの定義場所を調べられる',
   ],
   prerequisites: [2],
   sections: [
@@ -572,7 +739,8 @@ Article.new.respond_to?(:has_many) # => false
           </p>
           <p>
             デモの Article には <code>scope :recent, -&gt; {'{ order(published_at: :desc) }'}</code> と書いてあり、この行で recent というクラスメソッドができます。その定義元は{' '}
-            <code>#&lt;Class:Article (...)&gt;</code> と表示されました。これは Article というクラスのためだけに Ruby が用意するクラスで、特異クラスと呼びます。クラスメソッドが特異クラスに定義される仕組みは、「特異メソッドと特異クラス」と「クラスメソッドの実体」の節で説明します。
+            <code>#&lt;Class:Article (...)&gt;</code> と表示されました。これは Article というクラスのためだけに Ruby が用意するクラスで、特異クラスと呼びます。<code>#&lt;Class:名前&gt;</code> という表示は「その名前のクラスの特異クラス」と読みます。Article の後ろの括弧は Rails
+            がモデルの表示に付け足す部分で、ここでは中身を <code>(...)</code> と省略しています。クラスメソッドが特異クラスに定義される仕組みは、「特異メソッドと特異クラス」と「クラスメソッドの実体」の節で説明します。
           </p>
           <p>
             この章ではここまでの3つの節で見た継承、モジュールの include、クラスメソッドを詳しく扱います。モジュールが ancestors のどこに入るか、super が次にどこを探すか、クラスメソッドがどこに定義されるかを順に確かめます。最初に、モジュールの2つの用途を整理します。
@@ -641,6 +809,15 @@ Post.ancestors.take(4) # => [Post, Searchable, Publishable, Object]
 `}
           />
           <p>
+            <code>take(4)</code> は配列の先頭から4つを取り出すメソッドで、ここでは ancestors の先頭だけを表示するために使っています。後から include した Searchable が、先に include した Publishable より前に並んでいます。
+          </p>
+          <p>
+            次の図は上のコードの include を上から順に実行したときの ancestors を、左の列から並べたものです。新しく include したモジュールは、どの列でも Post のすぐ後ろに入ります。
+          </p>
+          <Figure title="include を1行ずつ実行したときの ancestors" caption="Object より後ろの Kernel と BasicObject は省略しています。">
+            <IncludeOrderFigure />
+          </Figure>
+          <p>
             <code>Post.new.publish</code> では、まず <code>Post</code> で <code>publish</code> を探します。定義が無いので次の <code>Searchable</code> を探すと見つかります。<code>Searchable#publish</code> の中の{' '}
             <code>super</code> は、ancestors で次にある <code>Publishable</code> の <code>publish</code> を呼びます。
           </p>
@@ -684,17 +861,36 @@ Draft.new.save
 # => :ok
 `}
           />
+          <p>
+            <code>Draft.ancestors</code> の先頭は Logging で、Draft はその次です。<code>Draft.new.save</code> を呼ぶと、Ruby は先頭の Logging で save を見つけて実行します。Logging の save は「保存前」を表示し、
+            <code>super</code> で次の Draft の save を呼びます。Draft の save が返した <code>:ok</code> を result に入れ、「保存後」を表示してから、同じ値を返します。コメントに書いた出力の3行は、この順に対応しています。
+          </p>
           <Figure n="3-3" title="include と prepend の挿入位置" caption="include したモジュールはクラスの後ろ、prepend したモジュールはクラスの前に入る。">
             <IncludePrependFigure />
           </Figure>
           <p>
-            include では、モジュールのメソッドからクラスのメソッドを <code>super</code> で呼ぶことはできません。モジュールがクラスの後ろにあるためです。既存のクラスのメソッドに前後の処理を追加したい場合は{' '}
+            include では、モジュールのメソッドからクラスのメソッドを <code>super</code> で呼ぶことはできません。モジュールがクラスの後ろにあるためです。上の例の <code>prepend Logging</code> を <code>include Logging</code> に変えると、ancestors は{' '}
+            <code>[Draft, Logging, Object]</code> になります。Draft の save が先に見つかるので、Logging の save は実行されず、「保存前」も表示されません。既存のクラスのメソッドに前後の処理を追加したい場合は{' '}
             <code>prepend</code> を使います。
           </p>
           <p>
+            あるメソッドを呼んだとき、クラスに書いた定義より先に別の処理が実行されているように見える場合は、gem などが prepend したモジュールが無いかを確かめます。<code>ancestors</code>{' '}
+            でクラスより前に並んでいるモジュールが、prepend されたモジュールです。<code>instance_method(:名前).owner</code> は最初に見つかる定義の定義元を返し、<code>super_method</code> はその定義の中の super
+            が呼ぶ次の定義を返します（<ChapterLink n={1} section="find-source" />
+            ）。
+          </p>
+          <Code
+            lang="ruby"
+            title="上の Draft で、save の定義元を順に調べる"
+            code={`
+Draft.instance_method(:save).owner              # => Logging（最初に実行される定義）
+Draft.instance_method(:save).super_method.owner # => Draft（Logging の super が呼ぶ定義）
+`}
+          />
+          <p>
             Rails では、非推奨（deprecated。将来のバージョンで削除する予定であること）になったメソッドに警告を追加する処理で <code>prepend</code> が使われています。対象のメソッドと同じ名前のメソッドを持つモジュールを作り、警告を出してから{' '}
             <code>super</code> で元のメソッドを呼びます。引用の中の <code>define_method</code> は、名前を指定してメソッドを定義するメソッドです（<ChapterLink n={5} section="define-method" />
-            ）。
+            ）。次の引用では、モジュールを作る行、その中にメソッドを定義する行、prepend する行の3つを確かめます。
           </p>
           <Code
             lang="ruby"
@@ -715,9 +911,62 @@ Draft.new.save
         target_module.prepend(mod) if mod
 `}
           />
+          <p>
+            この引用は <code>deprecate_methods(target_module, *method_names)</code> というメソッドの後半です。target_module は警告を付ける対象のクラスかモジュール、method_name
+            は対象のメソッドの名前（シンボル）です。引用したのは、target_module にその名前のメソッドがまだ定義されていない場合に実行される分岐です。すでに定義されている場合は、手前の43〜51行が、警告を出してから元の処理を呼ぶメソッドに定義し直します。
+          </p>
+          <ul>
+            <li>
+              <code>mod ||= Module.new</code>：名前の無い新しいモジュールを作り、変数 mod に入れます。<code>||=</code> は mod が nil のときだけ代入するので、対象のメソッドが複数あっても、作るモジュールは1つです。
+            </li>
+            <li>
+              <code>mod.module_eval do … end</code>：self を mod にしてブロックを実行します（<ChapterLink n={4} section="self-switch" />
+              ）。そのため、ブロックの中の define_method は mod にメソッドを定義します。
+            </li>
+            <li>
+              <code>define_method(method_name) do |*args, &amp;block| … end</code>：対象と同じ名前のメソッドを定義します。<code>*args</code> は呼び出しのときに渡された引数のすべて、<code>&amp;block</code>{' '}
+              は渡されたブロックです。
+            </li>
+            <li>
+              <code>deprecator.deprecation_warning(method_name, message)</code>：<code>DEPRECATION WARNING:</code> で始まる警告を出します。
+            </li>
+            <li>
+              <code>super(*args, &amp;block)</code>：受け取った引数とブロックをそのまま渡して、ancestors で mod より後ろにある同じ名前のメソッドを呼びます。mod は最後の行で target_module
+              の手前に入るので、次に探されるのは target_module と、その後ろに並ぶクラスやモジュールです。
+            </li>
+            <li>
+              <code>ruby2_keywords(method_name)</code>：<code>*args</code> で受け取ったキーワード引数を、super に渡すときにもキーワード引数として渡すための指定です。
+            </li>
+            <li>
+              <code>target_module.prepend(mod) if mod</code>：mod が作られていれば、target_module に prepend します。prepend はメソッドなので、クラスの本体の外からもレシーバを付けて呼べます。
+            </li>
+          </ul>
           <Callout title="alias_method による包み込みとの違い">
+            <Code
+              lang="ruby"
+              title="alias_method で save の前に処理を足す"
+              code={`
+class Memo
+  def save = :ok
+end
+
+class Memo
+  alias_method :save_without_log, :save  # 元の save に別名を付ける
+  def save                               # 同じ名前で定義し直す
+    puts "保存前"
+    save_without_log                     # 別名で元の処理を呼ぶ
+  end
+end
+
+Memo.new.save
+# 保存前
+# => :ok
+Memo.instance_methods(false).sort # => [:save, :save_without_log]
+`}
+            />
             <p>
-              <code>prepend</code> が使えるようになる前は、元のメソッドに別名を付けてから同じ名前で再定義する方法（<code>alias_method</code>）が使われていました。この方法は、複数の gem
+              <code>prepend</code> が使えるようになる前は、上の例のように、元のメソッドに別名を付けてから同じ名前で再定義する方法（<code>alias_method</code>）が使われていました。ancestors は変わらず、Memo に save_without_log
+              というメソッドが1つ増えます。この方法は、複数の gem
               が同じメソッドを包むと別名が衝突しやすく、包んだ順序も追いにくいものでした。<code>prepend</code> では包み込みの順序が ancestors にそのまま表れるので、<code>ancestors</code> と{' '}
               <code>super_method</code> で確認できます。
             </p>
@@ -776,6 +1025,63 @@ Child.new.greet("  ruby ", polite: true) # => "こんにちは、RUBYさん"
             <SuperChainFigure />
           </Figure>
           <p>
+            図 3-4 を上から順に見ます。図の <code>Trim#greet</code> は「Trim に定義された greet」を表す書き方です。
+          </p>
+          <ol>
+            <li>
+              Child に greet の定義は無いので、ancestors で次にある Trim の greet が実行されます。引数は <code>"  ruby "</code> と <code>polite: true</code> です。
+            </li>
+            <li>
+              Trim の greet は <code>name.strip</code> で前後の空白を取り除き、<code>super("ruby", polite: true)</code> にあたる呼び出しをします。いま実行しているメソッドの定義元は Trim なので、Ruby は Trim より後ろの Loud
+              から greet を探します。
+            </li>
+            <li>
+              Loud の greet は括弧なしの <code>super</code> なので、受け取った引数をそのまま渡します。Loud の次にある Base の greet が呼ばれます。
+            </li>
+            <li>
+              Base の greet は <code>"こんにちは、rubyさん"</code> を返します。Loud はその戻り値に <code>upcase</code> を呼んで <code>"こんにちは、RUBYさん"</code> を返し、Trim はそれをそのまま返します。
+            </li>
+          </ol>
+          <p>
+            Child の親クラスは Base ですが、Trim の中の super が呼ぶのは Base ではなく Loud です。super の行き先は、super を書いたモジュールだけを見ても決まりません。そのモジュールを組み込んだクラスの ancestors で決まります。
+          </p>
+          <p>
+            括弧なしの <code>super</code> と <code>super()</code> の違いでエラーになるのは、受け取る引数の数が親と子で違う場合です。次の例では、子クラスの initialize は引数を1つ受け取り、親クラスの initialize
+            は引数を受け取りません。
+          </p>
+          <Code
+            lang="ruby"
+            title="super と super() の違い"
+            code={`
+class Parent
+  def initialize = @items = []
+end
+
+class Kid < Parent
+  def initialize(name)
+    super          # 受け取った name をそのまま渡す
+    @name = name
+  end
+end
+
+Kid.new("a")
+# wrong number of arguments (given 1, expected 0) (ArgumentError)
+
+class Kid2 < Parent
+  def initialize(name)
+    super()        # 引数を渡さない
+    @name = name
+  end
+end
+
+Kid2.new("a").instance_variables # => [:@items, :@name]
+`}
+          />
+          <p>
+            Kid の <code>super</code> は name を親の initialize に渡すので、引数を受け取らない親の側で ArgumentError になります。エラーの文の <code>given 1</code> は渡した引数の数、<code>expected 0</code>{' '}
+            は受け取れる引数の数です。<code>super()</code> と書いた Kid2 では親の initialize が引数なしで実行され、@items と @name の両方が設定されています。
+          </p>
+          <p>
             第1章で調べた <code>process_action</code>（コントローラーがアクションを実行するときに通るメソッド）の7つの定義が上から順に呼ばれるのも、同じ規則によるものです。<code>ApplicationController.ancestors</code> から <code>process_action</code>{' '}
             を定義しているものだけを取り出すと、第1章の図1-6 と同じ順序になります。
           </p>
@@ -793,8 +1099,18 @@ end
 `}
           />
           <p>
+            <code>select</code> のブロックは、ancestors の要素（クラスかモジュール）を1つずつ m に受け取り、その要素自身が process_action を定義しているかを調べます。<code>instance_methods(false)</code> が返すのは public と
+            protected のメソッドだけなので、private のメソッドを <code>private_instance_methods(false)</code> でも調べています。結果の7つは ancestors の順のままです。先頭の ControllerRuntime の process_action
+            が最初に実行され、それぞれの定義が super を呼ぶたびに、次の要素の定義へ進みます。
+          </p>
+          <p>
             どのモジュールがどの順で組み込まれるかは、各モジュールを include する順序で決まります。<code>ActionController::Base</code> がモジュールを include
             する部分は<ChapterLink n={10} />で読みます。
+          </p>
+          <p>
+            自分のコントローラーやモデルで Rails のメソッドを上書きして super を書いたときも、次に呼ばれる定義は同じ規則で決まります。実際の行き先は、インスタンスに対して{' '}
+            <code>method(:名前).super_method</code> を呼ぶと確かめられます（<ChapterLink n={1} section="find-source" />
+            ）。
           </p>
         </>
       ),
@@ -835,8 +1151,53 @@ obj.singleton_class.ancestors.take(3)
 `}
           />
           <p>
+            2行目の <code>instance_methods(false)</code> は、特異クラス自身に定義されたメソッドが greet だけであることを示しています。3行目の ancestors では特異クラスが先頭にあり、その次が obj のクラスの Object です。
+          </p>
+          <p>
             特異クラスはそのオブジェクトのメソッド探索で最初に探される場所です。<code>obj.class</code> は <code>Object</code> のままですが、探索は特異クラスから始まり、その後に{' '}
-            <code>Object</code> へ進みます。<code>#&lt;Class:...&gt;</code> は特異クラスを表す表記です。
+            <code>Object</code> へ進みます（図 3-5）。<code>#&lt;Class:...&gt;</code> は特異クラスを表す表記です。
+          </p>
+          <p>
+            <code>#&lt;Class:...&gt;</code> のコロンの後ろには、どのオブジェクトの特異クラスかが入ります。上の実行結果と、この章のほかの節に出てくる表示を並べると、次のように読めます。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>表示</th>
+                  <th>読み方</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <code>#&lt;Object:0x00007f2b54e186e8&gt;</code>
+                  </td>
+                  <td>Object クラスのインスタンス。obj を p で表示したときの形です。0x で始まる部分はオブジェクトを区別するための値で、実行するたびに変わります</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>#&lt;Class:#&lt;Object:0x00007f2b54e186e8&gt;&gt;</code>
+                  </td>
+                  <td>上のインスタンス（obj）の特異クラス。コロンの後ろに obj の表示がそのまま入っています</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>#&lt;Class:Book&gt;</code>
+                  </td>
+                  <td>Book というクラスの特異クラス。Book のクラスメソッドが定義される場所です（次の節）</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>#&lt;Class:Article(...)&gt;</code>
+                  </td>
+                  <td>Article というモデルのクラスの特異クラス。括弧は Rails がモデルの表示に付け足す部分です（次の節）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code>owner</code> の結果や TracePoint の出力にこの表示が出てきたら、コロンの後ろのオブジェクトだけに定義されたメソッドを指している、と読めます。
           </p>
           <Figure n="3-5" title="オブジェクトの特異クラス" caption="青の矢印が obj のメソッド探索の始まり。other には特異クラスに定義されたメソッドが無いので、Object から探索する。">
             <SingletonFigure />
@@ -881,7 +1242,17 @@ User.singleton_class.ancestors.take(4)
           <p>
             子クラス <code>User</code> で親のクラスメソッド <code>all</code> を呼べるのは、<code>User</code> の特異クラスの superclass が <code>Record</code>{' '}
             の特異クラスになっているからです。クラスの継承と並行して、特異クラスの継承関係が作られます。<code>User.all</code> の中の <code>table</code> と <code>name</code> は self（
-            <code>User</code>）に対して呼ばれるので、結果は <code>"users"</code> になります。
+            <code>User</code>）に対して呼ばれるので、結果は <code>"users"</code> になります。<code>name</code> はクラスの名前を文字列で返すメソッドで、<code>User.name</code> は <code>"User"</code> です。同じ all を{' '}
+            <code>Record.all</code> として呼ぶと、self は Record なので <code>"SELECT * FROM records"</code> が返ります。
+          </p>
+          <p>
+            実行結果の <code>User.method(:all).owner</code> が <code>#&lt;Class:Record&gt;</code> なのは、all を定義した場所が Record の特異クラスだからです。最後の行の{' '}
+            <code>User.singleton_class.ancestors</code> は、User のクラスメソッドを探す順番です。<code>User.all</code> を呼ぶと、Ruby は <code>#&lt;Class:User&gt;</code>、<code>#&lt;Class:Record&gt;</code>{' '}
+            の順に探し、2番目で all を見つけます。
+          </p>
+          <p>
+            図 3-6 の左の列は、User から superclass をたどった並びです。右の列はそれぞれのクラスの特異クラスで、User のクラスメソッドはこの列を上から順に探します。横の破線は、左のクラスの特異クラスが右にあることを表します。右の列を下までたどると
+            Class と Module に着きます。<code>User.new</code> や <code>User.name</code> のように、どのクラスに対しても呼べるメソッドは、この Class と Module に定義されています。
           </p>
           <Figure n="3-6" title="クラスと特異クラスの並行する継承" caption="User.all の探索は #<Class:User> から始まり、#<Class:Record> で見つかる（青の経路）。">
             <ClassMethodFigure />
@@ -889,7 +1260,11 @@ User.singleton_class.ancestors.take(4)
           <h3>Rails のモデルで確かめる</h3>
           <p>
             第1章の TracePoint（実行されたメソッドを記録する Ruby の機能）の出力で、<code>published</code> の定義元が <code>#&lt;Class:Article(...)&gt;</code> と表示されていました。<code>scope</code> は、Article
-            の特異クラスにメソッドを定義します。<code>ActiveRecord::Scoping::Named</code> の該当部分を引用します。
+            の特異クラスにメソッドを定義します。<code>ActiveRecord::Scoping::Named</code> の該当部分を引用します。この引用では、メソッドをどこに定義しているかと、定義したメソッドが呼ばれたときに何を実行するかを確かめます。
+          </p>
+          <p>
+            引用は <code>scope(name, body, &amp;block)</code> というクラスメソッドの中にあります。モデルに <code>scope :published, -&gt; {'{ where(published: true) }'}</code> と書くと、name に{' '}
+            <code>:published</code> が、body に <code>-&gt;</code> で作った lambda（後で実行する処理をまとめたオブジェクト）が入ります。この行は Article の本体で実行されるので、scope の中の self は Article です。
           </p>
           <Code
             lang="ruby"
@@ -908,6 +1283,41 @@ User.singleton_class.ancestors.take(4)
             <code>singleton_class.define_method(name)</code> は「自分（Article）の特異クラスに、<code>name</code> という名前のインスタンスメソッドを定義する」という意味で、結果として{' '}
             <code>Article.published</code> というクラスメソッドができます。<code>define_method</code> とブロックの扱いは<ChapterLink n={4} />と<ChapterLink n={5} />で説明します。
           </p>
+          <p>引用を上から順に読みます。</p>
+          <ul>
+            <li>
+              <code>if body.respond_to?(:to_proc)</code>：body をブロックとして渡せるかを調べています。lambda は to_proc を持つので、<code>-&gt;</code> で書いた scope はこの分岐に入ります。
+            </li>
+            <li>
+              <code>singleton_class.define_method(name) do |*args| … end</code>：レシーバを省略した <code>singleton_class</code> は <code>self.singleton_class</code> のことで、Article の特異クラスを返します。そこに published
+              という名前のメソッドを定義します。do から end までが、<code>Article.published</code> を呼んだときに実行される処理です。<code>*args</code> は呼び出しのときに渡された引数のすべてです。
+            </li>
+            <li>
+              <code>scope = all._exec_scope(*args, &amp;body)</code>：<code>all</code> は <code>Article.all</code> のことで、全件を対象にした問い合わせを表すオブジェクト（Relation。<ChapterLink n={12} section="lazy" />
+              ）を返します。<code>_exec_scope</code> は、self をその Relation に切り替えて lambda を実行します。そのため、lambda の中の <code>where(published: true)</code> は Relation に対して呼ばれます（
+              <ChapterLink n={4} section="dsl" />
+              ）。
+            </li>
+            <li>
+              <code>scope = scope.extending(extension) if extension</code>：extension は、scope にブロックを渡したときだけ作られるモジュールです。ブロックを渡していなければ nil なので、この行は何もしません。
+            </li>
+            <li>
+              <code>scope</code>：lambda を実行して得た Relation を返します。これが <code>Article.published</code> の戻り値です。
+            </li>
+          </ul>
+          <p>
+            <ChapterLink n={1} section="trace" />の TracePoint の出力にあった <code>named.rb:174</code> は、この引用の2行目です。define_method に渡したブロックがメソッドの本体になるので、<code>Article.published</code>{' '}
+            を呼ぶと、174行目から実行が始まります。
+          </p>
+          <p>
+            次の図は上の引用の処理を、scope の行を実行した時点と Article.published を呼んだ時点に分けて並べたものです。左の列で特異クラスに定義した published が、右の列の呼び出しで見つかり、その本体が実行されます。
+          </p>
+          <Figure
+            title="scope を定義する時点と呼び出す時点"
+            caption="青の矢印が Article.published を呼んだときの経路です。引用の extension の行は、scope にブロックを渡していないときは何もしないので省略しています。"
+          >
+            <ScopeTimingFigure />
+          </Figure>
           <p>Article の特異クラスの ancestors の先頭も見ておきます。</p>
           <Code
             lang="ruby"
@@ -922,6 +1332,28 @@ Article.singleton_class.ancestors.first(4)
             <code>#&lt;Class:ActiveRecord::Base&gt;</code> の手前にモジュールが1つあります。これは <code>ActiveRecord::Base</code> の特異クラスに prepend
             されたモジュールです。特異クラスもクラスなので、include や prepend でモジュールを組み込めます。
           </p>
+          <p>
+            先頭の2つは Article と ApplicationRecord の特異クラスです。Rails のモデルのクラスを表示すると、クラス名の後ろに括弧が付きます。テーブルを持つモデルでは{' '}
+            <code>Article(id: integer, title: string, …)</code> のようにカラムの一覧が入り、抽象クラスでは <code>(abstract)</code> が入ります。特異クラスの表示にはこの文字列がそのまま入るので、本書ではカラムの一覧を{' '}
+            <code>(...)</code> と省略しています。テーブルの情報をまだ読み込んでおらず、データベースにも接続していない時点では、カラムの一覧の代わりに{' '}
+            <code>(call 'Article.load_schema' to load schema informations)</code> という文が入ります。
+          </p>
+          <p>
+            クラスメソッドの定義元を <code>Article.method(:名前).owner</code> で調べたときは、表示を次のように読み分けます。
+          </p>
+          <ul>
+            <li>
+              <code>#&lt;Class:Article(...)&gt;</code>：Article 自身に定義されたクラスメソッドです。app/models/article.rb の <code>def self.</code>、<code>class &lt;&lt; self</code>、<code>scope</code> などを探します。
+            </li>
+            <li>
+              <code>#&lt;Class:ApplicationRecord(abstract)&gt;</code>：ApplicationRecord に定義されたクラスメソッドです。
+            </li>
+            <li>
+              <code>ActiveRecord::Core::ClassMethods</code> のようなモジュール名：Rails や gem が特異クラスに組み込んだモジュールのメソッドです。<code>source_location</code> でファイルと行を調べます（
+              <ChapterLink n={1} section="find-source" />
+              ）。
+            </li>
+          </ul>
         </>
       ),
     },
@@ -955,6 +1387,20 @@ Tool.singleton_class.ancestors.take(3)
 # => [#<Class:Tool>, Greeting, #<Class:Object>]
 `}
           />
+          <p>
+            最後の行の ancestors では、Greeting が <code>#&lt;Class:Tool&gt;</code> のすぐ後ろに入っています。クラスに include したモジュールがクラスのすぐ後ろに入るのと同じ位置です。Tool
+            の特異クラスの ancestors は Tool のクラスメソッドを探す順番なので（前の節）、<code>Tool.hello</code> と呼ぶと Greeting の hello が見つかります。Tool 自身の ancestors には Greeting が入らないので、
+            <code>Tool.new.hello</code> は NoMethodError になります。
+          </p>
+          <p>
+            次の図は Tool に対する2つの呼び出しで、メソッドを探す順番を並べたものです。左の列が Tool.new.hello、右の列が Tool.hello の探索で、Greeting は右の列にだけ入っています。
+          </p>
+          <Figure
+            title="extend したモジュールが入る場所"
+            caption="縦の矢印は探索の順序、横の破線は Tool の特異クラスへの参照です。右の列は take(3) で表示した3つまでを描いています。"
+          >
+            <ExtendLookupFigure />
+          </Figure>
           <p>
             クラス本体で <code>extend M</code> と書くと、<code>M</code> のメソッドがそのクラスのクラスメソッドになります。Rails のモデルで使う <code>has_many</code> の定義元{' '}
             <code>ActiveRecord::Associations::ClassMethods</code> も、この形で組み込まれています。実際に <code>Article.singleton_class.ancestors</code>{' '}
@@ -1003,6 +1449,11 @@ Tool.singleton_class.ancestors.take(3)
       body: (
         <>
           <p>
+            モデルに <code>include</code> を1行書くだけで、インスタンスメソッドに加えて、クラスメソッドや scope まで使えるようになるモジュールがあります。app/models/concerns に置くモジュールの{' '}
+            <code>included do … end</code> がその例です。これは、include のときに Ruby が自動で呼ぶメソッドを使って作られています（<ChapterLink n={5} section="concern" />
+            ）。クラスを継承したときにも、同じように自動で呼ばれるメソッドがあります。
+          </p>
+          <p>
             Ruby には、モジュールが組み込まれたときや、クラスが継承されたときに自動で呼ばれるメソッドがあります。これらを<Term en="hook">フック</Term>と呼びます
             <Ref n={1} />
             <Ref n={4} />。
@@ -1048,6 +1499,11 @@ Tool.singleton_class.ancestors.take(3)
               </tbody>
             </table>
           </div>
+          <p>
+            <code>Module#included</code> は「Module クラスのインスタンスメソッド included」を表す書き方です。どのモジュールも Module クラスのインスタンスなので、何も定義しなくても included
+            を持っています。ただし、最初からある included は何もしません。モジュールの側で <code>def self.included(base)</code> のように同じ名前の特異メソッドを定義すると、Ruby は最初からあるものより先にそれを見つけて呼びます。
+            <code>inherited</code> も同じで、継承される側のクラスに <code>def self.inherited(subclass)</code> を定義します。
+          </p>
           <h3>include の内部：append_features と included</h3>
           <p>
             <code>include M</code> を実行すると、Ruby はまず <code>M.append_features(クラス)</code> を呼んで ancestors にモジュールを挿入し、その後で{' '}
@@ -1085,12 +1541,29 @@ Order.tracked? # => true
 `}
           />
           <p>
+            <code>class Order</code> の後ろのコメント3行が、<code>include Trackable</code> を実行したときの出力です。
+          </p>
+          <ul>
+            <li>
+              1行目：append_features が先に呼ばれます。引数の base は include した側のクラスで、ここでは Order です。この時点では、Order の ancestors に Trackable はまだ入っていません。
+            </li>
+            <li>
+              2行目：<code>super</code> の後では入っています。<code>def self.append_features</code> は Trackable の特異メソッドです。その中の super は、次に見つかる Module クラスの append_features
+              を呼びます。ancestors にモジュールを挿入する処理は、Module クラスの側にあります。
+            </li>
+            <li>
+              3行目：その後で included が呼ばれます。<code>base.extend(ClassMethods)</code> は <code>Order.extend(Trackable::ClassMethods)</code> と同じ意味なので、tracked? が Order のクラスメソッドになります。
+            </li>
+          </ul>
+          <p>
             <code>included</code> の中で <code>base.extend(ClassMethods)</code> を呼ぶ書き方は、「include するだけでインスタンスメソッドとクラスメソッドの両方を追加する」ための定番の書き方でした。
             <code>ActiveSupport::Concern</code> はこの書き方を簡潔にするためのもので、<code>append_features</code> を上書きして同じことを行います（<ChapterLink n={5} />）。
           </p>
           <h3>inherited：子クラスごとの準備</h3>
           <p>
-            <code>inherited</code> は、子クラスごとに初期値を用意するときに使われます。クラスのインスタンス変数（クラスの本体や <code>def self.</code> の中で <code>@</code> を付けて作る変数で、クラスというオブジェクトが持つ）は子クラスに引き継がれないため、子クラスが作られた時点で設定します。
+            <code>inherited</code> は、子クラスごとに初期値を用意するときに使われます。クラスの本体や <code>def self.</code> の中で <code>@</code> を付けて作る変数は、クラスというオブジェクトが持つインスタンス変数で、クラスのインスタンス変数と呼びます（
+            <ChapterLink n={5} section="class-macro" />
+            ）。クラスのインスタンス変数は子クラスに引き継がれません。親クラスに入れた値は子クラスからは見えないので、子クラスが作られた時点で、子クラスの側に設定します。
           </p>
           <Code
             lang="ruby"
@@ -1109,7 +1582,15 @@ Invoice.table_name # => "invoices"
 Model.table_name   # => nil
 `}
           />
-          <p>ActiveRecord も、モデルのクラスが作られるたびに <code>inherited</code> でキャッシュ（一度作った結果を保存しておき、次から使い回すもの）用のインスタンス変数を初期化しています。</p>
+          <p>
+            <code>class Invoice &lt; Model</code> を実行した時点で、Ruby は <code>Model.inherited(Invoice)</code> を呼びます。<code>instance_variable_set(:@table_name, 値)</code>{' '}
+            は、レシーバのインスタンス変数に値を入れるメソッドです。ここでは Invoice というクラスの @table_name に <code>"invoices"</code> を入れています。<code>Invoice.table_name</code> の中の @table_name は、self である
+            Invoice の変数を指すので、<code>"invoices"</code> が返ります。Model の inherited が呼ばれるのは、Model を継承したクラスが作られたときだけです。Model 自身の @table_name には何も入っていないので、
+            <code>Model.table_name</code> は nil を返します。
+          </p>
+          <p>
+            ActiveRecord も、モデルのクラスが作られるたびに <code>inherited</code> でキャッシュ（一度作った結果を保存しておき、次から使い回すもの）用のインスタンス変数を初期化しています。次の引用では、作られた子クラスに対して何を呼び、どの変数を設定しているかを確かめます。
+          </p>
           <Code
             lang="ruby"
             title="activerecord/lib/active_record/core.rb（410〜430行）"
@@ -1138,6 +1619,30 @@ Model.table_name   # => nil
         end
 `}
           />
+          <p>
+            このメソッドは <code>ActiveRecord::Core::ClassMethods</code> というモジュールの中にあります。「クラスに対して呼ぶメソッド」の節で find の定義元として出てきたモジュールです。このモジュールのメソッドは ActiveRecord::Base
+            のクラスメソッドになるので、<code>def self.inherited</code> ではなく <code>def inherited</code> と書かれています。
+          </p>
+          <ul>
+            <li>
+              <code>super</code>：ほかのモジュールと Ruby 本体の inherited を先に呼びます。
+            </li>
+            <li>
+              <code>subclass.initialize_find_by_cache</code>：subclass は作られた子クラスで、<code>class Article &lt; ApplicationRecord</code> なら Article です。このメソッドは、find や find_by
+              が一度組み立てたクエリを保存しておく Hash を、子クラスのインスタンス変数に用意します。
+            </li>
+            <li>
+              <code>unless subclass.base_class? … end</code>：<code>base_class?</code> は、そのクラスが ActiveRecord::Base か抽象クラスを直接継承しているときに真を返します。Article は抽象クラスの ApplicationRecord
+              を直接継承しているので真になり、この部分は実行されません。モデルをさらに継承したクラスを作ったときだけ、base_class? が真のクラスに着くまで親をたどり、途中のクラスのキャッシュを作り直します。
+            </li>
+            <li>
+              <code>subclass.class_eval do … end</code>：self を子クラスにしてブロックを実行します（<ChapterLink n={4} section="self-switch" />
+              ）。ブロックの中の <code>@arel_table</code> などは、子クラスのインスタンス変数です。前の例の <code>instance_variable_set</code> と同じことを、5つの変数にしています。
+            </li>
+            <li>
+              <code>@filter_attributes ||= nil</code>：<code>||=</code> は、変数が nil か false のときだけ右辺を代入します。すでに値が入っていれば、その値を変えません。
+            </li>
+          </ul>
           <p>
             コメントにあるとおり、クラスを定義した時点でキャッシュを初期化しておくことで、複数のスレッド（1つのプログラムの中で並行して処理を進める流れ。<ChapterLink n={23} section="thread" />）が同時に初回アクセスしたときの競合を避けています。最後の{' '}
             <code>@generated_association_methods</code> は、<code>comments</code> などの関連メソッドを入れるモジュール（図2-6 の添字1）を指す変数です。
@@ -1182,6 +1687,10 @@ end
 # undefined method 'shout' for an instance of String (NoMethodError)
 `}
           />
+          <p>
+            例の結果を上から順に見ます。using の前では <code>"x".respond_to?(:shout)</code> が false で、String に shout はありません。<code>using StringExt</code> を書いた UsesIt の中では、<code>"hi".shout</code>{' '}
+            も、メソッド名をシンボルで渡して呼ぶ <code>send</code> も成功します。UsesIt を閉じた後の最後の行では、同じ <code>"hi".shout</code> が NoMethodError になります。
+          </p>
           <p>
             <code>using</code> の効果は、それを書いた場所からファイル（またはモジュール定義）の終わりまでです。呼び出された先のメソッドの中には及びません。このため、別のファイルのコードからは変更が見えず、gem
             同士の衝突を避けられます。

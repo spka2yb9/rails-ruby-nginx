@@ -6,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 22-1 応答時間と、Rails が測る時間 ---------- */
+/* ---------- 図 25-1 応答時間と、Rails が測る時間 ---------- */
 function ResponseTimeFigure() {
   const x0 = 250
   const scale = 44 // 1ms あたりの幅
@@ -17,7 +17,7 @@ function ResponseTimeFigure() {
   ]
   return (
     <Svg
-      id="22-1"
+      id="25-1"
       w={780}
       h={260}
       label="同じ GET /articles/1 の要求で、curl が測った応答時間は11.2ms、Rack::Runtime のミドルウェアが測った x-runtime は8.7ms、ログの Completed の行は7ms だった。外側の時間ほど、通信や Puma の処理、ミドルウェアの処理を多く含む。Completed の7ms のうち、Views が3.6ms、ActiveRecord が1.3ms（SQL 2回）で、残りはコントローラーなどの Ruby の処理"
@@ -52,7 +52,7 @@ function ResponseTimeFigure() {
   )
 }
 
-/* ---------- 図 22-2 時間のかかる場所の違い ---------- */
+/* ---------- 図 25-2 時間のかかる場所の違い ---------- */
 function SlowPartsFigure() {
   const rows = [
     { t: 'GET /articles/1', total: 7, v: 3.6, ar: 1.3, note: '7ms（2 queries）' },
@@ -63,7 +63,7 @@ function SlowPartsFigure() {
   const W = 420
   return (
     <Svg
-      id="22-2"
+      id="25-2"
       w={780}
       h={230}
       label="3つの要求の Completed の行を、全体を100%とした内訳で並べた。記事のページ（7ms）は Views が約半分、ActiveRecord が2割弱。DB で0.2秒待つ /lab/io（202ms）はほぼすべてが ActiveRecord。Ruby で計算する /lab/cpu（546ms）は Views も ActiveRecord もほぼ0で、残りがすべて Ruby の処理だった"
@@ -105,11 +105,11 @@ function SlowPartsFigure() {
   )
 }
 
-/* ---------- 図 22-4 キャッシュのヒットとミス ---------- */
+/* ---------- 図 25-4 キャッシュのヒットとミス ---------- */
 function CacheFigure() {
   return (
     <Svg
-      id="22-4"
+      id="25-4"
       w={780}
       h={290}
       label="Rails.cache.fetch はキーでキャッシュを探す。見つかればヒットで、保存した値をすぐに返す（0.1ms）。見つからないか有効期限が切れていればミスで、ブロックの処理（約500ms）を実行し、結果をキーと有効期限とともに保存してから返す。元のデータが変わっても、有効期限が来るまでは保存した古い値が返る"
@@ -138,7 +138,7 @@ function CacheFigure() {
   )
 }
 
-/* ---------- 図 22-3 1リクエストの処理時間の内訳 ---------- */
+/* ---------- 図 25-3 1リクエストの処理時間の内訳 ---------- */
 function BreakdownFigure() {
   // デモの実測（ms）。start はリクエストの開始からの時刻
   const rows: { t: string; start: number; dur: number; fill: 'box' | 'box2' | 'box4' | 'box5' }[] = [
@@ -155,7 +155,7 @@ function BreakdownFigure() {
   const rowH = 30
   return (
     <Svg
-      id="22-3"
+      id="25-3"
       w={780}
       h={rows.length * rowH + 80}
       label="GET /articles/1 の処理をイベントの開始時刻と処理時間で並べた。リクエスト全体が約6.9ms、そのうちコントローラーの処理が約5.4ms。記事を読む SQL が0.5ms、レイアウトの描画が3.1ms で、その中のテンプレートの描画が2.6ms、テンプレートの中で関連のコメントを読む SQL が0.6ms、コメントのパーシャルの描画が0.08ms だった。SQL がテンプレートの描画の中で実行されている。ログの Views は描画の時間からこの SQL の時間を引いた値になる"
@@ -176,6 +176,8 @@ function BreakdownFigure() {
               {r.t}
             </T>
             <Box x={x0 + r.start * scale} y={y} w={Math.max(4, r.dur * scale)} h={22} fill={r.fill} rx={3} />
+            {/* 処理時間の文字の下を背景色で塗り、目盛りの点線が文字に重ならないようにする */}
+            <rect x={x0 + (r.start + r.dur) * scale + 3} y={y + 3} width={44} height={16} fill="var(--fig-bg)" />
             <T x={x0 + (r.start + r.dur) * scale + 6} y={y + 11} fs={10.5} tone="muted">
               {`${r.dur}ms`}
             </T>
@@ -189,11 +191,11 @@ function BreakdownFigure() {
   )
 }
 
-/* ---------- 図 22-5 キャッシュの層 ---------- */
+/* ---------- 図 25-5 キャッシュの層 ---------- */
 function LayersFigure() {
   const rows = [
     { t: 'ブラウザーの HTTP キャッシュ', s: 'Cache-Control・ETag・Last-Modified に従い、要求しないか条件付き GET を送る', fill: 'bg' as const },
-    { t: 'CDN・Nginx（第24章）', s: 'public な応答や、ダイジェスト付きのアセットを保存して返す', fill: 'bg' as const },
+    { t: 'CDN・Nginx（第27章）', s: 'public な応答や、ダイジェスト付きのアセットを保存して返す', fill: 'bg' as const },
     { t: '条件付き GET', s: 'fresh_when・stale? が一致すれば 304。テンプレートの描画を省ける', fill: 'box2' as const },
     { t: 'フラグメントキャッシュ', s: 'cache・cached: true で、描画した HTML の断片を Rails.cache に保存', fill: 'box' as const },
     { t: '低レベルのキャッシュ', s: 'Rails.cache.fetch で、計算結果や外部 API の応答を保存', fill: 'box' as const },
@@ -201,7 +203,7 @@ function LayersFigure() {
   ]
   return (
     <Svg
-      id="22-5"
+      id="25-5"
       w={780}
       h={rows.length * 46 + 26}
       label="キャッシュの層を、ブラウザーに近い順に並べた。ブラウザーの HTTP キャッシュ、CDN や Nginx、Rails の条件付き GET（fresh_when・stale? による 304）、フラグメントキャッシュ（描画した HTML の断片）、低レベルのキャッシュ（Rails.cache.fetch）、そしてそれらを保存するキャッシュストア（MemoryStore、Redis、Memcached、Solid Cache）。上の層で返せるほど、下の層の処理を省ける"
@@ -221,22 +223,167 @@ function LayersFigure() {
   )
 }
 
+/* ---------- イベントを発行する処理と購読するブロック ---------- */
+function NotificationsFigure() {
+  const pubs = [
+    ['SQL の実行', 'sql.active_record'],
+    ['テンプレートの描画', 'render_template.action_view'],
+    ['アクションの処理', 'process_action.action_controller'],
+    ['自分のコード（Ranking.calculate）', 'ranking.demo'],
+  ]
+  const subs = [
+    ['LogSubscriber', 'ログの行（Completed など）'],
+    ['ActionDispatch::ServerTiming', 'Server-Timing ヘッダー'],
+    ['APM・rack-mini-profiler', '処理時間を集める'],
+    ['subscribe("ranking.demo")', 'Rails.logger.info でログに書く'],
+  ]
+  const rowY = (i: number) => 32 + i * 58
+  const hubY = (i: number) => 127 + i * 10
+  return (
+    <Svg
+      id="ch22-notifications"
+      w={780}
+      h={262}
+      label="左に instrument でイベントを発行する処理として、SQL の実行（sql.active_record）、テンプレートの描画（render_template.action_view）、アクションの処理（process_action.action_controller）、自分のコード（ranking.demo）を並べた。発行されたイベントは中央の ActiveSupport::Notifications を通り、右の subscribe で購読する側に渡される。右には LogSubscriber（ログの行）、ActionDispatch::ServerTiming（Server-Timing ヘッダー）、APM や rack-mini-profiler（処理時間を集める）、ranking.demo を購読するブロック（Rails.logger.info でログに書く）を並べた。渡すのはイベントの名前、開始と終了の時刻、ペイロード"
+    >
+      <T x={130} y={16} anchor="middle" fs={11.5} tone="muted">
+        instrument で発行する処理
+      </T>
+      <T x={650} y={16} anchor="middle" fs={11.5} tone="muted">
+        subscribe で購読する側
+      </T>
+      {pubs.map((p, i) => (
+        <g key={p[1]}>
+          <Box x={20} y={rowY(i)} w={220} h={46} lines={p} fs={11.5} subTone="muted" />
+          <Arrow x1={240} y1={rowY(i) + 23} x2={290} y2={hubY(i)} />
+        </g>
+      ))}
+      <Box x={290} y={114} w={200} h={56} lines={['ActiveSupport::', 'Notifications']} fs={12} fill="box5" />
+      <T x={390} y={194} anchor="middle" fs={11} tone="muted">
+        渡すもの：イベントの名前、
+      </T>
+      <T x={390} y={212} anchor="middle" fs={11} tone="muted">
+        開始と終了の時刻、ペイロード
+      </T>
+      {subs.map((s, i) => (
+        <g key={s[0]}>
+          <Arrow x1={490} y1={hubY(i)} x2={540} y2={rowY(i) + 23} />
+          <Box x={540} y={rowY(i)} w={220} h={46} lines={s} fs={11.5} subTone="muted" />
+        </g>
+      ))}
+    </Svg>
+  )
+}
+
+/* ---------- Rack::ETag と fresh_when が If-None-Match と比べる時点 ---------- */
+function EtagTimingFigure() {
+  type Step = { lines: string[]; fill?: 'bg' | 'box' | 'box5'; tone?: 'acc' | 'danger' }
+  const left: Step[] = [
+    { lines: ['要求（If-None-Match に前回の ETag）'], fill: 'bg' },
+    { lines: ['アクションを実行'] },
+    { lines: ['テンプレートを描画（1回）'] },
+    { lines: ['Rack::ETag が本文全体のダイジェストを ETag にする'] },
+    { lines: ['Rack::ConditionalGet が If-None-Match と比べる', '一致しない（CSRF のメタタグで本文が毎回違う）'], fill: 'box5', tone: 'danger' },
+    { lines: ['200・本文 2787B'], fill: 'bg' },
+  ]
+  const right: Step[] = [
+    { lines: ['要求（If-None-Match に前回の ETag）'], fill: 'bg' },
+    { lines: ['アクションで記事を読む（SQL 1回）'] },
+    { lines: ['fresh_when が ETag を作る', 'cache_key_with_version とテンプレートのダイジェストから'] },
+    { lines: ['request.fresh?(response) で If-None-Match と比べる', '一致する'], fill: 'box5', tone: 'acc' },
+    { lines: ['head :not_modified で 304・本文 0B'], fill: 'bg' },
+  ]
+  const top = 34
+  const step = 54
+  const h = 40
+  const col = (steps: Step[], x: number) =>
+    steps.map((s, i) => {
+      const y = top + i * step
+      return (
+        <g key={s.lines[0]}>
+          <Box x={x} y={y} w={350} h={h} lines={s.lines} fs={11.5} fill={s.fill ?? 'box'} subTone={s.tone ?? 'muted'} />
+          {i < steps.length - 1 && <Arrow x1={x + 175} y1={y + h} x2={x + 175} y2={y + step - 1} />}
+        </g>
+      )
+    })
+  return (
+    <Svg
+      id="ch22-etag-timing"
+      w={780}
+      h={400}
+      label="2つのデモで、If-None-Match に前回の ETag を入れた要求を処理する順を上から並べた。左の Rack::ETag の場合は、アクションを実行し、テンプレートを1回描画した後で、Rack::ETag が本文全体のダイジェストを ETag にし、Rack::ConditionalGet が If-None-Match と比べる。CSRF のメタタグで本文が毎回違うので一致せず、200 と2787バイトの本文を返す。比べる時点で描画は終わっている。右の fresh_when の場合は、アクションで記事を読む SQL を1回実行し、fresh_when が cache_key_with_version とテンプレートのダイジェストから ETag を作り、request.fresh?(response) で If-None-Match と比べる。一致するので head :not_modified で本文0バイトの304を返す。描画の前に比べるので、テンプレートの描画は0回で、1ms で返った"
+    >
+      <T x={195} y={16} anchor="middle" fs={12} bold>
+        Rack::ETag（/articles/1）
+      </T>
+      <T x={585} y={16} anchor="middle" fs={12} bold>
+        fresh_when（/cached/articles/1）
+      </T>
+      {col(left, 20)}
+      {col(right, 410)}
+      <T x={195} y={top + 6 * step + 4} anchor="middle" fs={11} tone="muted">
+        比べる時点で、描画は終わっている
+      </T>
+      <T x={585} y={top + 5 * step + 4} anchor="middle" fs={11} tone="muted">
+        描画の前に比べる。描画は0回で、1ms で返った
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- touch の前後で、フラグメントキャッシュのバージョンを比べる ---------- */
+function FragmentVersionFigure() {
+  const panels = [
+    { x: 20, title: 'touch の前（show 2回目）', now: '20261111102904565673', nowFill: 'box' as const, cmp: '一致', tone: 'acc' as const, result: ['ヒット（hit=true）', '保存した HTML を使う'] },
+    {
+      x: 410,
+      title: 'touch の後',
+      now: '20261111102924312343',
+      nowFill: 'box5' as const,
+      cmp: '不一致',
+      tone: 'danger' as const,
+      result: ['ミス（hit=false）', '描画し、バージョン 20261111102924312343 で上書き'],
+    },
+  ]
+  return (
+    <Svg
+      id="ch22-fragment-version"
+      w={780}
+      h={300}
+      label="フラグメントキャッシュのキー views/cached_articles/show:56f144d2a3735c2ad85933a601e3409e/articles/1 は touch の前と後で同じ。touch の前は、読むときのバージョン（記事の updated_at）20261111102904565673 が保存されているバージョン 20261111102904565673 と一致し、ヒットして保存した HTML を使う。touch の後は、読むときのバージョンが 20261111102924312343 に変わり、保存されているバージョン 20261111102904565673 と一致しないのでミスになり、描画してバージョン 20261111102924312343 で同じキーに上書きする"
+    >
+      <T x={20} y={14} fs={11.5} tone="muted">
+        キー（touch の前と後で同じ）
+      </T>
+      <Box x={20} y={26} w={740} h={32} lines="views/cached_articles/show:56f144d2a3735c2ad85933a601e3409e/articles/1" mono fs={11.5} fill="bg" />
+      {panels.map((p) => (
+        <g key={p.title}>
+          <T x={p.x + 175} y={84} anchor="middle" fs={12} bold>
+            {p.title}
+          </T>
+          <Box x={p.x} y={98} w={350} h={44} lines={['読むときのバージョン（記事の updated_at）', p.now]} fs={11.5} fill={p.nowFill} />
+          <T x={p.x + 175} y={158} anchor="middle" fs={12} tone={p.tone} bold>
+            {p.cmp}
+          </T>
+          <Box x={p.x} y={174} w={350} h={44} lines={['保存されているバージョン', '20261111102904565673']} fs={11.5} fill="box4" />
+          <Arrow x1={p.x + 175} y1={218} x2={p.x + 175} y2={237} />
+          <Box x={p.x} y={238} w={350} h={44} lines={p.result} fs={11.5} fill="bg" bold />
+        </g>
+      ))}
+    </Svg>
+  )
+}
+
 const ch22: Chapter = {
   number: 22,
   part: 4,
   title: '性能：計測・改善・キャッシュ',
   summary:
-    '応答時間の測り方とログの Completed の行の読み方、時間のかかる場所をログから見分ける方法を、デモの実測で確かめます。続いて、1リクエストの処理時間の内訳を ActiveSupport::Notifications のイベントで計測し、ログや Server-Timing の値がどこから来るかを説明します。DB・メモリー・YJIT の要点と、一度作った結果を保存して使い回すキャッシュの基本、HTTP キャッシュ、フラグメントキャッシュ、Rails.cache とキャッシュストアの仕組みを、実測とともに扱います。',
+    '記事の表示に時間がかかるときは、SQL の回数と画面を描く時間を別々に調べられます。1回の要求で記録された時間を読み、同じ記事をもう一度開いたときにどの処理を省けるかを確かめます。',
   goals: [
-    'curl の応答時間・x-runtime・ログの Completed の行が測る範囲の違いと、Completed の行の Views・ActiveRecord・GC の意味を説明できる',
-    'Completed の行と SQL の回数から、時間が SQL・描画・Ruby の処理のどこにかかっているかを見分けられる',
-    'ログの Completed の行と Server-Timing の値が、どのイベントから作られるかを説明できる',
-    'ActiveSupport::Notifications でイベントを購読して、処理時間の内訳を調べられる',
-    '遅さの原因が DB・ビュー・GC のどこにあるかを、ログとイベントから切り分けられる',
-    'キャッシュのヒット・ミス・有効期限と、元のデータが変わっても保存した値は変わらないことを説明できる',
-    'Rack::ETag と fresh_when の違いと、304 でもテンプレートが描画される場合を説明できる',
-    'フラグメントキャッシュのキーの構成と、レコードの更新でキャッシュが切り替わる仕組みを説明できる',
-    'キャッシュストアの種類と、MemoryStore がプロセスごとであることを説明できる',
+    'ブラウザーから見た応答時間と、Rails のログが測る区間を区別できる',
+    'ログと処理ごとの計測値から、時間のかかった SQL や描画を特定できる',
+    '応答の本文、HTML の一部分、計算結果のどれを使い回すかを選び、記事の更新後に値が切り替わる条件を説明できる',
   ],
   prerequisites: [12, 13, 16],
   sections: [
@@ -306,13 +453,12 @@ Completed 200 OK in 7ms (Views: 3.6ms | ActiveRecord: 1.3ms (2 queries, 0 cached
           </ul>
           <p>
             3つの時間を比べると、curl の 11.2ms、x-runtime の 8.7ms、Completed の 7ms の順に短くなっています。x-runtime は Rack::Runtime というミドルウェア（要求の前後に処理を挟む部品）が付けるヘッダーで、そのミドルウェアから内側の処理にかかった時間です
-            <Ref n={8} />。Completed の時間は、コントローラーがアクションを処理した時間で、その外側のミドルウェアの処理は含みません。curl の時間には、さらに通信と Puma の処理が加わります（図
-            22-1）。利用者が待つのは、いちばん外側の時間です。
+            <Ref n={8} />。Completed の時間は、コントローラーがアクションを処理した時間で、その外側のミドルウェアの処理は含みません。curl の時間には、さらに通信と Puma の処理が加わります（図 25-1）。利用者が待つのは、いちばん外側の時間です。
           </p>
           <p>
             Completed の 7ms のうち、Views と ActiveRecord を足すと 4.9ms で、残りの約 2ms はどちらにも入りません。コントローラーの Ruby の処理などが、この残りに入ります。次の節では、要求によってこの内訳がどう違うかを比べます。
           </p>
-          <Figure n="22-1" title="応答時間と、Rails が測る時間" caption="デモの GET /articles/1 を1回要求したときの実測値（curl・x-runtime・ログ）をもとにした模式図。">
+          <Figure n="25-1" title="応答時間と、Rails が測る時間" caption="デモの GET /articles/1 を1回要求したときの実測値（curl・x-runtime・ログ）をもとにした模式図。">
             <ResponseTimeFigure />
           </Figure>
         </>
@@ -341,7 +487,7 @@ Completed 200 OK in 7ms (Views: 3.6ms | ActiveRecord: 1.3ms (2 queries, 0 cached
           />
           <p>
             /lab/io は約 202ms のほとんどが ActiveRecord で、SQL の応答を待つ時間でした。/lab/cpu は 475〜596ms かかりましたが、Views も ActiveRecord もほぼ 0
-            で、残りはすべてコントローラーの中の Ruby の計算です（図 22-2）。ActiveRecord が長ければ SQL を、Views が長ければテンプレートを調べます。どちらも短ければ、コントローラーやモデルの Ruby
+            で、残りはすべてコントローラーの中の Ruby の計算です（図 25-2）。ActiveRecord が長ければ SQL を、Views が長ければテンプレートを調べます。どちらも短ければ、コントローラーやモデルの Ruby
             のコードや、外部の API の応答を待つ時間を調べます。
           </p>
           <p>
@@ -385,9 +531,10 @@ end
           <p>
             Completed の行の Views と ActiveRecord の値は、Rails の中の各処理が発行するイベントから計算されています。次の節では1件の要求の中で発行されるイベントを時刻順に並べて、内訳の計算を確かめます。
           </p>
-          <Figure n="22-2" title="時間のかかる場所の違い" caption="デモの開発環境で、3つの要求を処理したときの Completed の行（/lab/cpu は 546ms の回）をもとにした図。">
+          <Figure n="25-2" title="時間のかかる場所の違い" caption="デモの開発環境で、3つの要求を処理したときの Completed の行（/lab/cpu は 546ms の回）をもとにした図。">
             <SlowPartsFigure />
           </Figure>
+          <p>直す前に測って遅い場所を確かめる考え方は、<ChapterLink n={90} /> で原則として扱います。</p>
         </>
       ),
     },
@@ -406,8 +553,7 @@ Completed 200 OK in 5ms (Views: 2.9ms | ActiveRecord: 1.1ms (2 queries, 0 cached
 `}
           />
           <p>
-            この値は処理の各段が発行する <Term>ActiveSupport::Notifications</Term> のイベントから計算されます。同じリクエストの間に発行されたイベントをすべて購読し、開始時刻と処理時間を並べました（
-            <code>!</code> で始まる内部用のイベントは除外）。
+            下の記録の左端は要求を受けてからの経過時間、隣はその行の処理にかかった時間です。たとえば <code>+1.61ms　0.52ms</code> は、1.61ms の時点で記事を読む SQL が始まり、0.52ms かかったという意味です。Rails が処理ごとに出す通知（<Term>ActiveSupport::Notifications</Term> のイベント）を同じ要求の間だけ記録して並べました。<code>!</code> で始まる内部用のイベントは除いています。
           </p>
           <Code
             lang="text"
@@ -431,14 +577,14 @@ Completed 200 OK in 5ms (Views: 2.9ms | ActiveRecord: 1.1ms (2 queries, 0 cached
           <p>
             コメントを読む SQL は、テンプレートの描画の途中（+4.21ms）で実行されています。ビューで関連をたどると、そこで初めて SQL が送られるからです（<ChapterLink n={12} section="lazy" />
             ）。render_template などのイベントの時間にはこの SQL も含まれますが、ログの Views は描画の時間から描画中の SQL の時間を引いた値で、引いた分は ActiveRecord に加えられます（activerecord の
-            controller_runtime.rb の <code>cleanup_view_runtime</code>）。デモでも、ActiveRecord の 1.1ms は2つの SQL（0.52ms と 0.61ms）の合計でした（図 22-3）。Views と ActiveRecord
+            controller_runtime.rb の <code>cleanup_view_runtime</code>）。デモでも、ActiveRecord の 1.1ms は2つの SQL（0.52ms と 0.61ms）の合計でした（図 25-3）。Views と ActiveRecord
             は重ならないので、どちらが長いかで、描画と SQL のどちらに時間がかかったかを判断できます。
           </p>
           <p>
             Server-Timing は、開発環境の設定ファイルの <code>config.server_timing = true</code> で入る ActionDispatch::ServerTiming のミドルウェアが付けるヘッダーで、イベントの名前ごとの合計時間です
             <Ref n={1} />。ブラウザーの開発者ツールのネットワークの画面で、サーバー側の内訳として表示されます。
           </p>
-          <Figure n="22-3" title="1リクエストの処理時間の内訳" caption="デモアプリケーション（Rails 8.1.4.1、開発環境、MySQL 8.4）での GET /articles/1 の実測。1回の計測なので、値は目安。">
+          <Figure n="25-3" title="1リクエストの処理時間の内訳" caption="デモアプリケーション（Rails 8.1.4.1、開発環境、MySQL 8.4）での GET /articles/1 の実測。1回の計測なので、値は目安。">
             <BreakdownFigure />
           </Figure>
         </>
@@ -472,6 +618,15 @@ end
             New Relic や Datadog などの APM（アプリケーションの性能の監視サービス）の Ruby のエージェントや、rack-mini-profiler も、Rails のイベントを購読して処理時間を集めています。本番環境で遅いリクエストを調べるときは、こうしたツールで、遅いリクエストのイベントの内訳を見ます。
           </p>
           <p>
+            次の図はイベントを発行する処理を左に、受け取る側を右に並べたものです。左の処理が instrument で発行したイベントは、中央の ActiveSupport::Notifications を通って、そのイベントの名前を購読している右の箱に渡されます。
+          </p>
+          <Figure
+            title="イベントを発行する処理と、購読する側"
+            caption="模式図。実線の矢印はイベントが渡る向き。右の箱が受け取るのは、購読した名前のイベントだけ。左右の箱はこの章に出てきた例で、Rails が発行するイベントと購読する側はほかにもある。"
+          >
+            <NotificationsFigure />
+          </Figure>
+          <p>
             <ChapterLink n={19} section="variants" />のデモのログの SQL には、<code>/*action='show',application='Demo',controller='redirect'*/</code>（ActiveStorage の RedirectController の要求）のようなコメントが付いていました。開発環境の設定ファイルの{' '}
             <code>config.active_record.query_log_tags_enabled = true</code> による ActiveRecord::QueryLogs の機能です。MySQL のスロークエリログ（実行に時間がかかった SQL を記録するログ）にもこのコメントが残るので、遅い SQL
             を送ったコントローラーとアクションを特定できます。
@@ -491,7 +646,7 @@ end
               ）。関連の遅延読み込みは strict_loading でも検出できますが、count などの集計や直接の find は SQL ログでも確認します
             </li>
             <li>
-              SQL の1回の実行時間：実行時間の長い SQL は EXPLAIN で索引が使われているかを確かめます（<ChapterLink n={12} section="explain" />
+              SQL の1回の実行時間：実行時間の長い SQL は EXPLAIN で索引が使われているかを確かめます（<ChapterLink n={37} section="explain-rails" />
               ）
             </li>
             <li>
@@ -502,8 +657,7 @@ end
           <p>
             ログの <code>GC:</code> は、そのリクエストの間に GC（ガベージコレクション）に使った時間です。デモの <code>/articles/1</code> は1回で約3000個のオブジェクトを割り当てていました。GC
             はオブジェクトを多く作るほど頻繁に起き、実行中は同じプロセスのすべてのスレッドが止まります
-            <Ref n={3} />。<ChapterLink n={17} />
-            の計測中には、<code>GC: 16.7ms</code> の行もありました。大量のレコードを <code>each</code> で読むと、1件ごとにオブジェクトができるので、<code>find_each</code> で分けるか、
+            <Ref n={3} />。デモの別の計測では、<code>GC: 16.7ms</code> の行もありました。大量のレコードを <code>each</code> で読むと、1件ごとにオブジェクトができるので、<code>find_each</code> で分けるか、
             <code>pluck</code> で必要な列だけを読みます。
           </p>
           <p>
@@ -512,6 +666,20 @@ end
             で見たとおり、<code>load_defaults 8.1</code> では <code>config.yjit = !Rails.env.local?</code>（開発環境とテスト環境以外で有効）になるので、デモの開発環境では無効（
             <code>RubyVM::YJIT.enabled?</code> が false）でした。Puma のスレッドと GVL の関係は
             <ChapterLink n={23} />で扱います。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'db-read-design',
+      title: "一覧と集計を DB の仕事にする",
+      body: (
+        <>
+          <p>
+            一覧画面では、一度に表示する件数を決めます。ページ番号を使うページネーションでは、決まった順に並べて <code>LIMIT</code> と <code>OFFSET</code> を設定します。Kaminari なら <code>Article.order(created_at: :desc, id: :desc).page(params[:page]).per(25)</code> のようにし、ビューで <code>paginate</code> を使えます。並び順の値が同じ行にも ID で順序を付けておくと、順番が安定します。深いページや、表示中にも増えるデータなら、最後に受け取った行の日時と ID を次の取得条件にする方法もあります。<Ref n={10} /><Ref n={11} />
+          </p>
+          <p>
+            <ChapterLink n={13} section="n-plus-one-check">関連の件数を数える例</ChapterLink> のように、明細が不要な一覧では集計済みの値だけを読み取れます（GROUP BY で行をまとめて数える SQL は <ChapterLink n={36} section="group-by" />）。加えて、要求のたびに大量のデータから集計する必要があるかを考えます。多少古くてもよいランキングなら定期ジョブで計算して保存でき、更新直後に必要な件数なら DB の集計や整合性を保つカウンターを選べます。時間がかかる出力ファイルはジョブへ回し、画面には受付済み・完了・失敗を区別して返します。<Ref n={12} />
           </p>
         </>
       ),
@@ -597,15 +765,14 @@ Rails.cache = ActiveSupport::Cache::MemoryStore
 `}
           />
           <p>
-            1回目はミスで、ブロックを実行して約 530ms かかりました。2回目と3回目はヒットで、0.1ms 以下でした。有効期限の1秒を過ぎた4回目は、もう一度ブロックを実行しました（図
-            22-4）。有効期限は、古い値が使われる時間を区切ります。元のデータが変わったときにキーを変えて、古い値を使わないようにする方法もあり、「フラグメントキャッシュ」の節で扱います。値の保存先をキャッシュストアと呼び、デモの開発環境はプロセスのメモリーに保存する
+            1回目はミスで、ブロックを実行して約 530ms かかりました。2回目と3回目はヒットで、0.1ms 以下でした。有効期限の1秒を過ぎた4回目は、もう一度ブロックを実行しました（図 25-4）。有効期限は、古い値が使われる時間を区切ります。元のデータが変わったときにキーを変えて、古い値を使わないようにする方法もあり、「フラグメントキャッシュ」の節で扱います。値の保存先をキャッシュストアと呼び、デモの開発環境はプロセスのメモリーに保存する
             MemoryStore です（「Rails.cache とキャッシュストア」の節）。
           </p>
           <p>
-            キャッシュはブラウザー、ブラウザーと Rails の間のサーバー、Rails の中の各所に置けます（図 22-5）。ブラウザーに近いところで応答を返せるほど、その後ろの処理を省けます。次の節では、ブラウザーが保存した応答を使い回す
+            キャッシュはブラウザー、ブラウザーと Rails の間のサーバー、Rails の中の各所に置けます（図 25-5）。ブラウザーに近いところで応答を返せるほど、その後ろの処理を省けます。次の節では、ブラウザーが保存した応答を使い回す
             HTTP キャッシュを扱います。
           </p>
-          <Figure n="22-4" title="キャッシュのヒットとミス" caption="デモでの Rails.cache.fetch（MemoryStore、有効期限1秒）の実測をもとにした模式図。">
+          <Figure n="25-4" title="キャッシュのヒットとミス" caption="デモでの Rails.cache.fetch（MemoryStore、有効期限1秒）の実測をもとにした模式図。">
             <CacheFigure />
           </Figure>
         </>
@@ -617,8 +784,7 @@ Rails.cache = ActiveSupport::Cache::MemoryStore
       body: (
         <>
           <p>
-            HTTP のキャッシュは、ブラウザーなどが保存した応答の再利用を、ETag や Last-Modified のヘッダーで管理する仕組みです。ブラウザーは保存した応答の ETag を If-None-Match ヘッダーで送り、サーバーは変わっていなければ本文の無い
-            304 を返します。Rails のミドルウェアのスタックには Rack::ETag と Rack::ConditionalGet が入っていて、何もしなくても ETag が付きます。デモで確かめました。
+            では、記事を更新せずに同じページをもう一度開いたら、描画も省けるでしょうか。デモでは Rails の標準のミドルウェア Rack::ETag と Rack::ConditionalGet を使い、最初の応答でもらった ETag を次の要求の <code>If-None-Match</code> に入れました。
           </p>
           <Code
             lang="text"
@@ -634,7 +800,7 @@ Rails.cache = ActiveSupport::Cache::MemoryStore
             ）が描画のたびに値を変えるので、本文が毎回違い、ETag も一致しません。仮に一致して 304 になったとしても、テンプレートの描画は済んだ後なので、サーバーの処理時間は減りません。
           </p>
           <p>
-            サーバーの処理を省くには、コントローラーで <code>fresh_when</code> か <code>stale?</code> を使い、描画の前に判定します。
+            描画も省くには、コントローラーで <code>fresh_when</code> か <code>stale?</code> を使い、描画の前に判定します。次の引用の最後にある <code>request.fresh?(response)</code> が、ブラウザーの持つ版がまだ使えるかを確かめる行です。使えれば <code>head :not_modified</code> が本文のない 304 を返します。
           </p>
           <Code
             lang="ruby"
@@ -664,11 +830,20 @@ Rails.cache = ActiveSupport::Cache::MemoryStore
 `}
           />
           <p>
+            次の図は2つのデモで要求を受けてから応答を返すまでの処理を、上から順に並べたものです。紫の箱が If-None-Match と比べる所で、左の Rack::ETag では描画の後に、右の fresh_when では描画の前にあります。
+          </p>
+          <Figure
+            title="Rack::ETag と fresh_when が If-None-Match と比べる時点"
+            caption="上の2つの実行結果をもとにした模式図。実線の矢印は処理の順。右の fresh_when の列には、テンプレートを描画する箱がない。"
+          >
+            <EtagTimingFigure />
+          </Figure>
+          <p>
             <code>fresh_when @article</code> は、記事の <code>cache_key_with_version</code>（id と updated_at）とテンプレートのダイジェストから ETag を作り、要求の If-None-Match
             と一致すれば <code>head :not_modified</code> で応答します。記事を読む SQL の1回だけで、描画をせずに1ms で返りました。既定の Cache-Control は <code>private</code>{' '}
-            なので、この応答は利用者のブラウザーにだけ保存されます。ログインした利用者ごとに内容が違うページを <code>public: true</code> にすると、CDN（配信する内容の複製を多数のサーバーに置いて返すサービス）などで他の利用者に同じ応答が返るので注意します。
+            なので、利用者のブラウザーに保存でき、複数の利用者で共有するキャッシュには保存できません。ログインした利用者ごとに内容が違うページを <code>public: true</code> にすると、CDN（配信する内容の複製を多数のサーバーに置いて返すサービス）などで他の利用者に同じ応答が返るので注意します。
           </p>
-          <Figure n="22-5" title="キャッシュの層" caption="Caching with Rails（ガイド）と、この章の実測をもとにまとめた図。">
+          <Figure n="25-5" title="キャッシュの層" caption="Caching with Rails（ガイド）と、この章の実測をもとにまとめた図。">
             <LayersFigure />
           </Figure>
         </>
@@ -730,6 +905,15 @@ Rails.cache = ActiveSupport::Cache::MemoryStore
             で updated_at が変わると、同じキーで読んでもバージョンが一致しないのでキャッシュミス（hit=false）になり、新しい内容で上書きされます。キーの数が増え続けないようにするための仕組みです（cache versioning）
             <Ref n={5} />。
           </p>
+          <p>
+            次の図は touch の前と後で同じキーを読んだときに比べる値を、左右に並べたものです。上のキーは前と後で同じで、その下の2つのバージョンが一致するかどうかで、ヒットとミスが決まります。
+          </p>
+          <Figure
+            title="touch の前後で比べるバージョン"
+            caption="上の記録（show 2回目と、touch 後の show）をもとにした模式図。紫の箱は touch で変わった値。"
+          >
+            <FragmentVersionFigure />
+          </Figure>
           <p>
             <code>cached: true</code> のコレクションの描画は、全要素のキーを <code>read_multi</code> でまとめて1回で読み、無かった分だけを描画して <code>write_multi</code>{' '}
             で書き込みます。2回目は3件とも見つかり（hits=3）、パーシャルは描画されませんでした。コメントの描画を記事のキャッシュの中に入れ子にする場合は、Comment に{' '}
@@ -816,6 +1000,23 @@ store.fetch("ranking/top", expires_in: 10.minutes) { Article.order(views_count: 
       ),
     },
     {
+      id: 'index-and-caching-decisions',
+      title: "PostgreSQL の実行計画とキャッシュの判断",
+      body: (
+        <>
+          <p>
+            関連を <code>preload</code> すると、親の ID を使う <code>IN (...)</code> の問い合わせが作られます。大量の ID を一度に渡すと、MySQL の通信サイズの制限に達したり、範囲を最適化するメモリーの上限を超えて実行計画が変わったりすることがあります。管理バッチでは件数を分けて読み、ページの表示では必要な範囲だけを取得します。<Ref n={13} /><Ref n={14} />（<ChapterLink n={13} section="preload">先読みの SQL</ChapterLink>）。
+          </p>
+          <p>
+            <ChapterLink n={37} section="explain-rails">MySQL の実行計画</ChapterLink> と比べると、PostgreSQL の計画では、全表を読む <code>Seq Scan</code>、索引から行を得る <code>Index Scan</code>、必要な値を索引が持つときに選ばれる <code>Index Only Scan</code> などの名前で経路を見られます。行が少ない場合などには全表の読み取りが適切な場合もあります。estimated rows と actual rows、実行回数を比べると、推定のずれや繰り返しがわかります。実行付きの <code>EXPLAIN ANALYZE</code> は実際に文を実行するので、実行の影響を確認して使います。<Ref n={15} />
+          </p>
+          <p>
+            関連の読み込み回数を減らしても重い処理にはキャッシュを検討できます。 Solid Cache を使うときは、<code>config/cache.yml</code> の <code>max_age</code> や <code>max_size</code> などで、有効期間・容量に合う保管量を決めます。<Ref n={16} /><code>Rails.cache.fetch</code> で検索結果を保存するなら、検索条件・利用者に見せてよい範囲・有効期限をキーや設計に反映します。無効化条件とヒット率を見て、保存する費用に見合うかを確かめます。<Ref n={10} /><Ref n={17} />
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'summary',
       title: 'まとめ',
       body: (
@@ -843,6 +1044,14 @@ store.fetch("ranking/top", expires_in: 10.minutes) { Article.order(views_count: 
     { title: 'actionpack/lib/action_controller/log_subscriber.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_controller/log_subscriber.rb`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'Completed の行が process_action のイベントの時間と、Views・ActiveRecord・GC の値から作られること。' },
     { title: 'rack: lib/rack/runtime.rb', publisher: 'rack/rack（GitHub）', url: 'https://github.com/rack/rack/blob/v3.2.8/lib/rack/runtime.rb', accessed: '2026-11-16', version: 'Rack 3.2.8', note: 'Rack::Runtime が、自分より内側の処理にかかった時間を x-runtime ヘッダーに入れること。デモのミドルウェアの一覧で8番目にあることを確認。' },
     { title: 'curl man page（-w, --write-out の time_total）', publisher: 'curl', url: 'https://curl.se/docs/manpage.html', accessed: '2026-11-16', version: 'curl 8.x', note: 'time_total は転送全体にかかった秒数であること。curl 8.23.0 で実測。' },
+    { title: "Active Record Querying", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/active_record_querying.html", accessed: "2026-11-20", version: "Rails 8.1", note: "Relation、スコープ、バッチ、一覧と集計の問い合わせ。" },
+    { title: "Kaminari", publisher: "kaminari/kaminari", url: "https://github.com/kaminari/kaminari", accessed: "2026-11-20", note: "Relation のページ番号・件数・表示用ヘルパー。" },
+    { title: "Active Job Basics", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/active_job_basics.html", accessed: "2026-11-20", version: "Rails 8.1", note: "ジョブの設定、キュー、再試行、定期実行。" },
+    { title: "Packet Too Large", publisher: "MySQL Reference Manual", url: "https://dev.mysql.com/doc/refman/8.4/en/packet-too-large.html", accessed: "2026-11-20", version: "MySQL 8.4", note: "max_allowed_packet の制限。" },
+    { title: "Range Optimization", publisher: "MySQL Reference Manual", url: "https://dev.mysql.com/doc/refman/8.4/en/range-optimization.html", accessed: "2026-11-20", version: "MySQL 8.4", note: "多数の値を渡す範囲最適化とメモリー上限。" },
+    { title: "Using EXPLAIN", publisher: "PostgreSQL Documentation", url: "https://www.postgresql.org/docs/current/using-explain.html", accessed: "2026-11-20", note: "実行計画のスキャン方式と EXPLAIN ANALYZE。" },
+    { title: "Solid Cache", publisher: "rails/solid_cache", url: "https://github.com/rails/solid_cache", accessed: "2026-11-20", note: "DB をキャッシュストアに使う構成。" },
+    { title: "Caching with Rails", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/caching_with_rails.html", accessed: "2026-11-20", version: "Rails 8.1", note: "フラグメントやキャッシュストアの使用法。" },
   ],
 }
 

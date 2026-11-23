@@ -13,21 +13,21 @@ function ArchitectureFigure() {
       id="1-4"
       w={620}
       h={566}
-      label="本番構成の模式図。上から順に、ブラウザー、ALB（第25章）、Nginx（第24章）、Puma（第23章）、Rails アプリケーションが並ぶ。Rails アプリケーションの中は Rack ミドルウェア（第6章）、ルーティング（第9章）、コントローラー（第10章）、ActiveRecord（第3部）と ActionView（第16章）の順に処理が進む。ActiveRecord は MySQL に SQL を送る。右側では Rails が Redis にジョブを登録し、Sidekiq（第18章）がそれを取り出して実行し、MySQL にアクセスする"
+      label="本番構成の模式図。上から順に、ブラウザー、ALB（第28章）、Nginx（第27章）、Puma（第26章）、Rails アプリケーションが並ぶ。Rails アプリケーションの中は Rack ミドルウェア（第6章）、ルーティング（第9章）、コントローラー（第10章）、ActiveRecord（第3部）と ActionView（第20章）の順に処理が進む。ActiveRecord は MySQL に SQL を送る。右側では Rails が Redis にジョブを登録し、Sidekiq（第21章）がそれを取り出して実行し、MySQL にアクセスする"
     >
       <Box x={30} y={16} w={380} h={40} lines="ブラウザー（クライアント）" fill="bg" />
       <Arrow x1={220} y1={56} x2={220} y2={80} />
       <T x={230} y={68} fs={12} tone="muted">HTTPS</T>
       <Box x={30} y={80} w={380} h={44} lines={['ALB（ロードバランサー）', 'TLS を終端し、サーバーに振り分ける']} bold subTone="muted" />
-      <T x={400} y={102} fs={12} anchor="end" tone="acc">第25章</T>
+      <T x={400} y={102} fs={12} anchor="end" tone="acc">第28章</T>
       <Arrow x1={220} y1={124} x2={220} y2={148} />
       <T x={230} y={136} fs={12} tone="muted">HTTP</T>
       <Box x={30} y={148} w={380} h={44} lines={['Nginx', '静的ファイルを返し、それ以外を Puma へ転送']} bold subTone="muted" />
-      <T x={400} y={170} fs={12} anchor="end" tone="acc">第24章</T>
+      <T x={400} y={170} fs={12} anchor="end" tone="acc">第27章</T>
       <Arrow x1={220} y1={192} x2={220} y2={216} />
       <T x={230} y={204} fs={12} tone="muted">HTTP</T>
       <Box x={30} y={216} w={380} h={44} lines={['Puma', 'ワーカー（プロセス）× スレッドで実行']} bold subTone="muted" />
-      <T x={400} y={238} fs={12} anchor="end" tone="acc">第23章</T>
+      <T x={400} y={238} fs={12} anchor="end" tone="acc">第26章</T>
       <Arrow x1={220} y1={260} x2={220} y2={284} />
       <T x={230} y={272} fs={12} tone="muted">Rack の呼び出し（call）</T>
 
@@ -42,7 +42,7 @@ function ArchitectureFigure() {
       <Arrow x1={132} y1={428} x2={132} y2={442} />
       <Arrow x1={307} y1={428} x2={307} y2={442} />
       <Box x={50} y={442} w={165} h={28} lines="ActiveRecord（第3部）" fs={12} />
-      <Box x={225} y={442} w={165} h={28} lines="ActionView（第16章）" fs={12} />
+      <Box x={225} y={442} w={165} h={28} lines="ActionView（第20章）" fs={12} />
 
       <Arrow x1={132} y1={470} x2={132} y2={510} />
       <T x={140} y={494} fs={12} tone="muted">SQL</T>
@@ -53,7 +53,7 @@ function ArchitectureFigure() {
       <Box x={460} y={316} w={140} h={40} lines="Redis" fill="box4" />
       <Arrow x1={530} y1={356} x2={530} y2={400} />
       <T x={538} y={378} fs={12} tone="muted">取り出し</T>
-      <Box x={460} y={400} w={140} h={48} lines={['Sidekiq', '第18章']} bold subTone="acc" />
+      <Box x={460} y={400} w={140} h={48} lines={['Sidekiq', '第21章']} bold subTone="acc" />
       <Arrow d="M530,448 V530 H217" />
       <T x={540} y={490} fs={12} tone="muted">SQL</T>
     </Svg>
@@ -91,6 +91,7 @@ function GemDependencyFigure() {
       <Arrow x1={540} y1={60} x2={520} y2={113} />
       <Arrow d="M490,60 C 410,70 405,170 362,203" />
       <Arrow d="M500,60 L 224,142" />
+      <Arrow x1={120} y1={155} x2={100} y2={203} />
       <Arrow x1={505} y1={155} x2={540} y2={203} />
     </Svg>
   )
@@ -337,20 +338,112 @@ function RequestFlowFigure() {
   )
 }
 
+/* ---------- GET /articles のログの行と、処理の始まりと終わり ---------- */
+const logRows: { text: string; depth: number; note?: string; muted?: boolean }[] = [
+  { text: 'Started GET "/articles" for 172.29.0.1 …', depth: 0, note: '要求を受け取った', muted: true },
+  { text: 'Processing by ArticlesController#index as */*', depth: 1, note: 'アクションの実行から応答まで（7ms）' },
+  { text: 'Rendering layout layouts/application.html.erb', depth: 2, note: 'レイアウトの描画（4.4ms）' },
+  { text: 'Rendering articles/index.html.erb within …', depth: 3, note: 'index.html.erb の描画（3.1ms）' },
+  { text: 'Article Load (0.5ms) SELECT … LIMIT 3 …', depth: 4, note: 'SQL の実行（0.5ms）' },
+  { text: '↳ app/views/articles/index.html.erb:3', depth: 4, note: 'SQL を実行させたファイルと行', muted: true },
+  { text: 'Rendered collection of …/_article.html.erb [3 times] …', depth: 4, note: '_article.html.erb を3回使った（0.2ms）' },
+  { text: 'Rendered articles/index.html.erb within … (Duration: 3.1ms …)', depth: 3 },
+  { text: 'Rendered layout layouts/application.html.erb (Duration: 4.4ms …)', depth: 2 },
+  { text: 'Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms …)', depth: 1 },
+]
+
+function LogNestingFigure() {
+  const y = (i: number) => 22 + i * 26
+  const x = (depth: number) => 16 + depth * 14
+  const right = (depth: number) => 778 - depth * 14
+  // [始まりの行, 終わりの行, 深さ]
+  const frames: [number, number, number][] = [
+    [1, 9, 1],
+    [2, 8, 2],
+    [3, 7, 3],
+  ]
+  return (
+    <Svg
+      id="ch01-log-nesting"
+      w={780}
+      h={280}
+      label="GET /articles のログの10行を、出力された順に上から並べた図。Processing の行から Completed の行までが、アクションの実行から応答までの枠で、7ms。その内側の Rendering layout の行から Rendered layout の行までがレイアウトの描画の枠で、4.4ms。さらに内側の Rendering articles/index.html.erb の行から Rendered articles/index.html.erb の行までが index.html.erb の描画の枠で、3.1ms。その中で、Article Load の SQL（0.5ms）と、SQL を実行させたファイルと行を示す ↳ の行が出力され、続いて _article.html.erb を3回使った Rendered collection の行（0.2ms）が出力される"
+    >
+      {frames.map(([from, to, depth]) => (
+        <Box key={depth} x={x(depth) - 14} y={y(from) - 11} w={right(depth) - x(depth) + 14} h={y(to) - y(from) + 22} fill="bg" />
+      ))}
+      <Box x={x(4) - 14} y={y(4) - 11} w={right(4) - x(4) + 14} h={y(5) - y(4) + 22} fill="box5" />
+      {logRows.map((r, i) => (
+        <g key={r.text}>
+          <T x={x(r.depth) - 4} y={y(i)} fs={11.5} mono>
+            {r.text}
+          </T>
+          {r.note && (
+            <T x={right(r.depth) - 12} y={y(i)} fs={12} anchor="end" tone={r.muted ? 'muted' : undefined}>
+              {r.note}
+            </T>
+          )}
+        </g>
+      ))}
+    </Svg>
+  )
+}
+
+/* ---------- has_many :comments から comments の定義ができるまで ---------- */
+function HasManyDefinitionFigure() {
+  return (
+    <Svg
+      id="ch01-has-many-comments"
+      w={780}
+      h={356}
+      label="has_many :comments の1行から comments の定義ができるまでの図。左上の app/models/article.rb の has_many :comments が、ActiveRecord::Associations::ClassMethods の has_many（associations.rb の1427行）を呼ぶ。has_many は Builder::HasMany.build を呼び、build は define_readers を呼ぶ。define_readers には mixin として Article::GeneratedAssociationMethods、name として :comments が渡る。define_readers は class_eval で def comments を実行し、Article::GeneratedAssociationMethods の中に comments（association.rb の104行として記録）ができる。左下の article.comments は、この comments を呼ぶ"
+    >
+      <Box x={20} y={28} w={230} h={56} lines={['app/models/article.rb', 'has_many :comments']} mono fs={12} fill="bg" />
+      <Arrow x1={250} y1={56} x2={318} y2={56} />
+      <T x={284} y={44} fs={11.5} anchor="middle" tone="muted">
+        呼ぶ
+      </T>
+      <Box x={320} y={28} w={440} h={56} lines={['ActiveRecord::Associations::ClassMethods', 'has_many（associations.rb:1427）']} mono fs={12} fill="box2" />
+
+      <Arrow x1={540} y1={84} x2={540} y2={110} />
+      <Box x={320} y={110} w={440} h={36} lines="Builder::HasMany.build" mono fs={12} />
+      <Arrow x1={540} y1={146} x2={540} y2={172} />
+      <Box
+        x={320}
+        y={172}
+        w={440}
+        h={74}
+        lines={['define_readers(mixin, name)  association.rb:102', 'mixin = Article::GeneratedAssociationMethods', 'name  = :comments']}
+        mono
+        fs={12}
+        align="start"
+      />
+
+      <Arrow x1={540} y1={246} x2={540} y2={284} accent />
+      <T x={552} y={265} fs={11.5} tone="acc">
+        class_eval で def comments を実行
+      </T>
+      <Box x={320} y={286} w={440} h={56} lines={['Article::GeneratedAssociationMethods', 'comments（association.rb:104）']} mono fs={12} fill="box2" />
+
+      <Box x={20} y={294} w={230} h={40} lines="article.comments" mono fs={12} fill="bg" />
+      <Arrow x1={250} y1={314} x2={318} y2={314} />
+      <T x={284} y={302} fs={11.5} anchor="middle" tone="muted">
+        呼ぶ
+      </T>
+    </Svg>
+  )
+}
+
 const ch01: Chapter = {
   number: 1,
   part: 1,
   title: '全体像とソースコードの調べ方',
   summary:
-    'ブラウザーとサーバーの間の HTTP の要求と応答、rails new で作るアプリケーションのディレクトリとマイグレーション、1つの要求をルーティング・コントローラー・モデル・ビューが処理する順番（MVC）を、デモのアプリケーションで確かめます。続いて、ブラウザーからデータベースまでの構成要素と、それぞれを扱う章を示します。あわせて、Rails や Ruby のメソッドがどこで定義されているかを自分で調べる方法を説明します。',
+    'ブラウザーで記事の一覧を開くと、Rails のどのファイルが動くのでしょうか。画面に届く応答と Rails のログを見比べ、最後に、呼ばれたメソッドの定義をソースコードから探します。',
   goals: [
-    'HTTP の要求（メソッド・パス・ヘッダー）と応答（状態コード・ヘッダー・本文）を curl の出力から読み取れる',
-    'GET /articles の要求を、ルーティング・コントローラー・モデル・ビューがどの順に処理するかを、ファイルとログを示して説明できる',
-    '本番環境でリクエストが通る構成要素（ロードバランサー、Nginx、Puma、Rails、MySQL）と、それぞれを扱う章を対応付けられる',
-    'Rails を構成する gem の役割と依存関係を説明できる',
-    '本書の基準バージョンと、Rails 7.2 との違いの示し方を理解する',
-    'owner・source_location・super_method を使い、メソッドの定義場所と呼び出し順を自分で特定できる',
-    'debug gem と TracePoint を使い、実行中の処理を追跡できる',
+    '記事の一覧を開いたときの要求と応答を curl の出力から読み取れる',
+    'URL から画面ができるまでに、どのファイルが記事を探し、どのファイルが HTML を作るかを追える',
+    'アプリで使っている gem のバージョンを調べ、実際に呼ばれたメソッドの定義を開ける',
   ],
   prerequisites: [],
   sections: [
@@ -366,8 +459,8 @@ const ch01: Chapter = {
             <Ref n={13} />。要求はリクエスト、応答はレスポンスとも呼び、本書でも両方の呼び方を使います。
           </p>
           <p>
-            本書のデモのアプリケーション（記事やコメントを表示する Rails のアプリケーション。「基準バージョンと Rails 7.2 との違いの示し方」の節で説明します）では、記事の一覧を http://127.0.0.1:3300/articles
-            で開けます。この URL は次の部分からできています。
+            この章では、記事一覧を開いたときの通信記録を読みます。例の <code>http://127.0.0.1:3300/articles</code> は、記録に使ったデモアプリの URL です。
+            まずこの節で、何を要求し、何が返ったかを確かめます。その結果を <ChapterLink n={1} section="request-flow">「1つの要求を処理する順番」</ChapterLink> のログと見比べると、表示された記事をどのコードが用意したかが分かります。URL を分けてみましょう。
           </p>
           <ul>
             <li>
@@ -413,7 +506,7 @@ const ch01: Chapter = {
             応答の1行目の <code>HTTP/1.1 200 OK</code> は状態行で、200 が<Term en="status code">状態コード</Term>です。状態コードは要求をどう処理したかを表す3桁の数で、200 は要求が成功したことを表します。続くヘッダーの
             content-type は本文が HTML であること、x-runtime は Rails が応答を作るのにかかった秒数、content-length は本文の長さが 2532 バイトであることを表します。空行の後に本文が続きます（図 1-1）。
           </p>
-          <Figure n="1-1" title="HTTP の要求と応答" caption="curl -v の出力をもとにした模式図。ヘッダーの一部と本文の中身は省略しています。">
+          <Figure n="1-1" title="HTTP の要求と応答" caption="curl -v の出力をもとにした模式図。ヘッダーの一部と本文の中身は省略しています。Puma は要求を受け取って Rails に渡すプログラムで、「1つの要求を処理する順番」の節で説明します。">
             <HttpFigure />
           </Figure>
           <Code
@@ -684,7 +777,7 @@ end
           <p>
             db/migrate に作られたファイルを<Term en="migration">マイグレーション</Term>と呼びます。テーブルを作る、列を加えるといった、データベースの構造の変更を Ruby で書いたものです。このファイルは articles
             というテーブルを作り、title と body の列を加えます。<code>t.timestamps</code> は行を作った日時（created_at）と更新した日時（updated_at）の列を加えます。id の列は書かなくても作られます
-            <Ref n={19} />。
+            <Ref n={19} />。1行目の <code>ActiveRecord::Migration[8.1]</code> の 8.1 は、このマイグレーションを作った Rails のバージョンです。
           </p>
           <Code
             lang="text"
@@ -709,7 +802,9 @@ end
 `}
           />
           <p>
-            それでも Article を使ってテーブルに行を加えられます。<code>bin/rails runner</code> はアプリケーションを読み込んだ状態で、引数に渡した Ruby のコードを実行するコマンドです。
+            それでも Article を使ってテーブルに行を加えられます。<code>&lt; ApplicationRecord</code> は、Article が ApplicationRecord のメソッドを受け継ぐことを表します。ApplicationRecord は rails new が
+            app/models/application_record.rb に作ったクラスで、Rails の <code>ActiveRecord::Base</code> というクラスを受け継いでいます。次の例で使う <code>create!</code> と <code>count</code>{' '}
+            は、Article がそこから受け継いだメソッドです。<code>bin/rails runner</code> はアプリケーションを読み込んだ状態で、引数に渡した Ruby のコードを実行するコマンドです。
           </p>
           <Code
             lang="text"
@@ -898,6 +993,48 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
             の行でビューの処理が始まり、その後の Article Load の行で SQL が実行されていて、次の <code>↳</code> の行から、その SQL を実行させたのがビューの index.html.erb
             だと分かります。Rendered collection の行は _article.html.erb を3回使ったこと、最後の Completed 200 OK in 7ms は、状態コード 200 の応答を 7 ミリ秒で作り終えたことを表します。
           </p>
+          <p>
+            次の図はこのログの行を出力された順に上から並べ、Processing の行から Completed の行までと、Rendering の行から同じファイル名の Rendered の行までを、それぞれ枠で囲んだものです。外側の枠から順に見ると、レイアウトの描画の中で
+            index.html.erb の描画が進み、その途中で SQL が実行されたことが分かります。
+          </p>
+          <Figure
+            title="GET /articles のログの行と、処理の始まりと終わり"
+            caption="上の bin/rails server の出力をもとにした模式図。行の一部を … で省略し、行の字下げを枠の深さに合わせて変えています。右側の時間はログに出力された値で、枠の高さは時間に比例しません。"
+          >
+            <LogNestingFigure />
+          </Figure>
+          <p>ログのほかの部分は次のように読みます。</p>
+          <ul>
+            <li>
+              1行目の Started の行は、Puma とルーティングの間で要求を処理するミドルウェアが出力しています。ミドルウェアは要求がルーティングに届く前と、応答が Puma
+              に戻る前に通る処理です（<ChapterLink n={6} />）。
+            </li>
+            <li>
+              1行目の <code>for 172.29.0.1</code> は、要求を送った側のアドレスです。デモのアプリケーションは Docker のコンテナ（ほかのプログラムから分けた実行環境）の中で動かしています。コンテナの外で実行した curl
+              の要求は、コンテナの中の Rails にはこのアドレスから届きます。
+            </li>
+            <li>
+              2行目の <code>as */*</code> は、要求された応答の形式です。curl は <code>Accept: */*</code> を送って形式を指定しなかったので、<code>*/*</code> と表示されました。ブラウザーで開いたときは{' '}
+              <code>as HTML</code> と表示されます。
+            </li>
+            <li>
+              SQL の末尾の <code>/* */</code> で囲んだ部分は SQL のコメントで、データベースは実行するときに読み飛ばします。開発環境の Rails が、この SQL を実行したコントローラー（articles）とアクション（index）を書き込んでいます（
+              <ChapterLink n={22} section="notifications" />）。
+            </li>
+            <li>
+              <code>↳</code> の行の末尾の 3 は行番号です。index.html.erb で <code>render @articles</code> があるのは2行目ですが、開発環境の Rails は「HTTP の要求と応答」の節で見た BEGIN
+              のコメントを出力するコードを、テンプレートの先頭に1行足してから実行します。このため、行番号はファイルより1つ大きく表示されます。
+            </li>
+            <li>
+              最後の行の <code>Views: 5.0ms</code> は HTML を作るのにかかった時間、<code>ActiveRecord: 0.5ms (1 query, 0 cached)</code> はデータベースの処理にかかった時間と、実行した SQL
+              が1つだったことを表します。<code>0 cached</code> は前に実行した結果を使い回した SQL が無かったことを表します（<ChapterLink n={12} section="query-cache" />
+              ）。GC は Ruby が使い終わったメモリーを回収する処理（ガベージコレクション）にかかった時間です。
+            </li>
+          </ul>
+          <p>
+            業務でページの表示が遅いと言われたときも、同じ順でログを読みます。Completed の行で Views と ActiveRecord のどちらに時間がかかっているかを見て、SQL の行の数と <code>↳</code>{' '}
+            の行から、どのファイルのどの行が SQL を実行させたかを確かめます。
+          </p>
           <Figure n="1-3" title="1つの要求を処理する順番" caption="デモのアプリケーション（開発環境）での GET /articles のログをもとにした模式図。Puma と Rails の間のミドルウェアは省略しています。">
             <RequestFlowFigure />
           </Figure>
@@ -976,14 +1113,6 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
                   </td>
                 </tr>
                 <tr>
-                  <td>Hotwire（Turbo・Stimulus）と ActionCable</td>
-                  <td>ページ全体を読み込み直さずに、画面の一部だけを書き換える。サーバーからブラウザーへ新しいデータを送る（例：ほかの人が書いたコメントをすぐに表示する）</td>
-                  <td>app/javascript、app/views</td>
-                  <td>
-                    <ChapterLink n={17} />
-                  </td>
-                </tr>
-                <tr>
                   <td>ActiveJob</td>
                   <td>メールの送信のように時間のかかる処理を、応答を返した後に、Rails の Web サーバーとは別に動くプログラムで実行する</td>
                   <td>app/jobs</td>
@@ -1044,12 +1173,8 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
       body: (
         <>
           <p>
-            業務で Rails アプリを改修するとき、多くの場合はコントローラーやモデルのコードだけを読んでいます。しかし、ブラウザーが送ったリクエストは、アプリのコードに届くまでにいくつものソフトウェアを通ります。Rails
-            の内部でも、アプリのコードが呼ばれる前後に多くの処理が実行されます。本書はこの経路全体を対象にし、それぞれの段階で何が起きているかを、Ruby
-            の言語仕様と Rails の実際のソースコードに基づいて説明します。
-          </p>
-          <p>
-            図1-4 はロードバランサーの後ろに Nginx と Puma を置く構成で、1つのリクエストがどこを通るかを示したものです。各要素の右上に、その要素を詳しく扱う章を書いています。
+            図 1-4 では、まず左側の「ブラウザー」から「コントローラー」まで矢印を下にたどってください。先ほどの記事一覧の要求が、本番ではどこを通って自分の書いたコードに届くかが分かります。
+            続いて「コントローラー」から分かれる2本を見てください。一方で記事を読み、もう一方で画面を作ります。各部品の章番号は、その部品を詳しく調べたいときの参照先です。
           </p>
           <Figure n="1-4" title="本番構成と本書の章" caption="模式図。サーバーの台数、Puma のワーカー数、DB の構成は省略しています。">
             <ArchitectureFigure />
@@ -1057,8 +1182,8 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
           <p>図の上から順に、各要素の役割を簡単に説明します。</p>
           <ul>
             <li>
-              <Term en="Application Load Balancer">ALB</Term>：AWS のロードバランサーです。ブラウザーとの HTTPS 通信（TLS）をここで終わらせ、復号した HTTP
-              リクエストを複数のサーバーに振り分けます。後ろのサーバーには、元のクライアントの IP アドレスや、元の通信が HTTPS だったことをヘッダーで伝えます（
+              <Term en="Application Load Balancer">ALB</Term>：AWS（Amazon が提供するクラウドサービス）のロードバランサーです。ブラウザーとの HTTPS 通信（TLS）をここで終わらせ、復号した（暗号を解いた）HTTP
+              リクエストを複数のサーバーに振り分けます。図の「TLS を終端」は、暗号化した通信をここで終わらせることを指します。後ろのサーバーには、元のクライアントの IP アドレスや、元の通信が HTTPS だったことをヘッダーで伝えます（
               <ChapterLink n={25} />）。
             </li>
             <li>
@@ -1070,7 +1195,8 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
               <ChapterLink n={23} />）。
             </li>
             <li>
-              Rails アプリケーション：Puma から Rack という規約に従って呼び出されます。リクエストはまずミドルウェアの列を通り、ルーティングで行き先のコントローラーとアクションが決まり、コントローラーがモデル（ActiveRecord）とビュー（ActionView）を使ってレスポンスを作ります（第2部〜第4部）。
+              Rails アプリケーション：Puma から Rack という規約に従って呼び出されます。リクエストはまずミドルウェア（ルーティングの前後でリクエストとレスポンスを処理する部品。
+              <ChapterLink n={6} />）の列を通り、ルーティングで行き先のコントローラーとアクションが決まり、コントローラーがモデル（ActiveRecord）とビュー（ActionView）を使ってレスポンスを作ります（第2部〜第4部）。
             </li>
             <li>MySQL：ActiveRecord が SQL を送るデータベースです（第3部）。</li>
             <li>
@@ -1079,9 +1205,71 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
             </li>
           </ul>
           <p>
-            第1部ではこの構成の説明に入る前に Ruby のオブジェクトモデルを扱います。Rails の内部コードはモジュールの組み込み、特異クラス、ブロック、メタプログラミングといった Ruby
+            第1部ではこの構成の説明に入る前に Ruby のオブジェクトモデルを扱います。オブジェクトモデルは、オブジェクト・クラス・メソッドがどう結び付いていて、メソッドを呼んだときにどの定義が実行されるかという仕組みのことです。Rails
+            の内部コードはモジュールの組み込み、特異クラス、ブロック、メタプログラミングといった Ruby
             の機能を多用しています。たとえば、モデルに書く <code>has_many :comments</code> は Ruby のメソッド呼び出しであり、その実行結果としてクラスにメソッドが追加されます。この仕組みを説明できるようにすることが第1部の目的です。
           </p>
+          <p>
+            オブジェクトとクラスは<ChapterLink n={2} />、モジュールと特異クラスは<ChapterLink n={3} />、ブロックは<ChapterLink n={4} />
+            、メタプログラミング（プログラムの実行中にメソッドやクラスを作るコードを書くこと）は<ChapterLink n={5} />で説明します。<code>has_many :comments</code>{' '}
+            が追加するメソッドは、この章の「メソッドの定義場所を調べる」の節で実際に確かめます。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'rails-way',
+      title: "Rails の規約と設計思想",
+      body: (
+        <>
+          <p>
+            Rails は、ルーティング、DB 操作、ビュー、ジョブなどが一緒に動く形で提供されるフルスタックのフレームワークです。「1つの要求を処理する順番」の節の記事の例では、routes.rb・コントローラー・ビュー・モデル・テーブルが、名前の決まりに従うだけで結び付きました（設定より規約）。規約に従うと、開発者は名前の対応を設定に書かずに済み、アプリ固有の判断に集中できます。別の Rails アプリを読むときも、同じ決まりで部品の場所を探せます。<Ref n={23} />
+          </p>
+          <p>
+            規約は変えられます。たとえば、既存の DB のテーブル名が blog_posts で、Article というモデルから読み書きしたいときは、モデルでテーブル名を指定します。
+          </p>
+          <Code
+            lang="ruby"
+            title="app/models/article.rb（テーブル名の規約を変える例）"
+            code={`
+class Article < ApplicationRecord
+  # 既存の DB のテーブル名に合わせる
+  self.table_name = "blog_posts"
+end
+`}
+          />
+          <p>
+            規約を変えた所はクラス名からテーブル名を推測できなくなります。上のコメントのように理由と影響のある範囲を残しておくと、次に読む人が判断を追えます。
+          </p>
+          <p>
+            Rails の設計の考え方を表す語には、設定より規約のほかに次の4つがあります。レビューの指摘や設計の相談でそのまま使われる語なので、記事の例に当てはめて意味を確かめます。Rails の考え方の全体は
+            <ChapterLink n={31} section="doctrine" />で扱います。
+          </p>
+          <ul>
+            <li>
+              <Term en="Don't Repeat Yourself">DRY</Term> は、同じ仕様や事実の定義を一か所にする考え方です。列の種類は DB のスキーマ（テーブルと列の定義）から読み取れるので、モデルにも同じ一覧を書く必要がありません。「rails new
+              で作るアプリケーション」の節の app/models/article.rb に title や body の定義が無かったのはこのためです。たまたま同じ条件を使う別々の仕様は、それぞれが変わり得るかで共通化を判断します。たとえば、記事のタイトルとコメントの投稿者名の上限がどちらも100文字でも、片方だけ変える可能性があるなら、別々に書いたままにします（
+              <ChapterLink n={59} />）。
+            </li>
+            <li>
+              <Term>omakase</Term> は、開発を始められる一式を Rails が選んで提供する考え方です。日本語の「おまかせ」から来た語です。たとえばテストは Minitest（rails new
+              で最初から使えるテスト用のライブラリ）を使って始められます。既存チームのテスト基盤に合わせて RSpec（別のテスト用のライブラリ。本書のデモも使っています）を選ぶなど、置き換える理由が具体的なら部品を替えられます（
+              <ChapterLink n={20} />）。
+            </li>
+            <li>
+              <Term>Majestic Monolith</Term> は、機能が増えても一つのアプリケーションとして育てる考え方です。モノリスは全体を1つにまとめたアプリケーションを指します。一つの DB
+              トランザクションで更新でき、リリースの単位も揃います。トランザクションは複数の更新を、すべて成功するか、すべて取り消すかのどちらかにまとめる仕組みです（
+              <ChapterLink n={15} section="transaction" />
+              ）。たとえば、注文の保存と在庫の更新が同じ DB にあれば、1つのトランザクションにまとめて、片方だけが保存された状態を防げます。機能ごとにアプリケーションと DB
+              を分けると、2つの DB にまたがる更新は1つのトランザクションにまとめられず、変更を本番環境に反映する作業もアプリケーションごとに必要です。独立した運用が必要な処理が現れたら、その境界を切り出す価値を検討します（
+              <ChapterLink n={30} section="architecture-boundaries">機能を分ける境界</ChapterLink>）。
+            </li>
+            <li>
+              <Term en="conceptual compression">概念の圧縮</Term> は、頻繁に使う複数の仕組みを、一つの操作として使えるようにすることです。<code>Article.where(published: true)</code>{' '}
+              と書くと、Rails が値を列の型に合わせ、SQL を組み立てます。型の変換や SQL の書き方を意識しなくても、この1行で検索できます。普段はこの API で書き、計測結果から必要なときに SQL や接続の動きを調べます（SQL
+              の組み立ては<ChapterLink n={12} />）。
+            </li>
+          </ul>
         </>
       ),
     },
@@ -1109,7 +1297,7 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
                     <code>activesupport</code>
                   </td>
                   <td>
-                    コア拡張（<code>blank?</code> や時刻の計算など）、<code>ActiveSupport::Concern</code>、<code>ActiveSupport::Callbacks</code>、計測用の通知など、他のすべての gem
+                    コア拡張（String や Integer のような Ruby に元からあるクラスにメソッドを足したもの。<code>blank?</code> や時刻の計算など）、<code>ActiveSupport::Concern</code>、<code>ActiveSupport::Callbacks</code>、計測用の通知など、他のすべての gem
                     が使う共通部品
                   </td>
                   <td>第5章ほか</td>
@@ -1119,7 +1307,7 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
                     <code>activemodel</code>
                   </td>
                   <td>バリデーション、属性の型変換、変更の追跡など、データベースに依存しないモデルの機能</td>
-                  <td>第11章、第14章</td>
+                  <td>第15章、第18章</td>
                 </tr>
                 <tr>
                   <td>
@@ -1142,28 +1330,21 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
                     <code>actionview</code>
                   </td>
                   <td>テンプレートの探索と描画、ヘルパー</td>
-                  <td>第16章</td>
+                  <td>第20章</td>
                 </tr>
                 <tr>
                   <td>
                     <code>activejob</code>
                   </td>
                   <td>非同期ジョブの共通インターフェース</td>
-                  <td>第18章</td>
+                  <td>第21章</td>
                 </tr>
                 <tr>
                   <td>
                     <code>actionmailer</code>、<code>activestorage</code>
                   </td>
                   <td>メール送信、ファイル添付</td>
-                  <td>第19章</td>
-                </tr>
-                <tr>
-                  <td>
-                    <code>actioncable</code>
-                  </td>
-                  <td>WebSocket による双方向通信</td>
-                  <td>第17章</td>
+                  <td>第22章</td>
                 </tr>
                 <tr>
                   <td>
@@ -1179,6 +1360,14 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
           </div>
           <p>
             残りの <code>actiontext</code>（リッチテキスト）と <code>actionmailbox</code>（メールの受信）は本書の対象外です。
+          </p>
+          <p>
+            gem の名前と、その gem が定義するモジュールの名前は対応しています。activerecord gem は <code>ActiveRecord</code>、actionpack gem は <code>ActionDispatch</code>・<code>ActionController</code>・
+            <code>AbstractController</code> を定義します。<code>ActiveSupport::Concern</code> の <code>::</code> は、ActiveSupport というモジュールの中に定義された Concern を指す書き方です。
+          </p>
+          <p>
+            この表はエラーの調査で場所の見当を付けるときに使えます。エラーのときに表示される呼び出しの履歴（バックトレース）には、<code>actionpack-8.1.4.1/lib/action_dispatch/…</code>{' '}
+            のように gem の名前を含むファイルのパスが並びます。gem の名前が actionpack で、ディレクトリが action_dispatch なら、表から、ミドルウェアかルーティングの処理の中だと分かります。
           </p>
           <p>
             図1-5 は、これらの gem が実行時にどの gem に依存しているかを示したものです。各 gem の gemspec（gem の名前・バージョン・依存する gem を書いたファイル）に書かれた依存関係（開発時だけの依存を除く）から作りました
@@ -1209,6 +1398,97 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
               インストール済みの gem の依存関係は <code>gem dependency actionpack -v 8.1.4.1</code> で表示できます。開発時だけの依存には <code>development</code> と付くので、実行時の依存と区別できます。
             </p>
           </Callout>
+        </>
+      ),
+    },
+    {
+      id: 'rails-history',
+      title: "Rails の歴史と古い情報の読み方",
+      body: (
+        <>
+          <p>
+            Rails は David Heinemeier Hansson が Basecamp の開発で使った仕組みを取り出し、2004年に公開しました。その後に入った機能を時系列で知ると、既存アプリや記事で異なる書き方に出会った理由がわかります。<Ref n={24} />
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">世代</th>
+                  <th scope="col">変更の例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">1〜2</th>
+                  <td>scaffold で一連の画面を生成する使い方が広まり、リソース中心のルーティングが整った</td>
+                </tr>
+                <tr>
+                  <th scope="row">3</th>
+                  <td>Merb との統合が進み、Bundler による依存管理と Arel によるクエリの組み立てが入った</td>
+                </tr>
+                <tr>
+                  <th scope="row">4〜5</th>
+                  <td>Rails 4 で Strong Parameters、Rails 5 で Action Cable と API モード、5.2 で credentials が入った</td>
+                </tr>
+                <tr>
+                  <th scope="row">6〜7</th>
+                  <td>Rails 6 の新規アプリは Webpacker を利用。Rails 7 の標準構成で importmap と Hotwire が使われ始めた</td>
+                </tr>
+                <tr>
+                  <th scope="row">8</th>
+                  <td>ジョブ・キャッシュ・WebSocket を DB で支える構成、Kamal 2、認証ジェネレーターを提供する</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>表に出てきた語の意味は次のとおりです。本書で扱うものには、扱う節を添えています。</p>
+          <ul>
+            <li>
+              scaffold：モデル・マイグレーション・コントローラー・ビュー・ルーティングを一度に作るジェネレーターです（<code>bin/rails generate scaffold</code>）。
+            </li>
+            <li>
+              リソース中心のルーティング：「1つの要求を処理する順番」の節で見た <code>resources :articles</code> の書き方です（<ChapterLink n={9} section="resources" />）。
+            </li>
+            <li>Merb：Rails とは別に開発されていた Ruby の Web フレームワークです。</li>
+            <li>
+              Bundler と Arel：Bundler は Gemfile に書いた gem をインストールするツールです（「Rails を構成する gem」の節）。Arel は ActiveRecord が SQL を組み立てるときに内部で使うライブラリです（
+              <ChapterLink n={12} section="arel" />）。
+            </li>
+            <li>
+              Strong Parameters：フォームなどから受け取ってよい値の名前を、コントローラーで指定する仕組みです（<ChapterLink n={10} section="params" />）。
+            </li>
+            <li>
+              Action Cable と WebSocket：WebSocket は、ブラウザーとサーバーが接続をつないだまま、どちらからでもデータを送れる通信の方式です。Action Cable は Rails で WebSocket を扱う機能です（Nginx の設定は
+              <ChapterLink n={24} section="websocket" />）。
+            </li>
+            <li>
+              API モード：HTML のビューを使わず、JSON などのデータだけを返すアプリケーションを作る構成です（<code>rails new</code> に <code>--api</code> を付けて作ります）。
+            </li>
+            <li>
+              credentials：API キーやパスワードのような秘密の値を、暗号化したファイルに保存する仕組みです（<ChapterLink n={21} section="secrets" />）。
+            </li>
+            <li>
+              Webpacker・importmap・Hotwire：どれも JavaScript の扱いに関係します。Webpacker は複数の JavaScript のファイルを1つにまとめるツール（webpack）を Rails から使うための gem です。importmap
+              はファイルをまとめずにブラウザーに読み込ませる方式です。Hotwire はサーバーが返した HTML でページの一部を書き換える仕組みです（<ChapterLink n={16} section="assets" />）。
+            </li>
+            <li>
+              ジョブ・キャッシュ・WebSocket を DB で支える構成：これらの処理を、Redis のような別のソフトウェアを使わずに DB のテーブルで動かす gem（Solid Queue・Solid Cache・Solid Cable）を指します（
+              <ChapterLink n={18} section="solid-queue" />）。
+            </li>
+            <li>Kamal 2：Docker のコンテナを使って、アプリケーションをサーバーに配置して起動するツールです。</li>
+            <li>
+              認証ジェネレーター：ログインとログアウトのコードを作るジェネレーターです（<code>bin/rails generate authentication</code>。<ChapterLink n={21} section="authentication" />）。
+            </li>
+          </ul>
+          <p>
+            検索で見つけた記事や、以前から続いているアプリケーションのコードを読むときは、先に Rails のバージョンを確かめます。アプリケーションのバージョンは Gemfile.lock の rails の行で分かります（「Rails を構成する
+            gem」の節）。記事は、書かれた日付と、本文に出てくる語から世代を見分けます。たとえば、<code>app/javascript/packs</code> や <code>config/webpacker.yml</code>{' '}
+            が出てくる説明は Webpacker を使う構成のもので、importmap を使うアプリケーションには当てはまりません。業務のアプリケーションがどの構成かは、Gemfile に webpacker・importmap-rails・jsbundling-rails
+            のどの gem が書かれているかで分かります。
+          </p>
+          <p>
+            Rails 8 の「No PaaS Required」は、自前で用意したサーバーにもデプロイできる一式を提供する方針です。デプロイはアプリケーションのコードをサーバーに配置して、利用者が使える状態で動かす作業です。PaaS はデプロイや実行環境をサービス事業者に任せる選択肢です。アプリを置く場所と、使う Rails の機能は独立に選べるので、既存アプリでは導入済みの構成を調べてから手順を読みます。<Ref n={25} />（<ChapterLink n={29} section="kamal-thruster">Kamal と Thruster の位置付け</ChapterLink>）。
+          </p>
         </>
       ),
     },
@@ -1252,6 +1532,9 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
               </tbody>
             </table>
           </div>
+          <p>
+            CRuby は C 言語で書かれた Ruby の処理系（Ruby のプログラムを読んで実行するプログラム）で、ruby コマンドとしてインストールされるものです。Nginx の stable は安定版を指します。
+          </p>
           <p>
             Puma、Rack など、その他のソフトウェアのバージョンは<a href="#/">目次ページの「対象バージョン」</a>に載せています。本文のサンプルコードは Ruby 4.0.9 と Rails 8.1.4.1
             の環境で実行して出力を確認しました。オブジェクトの ID のように実行ごとに変わる値は、手元の結果と一致しません。
@@ -1300,10 +1583,12 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
           </p>
           <ul>
             <li>
-              <code>obj.method(:name)</code>：オブジェクト <code>obj</code> に対して呼ばれるメソッドを、<code>Method</code> オブジェクトとして取り出します。private メソッド（レシーバを付けて外から呼べないメソッド）も取り出せます。
+              <code>obj.method(:name)</code>：オブジェクト <code>obj</code> に対して呼ばれるメソッドを、<code>Method</code> オブジェクトとして取り出します。private メソッド（レシーバを付けて外から呼べないメソッド）も取り出せます。レシーバは <code>article.title</code> の <code>article</code>{' '}
+              のように、メソッドを呼ぶ相手のオブジェクトです。
             </li>
             <li>
-              <code>Klass.instance_method(:name)</code>：クラス <code>Klass</code> のインスタンスに対して呼ばれるメソッドを、インスタンスを作らずに取り出します（<code>UnboundMethod</code>）。
+              <code>Klass.instance_method(:name)</code>：クラス <code>Klass</code> のインスタンスに対して呼ばれるメソッドを、インスタンスを作らずに取り出します。返るのは{' '}
+              <code>UnboundMethod</code> というクラスのオブジェクトで、次の <code>owner</code>・<code>source_location</code>・<code>super_method</code> を <code>Method</code> オブジェクトと同じように使えます。
             </li>
             <li>
               <code>owner</code>：そのメソッドが定義されているクラスまたはモジュールを返します。
@@ -1339,11 +1624,65 @@ Article.instance_method(:comments).source_location
 `}
           />
           <p>
+            <code>has_many :comments</code> はクラスの本体に書くので、Article クラスに対する呼び出しです。そのため <code>Article.method(:has_many)</code> で取り出します。<code>comments</code> は{' '}
+            <code>article.comments</code> のように1件の記事（インスタンス）に対して呼ぶので、<code>Article.instance_method(:comments)</code> で取り出します。<code>source_location</code>{' '}
+            の戻り値は配列で、1つ目がファイルのパス、2つ目が行番号です。
+          </p>
+          <p>
             <code>has_many</code> は <code>ActiveRecord::Associations::ClassMethods</code> というモジュールに定義されています。一方、<code>comments</code> は Article
             クラスにも、Rails のどのファイルにも、そのままの形では書かれていません。<code>has_many</code> を呼んだときに <code>Article::GeneratedAssociationMethods</code>{' '}
             というモジュールの中に作られたメソッドです。モジュールがクラスのメソッドとして使える理由は<ChapterLink n={3} />、メソッドが実行時に作られる仕組みは
             <ChapterLink n={5} />で説明します。
           </p>
+          <p>
+            <code>source_location</code> が返したファイルの行を開くと、定義を読めます。<code>has_many</code> の 1427 行目からの4行は「コードと図の表記」の節に引用しています。<code>comments</code>{' '}
+            の 104 行目は、次の引用の3行目です。
+          </p>
+          <Code
+            lang="ruby"
+            title="activerecord/lib/active_record/associations/builder/association.rb（102〜110行）"
+            href={`${GH}/activerecord/lib/active_record/associations/builder/association.rb#L102-L110`}
+            code={`
+    def self.define_readers(mixin, name)
+      mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
+        def #{name}
+          association = association(:#{name})
+          deprecated_associations_api_guard(association, __method__)
+          association.reader
+        end
+      CODE
+    end
+`}
+          />
+          <ul>
+            <li>
+              <code>has_many :comments</code> から呼ばれたとき、引数の <code>mixin</code> は <code>Article::GeneratedAssociationMethods</code>、<code>name</code> は <code>:comments</code> です。
+            </li>
+            <li>
+              2行目の <code>&lt;&lt;-CODE</code> から8行目の <code>CODE</code> までは、複数行の文字列です。<code>{'#{name}'}</code> の位置に comments が入るので、文字列の中身は <code>def comments</code> で始まるメソッドの定義になります。
+            </li>
+            <li>
+              <code>class_eval</code> は渡した文字列を Ruby のコードとして <code>mixin</code> の中で実行します。結果は <code>Article::GeneratedAssociationMethods</code> の中に <code>def comments</code>{' '}
+              を書いたのと同じです。
+            </li>
+            <li>
+              <code>__FILE__, __LINE__ + 1</code> は、作ったメソッドの定義場所として、このファイルの次の行（104 行目）を記録させる引数です。<code>source_location</code> が 104 を返したのはこのためです。
+            </li>
+          </ul>
+          <p>
+            アプリケーションや gem のコードを <code>def comments</code> で検索しても見つからないメソッドは、このように実行時に作られています。<code>owner</code> と <code>source_location</code>{' '}
+            を使うと、作ったコードの場所が分かります。
+          </p>
+          <p>
+            次の図は <code>has_many :comments</code> の1行から <code>comments</code> の定義ができるまでを、メソッドが呼ばれる順に並べたものです。左上の has_many の呼び出しから、右の列を上から下へたどってください。左下の{' '}
+            <code>article.comments</code> は、最後にできた comments を呼びます。
+          </p>
+          <Figure
+            title="has_many :comments から comments の定義ができるまで"
+            caption="右の列の一番上と一番下の箱は、1行目が上の bin/rails console で調べた owner の値、2行目の括弧の中が source_location の値です。Builder::HasMany.build は「コードと図の表記」の節で引用する has_many の2行目で呼ばれます。太い矢印は comments の定義を作る処理です。"
+          >
+            <HasManyDefinitionFigure />
+          </Figure>
           <h3>super でたどられる順序を調べる</h3>
           <p>
             Rails では、同じ名前のメソッドが複数のモジュールに定義され、それぞれが <code>super</code> で次の定義を呼ぶ形がよく使われます。<code>super_method</code>{' '}
@@ -1361,6 +1700,23 @@ while m
 end
 `}
           />
+          <ul>
+            <li>
+              1行目は ApplicationController のインスタンスに対して呼ばれる <code>process_action</code> を取り出して <code>m</code> に入れます。
+            </li>
+            <li>
+              <code>while m</code> は、<code>m</code> が <code>nil</code> になるまで中の3行を繰り返します。
+            </li>
+            <li>
+              <code>path, line = m.source_location</code> は、戻り値の配列の1つ目（ファイルのパス）を <code>path</code> に、2つ目（行番号）を <code>line</code> に入れます。
+            </li>
+            <li>
+              <code>{"path.sub(%r{.*/gems/}, '')"}</code> は、パスの先頭から <code>/gems/</code> までを取り除き、gem の名前から後ろだけを残します。<code>{'%r{ }'}</code> は正規表現の書き方の1つです。
+            </li>
+            <li>
+              <code>m = m.super_method</code> で、<code>super</code> で呼ばれる次の定義に進みます。次が無ければ <code>nil</code> が入り、繰り返しが終わります。
+            </li>
+          </ul>
           <Code
             lang="text"
             title="出力"
@@ -1400,7 +1756,8 @@ bundle open activerecord
           />
           <p>
             <code>bundle info --path</code> は gem のパスを表示し<Ref n={6} />、<code>bundle open</code> はそのディレクトリをエディタで開きます
-            <Ref n={7} />。手元のファイルはアプリが実際に読み込んでいるバージョンなので、業務のアプリ（Rails 7.x）で調べるときは、本書が引用する 8.1.4.1 のソースと行番号や内容が異なることがあります。
+            <Ref n={7} />。環境変数はシェル（ターミナルでコマンドを受け付けるプログラム）から起動するプログラムに渡す、名前の付いた値です。<code>EDITOR=code bundle open activerecord</code>{' '}
+            のようにコマンドの前に書くと、その1回だけ指定できます（code は VS Code を開くコマンドです）。手元のファイルはアプリが実際に読み込んでいるバージョンなので、業務のアプリ（Rails 7.x）で調べるときは、本書が引用する 8.1.4.1 のソースと行番号や内容が異なることがあります。
           </p>
           <p>
             本書で Rails のソースを引用するときは、コードの見出しに GitHub 上の該当ファイルへのリンクを付けます。リンク先はタグ <code>v8.1.4.1</code>{' '}
@@ -1433,6 +1790,10 @@ group :development, :test do
 end
 `}
           />
+          <p>
+            <code>group :development, :test</code> は、開発環境とテスト環境でだけこの gem を読み込む指定です。本番環境では読み込まれません。<code>platforms:</code> はこの gem を使う Ruby の処理系を CRuby（mri）と
+            Windows 版に限る指定です。
+          </p>
           <p>
             止めたい行に <code>debugger</code>（<code>binding.break</code> の別名）を書き、その行を通るリクエストを送ると、<code>bin/rails server</code>{' '}
             を実行している端末でデバッガのプロンプト（コマンドの入力を待つ表示）が開きます
@@ -1500,6 +1861,23 @@ end
               </tbody>
             </table>
           </div>
+          <p>たとえば、デモの ArticlesController の show アクションの先頭に <code>debugger</code> を書きます。</p>
+          <Code
+            lang="ruby"
+            title="app/controllers/articles_controller.rb（debugger を足した show）"
+            code={`
+  def show
+    debugger
+    @article = Article.find(params[:id])
+  end
+`}
+          />
+          <p>
+            この状態で /articles/1 を開くと、<code>debugger</code> の行で実行が止まり、<code>bin/rails server</code> の端末に <code>(rdbg)</code>{' '}
+            というプロンプトが出ます。止まっている間、ブラウザーや curl は応答を待ったままです。プロンプトに <code>params[:id]</code> と入力すると、その時点の値が表示されます。<code>n</code>{' '}
+            で1行ずつ進めると、<code>Article.find</code> の実行後に <code>@article</code> に入った記事も確かめられます。<code>c</code> で実行を再開すると、応答が返ります。止めて値を見る操作の実例は
+            <ChapterLink n={28} section="debug" />にあります。
+          </p>
           <p>
             Rails の内部を調べるときは、アプリのアクションに <code>debugger</code> を置いて止め、<code>bt</code> で呼び出し履歴を見るのが手軽です。履歴には、Puma
             からミドルウェア、ルーティング、コントローラーを経てアクションに至るまでのメソッドが並びます。この履歴の各行が何をしているかを説明することが、第2部の内容です。
@@ -1507,7 +1885,8 @@ end
           <h3>TracePoint で呼ばれたメソッドを記録する</h3>
           <p>
             <code>TracePoint</code> はメソッドの呼び出しや例外の発生などのイベントが起きるたびにブロックを実行する Ruby の標準機能です
-            <Ref n={12} />。次の例は、<code>Article.published</code> の実行中に呼ばれた Ruby のメソッドを記録します（<code>:call</code> は Ruby で定義されたメソッドの呼び出しを表すイベントです。C
+            <Ref n={12} />。デモの Article モデルには <code>scope :published, -&gt; {'{ where(published: true) }'}</code> を書いていて、<code>Article.published</code> で published の列が true
+            の記事を取り出す条件を作れます。次の例は、<code>Article.published</code> の実行中に呼ばれた Ruby のメソッドを記録します（<code>:call</code> は Ruby で定義されたメソッドの呼び出しを表すイベントです。C
             で実装されたメソッドは <code>:c_call</code> という別のイベントになります）。
           </p>
           <Code
@@ -1524,6 +1903,22 @@ puts calls.size
 puts calls.first(5)
 `}
           />
+          <ul>
+            <li>
+              1行目で <code>Article.published</code> を一度呼んでおくのは、初回だけ実行される準備の処理を記録に入れないためです。
+            </li>
+            <li>
+              <code>TracePoint.new(:call) do |tp| … end</code> は記録の設定を作るだけで、この時点ではまだ記録を始めません。ブロックは Ruby で定義されたメソッドが呼ばれるたびに実行されます。
+            </li>
+            <li>
+              ブロックの中では <code>tp</code> から4つの値を取り出して1行の文字列にし、<code>calls</code> に加えます。<code>defined_class</code> は呼ばれたメソッドが定義されているクラスまたはモジュール、
+              <code>method_id</code> はメソッド名、<code>path</code> と <code>lineno</code> は定義されているファイルと行番号です。
+            </li>
+            <li>
+              <code>trace.enable {'{ Article.published }'}</code> は、ブロックを実行している間だけ記録します。
+            </li>
+            <li>最後の2行は記録した呼び出しの数と、先頭の5件を表示します。</li>
+          </ul>
           <Code
             lang="text"
             title="出力（1行目のクラス名の括弧内は省略）"
@@ -1537,8 +1932,14 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
 `}
           />
           <p>
+            出力の1行目は記録した呼び出しの数です。2行目からは呼ばれた順に「定義されているクラスまたはモジュール#メソッド名」と「ファイル:行番号」を並べています。published、all、current_scope
+            の順に呼ばれたことと、<code>scope</code> で作った published の定義が activerecord の lib/active_record/scoping/named.rb の 174 行目にあることが分かります。1行のコードに関係する Rails
+            のファイルが分かるので、ソースをどのファイルから読むかを決められます。
+          </p>
+          <p>
             <code>scope :published, -&gt; {'{ where(published: true) }'}</code> と1行書いただけの処理でも、108回の Ruby メソッド呼び出しが起きています。1行目の{' '}
-            <code>#&lt;Class:Article(...)&gt;</code> は「Article クラスの特異クラス」を表す表記で、<code>published</code> がクラスメソッドとして定義されていることを示しています。特異クラスは
+            <code>#&lt;Class:Article(...)&gt;</code> は「Article クラスの特異クラス」を表す表記で、<code>published</code> がクラスメソッドとして定義されていることを示しています。特異クラスは1つのオブジェクトだけが使うメソッドを置くクラスで、
+            <code>Article.published</code> のようなクラスメソッドは、Article クラスの特異クラスに置かれます。特異クラスは
             <ChapterLink n={3} />で、<code>scope</code> の中のブロックが、検索条件や並び順を保持するオブジェクト（Relation）を self として実行される仕組みは<ChapterLink n={4} />で説明します。
           </p>
           <Callout kind="warn">
@@ -1578,6 +1979,22 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
         end
 `}
           />
+          <p>
+            この4行は「メソッドの定義場所を調べる」の節で <code>Article.method(:has_many).source_location</code> が返した 1427 行目からの定義です。次のように読みます。
+          </p>
+          <ul>
+            <li>
+              1行目：<code>has_many :comments</code> と書くと、<code>name</code> に <code>:comments</code> が入ります。<code>**options</code> は <code>dependent: :destroy</code>{' '}
+              のような「名前: 値」の形の引数をまとめて受け取る書き方、<code>&amp;extension</code> は has_many に付けたブロックを受け取る書き方です。
+            </li>
+            <li>
+              2行目：<code>self</code> は has_many を呼んだクラス（Article）です。<code>Builder::HasMany.build</code> の中で、<code>comments</code> などのメソッドが作られます。「メソッドの定義場所を調べる」の節で読んだ <code>define_readers</code> は、この build から呼ばれます。戻り値の <code>reflection</code>{' '}
+              は、この関連の名前や設定を持つオブジェクトです。
+            </li>
+            <li>
+              3行目：<code>reflection</code> を Article に登録します。関連の内部は<ChapterLink n={13} />で扱います。
+            </li>
+          </ul>
           <h3>図の凡例</h3>
           <p>本書の図は次の凡例に従って描いています。とくに断りがない限り、すべての章で共通です。</p>
           <Figure n="1-7" title="本書の図の凡例" caption="色だけでなく、箱の中のラベルでも種類が分かるように描いています。">
@@ -1603,7 +2020,7 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
           <li>
             GET /articles は、routes.rb の対応で ArticlesController#index に渡り、index が条件を作り、ビューが記事を表示するときに SQL が実行され、HTML の応答が返ります。この分担を MVC と呼びます。
           </li>
-          <li>ジョブ・メール・ファイル添付・Hotwire・テスト・セキュリティ・キャッシュなどの機能は、第16〜22章で扱います。</li>
+          <li>ジョブ・メール・ファイル添付・テスト・セキュリティ・キャッシュなどの機能は、第20〜25章で扱います。</li>
           <li>リクエストは ALB → Nginx → Puma → Rails（ミドルウェア → ルーティング → コントローラー → モデル・ビュー）→ MySQL の順に通ります。本書はこの経路全体を扱います。</li>
           <li>
             rails gem は12個の gem に依存しています。activesupport はすべての gem から使われ、railties は activerecord に依存せず、Railtie を通じて各 gem と結び付きます。
@@ -1643,6 +2060,9 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
     { title: 'Layouts and Rendering in Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/layouts_and_rendering.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'アクションが応答を指定しなければ名前の対応するビューを描画すること、コレクションの描画と部分テンプレートの変数・カウンター。' },
     { title: 'Ruby on Rails Guides（目次）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/index.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'ActiveJob・ActionMailer・ActiveStorage・ActionCable・テスト・セキュリティ・キャッシュなど、Rails が用意する機能の一覧。' },
     { title: 'HTTPS', publisher: 'MDN Web Docs（Glossary）', url: 'https://developer.mozilla.org/en-US/docs/Glossary/HTTPS', accessed: '2026-11-16', note: 'HTTPS は TLS で通信を暗号化した HTTP であること。' },
+    { title: "The Rails Doctrine", publisher: "Ruby on Rails", url: "https://rubyonrails.org/doctrine", accessed: "2026-11-20", note: "設定より規約、omakase、統合を大切にする Rails の設計思想。" },
+    { title: "Ruby on Rails Release Notes", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/index.html#release-notes", accessed: "2026-11-20", note: "Rails の世代ごとの変更とリリースノートへの案内。" },
+    { title: "Rails 8: No PaaS Required", publisher: "Ruby on Rails", url: "https://rubyonrails.org/2024/11/7/rails-8-no-paas-required", accessed: "2026-11-20", version: "Rails 8.0", note: "Rails 8 のデプロイ、Solid 系の gem と認証ジェネレーター。" },
   ],
 }
 

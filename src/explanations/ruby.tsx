@@ -12,6 +12,9 @@ export const explanation01: Explanations = {
   sections: {
     scope: cite => <>
       <p>
+        この節では本番環境で1つの要求が通るソフトウェアを、ブラウザーの側から順に示します。その説明に出てくる語のうち、ここまでに出ていないものを先に説明します。
+      </p>
+      <p>
         IP アドレスは、ネットワークにつながったコンピューターを区別する番号で、「HTTP の要求と応答」の節の 127.0.0.1 もその1つです。
         静的ファイルはデモの HTML の head にある /icon.png のように、要求のたびに内容が変わらず、ファイルをそのまま返せばよいものです。
         rails new で作ったアプリケーションでは public ディレクトリに置きます。/articles の HTML のように、要求のたびに Rails が作る応答とは分けて扱います。{cite}
@@ -243,8 +246,9 @@ Public::Report.new.title # => "公開用の集計"`} />
         <code>prepend</code>は、そのためにクラスより先にモジュールを探索させる組み込み方です。
       </p>
       <p>
-        <code>include</code>と同じメソッドを組み込んでも、探索位置が変われば実行順が変わります。
-        「同じ名前の定義が複数ある」ことと「どの定義が最初に実行される」ことを、別々に確かめる必要があります。{cite}
+        <code>include</code>と<code>prepend</code>のどちらで組み込んでも、モジュールに書くメソッドは同じです。
+        違うのは、ancestors の中でモジュールが入る位置です。
+        クラスにも同じ名前のメソッドがあるとき、<code>include</code>ではクラスの定義が先に実行され、<code>prepend</code>ではモジュールの定義が先に実行されます。{cite}
       </p>
     </>,
     super: cite => <>
@@ -271,8 +275,9 @@ first.label                  # => "この1つだけ"
 second.respond_to?(:label)   # => false`} />
       <p>
         <code>respond_to?</code>は、その名前のメソッドを呼べるかを調べます。
-        first専用の定義を通常のObjectクラスに置くとsecondにも見えてしまうため、Rubyは特異クラスという専用の定義先を使います。
-        この保存先も探索経路に含めることで、通常のメソッドと同じ形で呼び出せます。{cite}
+        label の定義を Object クラスに置くと、second からも呼べてしまいます。
+        そのため Ruby は first のためだけのクラスを作り、label をそこに定義します。このクラスを特異クラスと呼びます。
+        メソッドを探すときは特異クラスを最初に調べるので、<code>first.label</code>は普通のメソッドと同じ書き方で呼べます。{cite}
       </p>
     </>,
     'class-methods': cite => <>
@@ -321,7 +326,7 @@ export const explanation04: Explanations = {
 double.call(3) # => 6
 double.call(5) # => 10`} />
       <p>
-        仮引数の<code>&amp;block</code>はメソッドへ渡されたブロックをProcとして受け取る書き方です。
+        仮引数（<code>def</code>の括弧の中に書く、引数を受け取る変数）の<code>&amp;block</code>はメソッドへ渡されたブロックをProcとして受け取る書き方です。
         呼び出し側の<code>&amp;double</code>は逆方向で、Procをブロックとして渡します。
         <code>&amp;</code>の意味は置く位置で変わるため、メソッドの定義側と呼び出し側を分けて読めます。{cite}
       </p>
@@ -338,7 +343,7 @@ label.call("Ruby") # => "記事: Ruby"
 prefix = "下書き: "
 label.call("Ruby") # => "下書き: Ruby"`} />
       <p>
-        labelが参照するのは、Proc作成時の文字列だけではなくprefixという変数です。
+        labelが参照するのは、Procを作った時点の文字列ではなく、prefixという変数です。
         その変数が別の文字列を指すようになれば、実行結果も変わります。
         この性質があるため、ブロックを登録する場所と、実際に呼ばれる場所・時刻を区別します。{cite}
       </p>
@@ -449,9 +454,32 @@ ActiveRecord::Base.record_timestamps # => true（親は変わらない）`} />
     </>,
     concern: cite => <>
       <p>
-        モジュールの共通処理が別のモデルのメソッドを使う場合、組み込み先で関連や設定も宣言したくなります。
+        複数のモデルで使う処理をモジュールにまとめると、インスタンスメソッドのほかに、組み込み先のクラスで scope や関連も宣言したくなります。
         たとえば、記事を公開する機能をまとめたモジュールが、公開日時のメソッドだけでなく、公開記事を検索するscopeも追加する場合です。
         インスタンス用のメソッドを組み込む操作に、クラスへの設定追加も合わせる必要があります。
+      </p>
+      <Code lang="ruby" title="Concern を使ったモジュールの書き方の例" code={`# app/models/concerns/publishable.rb
+module Publishable
+  extend ActiveSupport::Concern
+
+  included do
+    scope :published, -> { where.not(published_at: nil) }
+  end
+
+  class_methods do
+    def latest_published = published.order(published_at: :desc).first
+  end
+
+  def published? = published_at.present?
+end
+
+# app/models/article.rb
+class Article < ApplicationRecord
+  include Publishable
+end`} />
+      <p>
+        included のブロックに書いた scope は、Article のクラス本体に書いたときと同じように実行されます。class_methods のブロックの中のメソッドは
+        <code>Article.latest_published</code>のように呼ぶクラスメソッドになり、それ以外の def は<code>article.published?</code>のように呼ぶインスタンスメソッドになります。
       </p>
       <p>
         ActiveSupport::Concernはこうした組み込み時の処理やクラスメソッド、モジュール間の依存をまとめるための仕組みです。
@@ -489,7 +517,7 @@ p a.title
     </>,
     'rails-dsl': cite => <>
       <p>
-        has_many が作るもう1つのものが Reflection です。Reflection は関連の名前、相手のクラス、外部キーの列名などを持つオブジェクトで、
+        has_many は、comments などの関連メソッドのほかに Reflection も作ります。Reflection は関連の名前、相手のクラス、外部キーの列名などを持つオブジェクトで、
         <code>reflect_on_association</code>で取り出せます。
       </p>
       <Code lang="ruby" title="bin/rails runner で実行（デモのアプリ）" code={`r = Article.reflect_on_association(:comments)

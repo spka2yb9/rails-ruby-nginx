@@ -174,7 +174,7 @@ function UpgradeFigure() {
 
 const ch29: Chapter = {
   number: 29,
-  part: 6,
+  part: 10,
   title: 'Rails 7.2→8.x の主な違いとサポート状況',
   summary:
     'バージョン番号（メジャー・マイナー・パッチ）の読み方、セキュリティ修正とサポート期間、load_defaults が選ぶ既定値を確かめてから、Rails 7.2・8.0・8.1 のサポート期間と、2026年11月11日時点の状況を公式の情報から整理します。load_defaults 8.0・8.1 で変わる設定、rails new の既定の変化（Propshaft、Solid Queue・Cache・Cable、Kamal、Thruster、認証のジェネレーター）、本書の各章で見た 7.2 との違い、アップグレードの手順をまとめます。',
@@ -655,14 +655,6 @@ Regexp.timeout=1.0 strict_freshness=true yjit=false
                   </td>
                 </tr>
                 <tr>
-                  <td>ActionCable のアダプター（本番）</td>
-                  <td>Redis</td>
-                  <td>Solid Cable</td>
-                  <td>
-                    <ChapterLink n={17} section="adapter" />
-                  </td>
-                </tr>
-                <tr>
                   <td>キャッシュストア（本番）</td>
                   <td>設定はコメント</td>
                   <td>Solid Cache</td>
@@ -732,6 +724,9 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
           <p>
             本書が扱った ALB と Nginx の構成と比べると、Thruster は<ChapterLink n={24} />の Nginx の役割（アセットの配信とキャッシュのヘッダー、圧縮）の一部を、1つのコンテナの中で受け持ちます。kamal-proxy
             は、コンテナの入れ替えとヘルスチェック（/up）を受け持ちます。すでに ALB と Nginx で運用している構成では、これらに置き換える必要はありません。新しく小さな構成を作る場合や、コンテナにまとめたい場合に選べる方法です。
+          </p>
+          <p>
+            実際の配備手順は、<ChapterLink n={32} />の<span id="capistrano-deploy"><ChapterLink n={32} section="capistrano-deploy">Capistrano でのリリース切り替え</ChapterLink></span>と<span id="container-deploy"><ChapterLink n={32} section="container-deploy">Kamal でのコンテナの配備</ChapterLink></span>で確認できます。
           </p>
         </>
       ),
@@ -853,9 +848,36 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
             <UpgradeFigure />
           </Figure>
           <p>
+            本番で Ruby を更新するときは、新版の Ruby で Puma を起動して要求を渡します。転送先を替えながら稼働を続ける具体例は
+            <ChapterLink n={23} section="ruby-upgrade">Ruby 更新時の Puma とトラフィックの切り替え</ChapterLink>を参照してください。
+          </p>
+          <p>
             第5部の構成（Puma・Nginx・ALB）は Rails のバージョンとは独立しています。Puma と Nginx は、それぞれの gem・パッケージのバージョンに対応する説明書に従って確かめます（<ChapterLink n={23} />・
             <ChapterLink n={24} section="upstream" />
             ）。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'dual-boot',
+      title: "アップグレード前後を同じコードで確かめる",
+      body: (
+        <>
+          <p>
+            Rails の版を上げるとき、アプリのコードを共通にし、依存を選んで現行版と次の版の両方を起動する方法を dual boot と呼びます。たとえば <code>Gemfile.next</code> とそのロックファイルを用意し、次の版で使う入口を CI に足せます。既存のロックファイルを切り替えずに両方を並べられるので、テストの差で依存更新の影響が見えます。Bootboot のように分岐を管理する方法もあります。<Ref n={15} /><Ref n={3} />
+          </p>
+          <Code
+            lang="bash"
+            title={"テスト用 DB を準備した環境での実行例"}
+            code={`
+bundle exec rspec
+BUNDLE_GEMFILE=Gemfile.next bundle install
+BUNDLE_GEMFILE=Gemfile.next bundle exec rspec
+`}
+          />
+          <p>
+            現行版の非推奨警告から直し、次の版で発生した差を小さく確認します。<code>bin/rails app:update</code> で提示される設定にはアプリ固有の変更もあるので、差分ごとに採用します。既定値の切り替え、Rails gem の更新、Ruby の入れ替えを別々の変更として検証すると、問題が出たときに戻す対象がわかります。一部へ配備している間も残る構成でピーク時の要求を処理できるか確かめ、対象を広げる前に新旧のエラーや応答を比べます（<ChapterLink n={23} section="ruby-upgrade">新しい Ruby での切り替え</ChapterLink>）。<Ref n={3} />
           </p>
         </>
       ),
@@ -891,6 +913,7 @@ CMD ["./bin/thrust", "./bin/rails", "server"]
     { title: 'rails versions', publisher: 'rubygems.org', url: 'https://rubygems.org/gems/rails/versions', accessed: '2026-11-16', version: '—', note: '8.1 系列の各バージョンの公開日（rubygems.org の API で確認）。' },
     { title: 'Gemfile Reference', publisher: 'RubyGems Guides', url: 'https://guides.rubygems.org/gemfile/', accessed: '2026-11-16', version: '—', note: '~> の範囲（~> 2.0.3 は 2.0.3 以上 2.1 未満）。' },
     { title: 'activerecord CHANGELOG（Rails 8.1.4）', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v8.1.4.1/activerecord/CHANGELOG.md', accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: '8.1.0 で入った schema.rb の列のアルファベット順の並べ替えを、8.1.4 で取り消したこと。' },
+    { title: "Bootboot", publisher: "Shopify/bootboot", url: "https://github.com/Shopify/bootboot", accessed: "2026-11-20", note: "依存を切り替えて同じアプリを複数の版で動かす。" },
   ],
 }
 

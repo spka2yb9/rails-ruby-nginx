@@ -30,7 +30,7 @@ Article.new.persisted?   # => false`} />
     </>,
     schema: cite => <>
       <p>
-        テーブルにどんな列があり、それぞれの型が何かという構造を、テーブルのスキーマと呼びます。「テーブル・行・列と主キー」の節の DESCRIBE が表示したものです。
+        テーブルにどんな列があり、それぞれの型が何かという構造を、テーブルのスキーマと呼びます。「articles テーブルの列と型」の節の DESCRIBE が表示したものです。
         Rails はふだん、マイグレーションのファイルや db/schema.rb を読まず、動いているデータベースに問い合わせてスキーマを読みます。MySQL では SHOW FULL FIELDS という SQL を使います。
       </p>
       <Code lang="text" title="mysql コマンドで実行" code={`mysql> SHOW FULL FIELDS FROM articles WHERE Field IN ('id', 'title', 'published');
@@ -229,8 +229,8 @@ SELECT COUNT(*) FROM articles WHERE published_at = NULL;               -- 0`} />
         OR はどちらかの条件に合う行を選びます。
       </p>
       <p>
-        NULL は値が無いことを表す特別な値で、= で NULL と比べた結果は真にも偽にもならず、NULL になります。そのため published_at = NULL に合う行は0件でした。NULL の行を選ぶには IS NULL と書きます。
-        本文の表で where(published_at: nil) が IS NULL を作っているのはこのためです。{cite}
+        published_at = NULL に合う行が0件なのは、= で NULL と比べた結果が真にも偽にもならないためです。NULL との比較と、where に nil を渡すと IS NULL になることは
+        <ChapterLink n={35} section="where-rails" /> で扱いました。{cite}
       </p>
     </>,
     delegation: cite => <>
@@ -261,9 +261,8 @@ SELECT COUNT(*) FROM articles WHERE published_at = NULL;               -- 0`} />
     </>,
     explain: cite => <>
       <p>
-        テーブルから条件に合う行を探すとき、何も手がかりが無ければ、MySQL は先頭の行から最後の行まで読み、1行ずつ条件を確かめます。これを全件走査と呼びます。
-        索引はある列の値を順に並べ、それぞれの値を持つ行をすぐにたどれるようにしたものです。たとえば author_id の索引は、author_id の値の順に並んでいます。
-        索引があれば、MySQL は条件の値の位置から読み始め、条件に合う範囲だけを読めます。
+        索引の無い列で探すと、MySQL は表の先頭の行から最後の行まで読み、1行ずつ条件を確かめます（全件走査）。索引があれば、条件の値の位置から読み始め、条件に合う範囲だけを読めます。
+        索引の並び方と全件走査との違いは <ChapterLink n={37} section="what-is-index" /> で扱いました。
       </p>
       <p>
         デモの articles テーブルには author_id の索引があり、title には索引がありません。MySQL が行を読んだ回数を数える状態変数（Handler_read_ で始まる値）を FLUSH STATUS で0に戻してから、それぞれの列で検索しました。
@@ -301,7 +300,7 @@ export const explanation13: Explanations = {
       </p>
       <p>
         この節の実行例のログには、INSERT や DELETE の前後に BEGIN・COMMIT・ROLLBACK が出てきます。
-        これらは複数の変更をまとめて確定する（COMMIT）か、まとめて取り消す（ROLLBACK）ための SQL で、Rails は保存や削除の SQL を送るときに一緒に送ります（<ChapterLink n={15} section="transaction-basics" />）。
+        これらは複数の変更をまとめて確定する（COMMIT）か、まとめて取り消す（ROLLBACK）ための SQL で、Rails は保存や削除の SQL を送るときに一緒に送ります（<ChapterLink n={38} section="transaction" />）。
         また、<code>valid?</code> と <code>errors</code> は保存する前に値を確かめるバリデーションの機能です（<ChapterLink n={14} section="validation-basics" />）。{cite}
       </p>
     </>,
@@ -351,7 +350,7 @@ export const explanation13: Explanations = {
     </>,
     'eager-load': cite => <>
       <p>
-        「JOIN で2つのテーブルをつないで読む」の節で見たとおり、JOIN は ON の条件に合う行どうしをつないだ結果を1回の SELECT で返します。
+        <ChapterLink n={36} section="join" /> で見たとおり、JOIN は ON の条件に合う行どうしをつないだ結果を1回の SELECT で返します。
         LEFT OUTER JOIN は相手の無い行も残し、相手の列を NULL にします。
         eager_load はこの LEFT OUTER JOIN を使って記事の列と著者の列を同じ結果の行で受け取るので、著者のいない記事も、著者の列が NULL の行として残ります。
       </p>
@@ -382,7 +381,7 @@ export const explanation14: Explanations = {
     'call-chain': cite => <>
       <p>
         「保存する前に値を検証する」と「保存の前後に処理を足すコールバック」の節で見たとおり、save を1回呼ぶと、検証、コールバック、SQL の送信が決まった順に実行されます。
-        INSERT の前後の BEGIN と COMMIT は、保存の変更をまとめて確定するトランザクションの SQL で、途中で失敗すれば ROLLBACK で取り消します（<ChapterLink n={15} section="transaction-basics" />）。
+        INSERT の前後の BEGIN と COMMIT は、保存の変更をまとめて確定するトランザクションの SQL で、途中で失敗すれば ROLLBACK で取り消します（<ChapterLink n={38} section="transaction" />）。
       </p>
       <p>
         Rails はこれらを1つの大きな save に書かず、機能ごとのモジュールに同じ名前の save を定義し、super でつないでいます。
@@ -466,7 +465,7 @@ end`} />
         順番に1件ずつ試したときに成功しても、この競合は検出できません。
       </p>
       <p>
-        索引は、列の値から行をすばやく探すために DB が作るデータです（<ChapterLink n={13} section="foreign-key" />）。
+        索引は、列の値から行をすばやく探すために DB が作るデータです（<ChapterLink n={37} section="what-is-index" />）。
         索引を作るときに一意（unique）を指定すると、DB は同じ値を持つ2行目の INSERT や UPDATE を拒否します。これを一意の索引と呼びます。
         デモの authors テーブルの email 列に付いている index_authors_on_email が、一意の索引の例です。
       </p>
@@ -496,7 +495,7 @@ export const explanation15: Explanations = {
   sections: {
     transaction: cite => <>
       <p>
-        「トランザクションで変更をまとめる」の節では、Account.transaction のブロックで BEGIN から COMMIT までの範囲を決めました。この節では、そのブロックの中で Rails が何をしているかを見ます。
+        <ChapterLink n={38} section="transaction" /> では、Account.transaction のブロックで BEGIN から COMMIT までの範囲を決め、ブロックの中で例外が起きると ROLLBACK が送られることを確かめました。この節では、そのブロックの中で Rails が何をしているかを見ます。
         ActiveRecord::Base.transaction は、そのスレッドが使っている接続（「データベースとの接続」の節）に、トランザクションを始めさせます。
       </p>
       <p>
@@ -519,18 +518,18 @@ export const explanation15: Explanations = {
     </>,
     isolation: cite => <>
       <p>
-        「トランザクションで変更をまとめる」の節では、COMMIT する前の変更は、ほかの接続から見えませんでした。
+        COMMIT する前の変更は、ほかの接続からは見えません（<ChapterLink n={38} section="transaction" />）。
         ほかの接続が COMMIT した変更が、自分のトランザクションの途中でいつから見えるかを決めるのが分離レベルです。
         MySQL では READ UNCOMMITTED・READ COMMITTED・REPEATABLE READ・SERIALIZABLE の4つから選べ、既定は REPEATABLE READ です。
       </p>
       <p>
-        スナップショットはある時点で確定していたデータの状態です。分離レベルによって、通常の SELECT がいつの時点のスナップショットを読むかが変わります。
-        一方、UPDATE はスナップショットではなく、その時点で確定している最新の行を変更します。「ロックで更新の順番を待たせる」の節で、B の UPDATE が A の COMMIT した後の 1100 に 200 を足したのはこのためです。{cite}
+        分離レベルによって、通常の SELECT がいつの時点のスナップショット（ある時点で確定していたデータの状態）を読むかが変わります。
+        分離レベルごとに読める値の違いと、スナップショットの仕組みは、<ChapterLink n={38} section="isolation" /> と同じ章の「<ChapterLink n={38} section="mvcc">MVCC：行のバージョンとスナップショット</ChapterLink>」の節で確かめました。この節では、Rails で分離レベルを指定したときの動作を見ます。{cite}
       </p>
     </>,
     optimistic: cite => <>
       <p>
-        「同時に更新すると起きること」の節では、2つのスレッドが同じ残高を読み、後から書いた値が先に書いた値を上書きしました。
+        <ChapterLink n={38} section="concurrent-updates" /> では、2つのスレッドが同じ残高を読み、後から書いた値が先に書いた値を上書きしました。
         楽観的ロックはこの上書きを保存のときに見つける方法です。
         行にバージョン番号（更新のたびに増える番号）を持たせ、読んだ時点の番号と DB の番号が同じときだけ UPDATE すれば、読んだ後でほかの更新があったことが分かります。
       </p>
@@ -541,7 +540,7 @@ export const explanation15: Explanations = {
     </>,
     pessimistic: cite => <>
       <p>
-        「ロックで更新の順番を待たせる」の節で見たとおり、UPDATE は変更する行にロックを掛け、同じ行を変更するほかのトランザクションを COMMIT まで待たせます。
+        <ChapterLink n={38} section="lock" /> で見たとおり、UPDATE は変更する行にロックを掛け、同じ行を変更するほかのトランザクションを COMMIT まで待たせます。
         悲観的ロックはこのロックを、UPDATE より前の読む時点で掛ける方法です。
         <code>SELECT ... FOR UPDATE</code> は、読んだ行に UPDATE と同じ種類のロックを掛ける SELECT です。
       </p>
@@ -553,9 +552,9 @@ export const explanation15: Explanations = {
     </>,
     'lock-index': cite => <>
       <p>
-        索引は、列の値から行をすばやく探すために DB が作るデータです（<ChapterLink n={13} section="foreign-key" />）。
+        索引は、列の値から行をすばやく探すために DB が作るデータです（<ChapterLink n={37} section="what-is-index" />）。
         articles の author_id には索引があり、title にはありません。
-        EXPLAIN（SQL をどう実行する予定かを MySQL に表示させる命令。<ChapterLink n={12} section="explain" />）で、2つの条件を比べました。
+        EXPLAIN（SQL をどう実行する予定かを MySQL に表示させる命令。<ChapterLink n={37} section="explain-rails" />）で、2つの条件を比べました。
       </p>
       <Code lang="text" title="EXPLAIN の結果から type・key・rows の列を抜き出したもの（MySQL 8.4.13）" code={`EXPLAIN SELECT * FROM articles WHERE title = '記事100';
   type: ALL   key: NULL                          rows: 9838
@@ -564,25 +563,13 @@ EXPLAIN SELECT * FROM articles WHERE author_id = 13;
       <p>
         type が ALL は、表のすべての行を順に読む（全件走査）という意味で、rows は読む予定の行の数の見積もりです。
         title で探すと表の約1万行を読み、author_id で探すと索引を使って 475 行だけを読みます。
-        FOR UPDATE や UPDATE のロックは、このとき読んだ行に掛かります。BEGIN の後で FOR UPDATE を実行し、主キーの側でロックが掛かった行を data_locks で数えました。
+        FOR UPDATE や UPDATE のロックは、このとき読んだ行に掛かります。BEGIN の後で FOR UPDATE を実行し、主キーの側でロックが掛かった行を data_locks（MySQL がロックの状態を表示する表。<ChapterLink n={38} section="lock" />）で数えました。
       </p>
       <Code lang="text" title="lockcount.rb の実行結果（数えた後は ROLLBACK）" code={`WHERE title = '記事100' FOR UPDATE: 一致した行 1 件、主キーで数えたロックした行 10004 行
 WHERE author_id = 13 FOR UPDATE: 一致した行 475 件、主キーで数えたロックした行 475 行`} />
       <p>
         一致したのは1件でも、title で探すと表の 10,004 行すべてにロックが掛かりました。author_id で探すと、ロックが掛かったのは一致した 475 行でした。
         索引 index_articles_on_author_id の側にも、読んだ範囲にロックが掛かります。{cite}
-      </p>
-    </>,
-    'timeout-deadlock': cite => <>
-      <p>
-        「ロックで更新の順番を待たせる」の節の接続 B のように、ほかのトランザクションが持つロックが手放されるまで進めない状態をロック待ちと呼びます。
-        Aが記事1を、Bが記事2をロックした後、Aが記事2を、Bが記事1を待つと、どちらも相手が終わるまで進めません。
-        この循環した待ちがデッドロックです。
-      </p>
-      <p>
-        単に時間がかかっている待ちと、互いに進めない循環は原因が違います。
-        DBが失敗させた文だけを取り消したのか、トランザクション全体を取り消したのかも、その後の処理に関わります。
-        例外名だけで続きを決めず、どの変更が残るかと、再試行する単位を確認します。{cite}
       </p>
     </>,
     pool: cite => <>

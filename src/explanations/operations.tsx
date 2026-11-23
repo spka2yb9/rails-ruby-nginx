@@ -50,14 +50,10 @@ export const explanation23: Explanations = {
         Shared はそのうちほかのプロセスと共有している量、Private はそのプロセスだけが使っている量です。{cite}
       </p>
     </>,
-    'restart-timeout': cite => <>
+    'restart-timeout': () => <>
       <p>
         タイムアウトは待つ時間の上限です。上限を過ぎると、待っていた側は待つのをやめ、エラーにしたり接続を切ったりします。
         Puma が待つものには、ワーカーからの状態の知らせ、クライアントから届く要求のデータ、同じ接続の次の要求などがあり、それぞれに別のタイムアウトがあります。
-      </p>
-      <p>
-        デプロイは新しいコードを本番環境のサーバーに置いて動かすことです。本番環境の Rails は起動したときにコードを読み込むので、新しいコードに切り替えるには Puma のプロセスを再起動します。
-        Puma にはシグナルを送って再起動させる方法が複数あり、要求を受けながら切り替えられるかどうかが違います。{cite}
       </p>
     </>,
     'thread-safety': cite => <>
@@ -164,7 +160,7 @@ export const explanation24: Explanations = {
     websocket: cite => <>
       <p>
         HTTP では、ブラウザーが要求を送ったときにだけ、サーバーが応答を返します。記事に新しいコメントが付いたことをサーバーからすぐに知らせるには、接続を開いたままにして、サーバーの側からもメッセージを送れる WebSocket を使います。
-        ActionCable と、Turbo Streams によるページの更新は WebSocket で届きます（<ChapterLink n={17} section="actioncable" />）。
+        ActionCable と、Turbo Streams によるページの更新は WebSocket で届きます。
       </p>
       <p>
         WebSocket の接続は HTTP の要求から始まります。ブラウザーは GET /cable の要求に Upgrade: websocket と Connection: Upgrade のヘッダーを付けて、この接続を WebSocket に切り替えたいと伝えます。
@@ -243,7 +239,7 @@ export const explanation25: Explanations = {
       </p>
       <p>
         手掛かりは各層のログです。アクセスログは要求ごとの1行の記録、エラーログは失敗の理由の記録です（<ChapterLink n={24} section="web-server" />）。
-        ある層のアクセスログに要求の記録があり、その後ろの層に記録が無ければ、要求はその間で止まっています。
+        まず、同じ時刻とパスの記録を前から順に探します。後ろの記録が見当たらないときは、前の層の接続エラーと突き合わせます。ヘルスチェックのようにログを抑えている要求や、まだ処理中で完了の行が出ていない要求もあります。
       </p>
     </>,
     'request-id': () => <>
@@ -267,7 +263,7 @@ export const explanation26: Explanations = {
       </p>
       <p>
         パーシャルはビューの一部を別のファイルに分けたテンプレートで、記事のページではコメント1件分の HTML を comments/_comment.html.erb で作ります（<ChapterLink n={16} />）。
-        turbo_stream_from は、ページを開いたまま新しいコメントなどを受け取るために、ブラウザーに WebSocket の接続を作らせる指定です（<ChapterLink n={17} />）。{cite}
+        turbo_stream_from は、ページを開いたまま新しいコメントなどを受け取るために、ブラウザーに WebSocket の接続を作らせる指定です。{cite}
       </p>
     </>,
     front: () => <>
@@ -295,7 +291,7 @@ export const explanation26: Explanations = {
       <p>
         この節の時間は、どれも「ある時点から別の時点まで」の長さで、前の部品が測る時間には、後ろの部品で過ぎた時間が含まれます。
         たとえば、Nginx の rt（7ms）には Rails の処理の時間（Completed の 5ms）も含まれています。
-        そのため、各部品の時間を足し合わせるのではなく、隣どうしの差を見て、どこで時間がかかったかを調べます。
+        7ms と 5ms を足すと、Rails の5ms を二重に数えてしまいます。差の約2ms には、Rails の計測区間の前後で Nginx や Puma が行った処理や待ち時間が含まれます。
       </p>
     </>,
   },
@@ -340,9 +336,9 @@ export const explanation27: Explanations = {
     </>,
     backfill: cite => <>
       <p>
-        新しい列を追加した直後は、既存の行の新しい列はすべて NULL です。既存の行に値を入れるには UPDATE を実行します。
+        この例の display_title は NULL を許し、既定値を指定せずに追加した列です。追加した時点では、以前からある記事の display_title は NULL です。既存の行に値を入れるには UPDATE を実行します。
         UPDATE は更新する行に行ロックをかけ、トランザクションが終わるまで、同じ行を更新しようとするほかの処理を待たせます。
-        transaction で囲まない UPDATE は、1文ごとに1つのトランザクションとして実行され、終わるとすぐに確定します。
+        この例の MySQL は自動コミットが有効です。複数の SQL を transaction で囲まなければ、UPDATE は1文が終わるたびに確定します。
         1つの UPDATE で100万行を更新すると、その100万行は更新が終わるまでロックされたままです。{cite}
       </p>
       <p>

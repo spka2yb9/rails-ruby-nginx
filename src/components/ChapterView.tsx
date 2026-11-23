@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { APPENDIX_START, chapterByNumber, chapterLabel, chapters, labelFor, loadChapter, type ChapterMeta } from '../content/chapters'
-import { PARTS, type Chapter } from '../content/types'
+import { APPENDIX_ID, chapterByNumber, chapterLabel, chapters, labelFor, loadChapter, type ChapterMeta } from '../content/chapters'
+import { APPENDIX_PART, BOOK_TITLE, PARTS, type Chapter } from '../content/types'
 import { hrefFor } from '../utils/route'
-import { SourceList } from './content'
 
 export function ChapterView({ chapter, section, restoreY }: { chapter: ChapterMeta; section: string | null; restoreY: number | null }) {
   const [loaded, setLoaded] = useState<{ n: number; full?: Chapter; failed?: boolean } | null>(null)
@@ -36,19 +35,19 @@ export function ChapterView({ chapter, section, restoreY }: { chapter: ChapterMe
   }, [chapter.number, section, restoreY, full])
 
   useEffect(() => {
-    document.title = `${chapterLabel(chapter)} ${chapter.title} | Rails・Ruby・Nginx 教科書`
+    document.title = `${chapterLabel(chapter)} ${chapter.title} | ${BOOK_TITLE}`
   }, [chapter])
 
   return (
     <article className="chapter">
       <header className="chapter-head">
-        <p className="chapter-part">{chapter.part === 6 ? part?.title : `第${chapter.part}部 ${part?.title}`}</p>
+        <p className="chapter-part">{chapter.part === APPENDIX_PART ? part?.title : `第${chapter.part}部 ${part?.title}`}</p>
         <h1>
           <span className="chapter-num">{chapterLabel(chapter)}</span> {chapter.title}
         </h1>
         <p className="chapter-summary">{chapter.summary}</p>
         <div className="chapter-goals">
-          <h2 id="goals">{chapter.number >= APPENDIX_START ? 'この付録で学ぶこと' : 'この章で学ぶこと'}</h2>
+          <h2 id="goals">{chapter.number === APPENDIX_ID ? 'この付録で学ぶこと' : 'この章で学ぶこと'}</h2>
           <ul>
             {chapter.goals.map((g, i) => (
               <li key={i}>{g}</li>
@@ -89,8 +88,6 @@ export function ChapterView({ chapter, section, restoreY }: { chapter: ChapterMe
           {s.body}
         </section>
       ))}
-
-      {full && <SourceList sources={chapter.sources} />}
 
       <nav className="prev-next" aria-label="前後の章">
         {prev ? (

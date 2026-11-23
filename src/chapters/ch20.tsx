@@ -8,11 +8,11 @@ const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const RC = 'https://github.com/rspec/rspec/blob/rspec-core-v3.13.7/rspec-core/lib/rspec/core'
 const RR = 'https://github.com/rspec/rspec-rails/blob/v8.1.0/lib/rspec/rails'
 
-/* ---------- 図 20-1 期待する結果と実際の結果を比べる ---------- */
+/* ---------- 図 23-1 期待する結果と実際の結果を比べる ---------- */
 function CompareFigure() {
   return (
     <Svg
-      id="20-1"
+      id="23-1"
       w={780}
       h={300}
       label="上段は1つのテストの中身。準備で入力の文字列を用意し、実行で short_title を呼び、比較で実際の結果と期待する結果を == で比べる。下段はテストを使う流れ。コードを書き換えたらテストを実行し、すべての比較が等しければ成功、1つでも違えば失敗として、期待した値と実際の値が表示されるので、変更で動作が変わったことに気付ける"
@@ -42,7 +42,7 @@ function CompareFigure() {
   )
 }
 
-/* ---------- 図 20-2 環境ごとの設定とデータベース ---------- */
+/* ---------- 図 23-2 環境ごとの設定とデータベース ---------- */
 function EnvFigure() {
   const cols = [
     { x: 20, key: 'development', name: 'development（開発）', run: 'bin/rails server など', file: 'development.rb', db: 'demo_development', fill: 'box' as const },
@@ -51,7 +51,7 @@ function EnvFigure() {
   ]
   return (
     <Svg
-      id="20-2"
+      id="23-2"
       w={780}
       h={300}
       label="Rails には development・test・production の3つの環境があり、環境変数 RAILS_ENV でどれを使うかが決まる。bin/rails server は development、bundle exec rspec は test で動く。環境ごとに config/environments の設定ファイルと、config/database.yml に書いたデータベースが別々で、テストは demo_test を使うので、開発用の demo_development のデータは変わらない"
@@ -77,11 +77,11 @@ function EnvFigure() {
   )
 }
 
-/* ---------- 図 20-3 RSpec の DSL が作るもの ---------- */
+/* ---------- 図 23-3 RSpec の DSL が作るもの ---------- */
 function DslFigure() {
   return (
     <Svg
-      id="20-3"
+      id="23-3"
       w={780}
       h={290}
       label="RSpec.describe Article は RSpec::Core::ExampleGroup の子クラス RSpec::ExampleGroups::Article を作る。入れ子の describe はさらにその子クラス RSpec::ExampleGroups::Article::Comments になる。let は LetDefinitions モジュールにメソッドを定義し、クラスにはメモ化するメソッドを定義する。it は Example のオブジェクトを作ってブロックを保存する。実行時には例ごとにクラスの新しいインスタンスが作られ、before とブロックがそのインスタンスを self として実行される"
@@ -116,7 +116,7 @@ function DslFigure() {
   )
 }
 
-/* ---------- 図 20-4 テストの種類と通る層 ---------- */
+/* ---------- 図 23-4 テストの種類と通る層 ---------- */
 function LayersFigure() {
   const layers = ['ブラウザー（JavaScript）', 'HTTP サーバー（Puma）', 'ミドルウェア', 'ルーティング', 'コントローラー', 'ビュー', 'モデル・DB']
   const kinds = [
@@ -127,10 +127,10 @@ function LayersFigure() {
   const rowH = 34
   return (
     <Svg
-      id="20-4"
+      id="23-4"
       w={760}
       h={layers.length * rowH + 70}
-      label="model spec はモデルとデータベースだけを通る。request spec は Rails.application をミドルウェアから呼ぶので、ミドルウェア、ルーティング、コントローラー、ビュー、モデルを通るが、HTTP サーバーとブラウザーは通らない。system spec は Capybara がブラウザーを操作し、テストのプロセスの中で起動した Puma に HTTP で要求するので、JavaScript を含むすべての層を通る"
+      label="記事を保存して表示する例。model spec はモデルから、request spec はミドルウェアから Rails の処理を呼ぶ。Selenium を使う system spec はブラウザーを操作して Puma に HTTP で要求し、画面の JavaScript も実行する"
     >
       {layers.map((l, i) => (
         <Box key={l} x={20} y={30 + i * rowH} w={260} h={rowH - 6} lines={l} fs={12} fill={i < 2 ? 'bg' : 'box'} />
@@ -144,17 +144,17 @@ function LayersFigure() {
         </g>
       ))}
       <T x={20} y={layers.length * rowH + 50} fs={11} tone="muted">
-        紫の帯：そのテストが実際に通る層（rspec-rails 8.1.0、Rails 8.1.4.1）
+        帯はこの例でテストが通る層。system spec は Selenium でブラウザーを操作する場合
       </T>
     </Svg>
   )
 }
 
-/* ---------- 図 20-5 テストのトランザクション ---------- */
+/* ---------- 図 23-5 テストのトランザクション ---------- */
 function RollbackFigure() {
   return (
     <Svg
-      id="20-5"
+      id="23-5"
       w={780}
       h={260}
       label="実行の最初に fixtures が投入され、COMMIT される。各例の前に、接続を固定して BEGIN し、例の中の保存は SAVEPOINT と RELEASE SAVEPOINT になる。外側のトランザクションが参加不可なので、RELEASE の時点で after_commit が実行される。例が終わると ROLLBACK し、次の例は fixtures だけがある状態から始まる。同じプロセスの別のスレッドも固定された接続を使うのでデータが見えるが、Sidekiq などの別のプロセスからは見えない"
@@ -184,23 +184,180 @@ function RollbackFigure() {
   )
 }
 
+/* ---------- 失敗の出力と spec の行の対応 ---------- */
+function FailureMapFigure() {
+  const LH = 18
+  const code: [string, number, string][] = [
+    ['3', 0, 'RSpec.describe Article, type: :model do'],
+    ['4', 2, 'describe "#valid?" do'],
+    ['', 4, '…'],
+    ['13', 4, 'it "タイトルが空なら無効で、title にエラーが入る" do'],
+    ['14', 6, 'article = Article.new(title: "")'],
+    ['16', 6, 'result = article.valid?'],
+    ['18', 6, 'expect(result).to be(false)'],
+  ]
+  const out: [number, string, string][] = [
+    [2, '1) Article#valid? タイトルが空なら無効で、title にエラーが入る', '例の名前（describe と it の文字列）'],
+    [5, 'Failure/Error: expect(result).to be(false)', '失敗した expect'],
+    [7, 'expected false', '期待した値'],
+    [12, 'got true', '実際の値'],
+    [5, '# ./spec/models/article_spec.rb:18:in …', '失敗した expect の行（18 行目）'],
+    [0, 'rspec ./spec/models/article_spec.rb:13 # Article#valid? …', '失敗した例だけを実行し直す'],
+  ]
+  const codeY = 46
+  const outY = 222
+  const yOf = (top: number, i: number) => top + i * LH
+  return (
+    <Svg
+      id="ch20-failure-map"
+      w={780}
+      h={336}
+      label="上は spec/models/article_spec.rb の一部に行番号を付けたもの。13 行目が失敗した例の it、18 行目が失敗した expect。下は失敗したときの出力。1) の行にある例の名前は、describe の Article と #valid? と it の文字列をつなげたもの。Failure/Error の行は失敗した expect、expected false は期待した値、got true は実際の値。# ./spec/models/article_spec.rb:18 は 18 行目の expect を、最後の rspec ./spec/models/article_spec.rb:13 は 13 行目の it を指し、その例だけを実行し直すコマンドになる"
+    >
+      <T x={56} y={16} bold fs={12}>
+        spec/models/article_spec.rb（行番号を付けて一部を表示）
+      </T>
+      <rect x={56} y={30} width={470} height={138} rx={6} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      {[3, 6].map((i) => (
+        <rect key={i} x={62} y={yOf(codeY, i) - LH / 2} width={458} height={LH} rx={3} fill="var(--fig-box5)" />
+      ))}
+      {code.map(([n, indent, text], i) => (
+        <g key={i}>
+          <T x={86} y={yOf(codeY, i)} anchor="end" mono fs={11.5} tone="muted">
+            {n}
+          </T>
+          <T x={98 + indent * 6.9} y={yOf(codeY, i)} mono fs={11.5}>
+            {text}
+          </T>
+        </g>
+      ))}
+      <T x={544} y={yOf(codeY, 3)} fs={11.5}>
+        13 行目：失敗した例の it
+      </T>
+      <T x={544} y={yOf(codeY, 6)} fs={11.5}>
+        18 行目：失敗した expect
+      </T>
+
+      <T x={56} y={192} bold fs={12}>
+        失敗したときの出力（一部を省略）
+      </T>
+      <rect x={56} y={206} width={470} height={120} rx={6} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      {[4, 5].map((i) => (
+        <rect key={i} x={62} y={yOf(outY, i) - LH / 2} width={458} height={LH} rx={3} fill="var(--fig-box5)" />
+      ))}
+      {out.map(([indent, text, note], i) => (
+        <g key={i}>
+          <T x={70 + indent * 6.9} y={yOf(outY, i)} mono fs={11.5}>
+            {text}
+          </T>
+          <T x={544} y={yOf(outY, i)} fs={11.5} tone="muted">
+            {note}
+          </T>
+        </g>
+      ))}
+
+      <Arrow d={`M62,${yOf(outY, 4)} L42,${yOf(outY, 4)} L42,${yOf(codeY, 6)} L60,${yOf(codeY, 6)}`} dashed />
+      <Arrow d={`M62,${yOf(outY, 5)} L26,${yOf(outY, 5)} L26,${yOf(codeY, 3)} L60,${yOf(codeY, 3)}`} dashed />
+    </Svg>
+  )
+}
+
+/* ---------- let と let! で記事を作る時点 ---------- */
+function LetTimingFigure() {
+  const rows = [
+    { y: 50, h: 44, label: '例の開始', mono: false },
+    { y: 118, h: 52, label: 'get articles_path', mono: true },
+    { y: 194, h: 52, label: 'article.title', mono: true },
+  ]
+  return (
+    <Svg
+      id="ch20-let-timing"
+      w={780}
+      h={260}
+      label="例の中の処理を上から時間の順に並べ、let と let! を比べた図。let では例の開始時には記事を作らない。get articles_path の応答を作る時点ではこの記事が DB に無いので、一覧に記事が出ない。後で article.title を読んだ時点で初めて INSERT するが、受け取った一覧は変わらない。let! では各例の開始時に create で記事を INSERT する。get articles_path の時点で記事は DB にあり、一覧に記事が出る。article.title は開始時に作った記事を返す"
+    >
+      <T x={30} y={34} anchor="middle" fs={11.5} tone="muted">
+        時間
+      </T>
+      <Arrow x1={30} y1={46} x2={30} y2={248} />
+      {rows.map((r) => (
+        <T key={r.label} x={44} y={r.y + r.h / 2} mono={r.mono} fs={12}>
+          {r.label}
+        </T>
+      ))}
+      <T x={320} y={24} anchor="middle" mono bold fs={12}>
+        {'let(:article) { create(:article) }'}
+      </T>
+      <T x={620} y={24} anchor="middle" mono bold fs={12}>
+        {'let!(:article) { create(:article) }'}
+      </T>
+
+      <Box x={180} y={50} w={280} h={44} lines="記事はまだ作らない" fs={12} fill="bg" />
+      <Arrow x1={320} y1={94} x2={320} y2={116} />
+      <Box x={180} y={118} w={280} h={52} lines={['この記事は DB に無い', '応答の一覧に記事が出ない']} fs={12.5} fill="box" subTone="danger" />
+      <Arrow x1={320} y1={170} x2={320} y2={192} />
+      <Box x={180} y={194} w={280} h={52} lines={['ここで初めて INSERT する', '受け取った一覧は変わらない']} fs={12.5} fill="box" subTone="muted" />
+
+      <Box x={480} y={50} w={280} h={44} lines={['記事を INSERT する', '各例の開始時に create']} fs={12.5} fill="box" subTone="muted" />
+      <Arrow x1={620} y1={94} x2={620} y2={116} />
+      <Box x={480} y={118} w={280} h={52} lines={['記事は DB にある', '応答の一覧に記事が出る']} fs={12.5} fill="box" subTone="acc" />
+      <Arrow x1={620} y1={170} x2={620} y2={192} />
+      <Box x={480} y={194} w={280} h={52} lines="開始時に作った記事を返す" fs={12} fill="box" />
+    </Svg>
+  )
+}
+
+/* ---------- deliver_later から deliveries まで ---------- */
+function EnqueuedMailFigure() {
+  return (
+    <Svg
+      id="ch20-enqueued-mail"
+      w={780}
+      h={290}
+      label="上の段は deliver_later の時点。deliver_later はメールを送るジョブを登録し、テスト用の TestAdapter はジョブを実行せずに配列に記録する。記録したジョブは ArticleMailer の published。下の段は perform_enqueued_jobs の時点。perform_enqueued_jobs は記録したジョブを、テストと同じプロセスで実行する。ジョブがメールを送ると、delivery_method = :test により ActionMailer::Base.deliveries の配列に入る。have_enqueued_mail は記録したジョブを調べ、deliveries は deliver_later の直後は 0 件、perform_enqueued_jobs の後は 1 件になる。本番では Sidekiq などの別のプロセスがジョブを取り出して実行する"
+    >
+      <Box x={20} y={40} w={200} h={50} lines={['deliver_later', 'メールを送るジョブを登録']} fs={12.5} fill="box" subTone="muted" />
+      <Arrow x1={220} y1={65} x2={258} y2={65} />
+      <Box x={260} y={40} w={220} h={50} lines={['TestAdapter', 'ジョブを実行せずに記録']} fs={12.5} fill="box" subTone="muted" />
+      <Arrow x1={480} y1={65} x2={518} y2={65} />
+      <Box x={520} y={40} w={240} h={50} lines={['記録したジョブの配列', 'ArticleMailer の published']} fs={12.5} fill="box4" subTone="muted" />
+      <T x={20} y={22} bold fs={12}>
+        deliver_later の時点
+      </T>
+
+      <Arrow x1={640} y1={90} x2={640} y2={148} />
+      <T x={20} y={132} bold fs={12}>
+        perform_enqueued_jobs の時点
+      </T>
+      <Box x={520} y={150} w={240} h={50} lines={['perform_enqueued_jobs', 'テストと同じプロセスで実行']} fs={12.5} fill="box5" subTone="muted" />
+      <Arrow x1={520} y1={175} x2={482} y2={175} />
+      <Box x={280} y={150} w={200} h={50} lines={['ジョブがメールを送る', 'delivery_method = :test']} fs={12.5} fill="box" subTone="muted" />
+      <Arrow x1={280} y1={175} x2={242} y2={175} />
+      <Box x={20} y={150} w={220} h={50} lines={['ActionMailer::Base.deliveries', 'テスト用の配送先の配列']} fs={12.5} fill="box4" subTone="muted" />
+
+      <T x={20} y={226} fs={11.5}>
+        have_enqueued_mail は上の段の「記録したジョブの配列」を調べる
+      </T>
+      <T x={20} y={246} fs={11.5}>
+        ActionMailer::Base.deliveries の件数：deliver_later の直後は 0 件、perform_enqueued_jobs の後は 1 件
+      </T>
+      <T x={20} y={274} fs={11.5} tone="muted">
+        本番では、Sidekiq などの別のプロセスがジョブを取り出して実行する
+      </T>
+    </Svg>
+  )
+}
+
 const ch20: Chapter = {
   number: 20,
   part: 4,
   title: 'テスト（RSpec 中心）',
   summary:
-    '期待する結果と実際の結果をプログラムで比べるというテストの考え方と、テスト用の環境とデータベースを、実際に動かして確かめます。続いて RSpec で最初の model spec と request spec を書いて実行結果を読み、describe・it・let がどんなクラスとメソッドを作るかを、実行時の出力で確かめます。model・request・system の各テストが通る層、例ごとのトランザクションによるデータの巻き戻しとその例外、fixtures と FactoryBot の違い、ジョブとメールのテスト、Minitest との対応も扱います。',
+    '「タイトルが空の記事は保存できない」という仕様を RSpec で確かめます。テストをわざと失敗させて出力を読み、モデルだけで調べることと、フォームを送って初めて分かることを区別します。',
   goals: [
-    'テストが期待する結果と実際の結果をプログラムで比べるコードであることを、RSpec の expect と eq の例で説明できる',
-    'development・test・production の環境と、テストが開発用と別のデータベースを使う理由を説明できる',
-    'rspec-rails を準備し、準備・実行・確認に分けた model spec を書いて実行できる',
-    '失敗したときの表示から、失敗した expect・期待した値・実際の値・再実行のコマンドを読み取れる',
-    'describe がクラス、it がそのインスタンスで実行されるブロック、let がメモ化されたメソッドであることを説明できる',
-    'model・request・system の各テストがアプリケーションのどの層を通るかを説明できる',
-    '例ごとのトランザクションの BEGIN・SAVEPOINT・ROLLBACK の流れと、after_commit が実行される理由を説明できる',
-    'テストのトランザクションが届かない場合（別のプロセス、並行するトランザクション）を説明できる',
-    'fixtures と FactoryBot が SQL を実行する時点の違いを説明できる',
-    'ジョブとメールのテストで使うアダプターとマッチャーを説明できる',
+    '入力・実行する操作・期待する結果を1件のテストに書き、失敗した行を見つけられる',
+    'モデル、HTTP の要求、ブラウザー操作のうち、確かめたい動作が通る範囲を選べる',
+    'テストが使うデータの作成時点と、各テストの後に DB の変更が戻る条件を説明できる',
   ],
   prerequisites: [3, 10, 15, 18],
   sections: [
@@ -265,7 +422,7 @@ NG  長いタイトルは10文字で切る: 期待 "RSpecでテストを…"、�
 `}
           />
           <p>
-            確認をプログラムにしておくと、変更で動作が変わったことに、実行するだけで気付けます（図 20-1）。確認が数百、数千と増えると、どの確認が失敗したか、期待した値と実際の値は何か、どのファイルの何行目かを見やすく表示する仕組みが欲しくなります。これをまとめた道具がテストのフレームワークで、Ruby
+            確認をプログラムにしておくと、変更で動作が変わったことに、実行するだけで気付けます（図 23-1）。確認が数百、数千と増えると、どの確認が失敗したか、期待した値と実際の値は何か、どのファイルの何行目かを見やすく表示する仕組みが欲しくなります。これをまとめた道具がテストのフレームワークで、Ruby
             では RSpec と Minitest がよく使われます。同じ確認を RSpec で書きました。
           </p>
           <Code
@@ -333,7 +490,7 @@ rspec ./short_title_spec.rb:8 # short_title 10文字より長いタイトルは1
             失敗した例は <code>F</code> で表示され、その後に、失敗した expect の行、期待した値（expected）と実際の値（got）、失敗した行の番号（short_title_spec.rb の9行目）が並びます。自分で書いた{' '}
             <code>check</code> と同じ内容を、RSpec が決まった形で表示しています。表示の読み方は「RSpec で最初のテストを書く」の節でも確かめます。
           </p>
-          <Figure n="20-1" title="期待する結果と実際の結果を比べる" caption="short_title の例（Ruby 4.0.9・rspec-core 3.13.7 で実行）をもとにした模式図。">
+          <Figure n="23-1" title="期待する結果と実際の結果を比べる" caption="short_title の例（Ruby 4.0.9・rspec-core 3.13.7 で実行）をもとにした模式図。">
             <CompareFigure />
           </Figure>
         </>
@@ -462,10 +619,10 @@ Finished in 0.19226 seconds (files took 1.73 seconds to load)
           <p>
             <code>delivery_method = :test</code> はメールを実際には送らずに <code>ActionMailer::Base.deliveries</code> という配列に入れる設定です。<code>cache_store = :null_store</code>{' '}
             はキャッシュに何も保存しない設定で、<code>active_storage.service = :test</code> は添付したファイルを一時的なディレクトリに保存する設定です
-            <Ref n={13} />。テストの結果が、メールの送信先や、前のテストが残したキャッシュやファイルに左右されないようにしています（図 20-2）。
+            <Ref n={13} />。テストの結果が、メールの送信先や、前のテストが残したキャッシュやファイルに左右されないようにしています（図 23-2）。
           </p>
           <p>次の節では Rails のアプリケーションに RSpec を入れて、テスト環境で Article のモデルを確かめるテストを書きます。</p>
-          <Figure n="20-2" title="環境ごとの設定とデータベース" caption="rails new demo -d mysql（Rails 8.1.4.1）が作る database.yml・config/environments と、デモでの実測をもとにした模式図。">
+          <Figure n="23-2" title="環境ごとの設定とデータベース" caption="rails new demo -d mysql（Rails 8.1.4.1）が作る database.yml・config/environments と、デモでの実測をもとにした模式図。">
             <EnvFigure />
           </Figure>
         </>
@@ -626,13 +783,22 @@ rspec ./spec/models/article_spec.rb:13 # Article#valid? タイトルが空なら
             </li>
           </ul>
           <p>
+            次の図はこの節の spec に行番号を付けたもの（図の上）と、失敗したときの出力（図の下）を並べたものです。出力の右に書いた説明を上から読み、色を付けた2つの行が spec のどの行を指すかを左の破線でたどってください。
+          </p>
+          <Figure
+            title="失敗の出力と spec の行の対応"
+            caption="この節の article_spec.rb と、検証を消して実行した出力をもとにした図。spec は 3・4・13・14・16・18 行目だけを載せ、出力は前後の行と行末を省略した。破線の矢印は出力の行番号が指す spec の行を表す。"
+          >
+            <FailureMapFigure />
+          </Figure>
+          <p>
             1つ目の例（タイトルがあれば有効）は、検証を消しても成功しました。成功する入力だけを確かめるテストでは、検証が無くなっても気付けません。失敗するはずの入力の例も書くのは、このためです。確かめたら検証を元に戻し、もう一度実行して{' '}
             <code>0 failures</code> になることを確認します。
           </p>
           <h3>フォームの送信を確かめる request spec</h3>
           <p>
             <ChapterLink n={16} section="form">
-              第16章の「フォームから保存まで」
+              第20章の「フォームから保存まで」
             </ChapterLink>
             の create アクションは、要求を送って応答を確かめる request spec でテストできます。<code>post</code> で要求を送ると、<code>response</code> に応答が入ります。
           </p>
@@ -767,7 +933,7 @@ end
           />
           <p>
             <code>it</code> はブロックを Example のオブジェクトに保存するだけで、実行はしません。実行するときは、例ごとにクラスの新しいインスタンスを作り、そのインスタンスを self として before とブロックを実行します（上の出力の object_id
-            が例ごとに違う）。そのため、ある例で代入したインスタンス変数や let の値は、次の例には残りません（図 20-3）。
+            が例ごとに違う）。そのため、ある例で代入したインスタンス変数や let の値は、次の例には残りません（図 23-3）。
           </p>
           <Code
             lang="ruby"
@@ -788,9 +954,29 @@ end
       end
 `}
           />
-          <Figure n="20-3" title="RSpec の DSL が作るもの" caption="rspec-core 3.13.7 の example_group.rb・memoized_helpers.rb を読み、デモの出力で確かめてまとめた模式図。">
+          <Figure n="23-3" title="RSpec の DSL が作るもの" caption="rspec-core 3.13.7 の example_group.rb・memoized_helpers.rb を読み、デモの出力で確かめてまとめた模式図。">
             <DslFigure />
           </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'test-strategy',
+      title: "テストをどの層に置くか",
+      body: (
+        <>
+          <p>
+            「空のタイトルを保存できない」という規則なら、モデルに値を渡して <code>valid?</code> を呼べば確かめられます。「保存に失敗したら入力画面を返す」まで調べるには、フォームと同じ値を <code>post</code> で送り、返った応答を調べます。ボタンを押すと JavaScript で入力欄が増える仕様なら、ブラウザーでボタンを押すテストが必要です。
+          </p>
+          <p>
+            小さい範囲のテストを多めにし、ブラウザーを動かす時間のかかるテストを代表的な操作に絞る考え方をテストピラミッドと呼びます。どの層で失敗したら何が分かるかを基準に、確かめる場所を選びます。<Ref n={14} /><Ref n={15} />
+          </p>
+          <p>
+            公開済みの記事だけが一覧に出るなら、モデルのスコープを公開・下書き両方のデータで確かめます。編集権限まで必要なら、request spec で所有者か他人かを変え、ステータスだけでなく「他人のデータが更新されない」ことも確認します。テスト名は対象のメソッド名だけでなく、満たすべき振る舞いがわかる形にします。
+          </p>
+          <p>
+            TDD（テスト駆動開発）では、期待する振る舞いを失敗するテストで表し、必要な実装で成功させてから整理します。既存の不具合では先に再現テストを追加すると修正の有無がわかります。仕様もまだ探索中の画面では、小さな試作で振る舞いを決め、確定した部分をテストに残す進め方もあります。<Ref n={14} />
+          </p>
         </>
       ),
     },
@@ -800,13 +986,12 @@ end
       body: (
         <>
           <p>
-            rspec-rails は、spec の <code>type:</code>（model・request・system など）に応じて、Rails のテスト用のモジュールを include します。どのモジュールを include するかで、テストがアプリケーションのどの層から処理を呼び出すかが決まります（図
-            20-4）。
+            rspec-rails は、spec の <code>type:</code>（model・request・system など）に応じて、Rails のテスト用のモジュールを include します。どのモジュールを include するかで、テストがアプリケーションのどの層から処理を呼び出すかが決まります（図 23-4）。
           </p>
           <ul>
             <li>model spec：モデルのクラスを直接呼ぶ。コントローラーやルーティングは通らない</li>
             <li>request spec：<code>get</code>・<code>post</code> が Rails.application を Rack のアプリケーションとして呼ぶ。HTTP サーバーは通らない</li>
-            <li>system spec：Capybara がブラウザー（既定では headless の Chrome）を操作し、テストのプロセスの中で起動した Puma に HTTP で要求する。JavaScript も実行される</li>
+            <li>system spec で Selenium を使うと、Capybara が Chrome などのブラウザーを操作する。ブラウザーはテスト用の Puma に HTTP で要求を送り、受け取った画面の JavaScript も実行する</li>
           </ul>
           <Code
             lang="ruby"
@@ -830,8 +1015,7 @@ end
           />
           <p>
             request spec は Rails 自身の結合テスト（ActionDispatch::IntegrationTest）と同じ仕組みです
-            <Ref n={2} />。<ChapterLink n={17} section="streams" />
-            のコメント投稿を request spec で確かめました。
+            <Ref n={2} />。Turbo Streams の形式で応答を返すコメント投稿を request spec で確かめました。
           </p>
           <Code
             lang="text"
@@ -848,7 +1032,7 @@ end
             <ChapterLink n={10} section="exceptions" />
             ）。一方、HTTP サーバーを通らないので、Puma の設定や Nginx は request spec では確かめられません。
           </p>
-          <Figure n="20-4" title="テストの種類と通る層" caption="rspec-rails 8.1.0 の example グループのモジュールと、Testing Rails Applications（ガイド）をもとにまとめた図。">
+          <Figure n="23-4" title="テストの種類と通る層" caption="rspec-rails 8.1.0 の example グループのモジュールと、Testing Rails Applications（ガイド）をもとにまとめた図。">
             <LayersFigure />
           </Figure>
         </>
@@ -931,16 +1115,16 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
           />
           <p>
             実際には COMMIT されていませんが、after_commit は実行されました。別のスレッドからも作成した行が見えたのは、固定された接続を共有しているからです。system spec でテストのスレッドと Puma
-            のスレッドが同じデータを見られるのも、この仕組みによります（図 20-5）。
+            のスレッドが同じデータを見られるのも、この仕組みによります（図 23-5）。
           </p>
-          <Figure n="20-5" title="テストのトランザクション" caption="Rails 8.1.4.1 の test_fixtures.rb・connection_pool.rb・transaction.rb を読み、デモのテストのログで確かめてまとめた模式図。">
+          <Figure n="23-5" title="テストのトランザクション" caption="Rails 8.1.4.1 の test_fixtures.rb・connection_pool.rb・transaction.rb を読み、デモのテストのログで確かめてまとめた模式図。">
             <RollbackFigure />
           </Figure>
           <p>トランザクションによる巻き戻しが適用されない、または期待どおりに動かない場合があります。</p>
           <ul>
             <li>
               別のプロセス：Sidekiq のプロセスや、別に起動したサーバーは別の接続を使うので、COMMIT されていない行は見えません（<ChapterLink n={18} section="transaction" />
-              ）。テストではジョブをテスト用のアダプターに入れ、同じプロセスで実行します（次節）
+              ）。テストではジョブをテスト用のアダプターに入れ、同じプロセスで実行します（<ChapterLink n={20} section="jobs-mail">ジョブとメールのテスト</ChapterLink>）
             </li>
             <li>
               並行するトランザクション：<ChapterLink n={14} section="uniqueness" />
@@ -1012,6 +1196,50 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
       ),
     },
     {
+      id: 'test-fixture-boundaries',
+      title: "テストデータの作成範囲と副作用を選ぶ",
+      body: (
+        <>
+          <p>
+            たとえば記事一覧が新しい記事を表示するかを試すとします。<code>let(:article) &#123; create(:article) &#125;</code> は、<code>article</code> を初めて参照した時点で記事を保存します。同じ例の中で2回目に参照すると、最初に作った記事が返ります。
+          </p>
+          <p>
+            記事に触れる前に <code>get articles_path</code> を呼ぶと、その応答を作った時点では記事はまだ DB にありません。比較のために後から <code>article.title</code> を読んでも、すでに受け取った一覧の内容は変わりません。要求の前に明示的に記事を作るか、各例の開始時に作成する <code>let!</code> を使います。<code>before</code> には各例に共通の準備を置きます。<Ref n={15} />
+          </p>
+          <p>
+            次の図は同じ例を <code>let</code>（左）と <code>let!</code>（右）で書いた場合に、例の中で何が起きるかを上から時間の順に並べたものです。左端の列は例の中で実行するコードです。真ん中の get articles_path の行で、2つの列の結果が分かれます。
+          </p>
+          <Figure
+            title="let と let! で記事を作る時点"
+            caption="本文の記事一覧の例をもとにした模式図。上の行は spec に書く定義、左端の列は例の中で実行する順のコード。赤い文字は一覧に記事が出ない結果を表す。"
+          >
+            <LetTimingFigure />
+          </Figure>
+          <p>
+            FactoryBot の <code>trait :published</code> のような名前付きの変化を使うと、基本の factory を小さく保ち、記事の公開や付随するデータを各例が選べます。<code>build</code>、<code>build_stubbed</code>、<code>create</code> の選び方に加え、factory 内の関連が実際に何件 INSERT するかも見ます。作るだけで大量の関連を作る定義を避けると、テストの前提と時間を把握しやすくなります。<Ref n={16} />
+          </p>
+          <p>
+            スタブは依存先の戻り値を差し替え、モックは依存先が決めた約束どおり呼ばれたかを確かめる方法です。HTTP/API などアプリの外との境界に使うと、通信に依存せずに成功・タイムアウト・エラーの経路を再現できます。アプリ内部では、メソッドの呼び順を全て固定するより、保存結果や応答のような外から見える変化を確認すると、仕様が同じまま実装を整理できます。<Ref n={15} /><Ref n={17} />
+          </p>
+          <Code
+            lang="ruby"
+            title={"外部の HTTP 応答をテスト内で返す例"}
+            code={`
+# spec/support などで require "webmock/rspec" を読み込む
+WebMock.disable_net_connect!(allow_localhost: true)
+
+stub_request(:get, "https://catalog.example.test/items/42")
+  .to_return(status: 200, body: '{"id":42}',
+             headers: { "Content-Type" => "application/json" })
+`}
+          />
+          <p>
+            テスト全体で外部通信を止める場合は、ブラウザードライバーが使うローカルの接続を許可するなど、スイートが必要とする経路を確認します。記録済み通信を再生するツールを使う場合も、記録にトークンや個人情報が入らないようにします。<Ref n={17} />
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'jobs-mail',
       title: 'ジョブとメールのテスト',
       body: (
@@ -1038,8 +1266,34 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
             <Ref n={4} />。
           </p>
           <p>
+            次の図は上のコードでジョブとメールがどこに入るかを、2つの時点に分けて並べたものです。上の段を左から右へ、右端の矢印で下の段へ移り、下の段を右から左へ読んでください。記録したジョブの配列と deliveries の配列は別のものです。
+          </p>
+          <Figure
+            title="deliver_later から deliveries に入るまで"
+            caption="この節の mail_spec.rb の実行結果をもとにした模式図。緑の箱はデータを入れる配列、実線の矢印は処理の流れを表す。TestAdapter はテスト環境の ActiveJob のアダプターの既定値。"
+          >
+            <EnqueuedMailFigure />
+          </Figure>
+          <p>
             Sidekiq::Job を直接使うジョブ（<ChapterLink n={18} section="direct" />
             ）は ActiveJob を通らないので、これらのマッチャーでは確かめられません。Sidekiq の gem の <code>Sidekiq::Testing</code> を使い、fake（配列に記録）か inline（その場で実行）を選びます。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'integration-ci',
+      title: "リクエスト・ブラウザー・CI の実行条件を揃える",
+      body: (
+        <>
+          <p>
+            Devise を使う構成では request spec に <code>Devise::Test::IntegrationHelpers</code> を組み込んで <code>sign_in(user)</code> で認証済みの条件を作れます。ログインそのものを試す目的なら、フォームやログインのリクエストを経由して、セッション成立を別のテストで確認します。<Ref n={15} /><Ref n={18} />
+          </p>
+          <p>
+            system spec では Capybara を使ってフォームに入力し、ボタンを押せます。<code>driven_by</code> で選ぶドライバーによって動かし方が変わります。<code>:rack_test</code> は Ruby からアプリを呼びます。JavaScript で入力欄が増えるところも試すなら、Selenium などのドライバーで実際のブラウザーを使います。画面のラベルやボタンの名前で操作対象を探せば、Capybara が対象の表示を待てます。<Ref n={14} /><Ref n={19} />
+          </p>
+          <p>
+            CI（継続的インテグレーション）では、PR と更新を契機に同じ設定でテストを実行します。GitHub Actions で Ruby を用意するなら <code>ruby/setup-ruby</code> の <code>bundler-cache: true</code> を使えます。MySQL や PostgreSQL を使うスイートならサービスと接続用のテスト設定を用意し、<code>RAILS_ENV=test bin/rails db:prepare</code> でスキーマを揃えてから <code>bundle exec rspec</code> を実行します。ブラウザーの失敗時にはスクリーンショットを成果物として残せます。デプロイへ進む条件とテスト環境の設定をリポジトリで共有しておくと、手作業での確認漏れを減らせます。<Ref n={20} /><Ref n={21} />
           </p>
         </>
       ),
@@ -1142,7 +1396,7 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
             spec は describe（グループ）・it（1つの例）・expect とマッチャー（確認）で書きます。成功する入力だけでなく、失敗するはずの入力の例も書き、コードに意図的な誤りを加えてテストが失敗することを確かめます。
           </li>
           <li>describe は ExampleGroup の子クラスを作り、it は例ごとに作られるそのインスタンスを self として実行されます。let は LetDefinitions モジュールのメソッドで、例の中でメモ化されます。</li>
-          <li>request spec は Rails.application をミドルウェアから呼び、system spec はブラウザーと Puma を通ります。</li>
+          <li>request spec は Rails.application をミドルウェアから呼びます。画面の操作や JavaScript の動きは、ブラウザーを動かすドライバーを使った system spec で確かめられます。</li>
           <li>テストのトランザクションは接続を固定し、参加不可のトランザクションとして始まります。例の中の保存は SAVEPOINT になり、after_commit も実行され、最後に ROLLBACK されます。</li>
           <li>同じプロセスのスレッドは固定された接続を共有しますが、別のプロセスからは COMMIT 前のデータは見えません。並行するトランザクションのテストはトランザクションを無効にします。</li>
           <li>fixtures は最初に1回投入され、FactoryBot の create は例ごとに関連を含めて INSERT します。</li>
@@ -1165,6 +1419,14 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
     { title: 'RSpec Core 3.13（rspec コマンド）', publisher: 'RSpec（rspec.info）', url: 'https://rspec.info/features/3-13/rspec-core/', accessed: '2026-11-16', version: 'rspec-core 3.13', note: 'rspec コマンドに spec のファイルを渡して実行すること。short_title の例は rspec-core 3.13.7（Ruby 4.0.9）で実測。' },
     { title: 'railties/lib/rails/generators/rails/app/templates/config/databases/mysql.yml.tt', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/app/templates/config/databases/mysql.yml.tt`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'development・test・production のデータベース名（アプリケーション名_development など）と、test のデータベースは作り直されるので開発用・本番用と同じにしないという注意書き。rails new demo -d mysql で生成して確認。' },
     { title: 'railties/lib/rails/generators/rails/app/templates/config/environments/test.rb.tt', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/app/templates/config/environments/test.rb.tt`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'テスト環境の cache_store = :null_store、active_storage.service = :test、delivery_method = :test（deliveries の配列に入れる）。' },
+    { title: "Testing Rails Applications", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/testing.html", accessed: "2026-11-20", version: "Rails 8.1", note: "Rails のテストの種類、システムテストの実行条件。" },
+    { title: "RSpec Rails", publisher: "RSpec", url: "https://rspec.info/features/8-0/rspec-rails/", accessed: "2026-11-20", version: "RSpec Rails 8.0", note: "RSpec Rails の各 spec と仕様の記述。" },
+    { title: "FactoryBot Getting Started", publisher: "thoughtbot/factory_bot", url: "https://github.com/thoughtbot/factory_bot/blob/main/GETTING_STARTED.md", accessed: "2026-11-20", note: "factory の作成方法、trait、関連データ。" },
+    { title: "WebMock", publisher: "bblimke/webmock", url: "https://github.com/bblimke/webmock", accessed: "2026-11-20", note: "HTTP スタブと外部通信の制限。" },
+    { title: "Devise", publisher: "heartcombo/devise", url: "https://github.com/heartcombo/devise", accessed: "2026-11-20", note: "構成モジュール、設定、テストと画面のカスタマイズ。" },
+    { title: "Capybara", publisher: "teamcapybara/capybara", url: "https://github.com/teamcapybara/capybara", accessed: "2026-11-20", note: "ドライバーとブラウザーの操作・待機。" },
+    { title: "ruby/setup-ruby", publisher: "ruby/setup-ruby", url: "https://github.com/ruby/setup-ruby", accessed: "2026-11-20", note: "CI の Ruby と Bundler の設定。" },
+    { title: "Building and testing Ruby", publisher: "GitHub Docs", url: "https://docs.github.com/en/actions/tutorials/build-and-test-code/ruby", accessed: "2026-11-20", note: "Ruby のテストの自動実行と成果物の保存。" },
   ],
 }
 

@@ -2,10 +2,10 @@ import type { Chapter, Section } from './types'
 import { labelFor } from './label'
 import meta from './chapter-meta.json'
 
-export { APPENDIX_START, labelFor } from './label'
+export { APPENDIX_ID, chapterNumber, labelFor } from './label'
 
-/** 目次・前後の章・参考資料一覧に使う章の情報。節の本文は含まない。 */
-export type ChapterMeta = Omit<Chapter, 'sections'> & { sections: Pick<Section, 'id' | 'title'>[] }
+/** 目次・前後の章に使う章の情報。節の本文と出典は含まない（出典は sources-index.json）。 */
+export type ChapterMeta = Omit<Chapter, 'sections' | 'sources'> & { sections: Pick<Section, 'id' | 'title'>[] }
 
 // chapter-meta.json は npm run build:index が章ファイルから生成する。
 export const chapters = meta as ChapterMeta[]

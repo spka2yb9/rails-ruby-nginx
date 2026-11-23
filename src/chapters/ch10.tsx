@@ -332,21 +332,187 @@ function ExceptionFigure() {
   )
 }
 
+/* ---------- flash の値が表示される要求（番号なし） ---------- */
+function FlashTimelineFigure() {
+  const colX = [290, 455, 620]
+  const colW = 150
+  const rowY = (i: number) => 52 + i * 58
+  type Cell = { lines: string[]; kind: 'show' | 'warn' | 'none' } | null
+  const rows: { label: [string, string]; cells: Cell[] }[] = [
+    {
+      label: ['redirect_to …, notice: …', '成功して移動先で出す'],
+      cells: [{ lines: ['notice を入れて 302'], kind: 'none' }, { lines: ['移動先の画面に表示'], kind: 'show' }, { lines: ['消えている'], kind: 'none' }],
+    },
+    {
+      label: ['flash.now[:alert] ＋ render', 'この要求の画面にだけ出す'],
+      cells: [{ lines: ['この画面に表示'], kind: 'show' }, { lines: ['残っていない'], kind: 'none' }, null],
+    },
+    {
+      label: ['flash[:alert] ＋ render', 'now を付けなかった場合'],
+      cells: [{ lines: ['この画面に表示'], kind: 'show' }, { lines: ['次の画面にもう一度表示'], kind: 'warn' }, { lines: ['消えている'], kind: 'none' }],
+    },
+    {
+      label: ['flash.keep(:notice)', '要求2で呼び、要求3まで残す'],
+      cells: [{ lines: ['notice を入れて 302'], kind: 'none' }, { lines: ['flash.keep(:notice)', 'して 302'], kind: 'none' }, { lines: ['移動先の画面に表示'], kind: 'show' }],
+    },
+  ]
+  return (
+    <Svg
+      id="ch10-flash-timeline"
+      w={780}
+      h={310}
+      label="flash にメッセージを入れる4つの書き方と、メッセージが表示される要求。redirect_to に notice を付けると、要求1は 302 を返し、要求2の移動先の画面に表示され、要求3では消えている。flash.now[:alert] を設定して render すると、要求1の画面にだけ表示され、要求2には残っていない。now を付けずに flash[:alert] を設定して render すると、要求1の画面に表示され、要求2の画面にもう一度表示され、要求3では消えている。要求2で flash.keep(:notice) を呼んでもう一度 redirect_to すると、要求3の移動先の画面に表示される"
+    >
+      <T x={20} y={20} bold fs={12.5}>
+        flash の書き方
+      </T>
+      {['要求1（設定した要求）', '要求2（次の要求）', '要求3'].map((t, i) => (
+        <T key={t} x={colX[i] + colW / 2} y={20} bold fs={12} anchor="middle">
+          {t}
+        </T>
+      ))}
+      <Arrow x1={290} y1={36} x2={768} y2={36} />
+      {rows.map((r, i) => (
+        <g key={r.label[0]}>
+          <Box x={20} y={rowY(i)} w={255} h={44} lines={r.label} fs={12} fill="bg" subTone="muted" align="start" />
+          {r.cells.map((c, j) =>
+            c === null ? null : c.kind === 'warn' ? (
+              <g key={j}>
+                <Box x={colX[j]} y={rowY(i)} w={colW} h={44} fill="box5" />
+                <T x={colX[j] + colW / 2} y={rowY(i) + 22} fs={11.5} anchor="middle" tone="danger">
+                  {c.lines[0]}
+                </T>
+              </g>
+            ) : c.kind === 'show' ? (
+              <Box key={j} x={colX[j]} y={rowY(i)} w={colW} h={44} lines={c.lines} fs={11.5} fill="box5" />
+            ) : (
+              <g key={j}>
+                <Box x={colX[j]} y={rowY(i)} w={colW} h={44} fill="bg" dashed />
+                {c.lines.map((t, k) => (
+                  <T key={t} x={colX[j] + colW / 2} y={rowY(i) + 22 + (k - (c.lines.length - 1) / 2) * 16} fs={11.5} anchor="middle" tone="muted">
+                    {t}
+                  </T>
+                ))}
+              </g>
+            ),
+          )}
+        </g>
+      ))}
+      <T x={20} y={294} fs={11.5} tone="muted">
+        紫の箱：その要求で返す画面にメッセージが表示される　破線の箱：表示されない
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- process_action の入れ子と rescue_from の範囲（番号なし） ---------- */
+function RescueRangeFigure() {
+  const layers = [
+    { name: 'ParamsWrapper の process_action', x: 20, y: 10, w: 740, h: 280 },
+    { name: 'Instrumentation の process_action', x: 40, y: 42, w: 700, h: 238 },
+    { name: 'Rescue の process_action', x: 60, y: 74, w: 660, h: 196, accent: true },
+    { name: 'Callbacks の process_action', x: 80, y: 112, w: 620, h: 112 },
+  ]
+  return (
+    <Svg
+      id="ch10-rescue-range"
+      w={780}
+      h={320}
+      label="ParamsWrapper の process_action の中で Instrumentation の process_action が、その中で Rescue の process_action が、その中で Callbacks の process_action が実行される。Callbacks の process_action の中で、before_action のメソッド（require_login、set_article）が実行された後にアクションが実行される。Rescue の process_action は rescue Exception でこの範囲全体の例外を捕まえるので、アクションの中の例外も before_action のメソッドの中の例外も rescue_from の処理の対象になる。外側の枠ほど、base.rb で後に include したモジュール"
+    >
+      {layers.map(l => (
+        <g key={l.name}>
+          <Box x={l.x} y={l.y} w={l.w} h={l.h} fill="box2" accent={l.accent} />
+          <T x={l.x + 14} y={l.y + 18} fs={12} bold={l.accent}>
+            {l.name}
+          </T>
+        </g>
+      ))}
+      <T x={706} y={92} fs={11.5} tone="muted" mono anchor="end">
+        rescue Exception =&gt; exception
+      </T>
+      <Box x={100} y={148} w={250} h={56} lines={['before_action のメソッド', 'require_login、set_article']} fs={12} fill="bg" subTone="muted" />
+      <Arrow x1={352} y1={176} x2={418} y2={176} />
+      <Box x={420} y={148} w={260} h={56} lines={['アクション', 'show、create など']} fs={12} fill="bg" subTone="muted" />
+      <T x={80} y={246} fs={11.5} tone="acc">
+        Rescue の枠の中で起きた例外は、before_action のメソッドの中のものも rescue_from の処理の対象
+      </T>
+      <T x={20} y={308} fs={11.5} tone="muted">
+        外側の枠ほど、base.rb で後に include したモジュール
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- セッションをメモリーに持つ方式と Cookie に入れる方式（番号なし） ---------- */
+function SessionStoreFigure() {
+  return (
+    <Svg
+      id="ch10-session-store"
+      w={780}
+      h={290}
+      label="左はセッションをプロセスのメモリーに持つ方式。ブラウザーのログインの要求1はプロセス A が処理し、author_id: 1 をプロセス A のメモリーに保存する。次の要求2をプロセス B が処理すると、プロセス B にはセッションが無い。右は Cookie に入れる方式。要求1を処理したプロセス A はセッションを暗号化して set-cookie でブラウザーに渡し、ブラウザーは Cookie を保存する。要求2は cookie ヘッダーを付けてプロセス B に届き、プロセス B は同じ secret_key_base で Cookie を復号して author_id: 1 を読む"
+    >
+      <T x={20} y={18} bold fs={12.5}>
+        プロセスのメモリーに持つ方式
+      </T>
+      <Box x={20} y={36} w={100} h={200} lines="ブラウザー" fs={12} />
+      <Box x={250} y={32} w={130} h={64} lines={['プロセス A', 'author_id: 1 を', 'メモリーに保存']} fs={12} subTone="muted" />
+      <Box x={250} y={172} w={130} h={56} lines={['プロセス B', 'セッションが無い']} fs={12} subTone="danger" />
+      <Arrow x1={122} y1={60} x2={248} y2={60} />
+      <T x={128} y={48} fs={11.5}>
+        要求1：ログイン
+      </T>
+      <Arrow x1={122} y1={200} x2={248} y2={200} />
+      <T x={128} y={188} fs={11.5}>
+        要求2
+      </T>
+      <T x={20} y={264} fs={11.5} tone="muted">
+        要求ごとに処理するプロセスが変わる
+      </T>
+
+      <Arrow x1={395} y1={8} x2={395} y2={280} plain dashed />
+
+      <T x={410} y={18} bold fs={12.5}>
+        Cookie に入れる方式（CookieStore）
+      </T>
+      <Box x={410} y={36} w={100} h={200} fill="box" />
+      <T x={460} y={60} fs={12} anchor="middle">
+        ブラウザー
+      </T>
+      <Box x={420} y={96} w={80} h={70} lines={['Cookie', '暗号化した', 'セッション']} fs={11.5} fill="box4" />
+      <Box x={640} y={32} w={130} h={64} lines={['プロセス A', '暗号化して', 'set-cookie で渡す']} fs={12} subTone="muted" />
+      <Box x={640} y={172} w={130} h={64} lines={['プロセス B', 'Cookie を復号して', 'author_id: 1']} fs={12} subTone="muted" fill="box5" />
+      <Arrow x1={512} y1={52} x2={638} y2={52} />
+      <T x={518} y={41} fs={11.5}>
+        要求1：ログイン
+      </T>
+      <Arrow x1={638} y1={78} x2={512} y2={78} />
+      <T x={518} y={90} fs={11.5} mono>
+        set-cookie
+      </T>
+      <Arrow x1={512} y1={204} x2={638} y2={204} />
+      <T x={518} y={192} fs={11.5}>
+        要求2 ＋ cookie
+      </T>
+      <T x={410} y={264} fs={11.5} tone="muted">
+        どのプロセスも同じ secret_key_base で復号する
+      </T>
+    </Svg>
+  )
+}
+
 const ch10: Chapter = {
   number: 10,
   part: 2,
   title: 'コントローラーの実行とレスポンス',
   summary:
-    'コントローラーのアクションが params で値を受け取り、モデルでデータを読み書きし、インスタンス変数でビューに値を渡して応答を決めることを、ログと応答で確かめます。render と redirect_to の違い、Cookie とセッションでログインの状態を覚える方法、before_action も扱います。そのうえで、ルーティングから呼ばれたコントローラーが、インスタンスを作ってアクションを実行し、Rack の応答の配列を返すまでを追います。params の合成と Strong Parameters、暗黙の描画、例外がエラーページになるまでの経路、Cookie とセッションの保存方法も扱います。',
+    '記事を保存した後に HTML を返す場合と、別の URL を開くようブラウザーに伝える場合では、ログに残る要求の数が違います。フォームの入力がコントローラーに届いてから応答が返るまでを追います。',
   goals: [
-    'アクションが params で値を受け取り、インスタンス変数でビューに値を渡すことと、render と redirect_to の違いを、ログと応答から説明できる',
-    'Cookie とセッションでログインの状態を覚える流れと、before_action でアクションの前に確認を入れる方法を説明できる',
-    'AbstractController::Base・Metal・Base の役割の違いを説明できる',
-    'dispatch から process_action、アクションの実行、to_a までの流れを説明できる',
-    'params がどの値から合成されるかと、Strong Parameters が何を防ぐかを説明できる',
-    'render を書かないアクションで何が描画されるかを説明できる',
-    'rescue_from、DebugExceptions、ShowExceptions が例外をどう扱い、ステータスがどう決まるかを説明できる',
-    'Cookie とセッションがどのミドルウェアで読み書きされ、どう保護されるかを説明できる',
+    'params から保存に使う項目を取り出し、アクションの前に呼ばれる処理を確認できる',
+    'render と redirect_to の違いを、状態コードと次の要求の有無から読み取れる',
+    '要求をまたいでログイン状態を参照できる理由を Cookie とセッションで説明できる',
+    'テンプレートの選択や例外の処理を経て、どの応答が返ったかをログで追える',
   ],
   prerequisites: [5, 6, 9],
   sections: [
@@ -512,6 +678,9 @@ Processing by ArticlesController#create as HTML
 Completed 422 Unprocessable Content in 28ms (Views: 7.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.3ms)
 `}
           />
+          <p>
+            Parameters の行には、フォームの入力欄のほかに2つの値があります。authenticity_token は Rails がフォームに埋め込む CSRF 対策のトークンで（<ChapterLink n={21} section="csrf" />）、ログでは値が [FILTERED] に置き換えられています。commit は送信ボタンの値です。
+          </p>
           <p>
             save が false を返したので、<code>render :new</code> が new.html.erb を使って HTML を作り、状態コード 422 で返しました。<code>render :new</code> は new
             アクションを実行するのではなく、new のテンプレートを使うだけです。<code>@article</code> は create で作った、入力値と検証の誤りを持つオブジェクトなので、返ったフォームには誤りの表示が付きました。
@@ -773,6 +942,169 @@ Completed 302 Found in 548ms (ActiveRecord: 87.6ms (2 queries, 0 cached) | GC: 0
       ),
     },
     {
+      id: 'controller-practice',
+      title: "CRUD を保つコントローラーの書き方",
+      body: (
+        <>
+          <p>
+            ここまでの節の create は、params から値を取り出し、モデルの save を呼び、結果に応じて redirect_to か render を選んでいました。アクションが増えると、1つのアクションに条件の判定や検索が足されていき、どこを直せばよいかが読み取りにくくなります。この節では、どの処理をアクションに書き、どの処理をほかの場所に書くかを見ます。
+          </p>
+          <p>
+            コントローラーでは、入力を受け付ける、処理を呼ぶ、結果を HTTP の応答に変える、という順で考えます。たとえば「この記事が公開可能か」はモデル側の規則です。アクションにあるのは <code>@article.publish!</code> の呼び出しと成功・失敗をどう返すかです。表示用の内容を整える仕事はビューやヘルパー（ビューから呼ぶメソッドを置くモジュール。<ChapterLink n={16} section="helpers" />）に置けます（<ChapterLink n={30} section="architecture-boundaries">境界の決め方</ChapterLink>）。<Ref n={17} />
+          </p>
+          <Code
+            lang="ruby"
+            title="記事を公開するアクションの例（publish! は Article に定義するメソッド）"
+            code={`
+def publish
+  @article = Article.find(params[:id])   # 入力を受け付ける
+  @article.publish!                      # 処理を呼ぶ。公開できるかどうかの判定は publish! の中に書く
+  redirect_to @article, notice: "公開しました", status: :see_other   # 結果を応答に変える
+end
+`}
+          />
+          <p>
+            「本文が空の記事は公開できない」のような条件をこのアクションの中に if で書くと、同じ条件を、記事を公開するほかの処理（管理画面や、時刻を指定して公開する処理など）にも書くことになります。条件を Article の publish! に書いておけば、条件が増えたときに直すのは publish! だけで、アクションは変わりません。
+          </p>
+          <h3>成功後の再読み込みと flash</h3>
+          <p>
+            「render と redirect_to」の節では、保存に成功したら redirect_to で GET の画面へ移しました。POST の後に GET へ移すこの流れは Post/Redirect/Get（PRG）と呼ばれます。PATCH や DELETE の後に取得へ切り替えることも明示できる応答は <code>303 See Other</code> です。更新（PATCH）や削除（DELETE）の後の redirect_to に <code>status: :see_other</code> を付けると 303 になり、移動先への要求は必ず GET になります（「Cookie とセッションでログインを覚える」の節の destroy と同じ理由です）。<Ref n={18} /><Ref n={19} />
+          </p>
+          <p>
+            フォームの選択肢を <code>new</code> で用意している場合は、<code>create</code> のエラーで再描画する経路でもその値を用意します。<code>render :new</code> は new のテンプレートを使うだけで、new アクションは実行しないためです。
+          </p>
+          <Code
+            lang="ruby"
+            title="フォームに著者の選択肢を出す例"
+            code={`
+def new
+  @article = Article.new
+  @authors = Author.order(:id)     # フォームの選択肢
+end
+
+def create
+  @article = Article.new(params.expect(article: [:title, :author_id]))
+  if @article.save
+    redirect_to @article
+  else
+    @authors = Author.order(:id)   # ここで代入しないと、new.html.erb の @authors は nil になる
+    render :new, status: :unprocessable_content
+  end
+end
+`}
+          />
+          <p>
+            create の else の側で <code>@authors</code> を代入し忘れると、入力に誤りがあるときだけ、テンプレートが nil の <code>@authors</code> を使って 500 になります（「コントローラーとアクション」の節で見た <code>undefined method … for nil</code> と同じ種類の誤りです）。正しい入力では redirect_to の側を通るので、保存に失敗する入力を試さないと見つかりません。
+          </p>
+          <p>
+            <code>redirect_to @article, notice: "公開しました"</code> の <code>notice:</code> は flash に値を入れる指定です。flash は次の要求まで残しておくメッセージを入れる場所で、移動先の画面のテンプレートで <code>flash[:notice]</code> として読め、その次の要求では消えています。
+          </p>
+          <p>
+            成功後の移動先で出す <code>notice:</code> に対し、同じ要求で <code>render</code> する画面だけに出すときは <code>flash.now[:alert]</code> を設定します。さらに次のリダイレクト先まで保ちたいときは <code>flash.keep(:notice)</code> で残すキーを指定します。<Ref n={20} />
+          </p>
+          <Code
+            lang="ruby"
+            title="flash と flash.now の使い分け"
+            code={`
+# 成功：redirect_to の移動先（次の要求）の画面で表示する
+redirect_to @article, notice: "作成しました"
+
+# 失敗：この要求で返す画面にだけ表示する
+flash.now[:alert] = "保存できませんでした"
+render :new, status: :unprocessable_content
+`}
+          />
+          <p>
+            render する画面に <code>flash[:alert] = …</code>（now なし）で設定すると、メッセージは次の要求まで残るので、利用者が次に開いた画面にも、同じメッセージがもう一度表示されます。
+          </p>
+          <p>
+            次の図は flash にメッセージを入れる4つの書き方を行に、要求1から要求3を列にして、どの要求で返す画面にメッセージが表示されるかを示したものです。行ごとに紫の箱がどの列にあるかを見てください。
+          </p>
+          <Figure
+            title="flash の値が表示される要求"
+            caption="この節の説明をまとめた模式図。要求1は flash を設定した要求、要求2はその次の要求。4行目の flash.keep は要求2のアクションの中で呼ぶ。"
+          >
+            <FlashTimelineFigure />
+          </Figure>
+          <h3>フックに置く準備と、例外の置き場所</h3>
+          <p>
+            フックは before_action のように、アクションの前後に呼ばれるように登録しておく処理のことです。
+          </p>
+          <p>
+            <code>before_action</code> には、認証や複数アクションで同じ規則で行う取得を置き、<code>only: %i[show edit update destroy]</code> などで対象を明示します（<code>%i[show edit]</code> は <code>[:show, :edit]</code> と同じ、シンボルの配列の書き方です）。たとえば show だけが必要とするフォームやサイドバーのデータは、アクション内で準備すると読み手が依存を追いやすくなります。親コントローラーのフックを一部の公開アクションで外す <code>skip_before_action</code> を使う場合も、外す対象を明示します。<Ref n={17} />
+          </p>
+          <Code
+            lang="ruby"
+            title="before_action に置く処理と、アクションの中に書く処理"
+            code={`
+class ArticlesController < ApplicationController
+  before_action :require_login, only: %i[new create edit update destroy]   # 認証
+  before_action :set_article, only: %i[show edit update destroy]           # 4つのアクションで同じ取得
+
+  def show
+    @recent_articles = Article.order(id: :desc).limit(5)   # show だけが使うので、show の中に書く
+  end
+
+  private
+    def set_article
+      @article = Article.find(params[:id])
+    end
+end
+`}
+          />
+          <p>
+            <code>@recent_articles</code> の取得を <code>only:</code> なしの before_action に置くと、それを表示しない edit や update でも同じ SQL が実行されます。また show.html.erb を読む人は、<code>@recent_articles</code> の代入が show アクションの中に無いので、before_action に登録したメソッドを順に読んで探すことになります。
+          </p>
+          <p>
+            skip_before_action は、親のクラスで登録した before_action を、子のコントローラーの一部のアクションで外す宣言です。ApplicationController で全アクションにログインを求め、ログインの画面だけ外す場合は次のように書きます。
+          </p>
+          <Code
+            lang="ruby"
+            title="skip_before_action で外す対象を明示する"
+            code={`
+class ApplicationController < ActionController::Base
+  before_action :require_login   # 継承したすべてのコントローラーの、すべてのアクションが対象
+end
+
+class SessionsController < ApplicationController
+  skip_before_action :require_login, only: %i[new create]   # ログインの画面と送信先だけ外す
+end
+`}
+          />
+          <p>
+            <code>only:</code> を付けずに <code>skip_before_action :require_login</code> と書くと、後から SessionsController に足したアクションも、ログインなしで呼べるようになります。
+          </p>
+          <p>
+            <code>rescue_from</code> は、アクションの中で起きた例外（処理を続けられない誤りを表すオブジェクト）の種類ごとに、応答を作るメソッドを登録する宣言です（内部は「例外がエラー応答になるまで」の節で読みます）。
+            共通の例外応答は <code>rescue_from</code> でまとめられます。どの画面でも対象が見つからない場合に同じ 404 を返すなら共通化でき、特定の画面だけが入力を復元して再表示する場合はそのアクションで扱えます。広いクラスを一律に捕まえる設定にすると、不具合まで通常応答へ置き換わるため、復旧方法が決まっている型を指定します。アプリケーション全体で使う認証・例外・ロケール（表示する言語と地域の設定）の設定は <code>ApplicationController</code>、管理画面にだけ必要な共通条件は <code>Admin::BaseController</code>（管理画面のコントローラーだけが継承する親クラス）が候補になります。<Ref n={17} />
+          </p>
+          <Code
+            lang="ruby"
+            title="rescue_from には、応答の決まっている例外のクラスを指定する"
+            code={`
+class ApplicationController < ActionController::Base
+  # 記事や著者が見つからないときは、どの画面でも同じ 404 を返す
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found
+
+  # rescue_from StandardError, with: :not_found   # 広すぎる指定の例
+
+  private
+    def not_found
+      render plain: "見つかりません", status: :not_found
+    end
+end
+`}
+          />
+          <p>
+            StandardError は、Ruby のほとんどの例外の親クラスです。コメントにした行のように StandardError を指定すると、メソッド名の打ち間違いで起きる NoMethodError のような不具合も「見つかりません」の 404 になり、500 の応答として現れなくなります。
+          </p>
+          <p>
+            たとえば公開アクションにタグ登録、公開日時の更新、通知、サイドバー用の記事検索が並んでいたら、それぞれの処理を、ほかにどの画面や処理が必要とするかを1つずつ調べます。公開条件と日時の確定は記事の操作（この節の最初の例の publish! のような、Article のメソッド）へ移します。一覧の検索条件はスコープ（モデルに名前を付けて定義した検索条件。<ChapterLink n={12} section="scope-design" />）へ、公開後の通知はコミット後の処理（データベースへの保存が確定した後に呼ばれる after_commit。<ChapterLink n={14} section="after-commit" />）へ移します。サイドバーだけの取得は表示するアクションに限ると、共通の before_action から不要な SQL が発生するのを防げます。
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'hierarchy',
       title: 'コントローラーのクラス階層',
       body: (
@@ -790,18 +1122,38 @@ ArticlesController.ancestors.size     # => 72
 ActionController::Base::MODULES.size  # => 36
 `}
           />
-          <p>3つの基底クラスは、次のように役割が分かれています。</p>
+          <p>各行は次のことをしています。</p>
+          <ul>
+            <li>
+              <code>ancestors</code> は、ArticlesController のメソッドを探す順に、クラスとモジュールを並べた配列を返します。
+            </li>
+            <li>
+              <code>take_while {'{ |k| k != Object }'}</code> は、配列の先頭から Object の手前までを取り出します。Object から後ろは、Ruby のすべてのクラスに共通の祖先なので除いています。
+            </li>
+            <li>
+              <code>select {'{ |k| k.is_a?(Class) }'}</code> は、そのうちクラスだけを残します。モジュールはここで除かれます。
+            </li>
+            <li>
+              2つ目の式の 72 は、モジュールと Object から後ろも含めた祖先の数です。3つ目の式の <code>ActionController::Base::MODULES</code> は、Base が include するモジュールを並べた配列の定数で、36個あります。
+            </li>
+          </ul>
+          <p>
+            クラスは5つで、後ろの3つ（ActionController::Base、ActionController::Metal、AbstractController::Base）が Rails のクラスです。この3つの基底クラスは、次のように役割が分かれています。
+          </p>
           <ul>
             <li>
               <code>AbstractController::Base</code>：HTTP の処理を含まない、アクションの呼び出しの仕組み（<code>process</code>、<code>action_methods</code> など）。ActionMailer もこのクラスを使います。
             </li>
             <li>
-              <code>ActionController::Metal</code>：リクエストと応答のオブジェクトを持ち、Rack の応答の配列を返す最小限のコントローラー。
+              <code>ActionController::Metal</code>：リクエストと応答のオブジェクトを持ち、Rack の応答の配列（状態コード、ヘッダー、本文の3つを並べた配列。<ChapterLink n={6} section="rack-contract" />）を返す最小限のコントローラー。
             </li>
             <li>
-              <code>ActionController::Base</code>：Metal に36個のモジュールを include したもの。描画、Strong Parameters、Cookie、CSRF 対策、コールバック、例外処理などはモジュールが持ちます。
+              <code>ActionController::Base</code>：Metal に36個のモジュールを include したもの。描画、Strong Parameters、Cookie、CSRF 対策、コールバック（before_action のように、アクションの前後に呼ぶ処理）、例外処理などはモジュールが持ちます。
             </li>
           </ul>
+          <p>
+            図 10-5 の左の列は継承の関係で、下のクラスが上のクラスを継承しています。右の枠は Base が include する36個のモジュールを役割ごとに分けて、一部の名前を載せたものです。ActionController::API は、JSON だけを返すアプリケーションのために、Base より少ないモジュールを Metal に include したクラスです。
+          </p>
           <Figure n="10-5" title="コントローラーのクラス階層" caption="Rails 8.1.4.1 の ActionController::Base::MODULES の36個を、本書で役割ごとにまとめた図。">
             <HierarchyFigure />
           </Figure>
@@ -809,6 +1161,126 @@ ActionController::Base::MODULES.size  # => 36
             祖先に並ぶ72個のクラスとモジュールの大半は、これらのモジュールです。<ChapterLink n={1} />の図 1-6 で見た <code>process_action</code> の7つの定義は、このうち ParamsWrapper、Instrumentation、Rescue、Callbacks
             などのモジュールにあります。
           </p>
+          <p>
+            ここまでの節で使ったメソッドが、どのクラスやモジュールに定義されているかを表にします。ファイルの場所は actionpack/lib からのパスです（rescue_from だけは activesupport/lib からのパス）。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>メソッド</th>
+                  <th>定義しているクラス・モジュール</th>
+                  <th>ファイル</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <code>params</code>
+                  </td>
+                  <td>ActionController::StrongParameters</td>
+                  <td>action_controller/metal/strong_parameters.rb</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>render</code>
+                  </td>
+                  <td>AbstractController::Rendering。ActionController::Rendering が上書きして、2回目の render を確かめてから super で呼ぶ</td>
+                  <td>abstract_controller/rendering.rb、action_controller/metal/rendering.rb</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>redirect_to</code>
+                  </td>
+                  <td>ActionController::Redirecting</td>
+                  <td>action_controller/metal/redirecting.rb</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>session</code>、<code>reset_session</code>
+                  </td>
+                  <td>ActionController::Metal。どちらもリクエストのオブジェクトの同じ名前のメソッドを呼ぶだけ</td>
+                  <td>action_controller/metal.rb</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>cookies</code>
+                  </td>
+                  <td>ActionController::Cookies。<code>request.cookie_jar</code> を返す</td>
+                  <td>action_controller/metal/cookies.rb</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>before_action</code>
+                  </td>
+                  <td>
+                    AbstractController::Callbacks（クラスメソッド。<ChapterLink n={5} section="rails-dsl" />）
+                  </td>
+                  <td>abstract_controller/callbacks.rb</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>rescue_from</code>
+                  </td>
+                  <td>ActiveSupport::Rescuable（クラスメソッド）。ActionController::Rescue が include している</td>
+                  <td>active_support/rescuable.rb</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Rails のソースのファイル名は、モジュール名を小文字と下線に直したものです（StrongParameters なら strong_parameters.rb）。表に無いメソッドの定義場所は、<ChapterLink n={1} section="find-source" />の <code>owner</code> と <code>source_location</code> で調べられます。
+          </p>
+          <Code
+            lang="ruby"
+            title="bin/rails console で、メソッドを定義しているモジュールとファイルを調べる"
+            code={`
+ArticlesController.instance_method(:params).owner            # 定義しているモジュール
+ArticlesController.instance_method(:params).source_location  # ファイル名と行番号
+ArticlesController.instance_method(:render).super_method     # super で呼ばれる、次の定義
+`}
+          />
+          <p>
+            render と redirect_to は、ActionController::Instrumentation（action_controller/metal/instrumentation.rb）にも同じ名前の定義があります。Instrumentation は表のモジュールより後に include されていて ancestors では前にあるので、こちらの定義が先に見つかります。Instrumentation の render は描画にかかった時間を計り、redirect_to は計測のイベントを出し、どちらも <code>super</code> で表のモジュールの定義を呼びます。3行目の <code>super_method</code> は、この <code>super</code> で呼ばれる定義を返します。
+          </p>
+          <p>
+            モジュールを include する順は、<code>process_action</code> の連鎖の順を決めています。Base が36個のモジュールを include する部分の最後は次のとおりです。
+          </p>
+          <Code
+            lang="ruby"
+            title="actionpack/lib/action_controller/base.rb（include の最後の部分）"
+            href={`${GH}/actionpack/lib/action_controller/base.rb`}
+            code={`
+    include DefaultHeaders
+    include Logging
+    # Before callbacks should also be executed as early as possible, so also include
+    # them at the bottom.
+    include AbstractController::Callbacks
+    # Append rescue at the bottom to wrap as much as possible.
+    include Rescue
+    # Add instrumentations hooks at the bottom, to ensure they instrument all the
+    # methods properly.
+    include Instrumentation
+    # Params wrapper should come before instrumentation so they are properly showed
+    # in logs
+    include ParamsWrapper
+`}
+          />
+          <p>
+            後から include したモジュールほど、ancestors では前に並びます（<ChapterLink n={3} section="include" />）。最後に include した ParamsWrapper が最も前で、Instrumentation、Rescue、Callbacks の順に続きます。同じ名前のメソッドは ancestors の前から順に呼ばれ、<code>super</code> で次の定義に進むので、process_action は ParamsWrapper、Instrumentation、Rescue、Callbacks の順に通ります。図 1-6 の2番目から5番目がこの順です（1番目の ActiveRecord::Railties::ControllerRuntime は、ActiveRecord が後から足したモジュールです）。
+          </p>
+          <p>
+            Rescue のコメントの「wrap as much as possible」は、できるだけ多くの処理を rescue の対象にするという意味です。Rescue の process_action は Callbacks の process_action より先に呼ばれ、その <code>super</code> の中で before_action のメソッドとアクションが実行されます。そのため、アクションの中の例外だけでなく、before_action のメソッド（「CRUD を保つコントローラーの書き方」の節の set_article が呼ぶ Article.find など）の中で起きた例外も、rescue_from で登録した処理の対象になります。
+          </p>
+          <p>
+            次の図は process_action の連鎖を、外側の process_action が super で1つ内側の process_action を呼ぶ入れ子として描いたものです。太い青の枠が Rescue の process_action の範囲で、before_action のメソッドとアクションはどちらもこの枠の中で実行されます。
+          </p>
+          <Figure
+            title="process_action の入れ子と rescue_from の範囲"
+            caption="Rails 8.1.4.1 の base.rb の include の順をもとにした模式図。橙の枠はモジュールの process_action で、枠の中のものは外側の process_action が呼んだ super の中で実行される。図 1-6 にある ControllerRuntime と ActionController::Rendering の定義は省略した。"
+          >
+            <RescueRangeFigure />
+          </Figure>
         </>
       ),
     },
@@ -818,7 +1290,10 @@ ActionController::Base::MODULES.size  # => 36
       body: (
         <>
           <p>
-            ルーティングの Dispatcher は、コントローラーのクラスメソッド <code>dispatch</code> を呼びます（<ChapterLink n={9} />）。
+            ルーティングの Dispatcher は、コントローラーのクラスメソッド <code>dispatch</code> を呼びます（<ChapterLink n={9} />）。Dispatcher は、ルートに書いた <code>articles#show</code> から ArticlesController というクラスを求めて、処理を渡すオブジェクトです（<ChapterLink n={9} section="dispatch" />）。この節では、その後 show メソッドが呼ばれて応答が返るまでを、metal.rb と abstract_controller/base.rb で読みます。確かめるのはコントローラーのインスタンスがいつ作られるか、アクションの名前の文字列からメソッドがどう呼ばれるか、応答がどの形で返るかの3つです。
+          </p>
+          <p>
+            最初の引用には dispatch が2つあります。上の <code>def self.dispatch</code> がクラスメソッド、下の <code>def dispatch</code> がインスタンスメソッドです。
           </p>
           <Code
             lang="ruby"
@@ -842,9 +1317,32 @@ ActionController::Base::MODULES.size  # => 36
     end
 `}
           />
+          <ul>
+            <li>
+              <code>def self.dispatch(name, req, res)</code>：name はアクションの名前（"show"）、req は要求を表すオブジェクト、res は応答を表すオブジェクトです。
+            </li>
+            <li>
+              <code>if middleware_stack.any?</code>：このコントローラーに <code>use</code> で登録したミドルウェアがあるかを調べています。登録していなければ else の側に進みます。
+            </li>
+            <li>
+              <code>new.dispatch(name, req, res)</code>：<code>new</code> でコントローラーのインスタンスを作り、そのインスタンスの dispatch（下のメソッド）を呼びます。
+            </li>
+            <li>
+              <code>set_request!(request)</code> と <code>set_response!(response)</code>：要求と応答のオブジェクトを、インスタンス変数の <code>@_request</code> と <code>@_response</code> に入れます。アクションの中で使う <code>request</code>、<code>response</code>、<code>session</code> は、この2つを読みます。
+            </li>
+            <li>
+              <code>process(name)</code>：アクションを実行します（次の引用で読みます）。
+            </li>
+            <li>
+              <code>request.commit_flash</code>：flash のうち次の要求に渡す内容を確定します。
+            </li>
+            <li>
+              <code>to_a</code>：メソッドの最後の式なので、この値が dispatch の戻り値になります。
+            </li>
+          </ul>
           <p>
             クラスメソッドは、リクエストごとに <code>new</code> でコントローラーのインスタンスを作ります。インスタンス変数（<code>@article</code>{' '}
-            など）がリクエストの間で混ざらないのはこのためです。コントローラーにも <code>use</code> でミドルウェアを登録でき、その場合はコントローラー専用のスタックを通ります
+            など）がリクエストの間で混ざらないのはこのためです。ある要求の show で代入した <code>@article</code> は、その要求のためのインスタンスが持っていて、次の要求では新しいインスタンスが作られます。コントローラーにも <code>use</code> でミドルウェア（要求と応答の間に処理を挟む部品。<ChapterLink n={6} section="middleware" />）を登録でき、その場合はコントローラー専用のスタックを通ります
             <Ref n={1} />。インスタンスの <code>dispatch</code> は、リクエストと応答を設定し、<code>process</code> でアクションを実行し、flash を確定してから <code>to_a</code>{' '}
             で応答の配列を返します。<code>to_a</code> は <code>response.to_a</code> を呼ぶだけで、ActionDispatch::Response が <code>[status, headers, body]</code> を作ります。
           </p>
@@ -877,19 +1375,70 @@ ActionController::Base::MODULES.size  # => 36
 `}
           />
           <p>
+            上の <code>process</code> は、dispatch が <code>process(name)</code> で呼んだメソッドです。<code>GET /articles/1</code> の場合、action には "show" が入っています。
+          </p>
+          <ul>
+            <li>
+              <code>@_action_name = action.to_s</code>：アクションの名前を文字列にして保存します。アクションやビューの中の <code>action_name</code> はこの値を返します。
+            </li>
+            <li>
+              <code>unless action_name = _find_action_name(@_action_name)</code>：<code>=</code> は比較ではなく代入です。_find_action_name の戻り値をローカル変数の action_name に入れ、その値が nil か false なら、次の行の raise を実行します。
+            </li>
+            <li>
+              <code>raise ActionNotFound.new(…)</code>：呼べるアクションが無いときの例外です。メッセージは <code>The action 'destroy' could not be found for ArticlesController</code> のようになります。
+            </li>
+            <li>
+              <code>@_response_body = nil</code>：応答の本文がまだ決まっていない状態にします。render や redirect_to を済ませたかどうかの判定（「描画と応答のオブジェクト」の節の <code>performed?</code>）に使われます。
+            </li>
+            <li>
+              <code>process_action(action_name, ...)</code>：process_action を呼びます。ArticlesController のインスタンスに対して呼ぶので、ancestors で最も前にある定義から始まります。
+            </li>
+            <li>
+              下の <code>def process_action(...)</code> は AbstractController::Base の定義で、ancestors では最も後ろにあります。<code>send_action(...)</code> を呼ぶだけです。
+            </li>
+          </ul>
+          <p>
             <code>_find_action_name</code> は、アクション名が <code>action_methods</code> に含まれるかを確かめます。<code>action_methods</code> は、コントローラーの public メソッドから、最初の抽象クラス（
-            <code>abstract!</code> を宣言した ActionController::Base）とそのモジュールの public メソッドを除いたものです。private・protected のメソッドはアクションになりません。一方、ApplicationController
+            <code>abstract!</code> を宣言した ActionController::Base）とそのモジュールの public メソッドを除いたものです。<code>abstract!</code> は、そのクラス自身はアクションを持たないという印を付けるクラスメソッドで、AbstractController::Base、Metal、ActionController::Base が呼んでいます。render や redirect_to は Base とそのモジュールの public メソッドなので、アクションにはなりません。private・protected のメソッドはアクションになりません。一方、ApplicationController
             に書いた public メソッドは、サブクラスのアクションとして扱われます。見つからなければ <code>AbstractController::ActionNotFound</code>（404）です
             <Ref n={2} />。
           </p>
+          <Code
+            lang="ruby"
+            title="アクションになるメソッドと、ならないメソッド"
+            code={`
+class ApplicationController < ActionController::Base
+  def current_author      # public。action_methods に入り、継承したコントローラーのアクションとして扱われる
+    @current_author
+  end
+
+  private
+    def require_login     # private。action_methods に入らない
+      # …
+    end
+end
+`}
+          />
+          <p>
+            public のままでも、そのメソッドを指すルートが無ければ要求は届きません。ただしアクションとして扱われる状態なので、同じ名前のルートが足されると、URL から呼べるメソッドになります。Rails ガイドも、アクションにしないメソッドは private か protected にすることを勧めています。レビューでは、コントローラーに足されたアクション以外のメソッドが private の下にあるかを確かめます。
+          </p>
+          <p>
+            ActionNotFound は、ルートはあるのにメソッドが無いときに起きます。たとえば routes.rb に <code>resources :articles</code> と書くと destroy へのルートも作られるので、コントローラーに destroy を書いていない状態で <code>DELETE /articles/1</code> を送ると、上のメッセージの例外になります。
+          </p>
           <p>
             <code>process_action</code> は各モジュールが <code>super</code> を呼ぶ形で上書きしており（<ChapterLink n={3} />）、パラメーターの包み直し、計測、例外の捕捉、before_action
-            などのコールバックを順に通った後、AbstractController::Base の定義に届きます。その <code>send_action</code> は <code>send</code> の別名なので、最後は <code>send("show")</code>{' '}
+            などのコールバックを順に通った後、AbstractController::Base の定義に届きます。「コントローラーのクラス階層」の節で見たモジュールの名前でいうと、ParamsWrapper（パラメーターの包み直し）、Instrumentation（計測）、Rescue（例外の捕捉）、Callbacks（before_action などのコールバック）の順です。その <code>send_action</code> は <code>send</code> の別名なので、最後は <code>send("show")</code>{' '}
             で show メソッドが呼ばれます。
+          </p>
+          <p>
+            図 10-6 はここまでの呼び出しを上から順に並べたものです。上の2つが metal.rb の2つの dispatch、3つ目から5つ目が abstract_controller/base.rb の process、process_action、send_action です。6つ目の default_render は「描画と応答のオブジェクト」の節で読みます。7つ目は dispatch の最後の2行です。
           </p>
           <Figure n="10-6" title="dispatch から応答の配列まで" caption="Rails 8.1.4.1 の metal.rb・abstract_controller/base.rb・basic_implicit_render.rb を読んでまとめた図。process_action の連鎖の詳細は図 1-6 を参照。">
             <DispatchFigure />
           </Figure>
+          <p>
+            この呼び出しの順は例外のバックトレース（例外が起きた場所までの、メソッドの呼び出しの履歴）に現れます。アクションの中で例外が起きると、バックトレースには app/controllers/articles_controller.rb の行に続いて、actionpack の metal/basic_implicit_render.rb（send_action）、abstract_controller/base.rb（process_action）、abstract_controller/callbacks.rb、metal/rescue.rb、metal/instrumentation.rb、metal/params_wrapper.rb などの行が並びます。図 10-6 を下から上へたどる順です。development のエラー画面では Framework Trace の欄に表示されます。これらはアクションを呼び出した側のメソッドで、誤りのある場所ではありません。原因を探すときは、app/ で始まる行から読みます。
+          </p>
         </>
       ),
     },
@@ -900,7 +1449,10 @@ ActionController::Base::MODULES.size  # => 36
         <>
           <p>
             コントローラーの <code>params</code> は、<code>request.parameters</code> を <code>ActionController::Parameters</code> で包んだものです（<code>strong_parameters.rb</code> の
-            1519〜1529 行目）。<code>request.parameters</code> は次のように作られます。
+            1519〜1529 行目）。ActionController::Parameters は、ハッシュと同じように <code>params[:id]</code> で値を読めるクラスで、モデルに渡してよいと許可されたかどうかの状態も持ちます。<code>request.parameters</code> のほうは、要求から読み取った値を入れたハッシュです。
+          </p>
+          <p>
+            パスの <code>:id</code>、クエリ文字列、フォームの本文に同じ名前の値があったとき、params にどれが入るかを、<code>request.parameters</code> を作るコードで確かめます。
           </p>
           <Code
             lang="ruby"
@@ -922,10 +1474,44 @@ ActionController::Base::MODULES.size  # => 36
       end
 `}
           />
+          <ul>
+            <li>
+              <code>get_header("action_dispatch.request.parameters")</code>：env（Rack が要求の情報を入れて渡すハッシュ。<ChapterLink n={6} section="rack-contract" />）から、前に作った結果を読みます。あれば次の行の <code>return</code> でそれを返します。
+            </li>
+            <li>
+              <code>request_parameters.merge(query_parameters)</code>：request_parameters は本文から読み取った値、query_parameters はクエリ文字列から読み取った値のハッシュです。
+            </li>
+            <li>
+              <code>rescue EOFError</code>：EOFError は、入力を読んでいる途中でデータが終わったときの Ruby の例外です。本文を最後まで読めなかった場合は、クエリ文字列の値だけを使います。
+            </li>
+            <li>
+              <code>params.merge!(path_parameters)</code>：path_parameters はルーティングがパスから取り出した値（<code>:id</code> など）と、controller と action の名前です。<code>merge!</code> は新しいハッシュを作らず、params 自身を書き換えます。
+            </li>
+            <li>
+              <code>set_header(…, params)</code>：結果を env に保存します。
+            </li>
+          </ul>
           <p>
             本文のパラメーター（<code>request_parameters</code>）にクエリ文字列のパラメーターを、さらにルーティングのパスパラメーターをマージしています。<code>merge</code>{' '}
             は後のハッシュの値で上書きするので、同じ名前ならパスパラメーターが最も優先されます。結果は env に保存され、2回目からはそれを返します
-            <Ref n={3} />。デモのアプリケーションで、3か所に同じ <code>title</code> を入れて確かめました。
+            <Ref n={3} />。merge の動きだけを素の Ruby で確かめると、次のようになります。
+          </p>
+          <Code
+            lang="ruby"
+            title="merge.rb と実行結果（Ruby 4.0.9）"
+            code={`
+body  = { "title" => "from_body",  "b" => "1" }
+query = { "title" => "from_query", "q" => "1" }
+path  = { "title" => "from_path" }
+
+params = body.merge(query)
+p params   # => {"title" => "from_query", "b" => "1", "q" => "1"}
+params.merge!(path)
+p params   # => {"title" => "from_path", "b" => "1", "q" => "1"}
+`}
+          />
+          <p>
+            1回目の merge で title は query の値になり、2回目の merge! で path の値になりました。片方にしか無い b と q はそのまま残ります。デモのアプリケーションでも、3か所に同じ <code>title</code> を入れて確かめました。
           </p>
           <Code
             lang="text"
@@ -936,18 +1522,27 @@ POST /probe/echo/from_path?title=from_query&q=1   （ルートは post "probe/ec
 params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"echo"}
 `}
           />
+          <p>
+            1行目が送った要求で、パスの <code>:title</code> の位置に from_path、クエリ文字列に <code>title=from_query</code>、本文に <code>title=from_body</code> を入れています。最後の行が、アクションの中で読んだ params です。title はパスの from_path になりました。b は本文だけに、q はクエリ文字列だけにあるので、どちらも入っています。controller と action は、ルーティングが入れたパスパラメーターです（図 10-7）。
+          </p>
           <Figure n="10-7" title="params の合成" caption="上の実行結果を図にしたもの。">
             <ParamsFigure />
           </Figure>
           <p>
+            この順序があるので、<code>/articles/1?id=2</code> のようにクエリ文字列へ id を足して送っても、<code>params[:id]</code> はパスの "1" のままです。フォームの本文に id を足しても同じです。
+          </p>
+          <p>
             本文が JSON の場合は、Content-Type に応じて JSON として解析されます。さらに ParamsWrapper が、JSON の値をコントローラー名のキーの下にも複製します。<code>{'{"name":"json"}'}</code>{' '}
             を送ると、params には <code>"name"</code> と並んで <code>{'"probe" => {"name" => "json"}'}</code> が入りました
-            <Ref n={4} />。JSON の API で <code>params.expect(article: [...])</code> と書けるのはこのためです。
+            <Ref n={4} />。送ったのは ProbeController のアクションなので、キーは probe です。フォームの入力欄の名前は <code>article[title]</code> のように article の下に入る形ですが、JSON を送る側は <code>{'{"title":"…"}'}</code> のようにキーを付けずに送ることがあります。ParamsWrapper が複製するので、どちらの形でもコントローラーの名前のキーの下から読めます。JSON の API で <code>params.expect(article: [...])</code> と書けるのはこのためです。
           </p>
           <p>
             <Term>Strong Parameters</Term> は、許可していないキーがモデルの一括代入（<code>Article.new(hash)</code> など）に渡るのを防ぐ仕組みです。ActionController::Parameters
             は、<code>permit</code> や <code>expect</code> を通すまでは「許可されていない」状態で、そのままモデルに渡すと ActiveModel が{' '}
-            <code>ActiveModel::ForbiddenAttributesError</code> を投げます。Rails 8.0 で追加された <code>expect</code> は、必須のキーの確認と許可を1回で行います。
+            <code>ActiveModel::ForbiddenAttributesError</code> を投げます。Rails 8.0 で追加された <code>expect</code> は、必須のキーの確認と許可を1回で行います。「render と redirect_to」の節の実行結果で、expect の戻り値の表示の最後に <code>permitted: true</code> とあったのが、許可された状態を表しています。
+          </p>
+          <p>
+            expect が、書いたキー以外を捨てることと、必須のキーが無いときに例外にすることを、ソースで確かめます。
           </p>
           <Code
             lang="ruby"
@@ -962,6 +1557,29 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
     end
 `}
           />
+          <p>
+            <code>params.expect(article: [:title])</code> を、本文が <code>article[title]=ok&amp;article[admin]=1</code> の要求で呼んだ場合で、1行ずつ追います。
+          </p>
+          <ul>
+            <li>
+              <code>def expect(*filters)</code>：<code>*filters</code> は引数を配列にまとめて受け取ります。filters は <code>[{'{article: [:title]}'}]</code> です。
+            </li>
+            <li>
+              <code>params = permit_filters(filters)</code>：空の Parameters を新しく作り、filters に書いたキーの値だけを写して、許可済みにして返します。結果は <code>{'{"article" => {"title" => "ok"}}'}</code> で、admin は写されません。
+            </li>
+            <li>
+              <code>keys = filters.flatten.flat_map {'{ |f| f.is_a?(Hash) ? f.keys : f }'}</code>：filters から、いちばん外側のキーを取り出します。ここでは <code>[:article]</code> です。
+            </li>
+            <li>
+              <code>values = params.require(keys)</code>：require は、キーの値を取り出すメソッドです。値が無いか空なら <code>ActionController::ParameterMissing</code> を発生させます。配列を渡したので、結果も配列で返ります。
+            </li>
+            <li>
+              <code>values.size == 1 ? values.first : values</code>：キーが1つなら、配列から取り出した中身を返します。戻り値は <code>{'{"title" => "ok"}'}</code> を持つ許可済みの Parameters です。
+            </li>
+          </ul>
+          <p>
+            本文が <code>other=1</code> の場合は、permit_filters の結果に article が入らないので、require が ParameterMissing を発生させます。この例外は「例外がエラー応答になるまで」の節の表で 400 に対応しています。例外のメッセージは <code>param is missing or the value is empty or invalid: article</code> です。
+          </p>
           <p>デモのアプリケーション（production）での結果は次のとおりです。</p>
           <div className="table-wrap">
             <table>
@@ -1005,6 +1623,9 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
               </tbody>
             </table>
           </div>
+          <p>
+            1行目のとおり、許可していないキーは例外にならず、捨てられるだけです。フォームに入力欄を足したのに、その値だけが保存されないときは、expect（または permit）のキーに足し忘れていないかを最初に確かめます。3行目は expect も permit も通さずに <code>params[:article]</code> をそのままモデルに渡した場合です。article の値が送られていれば、その中身に関係なく 500 になります。
+          </p>
           <Callout kind="v72">
             <p>
               <code>params.expect</code> は Rails 8.0 で追加されたもので、Rails 7.2.4 にはありません
@@ -1042,6 +1663,23 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
 `}
           />
           <p>
+            send_action は、「dispatch からアクションの実行まで」の節の最後で、アクションのメソッドを呼んでいたメソッドです。
+          </p>
+          <ul>
+            <li>
+              <code>def send_action(method, *args)</code>：method にはアクションの名前（"show"）が入ります。
+            </li>
+            <li>
+              <code>ret = super</code>：上書きする前の send_action（send の別名）を呼びます。ここで show メソッドが実行され、その戻り値が ret に入ります。
+            </li>
+            <li>
+              <code>default_render unless performed?</code>：<code>performed?</code> は、render か redirect_to を済ませたかどうかを返すメソッドです（metal.rb では <code>response_body || response.committed?</code>）。済ませていなければ default_render を呼びます。
+            </li>
+            <li>
+              下の <code>def default_render</code> は BasicImplicitRender の定義で、本文の無い 204 を返します。ImplicitRender にも default_render があり、ancestors では ImplicitRender のほうが前にあるので、Base を継承したコントローラーでは ImplicitRender の定義が呼ばれます。
+            </li>
+          </ul>
+          <p>
             アクションのメソッドから戻った時点で、まだ応答の本文が決まっていなければ（<code>performed?</code> が偽なら）<code>default_render</code> を呼びます。ActionController::Base では
             ImplicitRender の <code>default_render</code> が使われ、アクション名のテンプレートがあれば <code>render</code> します。テンプレートが無い場合は、ブラウザーからの通常の GET（HTML
             を求めるリクエスト）なら <code>ActionController::MissingExactTemplate</code>（406）、それ以外は <code>head :no_content</code>（204）になります（<code>implicit_render.rb</code> の
@@ -1049,13 +1687,137 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
             <Ref n={6} />。デモのアプリケーションで、テンプレートの無いアクションに HTML を求めると 406、JSON を求めると 204 が返りました。
           </p>
           <p>
+            ImplicitRender の default_render は、上から順に次の4つの条件を調べます。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>条件</th>
+                  <th>結果</th>
+                  <th>例外のメッセージやログ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>要求の形式に合う、アクション名のテンプレートがある</td>
+                  <td>そのテンプレートを render する</td>
+                  <td>「コントローラーとアクション」の節の Rendering と Rendered の行</td>
+                </tr>
+                <tr>
+                  <td>要求の形式のテンプレートは無いが、同じアクションのほかの形式のテンプレートはある</td>
+                  <td>ActionController::UnknownFormat（406）</td>
+                  <td>
+                    <code>ArticlesController#show is missing a template for this request format and variant.</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>テンプレートが1つも無く、ブラウザーでページを開く要求である（GET で、HTML を求めている。X-Requested-With ヘッダーに XMLHttpRequest と書いて送る JavaScript からの要求は除く）</td>
+                  <td>ActionController::MissingExactTemplate（406）</td>
+                  <td>
+                    <code>ArticlesController#show is missing a template for request formats: text/html</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>テンプレートが1つも無く、上の要求でもない</td>
+                  <td>head :no_content（204）</td>
+                  <td>
+                    <code>No template found for ArticlesController#show, rendering head :no_content</code>（ログ）
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            2行目は show.html.erb しか無いアクションに JSON を求めたときなどに起きます。メッセージの後ろには、要求が求めた形式（request.formats）が付きます。「missing a template」のメッセージを見たら、app/views のコントローラーの名前のディレクトリに、アクションの名前と要求の形式に合うファイルがあるかを確かめます。
+          </p>
+          <p>
+            ImplicitRender は、アクションの名前からメソッドを決める <code>method_for_action</code> も上書きしています。アクションのメソッドが無くても、同じ名前のテンプレートがあれば default_render を呼ぶメソッドとして扱うので、ActionNotFound にならず、テンプレートが描画されます。SessionsController の new のような中身が空のアクションで、メソッドを消しても画面が表示されるのはこのためです。
+          </p>
+          <p>
             <code>render</code> の結果は <code>response_body=</code> で応答のオブジェクトに入ります。2回 <code>render</code> すると <code>AbstractController::DoubleRenderError</code>{' '}
             です。<code>redirect_to</code> も応答の本文を決めるので、<code>render</code> と <code>redirect_to</code> を両方呼んでも同じ例外になります。<code>head :ok</code>{' '}
             は本文を空にしてステータスだけを決めます。ビューの描画の内部は<ChapterLink n={16} />で扱います。
           </p>
           <p>
-            応答のオブジェクト <code>ActionDispatch::Response</code> は、ステータス、ヘッダー（Rack 3 では <code>Rack::Headers</code>）、本文を持ちます。<code>dispatch</code> の最後の{' '}
+            DoubleRenderError は、条件を付けた redirect_to の後に処理を止め忘れたときによく起きます。「render と redirect_to」の節で見たとおり、redirect_to も render も、アクションのコードの実行を止めないためです。
+          </p>
+          <Code
+            lang="ruby"
+            title="DoubleRenderError になる書き方と、直した書き方"
+            code={`
+# 公開していない記事のときも、redirect_to の後で render まで進む
+def show
+  @article = Article.find(params[:id])
+  redirect_to articles_path unless @article.published
+  render :show   # 2回目なので AbstractController::DoubleRenderError
+end
+
+# redirect_to の後に return でメソッドを終える
+def show
+  @article = Article.find(params[:id])
+  unless @article.published
+    redirect_to articles_path
+    return
+  end
+  render :show
+end
+`}
+          />
+          <p>
+            例外のメッセージは <code>Render and/or redirect were called multiple times in this action.</code> で始まり、redirect_to の後に return を書くようにという説明が続きます。before_action のメソッドが redirect_to して終わった場合は、Rails がアクションを呼ばないので、アクションの中の render と重なってこの例外になることはありません（「before_action でアクションの前に処理を入れる」の節）。
+          </p>
+          <p>
+            応答のオブジェクト <code>ActionDispatch::Response</code> は、ステータス、ヘッダー（Rack 3 では <code>Rack::Headers</code>。<ChapterLink n={6} section="rack3" />）、本文を持ちます。<code>dispatch</code> の最後の{' '}
             <code>to_a</code> がこれを Rack の配列にし、ミドルウェアを逆にたどって Puma に返ります（<ChapterLink n={6} />）。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'response-formats',
+      title: "HTML と JSON をリクエストで切り替える",
+      body: (
+        <>
+          <p>
+            同じ記事を、ブラウザーには HTML で、JavaScript やほかのプログラムには JSON で返したいことがあります。<code>respond_to</code> は同じ操作に対する応答形式を選びます。Rails はルートの拡張子（<code>/articles/42.json</code>）や要求の <code>Accept</code> ヘッダーなどから形式を決めます。<code>Content-Type</code> は要求本文をどう読み取るかを表すヘッダーで、応答としてほしい形式を伝える <code>Accept</code> と役割が異なります。<Ref n={17} />
+          </p>
+          <Code
+            lang="ruby"
+            title={"ArticlesController の show の例"}
+            code={`
+def show
+  @article = Article.find(params[:id])
+
+  respond_to do |format|
+    format.html
+    format.json { render json: @article.as_json(only: %i[id title]) }
+  end
+end
+`}
+          />
+          <ul>
+            <li>
+              <code>respond_to do |format| … end</code>：ブロックの中に、このアクションが返せる形式を並べます。Rails は要求が求めた形式に合う行だけを実行します。
+            </li>
+            <li>
+              <code>format.html</code>：ブロックを付けていないので、HTML を求められたときは render を書かない場合と同じ動きになり、show.html.erb が描画されます。
+            </li>
+            <li>
+              <code>format.json {'{ render json: … }'}</code>：JSON を求められたときは、このブロックを実行します。<code>render json:</code> は、渡した値を JSON の文字列にして本文に入れます。
+            </li>
+            <li>
+              <code>@article.as_json(only: %i[id title])</code>：記事の属性のうち id と title だけを持つハッシュを作ります。<code>%i[id title]</code> は <code>[:id, :title]</code> と同じです。
+            </li>
+          </ul>
+          <p>
+            HTML のときは既定のテンプレートを描画し、JSON では返す属性を絞っています。<code>render json: @article</code> と書くと、記事のすべての列が JSON に入るので、外に出してよい属性だけを only で指定しています。JSON を求めるには、<code>/articles/1.json</code> のように拡張子を付けるか、<code>curl -H "Accept: application/json"</code> のように Accept ヘッダーを付けて送ります。
+          </p>
+          <p>
+            どの形式でもアクセス条件を先に確認します。ログインの確認のような、その要求を受け付けてよいかの確認は、format.html や format.json のブロックの中に形式ごとに書かず、before_action や respond_to より前の行に置きます。片方の形式にだけ確認を書き忘れることを防げます。
+          </p>
+          <p>
+            要求に合う形式をアクションが提供しないときは <code>ActionController::UnknownFormat</code> になり、既定の例外処理では 406 が返ります。上の show に <code>/articles/1.xml</code> を送った場合がこれにあたります。<Ref n={17} /><Ref n={19} />
           </p>
         </>
       ),
@@ -1066,7 +1828,7 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
       body: (
         <>
           <p>
-            アクションの中で起きた例外は、まず <code>process_action</code> の連鎖にある ActionController::Rescue で捕捉されます。
+            production で利用者に 404 や 500 のページが表示されたとき、そのページを誰が、どの状態コードで返したのかを、この節で追います。アクションの中で起きた例外は、まず <code>process_action</code> の連鎖にある ActionController::Rescue で捕捉されます。rescue_from で登録した処理がどこで呼ばれ、登録が無い例外がどうなるかを、次のコードで確かめます。
           </p>
           <Code
             lang="ruby"
@@ -1081,11 +1843,61 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
       end
 `}
           />
+          <ul>
+            <li>
+              <code>def process_action(*)</code>：process_action の連鎖の1つです。<code>(*)</code> は引数を名前を付けずに受け取る書き方で、<code>super</code> にそのまま渡ります。
+            </li>
+            <li>
+              <code>super</code>：連鎖の次の定義を呼びます。この先で before_action のメソッドとアクションが実行されます。
+            </li>
+            <li>
+              <code>rescue Exception =&gt; exception</code>：def の中に begin を書かずに rescue を書くと、メソッド全体が対象になります。Exception は Ruby のすべての例外の親クラスなので、<code>super</code> の中で起きたどの例外もここに来ます。
+            </li>
+            <li>
+              <code>request.env["action_dispatch.show_detailed_exceptions"] ||= show_detailed_exceptions?</code>：詳しいエラーページを出すかどうかの値を env に入れます。<code>||=</code> は左の値が nil か false のときだけ代入します。
+            </li>
+            <li>
+              <code>rescue_with_handler(exception) || raise</code>：rescue_with_handler が真の値を返せば、<code>||</code> の右は実行されず、例外はここで終わります。nil を返したときだけ、右の <code>raise</code> が実行されます。引数の無い raise は、いま rescue している例外をもう一度発生させます。
+            </li>
+          </ul>
           <p>
             <code>rescue_with_handler</code> は ActiveSupport::Rescuable のメソッドで、<code>rescue_from</code> で登録した例外処理用のメソッドやブロック（ハンドラ）を探して呼びます。見つからなければ <code>raise</code>{' '}
             で例外を投げ直します
-            <Ref n={7} />。投げ直された例外はコントローラーの外に出て、ミドルウェアをさかのぼります。<ChapterLink n={6} />のスタックでは、DebugExceptions がログに出力し、<code>config.consider_all_requests_local</code> が true（development
-            の既定）なら詳細なエラーページを返します。そうでなければ外側の ShowExceptions に届きます。
+            <Ref n={7} />。最後の行の動きを、ハンドラの登録を1つだけにした素の Ruby で確かめます。
+          </p>
+          <Code
+            lang="ruby"
+            title="handler_or_raise.rb と実行結果（Ruby 4.0.9）"
+            code={`
+def handle(exception)                  # KeyError だけを処理するハンドラ
+  return nil unless exception.is_a?(KeyError)
+  puts "ハンドラが処理した: #{exception.class}"
+  true
+end
+
+def process_action
+  yield                                # アクションにあたる処理
+rescue Exception => exception
+  handle(exception) || raise
+end
+
+process_action { raise KeyError, "登録あり" }
+
+begin
+  process_action { raise ArgumentError, "登録なし" }
+rescue => e
+  puts "外側に届いた: #{e.class}: #{e.message}"
+end
+# ハンドラが処理した: KeyError
+# 外側に届いた: ArgumentError: 登録なし
+`}
+          />
+          <p>
+            KeyError は handle が処理して true を返したので、process_action の外には出ませんでした。ArgumentError は handle が nil を返したので raise で発生し直し、外側の rescue に届きました。Rails では、この外側にあたるのがミドルウェアです。
+          </p>
+          <p>
+            投げ直された例外はコントローラーの外に出て、ミドルウェアをさかのぼります。ミドルウェアは外側のものが内側のものの call を呼ぶ形で重なっているので（<ChapterLink n={6} section="middleware" />）、コントローラーから出た例外は、内側のミドルウェアの call から外側のミドルウェアの call へ順に伝わります。<ChapterLink n={6} />のスタックでは、DebugExceptions がログに出力し、<code>config.consider_all_requests_local</code> が true（development
+            の既定）なら詳細なエラーページを返します。そうでなければ外側の ShowExceptions に届きます。ShowExceptions の call が、production のエラーページを返す場所です。
           </p>
           <Code
             lang="ruby"
@@ -1120,11 +1932,46 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
 `}
           />
           <p>
-            ExceptionWrapper は、例外のクラス名から <code>rescue_responses</code> の表でステータスを決めます。表に無い例外は 500 です。ActiveRecord の Railtie は{' '}
+            上の call がミドルウェアとして呼ばれるメソッド、下の render_exception が call から呼ばれるメソッドです。<code>GET /articles/999999</code> で ActiveRecord::RecordNotFound が起きた場合で読みます。
+          </p>
+          <ul>
+            <li>
+              <code>@app.call(env)</code>：@app は1つ内側のミドルウェアです。この呼び出しの中で、残りのミドルウェア、ルーティング、コントローラーが実行されます。例外が起きなければ、その応答がそのまま call の戻り値になります。
+            </li>
+            <li>
+              <code>rescue Exception =&gt; exception</code>：内側のどこでも rescue されなかった例外が、ここに届きます。
+            </li>
+            <li>
+              <code>wrapper = ExceptionWrapper.new(backtrace_cleaner, exception)</code>：例外を ExceptionWrapper のオブジェクトで包みます。wrapper の status_code を呼ぶと、この例外に対応する状態コードが返ります。
+            </li>
+            <li>
+              <code>request.set_header "action_dispatch.exception", …</code>：例外を env に入れます。後で呼ばれる exceptions_app は、ここから例外を読めます。
+            </li>
+            <li>
+              <code>if wrapper.show?(request)</code>：例外をエラー応答にするかどうかを、<code>config.action_dispatch.show_exceptions</code> の設定で決めます（この節の最後の補足）。しない場合は <code>raise exception</code> で外側へ投げ直します。
+            </li>
+            <li>
+              <code>status = wrapper.status_code</code>：状態コードを求めます。RecordNotFound なら 404 です。
+            </li>
+            <li>
+              <code>request.path_info = "/#{'{status}'}"</code> と <code>request.request_method = "GET"</code>：要求のパスを <code>/404</code> に、メソッドを GET に書き換えます。元のパスとメソッドは、その前の2行で env に残しています。
+            </li>
+            <li>
+              <code>response = @exceptions_app.call(request.env)</code>：書き換えた要求で exceptions_app を呼びます。exceptions_app は、<code>GET /404</code> を受け取ったアプリケーションとして応答を作ります。
+            </li>
+            <li>
+              最後の行：exceptions_app が X-Cascade ヘッダーに pass と書いた応答を返したときは、本文が空でその状態コードの応答を返します。それ以外は、exceptions_app の応答をそのまま返します。
+            </li>
+          </ul>
+          <p>
+            ExceptionWrapper は、例外のクラス名から <code>rescue_responses</code> の表でステータスを決めます。表に無い例外は 500 です。ActiveRecord の Railtie（gem が Rails の起動時の設定を登録するためのクラス。<ChapterLink n={7} section="railtie" />）は{' '}
             <code>ActiveRecord::RecordNotFound</code> を 404 として追加しています
             <Ref n={8} />。ShowExceptions は、パスを <code>/404</code> のように書き換えて <code>exceptions_app</code> を呼びます。既定の <code>exceptions_app</code> は PublicExceptions
             で、<code>public/404.html</code> のようなファイルを返します
-            <Ref n={9} />。<code>config.exceptions_app = routes</code> とすると、エラーページを通常のルートとコントローラーで作れます。
+            <Ref n={9} />。<code>config.exceptions_app = routes</code> とすると、エラーページを通常のルートとコントローラーで作れます。パスが <code>/404</code> に書き換わっているので、routes.rb に <code>/404</code> や <code>/500</code> のルートを書けば、そのアクションがエラーページを作ります。
+          </p>
+          <p>
+            図 10-8 は例外が通る順を上から下へ並べたものです。左の列を上から順に見ます。Rescue と DebugExceptions の箱から右へ出る矢印は、その段階で応答が決まる場合です。右下の枠は ShowExceptions が状態コードを決めるときに使う rescue_responses の一部です。
           </p>
           <Figure n="10-8" title="例外の行き先" caption="Rails 8.1.4.1 の rescue.rb・debug_exceptions.rb・show_exceptions.rb・exception_wrapper.rb を読んでまとめた図。">
             <ExceptionFigure />
@@ -1178,6 +2025,12 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
               </tbody>
             </table>
           </div>
+          <p>
+            1行目と2行目は同じ RecordNotFound ですが、応答を作った場所が違います。1行目は rescue_from の登録が無いので、例外が ShowExceptions まで届き、public/404.html が返りました。2行目は Rescue の process_action の中でハンドラが応答を作ったので、例外はミドルウェアまで届いていません。4行目と5行目は rescue_responses の表に無い例外なので 500 です。
+          </p>
+          <p>
+            production の画面には public の HTML が出るだけで、例外の内容は表示されません。利用者から「エラーの画面が出た」と報告されたときは、ログからその要求を探し、DebugExceptions が出力した例外のクラス名とメッセージを読みます。クラス名が分かれば、この表と rescue_responses から、404 のように利用者の操作で起きる応答なのか、500 のようにコードの修正が必要な誤りなのかを区別できます。
+          </p>
           <Callout kind="note">
             <p>
               <code>config.action_dispatch.show_exceptions</code> は、<code>:all</code>（既定。すべての例外をエラー応答にする）、<code>:rescuable</code>（rescue_responses
@@ -1194,7 +2047,23 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
       body: (
         <>
           <p>
-            Cookie の読み書きは、ミドルウェアの ActionDispatch::Cookies と、リクエストに付く cookie jar が分担します。コントローラーの <code>cookies</code>{' '}
+            セッションのほかに、コントローラーの <code>cookies</code> で、Cookie を1つずつ読み書きすることもできます。表示の設定のような、ログインとは関係の無い小さな値を覚えるときに使います。
+          </p>
+          <Code
+            lang="ruby"
+            title="アクションの中での cookies の使い方"
+            code={`
+cookies[:theme] = "dark"                # 値をそのまま入れる。利用者はブラウザーで読めて、書き換えられる
+cookies.signed[:visitor_id] = 42        # 署名を付ける。読めるが、書き換えると Rails が検出する
+cookies.encrypted[:note] = "secret"     # 暗号化する。読めず、書き換えも Rails が検出する
+
+cookies[:theme]                         # 同じブラウザーからの次の要求でも "dark" を読める
+cookies.delete(:theme)                  # ブラウザーに Cookie を消させる
+`}
+          />
+          <p>
+            <code>cookies[:theme] = …</code> と書いた値が、いつ応答の set-cookie ヘッダーになるかを見ます。
+            Cookie の読み書きは、ミドルウェアの ActionDispatch::Cookies と、リクエストに付く cookie jar が分担します。cookie jar は1つの要求で読み書きする Cookie をまとめて持つオブジェクトです。コントローラーの <code>cookies</code>{' '}
             は、最初に使われたときに作られる cookie jar で、書き込んだ値は jar に記録されるだけです。アクションが終わって応答がミドルウェアに戻ってきたとき、Cookies が jar の内容を{' '}
             <code>set-cookie</code> ヘッダーに書き出します。
           </p>
@@ -1219,14 +2088,46 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
     end
 `}
           />
+          <ul>
+            <li>
+              <code>response = @app.call(env)</code>：先に内側のミドルウェアとコントローラーを実行し、応答を受け取ります。アクションの中の <code>cookies[:theme] = "dark"</code> は、この呼び出しの中で実行されます。
+            </li>
+            <li>
+              <code>if request.have_cookie_jar?</code>：この要求の処理の中で cookie jar が作られたかを調べます。作られていなければ、応答をそのまま返します。
+            </li>
+            <li>
+              <code>unless cookie_jar.committed?</code>：jar の内容をまだ書き出していないことを確かめます。
+            </li>
+            <li>
+              <code>response = Rack::Response[*response]</code>：内側から返った <code>[status, headers, body]</code> の配列を、ヘッダーを足しやすい Rack::Response のオブジェクトに変えます。<code>*response</code> は、配列の3つの要素を3つの引数として渡す書き方です。
+            </li>
+            <li>
+              <code>cookie_jar.write(response)</code>：jar に記録された書き込みと削除を、応答の set-cookie ヘッダーに書きます。
+            </li>
+            <li>
+              <code>response.to_a</code>：応答を配列に戻して、外側のミドルウェアに返します。
+            </li>
+          </ul>
           <p>
             <code>cookies.signed</code> は値に署名を付けて改ざんを検出し、<code>cookies.encrypted</code> はさらに暗号化して中身を読めなくします。鍵は <code>secret_key_base</code>{' '}
             から用途ごとのソルトで導出され、暗号化の既定は AES-256-GCM です
-            <Ref n={10} />。<code>secret_key_base</code> が変わると、既存の Cookie はすべて読めなくなります。
+            <Ref n={10} />。<code>secret_key_base</code> が変わると、既存の Cookie はすべて読めなくなります。セッションの Cookie も読めなくなるので、ログインしていた利用者は全員、ログインしていない状態に戻ります。Rails ガイドも、CookieStore を使っているときに secret_key_base を変えると、既存のセッションがすべて無効になると説明しています。本番の secret_key_base を作り直す作業は、この影響を確かめてから進めます。
           </p>
           <p>
             セッションの既定の保存先 <code>ActionDispatch::Session::CookieStore</code> は、セッションの中身全体を <code>cookies.signed_or_encrypted</code>（新しいアプリケーションでは暗号化される jar）に保存します（
-            <code>session/cookie_store.rb</code> の 121〜122 行目）。サーバー側には何も保存しないので、Puma のプロセスやサーバーが複数あっても、どのプロセスでも同じセッションを読めます。デモのアプリケーションで{' '}
+            <code>session/cookie_store.rb</code> の 121〜122 行目）。サーバー側には何も保存しないので、Puma のプロセスやサーバーが複数あっても、どのプロセスでも同じセッションを読めます。本番では、Rails を動かすプログラム（プロセス）を複数起動しておき、要求ごとにそのうちの1つが処理する構成がよく使われます（<ChapterLink n={23} section="cluster" />）。セッションをプロセスのメモリーに持つ方式では、ログインを処理したプロセスと次の要求を処理するプロセスが違うと、セッションを読めません。Cookie に入れる方式では、どのプロセスも同じ secret_key_base で復号するので、この問題が起きません。
+          </p>
+          <p>
+            次の図はログインの要求1をプロセス A が、次の要求2をプロセス B が処理した場合を、2つの方式で比べたものです。左がセッションをプロセスのメモリーに持つ方式、右が Cookie に入れる方式です。
+          </p>
+          <Figure
+            title="セッションをメモリーに持つ方式と Cookie に入れる方式"
+            caption="本文の説明をもとにした模式図。左の方式の応答と、右の方式で要求2に返る応答は省略した。"
+          >
+            <SessionStoreFigure />
+          </Figure>
+          <p>
+            デモのアプリケーションで{' '}
             <code>session[:user_id] = 42</code> と <code>flash[:notice]</code> を設定すると、production では次のヘッダーが返りました（値の大部分は省略）。
           </p>
           <Code
@@ -1241,8 +2142,11 @@ set-cookie: _demo_session=oKbhi2j91UHJi9RL01Jh…; path=/; secure; httponly; sam
           <p>
             Cookie は1つあたり 4096 バイトまでで、超えると <code>ActionDispatch::Cookies::CookieOverflow</code> になります（<code>cookies.rb</code> の 213〜216 行目）。Rails
             ガイドも、CookieStore に保存できるのは 4 kB 程度なので大きなデータやモデルのオブジェクトを入れないように説明しています
-            <Ref n={11} />。デモのアプリケーションでセッションに 5000 文字を入れると、暗号化と符号化の後で 9137 バイトになり、この例外で 500 になりました。flash は、セッションの中の{' '}
+            <Ref n={11} />。デモのアプリケーションでセッションに 5000 文字を入れると、暗号化と符号化の後で 9137 バイトになり、この例外で 500 になりました。符号化は暗号化した結果を、Cookie の値に使える文字だけの文字列に直すことです。暗号化と符号化で元の値より大きくなるので、入れた値が 4096 バイトより小さくても上限を超えることがあります。flash は、セッションの中の{' '}
             <code>"flash"</code> というキーに保存され、<code>dispatch</code> の <code>request.commit_flash</code> で次のリクエストに渡す内容が確定します。
+          </p>
+          <p>
+            セッションに入れるのは、<code>session[:author_id] = author.id</code> のような id や短い文字列にします。<code>session[:author] = author</code> のようにモデルのオブジェクトを入れたり、検索結果の配列や長い文章を入れたりすると、この上限に近づきます。flash もセッションの中に入るので、flash に長いメッセージを入れた場合も同じです。CookieOverflow のログを見たら、その要求でセッションと flash に何を入れたかを確かめます。
           </p>
           <Callout kind="note">
             <p>
@@ -1289,6 +2193,10 @@ set-cookie: _demo_session=oKbhi2j91UHJi9RL01Jh…; path=/; secure; httponly; sam
     { title: 'Using HTTP cookies', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies', accessed: '2026-11-16', note: 'HTTP は状態を持たないこと、Set-Cookie で渡した Cookie をブラウザーが Cookie ヘッダーで送り返すこと。' },
     { title: 'Redirections in HTTP', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections', accessed: '2026-11-16', note: '302 は GET 以外のメソッドを GET に変えるかどうかが決まっておらず、303 は GET に変えること。POST の後に 303 で移すと、再読み込みで操作が繰り返されないこと。' },
     { title: 'Securing Rails Applications（Session Fixation - Countermeasures）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/security.html#session-fixation-countermeasures', accessed: '2026-11-16', version: 'Rails 8.1', note: 'ログインに成功したら reset_session で新しいセッションにすること。' },
+    { title: "Action Controller Overview", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/action_controller_overview.html", accessed: "2026-11-20", version: "Rails 8.1", note: "パラメーター、フィルター、共通の例外処理。" },
+    { title: "ActionController::Redirecting", publisher: "Rails API", url: "https://api.rubyonrails.org/v8.1.0/classes/ActionController/Redirecting.html", accessed: "2026-11-20", version: "Rails 8.1", note: "リダイレクトの HTTP ステータスと url_from。" },
+    { title: "Layouts and Rendering in Rails", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/layouts_and_rendering.html", accessed: "2026-11-20", version: "Rails 8.1", note: "render、リダイレクト、描画形式、レイアウト。" },
+    { title: "ActionDispatch::Flash::FlashHash", publisher: "Rails API", url: "https://api.rubyonrails.org/v8.1.0/classes/ActionDispatch/Flash/FlashHash.html", accessed: "2026-11-20", version: "Rails 8.1", note: "flash.now と flash.keep の適用範囲。" },
   ],
 }
 

@@ -2,10 +2,24 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { search, type Hit, type IndexEntry } from '../utils/search'
 import { hrefFor } from '../utils/route'
 import { labelFor } from '../content/label'
+import { linuxGroups, linuxHref } from '../content/linux'
+
+const exercises: IndexEntry[] = linuxGroups.flatMap((group) => group.cases.map((c) => ({
+  chapter: 'linux' as const,
+  chapterTitle: c.levelName,
+  sectionId: c.id,
+  sectionTitle: c.title,
+  text: ['第6部 サーバ運用', group.name, c.id.toUpperCase(), c.intro, c.learn].filter(Boolean).join('　'),
+})))
+
+function resultHref(entry: IndexEntry) {
+  return entry.chapter === 'linux' ? linuxHref(entry.sectionId) : hrefFor(entry.chapter, entry.sectionId)
+}
 
 export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [q, setQ] = useState('')
-  const [hits, setHits] = useState<Hit[]>([])
+  const [results, setResults] = useState<{ query: string; hits: Hit[] }>({ query: '', hits: [] })
+  const hits = results.query === q ? results.hits : []
   const [active, setActive] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const id = useId()
@@ -13,7 +27,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
 
   // 検索索引は大きいので、初めて開いたときに読み込む
   useEffect(() => {
-    if (open && !index) import('../content/search-index.json').then((m) => setIndex(m.default as IndexEntry[]))
+    if (open && !index) import('../content/search-index.json').then((m) => setIndex([...exercises, ...m.default]))
   }, [open, index])
 
   useEffect(() => {
@@ -25,7 +39,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
 
   useEffect(() => {
     const t = setTimeout(() => {
-      setHits(index ? search(index, q) : [])
+      setResults({ query: q, hits: index ? search(index, q) : [] })
       setActive(0)
     }, 80)
     return () => clearTimeout(t)
@@ -34,7 +48,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
   if (!open) return null
 
   const go = (h: Hit) => {
-    location.hash = hrefFor(h.entry.chapter, h.entry.sectionId)
+    location.hash = resultHref(h.entry)
     onClose()
   }
 
@@ -42,11 +56,11 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
     if (e.key === 'Escape') onClose()
     else if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setActive((a) => Math.min(hits.length - 1, a + 1))
+      setActive((a) => Math.max(0, Math.min(hits.length - 1, a + 1)))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActive((a) => Math.max(0, a - 1))
-    } else if (e.key === 'Enter' && hits[active]) {
+    } else if (e.key === 'Enter' && !e.nativeEvent.isComposing && hits[active]) {
       go(hits[active])
     }
   }
@@ -55,26 +69,27 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
     <div className="search-backdrop" onClick={onClose}>
       <div className="search-dialog" role="dialog" aria-modal="true" aria-labelledby={`${id}-label`} onClick={(e) => e.stopPropagation()} onKeyDown={onKey}>
         <label id={`${id}-label`} htmlFor={`${id}-input`} className="search-label">
-          全文検索（本文も対象。空白区切りで AND 検索）
+          本文・演習名・コマンドを検索
         </label>
         <input
           id={`${id}-input`}
           ref={inputRef}
           type="search"
           className="search-input"
-          placeholder="例：特異クラス / prepend super / Concern included"
+          placeholder="例：特異クラス、または「第6部 ディスク」"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoComplete="off"
         />
         <ul className="search-results" role="listbox" aria-label="検索結果">
           {q && !index && <li className="search-empty">索引を読み込んでいます</li>}
-          {q && index && hits.length === 0 && <li className="search-empty">見つかりませんでした</li>}
+          {q && index && results.query !== q && <li className="search-empty">検索しています</li>}
+          {q && index && results.query === q && hits.length === 0 && <li className="search-empty">見つかりませんでした</li>}
           {hits.map((h, i) => (
             <li key={`${h.entry.chapter}-${h.entry.sectionId}`} role="option" aria-selected={i === active} className={i === active ? 'active' : ''}>
-              <a href={hrefFor(h.entry.chapter, h.entry.sectionId)} onClick={(e) => { e.preventDefault(); go(h) }} onMouseEnter={() => setActive(i)}>
+              <a href={resultHref(h.entry)} onClick={(e) => { e.preventDefault(); go(h) }} onMouseEnter={() => setActive(i)}>
                 <span className="search-where">
-                  {labelFor(h.entry.chapter)} {h.entry.chapterTitle} › {h.entry.sectionTitle}
+                  {h.entry.chapter === 'linux' ? '第6部' : labelFor(h.entry.chapter)} {h.entry.chapterTitle} › {h.entry.sectionTitle}
                 </span>
                 <span className="search-excerpt">{h.excerpt}</span>
               </a>

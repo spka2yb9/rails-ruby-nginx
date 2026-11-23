@@ -6,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 19-1 メールが届くまで ---------- */
+/* ---------- 図 22-1 メールが届くまで ---------- */
 function MailFlowFigure() {
   const cmds: [string, string][] = [
     ['EHLO localhost', '250'],
@@ -18,7 +18,7 @@ function MailFlowFigure() {
   ]
   return (
     <Svg
-      id="19-1"
+      id="22-1"
       w={780}
       h={330}
       label="アプリケーションは送信用の SMTP サーバーに接続し、SMTP の手順でメールを渡す。送信用のサーバーは、宛先のアドレスのドメインのメールを受け取るサーバーを調べ、そこへ SMTP で渡す。受信者はメールソフトや Web メールで、そのサーバーに届いたメールを読む。下段は、アプリケーションと SMTP サーバーのやり取りで、EHLO、MAIL FROM、RCPT TO、DATA、メールの文字列と「.」の行、QUIT を順に送り、サーバーはそれぞれに 250・354・221 などの番号で応答する"
@@ -61,11 +61,11 @@ function MailFlowFigure() {
   )
 }
 
-/* ---------- 図 19-2 メーラーがメールを作って送るまで ---------- */
+/* ---------- 図 22-2 メーラーがメールを作って送るまで ---------- */
 function MailerFlowFigure() {
   return (
     <Svg
-      id="19-2"
+      id="22-2"
       w={780}
       h={250}
       label="ArticleMailer.with(article: 記事).published.deliver_now を呼ぶと、published アクションが @article を用意して mail で宛先と件名を決める。アクションと同じ名前のテキスト用と HTML 用のテンプレートから本文が作られ、2つの部分を持つ1通のメールになる。配送方法が smtp なら SMTP サーバーに送り、test ならテスト環境で ActionMailer::Base.deliveries の配列に入れる"
@@ -91,11 +91,150 @@ function MailerFlowFigure() {
   )
 }
 
-/* ---------- 図 19-4 ファイルのアップロードと保存先 ---------- */
+/* ---------- MessageDelivery の2つの状態と deliver_later ---------- */
+function DeliveryStateFigure() {
+  return (
+    <Svg
+      id="ch19-delivery-state"
+      w={780}
+      h={244}
+      label="ArticleMailer.with(article: a).published が返した MessageDelivery は、作った直後は未処理で、@processed_mailer と @mail_message が nil、processed? は nil を返す。subject や message などを呼ぶか deliver_now を呼ぶと、アクションが1回実行されて処理済みになり、@processed_mailer にメーラーのインスタンス、@mail_message に Mail::Message が入り、processed? はメーラーのインスタンスを返す。未処理のときに deliver_later を呼ぶと MailDeliveryJob が投入され、メールはジョブの実行時に作られる。処理済みのときに deliver_later を呼ぶと enqueue_delivery が例外を発生させる"
+    >
+      <T x={20} y={22} fs={11.5} tone="muted">
+        ArticleMailer.with(article: a).published が返した直後
+      </T>
+      <Box
+        x={20}
+        y={40}
+        w={280}
+        h={92}
+        lines={['MessageDelivery（未処理）', '@processed_mailer = nil', '@mail_message = nil', 'processed? → nil']}
+        fs={12.5}
+        bold
+        fill="box"
+        subTone="muted"
+      />
+      <Arrow x1={300} y1={86} x2={478} y2={86} />
+      <T x={389} y={56} anchor="middle" fs={11.5} mono>
+        subject・message など
+      </T>
+      <T x={389} y={73} anchor="middle" fs={11.5} mono>
+        deliver_now
+      </T>
+      <T x={389} y={102} anchor="middle" fs={11.5} tone="muted">
+        アクションを1回実行
+      </T>
+      <Box
+        x={480}
+        y={40}
+        w={280}
+        h={92}
+        lines={['MessageDelivery（処理済み）', '@processed_mailer = メーラーのインスタンス', '@mail_message = Mail::Message', 'processed? → メーラーのインスタンス（真）']}
+        fs={12.5}
+        bold
+        fill="box"
+        subTone="muted"
+      />
+      <Arrow x1={160} y1={132} x2={160} y2={178} />
+      <T x={170} y={155} fs={11.5} mono>
+        deliver_later
+      </T>
+      <Box x={20} y={180} w={280} h={48} lines={['MailDeliveryJob を投入', 'メールはジョブの実行時に作る']} fs={12.5} fill="bg" subTone="muted" />
+      <Arrow x1={620} y1={132} x2={620} y2={178} />
+      <T x={630} y={155} fs={11.5} mono>
+        deliver_later
+      </T>
+      <Box x={480} y={180} w={280} h={48} fill="bg" />
+      <T x={620} y={196} anchor="middle" fs={12} tone="danger">
+        例外（enqueue_delivery）
+      </T>
+      <T x={620} y={214} anchor="middle" fs={11.5} tone="muted">
+        メールに加えた変更はジョブに渡らない
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- バリアントを変換する時点 ---------- */
+function VariantTimingFigure() {
+  const cols = [
+    { x: 245, t: '添付の COMMIT の後' },
+    { x: 390, t: 'ビューで URL を出力' },
+    { x: 540, t: '1回目の GET' },
+    { x: 700, t: '2回目の GET' },
+  ]
+  return (
+    <Svg
+      id="ch19-variant-timing"
+      w={780}
+      h={280}
+      label="既定の設定では、添付の COMMIT の後とビューで URL を出力した時点では変換されず、1回目の GET で、要求を処理している Puma のスレッドが元の画像を読み、変換して blob を保存し、variant_records に記録してから 302 を返す。デモでは 58ms だった。2回目の GET は記録を見つけてすぐに 302 を返し、8ms だった。preprocessed: true では、添付の COMMIT の後に TransformJob がワーカーで変換して blob を保存し、variant_records に記録するので、1回目の GET も2回目の GET も記録を見つけてすぐに 302 を返す"
+    >
+      {cols.map((c) => (
+        <T key={c.t} x={c.x} y={16} anchor="middle" bold fs={12}>
+          {c.t}
+        </T>
+      ))}
+      <T x={20} y={34} fs={11.5} tone="muted">
+        時間
+      </T>
+      <Arrow x1={160} y1={34} x2={760} y2={34} />
+      <T x={20} y={96} bold fs={12}>
+        既定
+      </T>
+      <T x={20} y={114} fs={11.5} tone="muted">
+        初回の要求で変換
+      </T>
+      <T x={245} y={106} anchor="middle" fs={11.5} tone="muted">
+        変換しない
+      </T>
+      <T x={390} y={106} anchor="middle" fs={11.5} tone="muted">
+        変換しない
+      </T>
+      <Box
+        x={450}
+        y={48}
+        w={180}
+        h={116}
+        lines={['Puma のスレッドで', '元の画像を読む', '変換して blob を保存', 'variant_records に記録', '302（デモで 58ms）']}
+        fs={12.5}
+        bold
+        fill="box5"
+        subTone="muted"
+      />
+      <Box x={640} y={76} w={120} h={60} lines={['記録を見つけて', 'すぐに 302', '（8ms）']} fs={12.5} fill="box" subTone="muted" />
+      <line x1={20} y1={178} x2={760} y2={178} stroke="var(--fig-line)" strokeDasharray="3 4" />
+      <T x={20} y={220} bold fs={11.5} mono>
+        preprocessed: true
+      </T>
+      <T x={20} y={238} fs={11.5} tone="muted">
+        COMMIT の後に変換
+      </T>
+      <Box
+        x={155}
+        y={190}
+        w={180}
+        h={76}
+        lines={['TransformJob（ワーカー）', '変換して blob を保存', 'variant_records に記録']}
+        fs={12.5}
+        bold
+        fill="box"
+        subTone="muted"
+      />
+      <T x={390} y={228} anchor="middle" fs={11.5} tone="muted">
+        変換しない
+      </T>
+      <Box x={450} y={202} w={180} h={52} lines={['記録を見つけて', 'すぐに 302']} fs={12.5} fill="box" subTone="muted" />
+      <Box x={640} y={202} w={120} h={52} lines={['記録を見つけて', 'すぐに 302']} fs={12.5} fill="box" subTone="muted" />
+    </Svg>
+  )
+}
+
+/* ---------- 図 22-4 ファイルのアップロードと保存先 ---------- */
 function UploadFigure() {
   return (
     <Svg
-      id="19-4"
+      id="22-4"
       w={780}
       h={290}
       label="ブラウザーは、file_field を含むフォームの値を multipart/form-data の形式で POST する。要求の本文は boundary の文字列で区切られ、title の値と、photo.png のファイル名・種類・中身のバイト列が入る。Rails の params では、ファイルは ActionDispatch::Http::UploadedFile になり、中身は一時ファイルに書かれている。一時ファイルは応答の後に消されるので、要求を処理している間に、サーバーのディスクかクラウドのストレージに保存し、どのファイルがどの記事のものかをデータベースに記録する"
@@ -126,11 +265,11 @@ function UploadFigure() {
   )
 }
 
-/* ---------- 図 19-3 deliver_later の処理経路 ---------- */
+/* ---------- 図 22-3 deliver_later の処理経路 ---------- */
 function DeliverFigure() {
   return (
     <Svg
-      id="19-3"
+      id="22-3"
       w={780}
       h={250}
       label="ArticleMailer.with(article: a).published は MessageDelivery を返すだけで、メールはまだ作られない。deliver_now ならその場でメーラーのアクションを実行してテンプレートを描画し、Mail::Message を SMTP などで送る。deliver_later なら、メーラー名・アクション名・params を ActionMailer::MailDeliveryJob の引数にしてキューに入れる。ジョブの実行時に、Sidekiq などのプロセスで同じ順に描画と送信が行われる。記事は GlobalID で渡るので、実行時のデータでメールが作られる"
@@ -149,7 +288,7 @@ function DeliverFigure() {
       </T>
       <Box x={300} y={116} w={220} h={50} lines={['MailDeliveryJob を投入', '("ArticleMailer", "published", …)']} fs={11} fill="box2" subTone="muted" />
       <Arrow x1={520} y1={141} x2={548} y2={141} />
-      <Box x={550} y={120} w={210} h={44} lines={['キュー（Redis など）', '第18章']} fs={11.5} fill="box4" subTone="muted" />
+      <Box x={550} y={120} w={210} h={44} lines={['キュー（Redis など）', '第21章']} fs={11.5} fill="box4" subTone="muted" />
       <Arrow d="M655,164 L655,196 L520,196" />
       <Box x={300} y={176} w={220} h={44} lines={['ジョブの実行（別のプロセス）', 'deliver_now と同じ処理（上段）']} fs={11} fill="box" subTone="muted" />
       <T x={20} y={240} fs={11} tone="muted">
@@ -159,7 +298,7 @@ function DeliverFigure() {
   )
 }
 
-/* ---------- 図 19-5 ActiveStorage のテーブル ---------- */
+/* ---------- 図 22-5 ActiveStorage のテーブル ---------- */
 function TablesFigure() {
   const cols = (x: number, y: number, title: string, rows: string[], fill: 'box' | 'box4' | 'box5', w = 220) => (
     <g>
@@ -177,7 +316,7 @@ function TablesFigure() {
   )
   return (
     <Svg
-      id="19-5"
+      id="22-5"
       w={780}
       h={300}
       label="articles の行は、active_storage_attachments の record_type と record_id で参照される。attachments は name（cover）と blob_id を持ち、active_storage_blobs の行を指す。blobs はファイルの key、filename、content_type、byte_size、checksum、service_name、metadata を持ち、ファイルの本体はストレージのサービスに key の名前で保存される。variant を作ると、active_storage_variant_records に元の blob_id と変換内容のダイジェストが記録され、変換後のファイルは別の blob として、record_type が ActiveStorage::VariantRecord の attachment でつながる"
@@ -201,11 +340,11 @@ function TablesFigure() {
   )
 }
 
-/* ---------- 図 19-6 リダイレクトとプロキシ ---------- */
+/* ---------- 図 22-6 リダイレクトとプロキシ ---------- */
 function ModeFigure() {
   return (
     <Svg
-      id="19-6"
+      id="22-6"
       w={780}
       h={250}
       label="リダイレクト方式では、ブラウザーが /rails/active_storage/blobs/redirect/署名付きID/cover.png を要求すると、Rails は 5 分で期限が切れるストレージの URL に 302 でリダイレクトし、ブラウザーはストレージからファイルを直接取得する。プロキシ方式では、Rails がストレージからファイルを読んでブラウザーに返すので、転送の間 Puma のスレッドを使うが、CDN でキャッシュできる"
@@ -243,12 +382,12 @@ function ModeFigure() {
   )
 }
 
-/* ---------- 図 19-7 直接アップロード ---------- */
+/* ---------- 図 22-7 直接アップロード ---------- */
 function DirectFigure() {
   const lanes = [
     { x: 50, t: 'ブラウザー' },
     { x: 540, t: 'Rails' },
-    { x: 730, t: 'ストレージ' },
+    { x: 730, t: 'S3' },
   ]
   const msgs = [
     { a: 0, b: 1, y: 64, t: '① POST direct_uploads（ファイル名・サイズ・チェックサム）' },
@@ -258,10 +397,10 @@ function DirectFigure() {
   ]
   return (
     <Svg
-      id="19-7"
+      id="22-7"
       w={780}
       h={220}
-      label="直接アップロードでは、ブラウザーがまず Rails の direct_uploads にファイル名・サイズ・チェックサムを POST する。Rails は blob の行を作り、署名付きのアップロード先の URL と signed_id を返す。ブラウザーはファイルをストレージに直接 PUT し、最後にフォームをファイルの代わりに signed_id を付けて送信する。ファイルの本体は Rails を通らない"
+      label="S3 を使った直接アップロードの例。ブラウザーがまず Rails にファイル名・サイズ・チェックサムを POST する。Rails は blob の行を作り、アップロード先の URL と signed_id を返す。ブラウザーがその URL で S3 にファイルを PUT してから、signed_id を記事のフォームで Rails に送る"
     >
       {lanes.map((l) => (
         <g key={l.t}>
@@ -277,7 +416,7 @@ function DirectFigure() {
         return (
           <g key={m.t}>
             <Arrow x1={x1} y1={m.y} x2={x2 + (x2 > x1 ? -4 : 4)} y2={m.y} dashed={m.dashed} accent={m.a === 0 && m.b === 2} />
-            <T x={62} y={m.y - 10} fs={10.5} tone={m.a === 0 && m.b === 2 ? 'acc' : undefined}>
+            <T x={62} y={m.y - 10} fs={12} tone={m.a === 0 && m.b === 2 ? 'acc' : undefined}>
               {m.t}
             </T>
           </g>
@@ -292,17 +431,11 @@ const ch19: Chapter = {
   part: 4,
   title: 'メールとファイル添付',
   summary:
-    'アプリケーションが SMTP サーバーにメールを渡す手順と、メーラーでメールを作って送る書き方を実際に動かして確かめてから、ActionMailer のメーラーがコントローラーと同じ描画の仕組みでメールを作ることと、deliver_now・deliver_later の違いを、投入されるジョブの中身とともに説明します。ファイルのアップロードで送られる要求と保存先を確かめた後、ActiveStorage のテーブル構造、ファイルの配信方式、直接アップロード、バリアントの生成とその注意点も扱います。',
+    '記事のお知らせメールと、記事に添付する画像を例にします。メールが作られて配送に渡るまでと、画像ファイルが保存されて次の閲覧で表示されるまでを、それぞれ追います。',
   goals: [
-    'アプリケーションが SMTP サーバーにメールを渡す手順と、その後メールが受信者に届くまでの流れを説明できる',
-    'メーラーのクラスとテンプレートを書き、deliver_now で送ったときに作られるメール（ヘッダーとマルチパートの本文）を読み取れる',
-    'メーラーが AbstractController::Base を継承し、テンプレートからマルチパートのメールを作ることを説明できる',
-    'MessageDelivery が遅延して処理されることと、deliver_later が投入するジョブの中身を説明できる',
-    'ファイルのアップロードで送られる multipart/form-data の要求と、受け取ったファイルを要求の間に保存する必要があることを説明できる',
-    'ActiveStorage の3つのテーブルと、添付したときに実行される SQL とジョブを説明できる',
-    'リダイレクト方式とプロキシ方式の配信の違いと、URL の有効期限を説明できる',
-    '直接アップロードでファイルが Rails を通らない流れを説明できる',
-    'バリアントが最初の要求で生成されることと、その負荷や安全上の注意を説明できる',
+    'メールを組み立てるタイミングと、今すぐ送る場合・ジョブで送る場合の違いを説明できる',
+    'どの記事の添付かを記録する DB の行と、画像本体の保存先を対応付けられる',
+    'ブラウザーが画像を送る経路と受け取る経路を比べ、リンクがどこを指すかを読み取れる',
   ],
   prerequisites: [10, 16, 18],
   sections: [
@@ -340,6 +473,11 @@ end
 puts "送信しました"
 `}
           />
+          <p>
+            <code>{'<<~MAIL'}</code> から <code>MAIL</code> までは複数行の文字列で、これが送るメールです。<code>Net::SMTP.start</code> の引数は接続先のサーバーの名前とポート番号（1台のサーバーの中で、通信の相手のプログラムを区別する番号。
+            <ChapterLink n={25} section="ip-port" />
+            ）です。<code>send_message</code> にはメールの文字列、差出人、宛先の順に渡します。実行すると、検証用のサーバーは次のやり取りを表示しました。
+          </p>
           <Code
             lang="text"
             title="検証用の SMTP サーバーの表示（C: はアプリケーションが送った行、S: はサーバーの応答。Ruby 4.0.9）"
@@ -371,12 +509,20 @@ S: 221 Bye
             <Ref n={9} />。
           </p>
           <p>
-            実際の運用では、メールはいくつかのサーバーを経由して届きます（図 19-1）。アプリケーションが接続するのは、送信に使う SMTP サーバーです。メールの送信を請け負うサービスや、会社のメールサーバーを使います。送信用のサーバーは、宛先のアドレスの
+            実際の運用では、メールはいくつかのサーバーを経由して届きます（図 22-1）。アプリケーションが接続するのは、送信に使う SMTP サーバーです。メールの送信を請け負うサービスや、会社のメールサーバーを使います。送信用のサーバーは、宛先のアドレスの
             @ より後ろ（example.com）から、そのドメインのメールを受け取るサーバーを DNS（ドメイン名からサーバーの場所を調べる仕組み）で探し、そのサーバーへ同じく SMTP で渡します
             <Ref n={8} />。受信者はメールソフトや Web メールで、そのサーバーに届いたメールを読みます。アプリケーションの処理は、送信用のサーバーが 250
             を返した時点で終わります。受信者に届いたかどうかは、この時点ではわかりません。
           </p>
-          <Figure n="19-1" title="メールが届くまで" caption="Net::SMTP と検証用の SMTP サーバーでの実測と、RFC 5321 をもとにした模式図。送信用のサーバーから先は実測していない。">
+          <p>
+            「メールが届かない」という問い合わせを調べるときは、250 が返る前と後に分けます。250 が返る前の失敗（SMTP サーバーに接続できない、ログインに失敗したなど）は、アプリケーションの例外やログに出ます。250
+            が返った後の失敗（宛先のアドレスが存在しない、迷惑メールに分類されたなど）はアプリケーションのログに出ないので、送信用のサーバーやサービスの記録で調べます（
+            <ChapterLink n={19} section="mail-review">
+              本番メールの接続設定を分ける
+            </ChapterLink>
+            の節）。
+          </p>
+          <Figure n="22-1" title="メールが届くまで" caption="Net::SMTP と検証用の SMTP サーバーでの実測と、RFC 5321 をもとにした模式図。送信用のサーバーから先は実測していない。">
             <MailFlowFigure />
           </Figure>
         </>
@@ -507,7 +653,12 @@ C: .
           <p>
             <code>Content-Type: multipart/alternative</code> は、同じ内容を別の形式で表した部分を並べたメールであることを表します。boundary
             の文字列で区切られた text/plain（文字だけの本文）と text/html（HTML の本文）の部分があり、受信者のメールソフトはどちらか一方を選んで表示します
-            <Ref n={12} />（図 19-2）。
+            <Ref n={12} />（図 22-2）。このように複数の部分からなるメールをマルチパートのメールと呼びます。
+          </p>
+          <p>
+            MIME-Version、Content-Type、Content-Transfer-Encoding は、<Term en="Multipurpose Internet Mail Extensions">MIME</Term>{' '}
+            という規格で決められたヘッダーです。メールの元の形式は、英数字と記号だけの本文を1つ持つものでした。MIME は、その形式のまま日本語、HTML、複数の部分、添付ファイルを送るための決まりです。文字化けしたメールや、HTML
+            のタグがそのまま表示されるメールを調べるときは、受信したメールのこれらのヘッダーを見ます。
           </p>
           <p>
             ログの processed outbound mail はメールを作るのにかかった時間、Delivered mail は SMTP サーバーとのやり取りにかかった時間です。<code>deliver_now</code>{' '}
@@ -521,7 +672,7 @@ C: .
             <ChapterLink n={16} />
             ）。次の節では、メーラーとコントローラーが実際に同じクラスを継承していることを確かめます。
           </p>
-          <Figure n="19-2" title="メーラーがメールを作って送るまで" caption="デモの ArticleMailer を検証用の SMTP サーバーに送った実測と、Rails 8.1.4.1 の設定の既定値をもとにした模式図。">
+          <Figure n="22-2" title="メーラーがメールを作って送るまで" caption="デモの ArticleMailer を検証用の SMTP サーバーに送った実測と、Rails 8.1.4.1 の設定の既定値をもとにした模式図。">
             <MailerFlowFigure />
           </Figure>
         </>
@@ -532,7 +683,7 @@ C: .
       title: 'メーラーの構造',
       body: (
         <>
-          <p>デモのアプリケーションに、記事の公開を知らせるメーラーを作りました。</p>
+          <p>前の節の ArticleMailer をもう一度示します。</p>
           <Code
             lang="ruby"
             title="app/mailers/article_mailer.rb（デモ）"
@@ -545,7 +696,9 @@ class ArticleMailer < ApplicationMailer
 end
 `}
           />
-          <p>メーラーのクラスの継承関係と、描画のモジュールを確かめました。</p>
+          <p>
+            このクラスの親のクラスを順にたどった結果（1行目）と、テンプレートの描画を受け持つ2つのモジュールを ArticleMailer が取り込んでいるかを調べた結果（2行目）です。
+          </p>
           <Code
             lang="text"
             code={`
@@ -554,10 +707,14 @@ AbstractController::Rendering? true  ActionView::Layouts? true
 `}
           />
           <p>
+            1行目の <code>{'<'}</code> は、左のクラスが右のクラスを継承していることを表します。2行目の AbstractController::Rendering は <code>render</code>{' '}
+            でテンプレートを描画する処理、ActionView::Layouts はレイアウトを適用する処理を持つモジュールで、どちらも true（取り込んでいる）でした。
+          </p>
+          <p>
             ActionMailer::Base は、コントローラーと同じ AbstractController::Base を継承しています（<ChapterLink n={10} section="hierarchy" />
             ）。アクションの中のインスタンス変数がテンプレートで使えること、テンプレートの探索、レイアウト（layouts/mailer）は<ChapterLink n={16} />
             で見た仕組みのままです。違いは、<code>mail</code> がアクション名のテンプレートを形式ごとにすべて探し、見つかった分を1通のメールの部分（パート）にすることです。デモでは published.text.erb と published.html.erb
-            を置いたので、マルチパートのメールになりました。
+            を置いたので、マルチパートのメールになりました。作られたメールの件名、メール全体の Content-Type（mime）、部分ごとの Content-Type（parts）を表示した結果です。
           </p>
           <Code
             lang="text"
@@ -566,12 +723,42 @@ subject=記事「変更後のタイトル」を公開しました mime=multipart
 `}
           />
           <p>
+            テンプレートが published.html.erb の1つだけなら、部分に分かれていない text/html のメールになります。HTML を表示しない設定のメールソフトでも本文を読めるようにするには、text.erb
+            も置きます。メールの見た目を全体で変えるときは、コントローラーのビューと同じく、レイアウトの app/views/layouts/mailer.html.erb と mailer.text.erb を直します。
+          </p>
+          <p>
             メールの中のリンクは <code>article_url(@article)</code> のように完全な URL で書きます。メールにはリクエストが無いので、ホスト名は{' '}
             <code>config.action_mailer.default_url_options</code> から取られます。設定が無いと、描画のときに <code>ActionView::Template::Error: Missing host to link to!</code> になりました。
+          </p>
+          <Code
+            lang="ruby"
+            title="config/environments/production.rb（rails new が作る行）"
+            code={`
+config.action_mailer.default_url_options = { host: "example.com" }
+`}
+          />
+          <p>
+            rails new が作る production.rb には上の行があり、host は example.com です。本番のドメインに書き換えないと、本番から送ったメールのリンクが example.com を指します。テンプレートに{' '}
+            <code>article_path</code> と書いた場合は例外にならず、パスだけのリンクがメールに入ります。メーラーのテンプレートをレビューするときは、<code>_path</code> が残っていないかを確かめます。
           </p>
           <p>
             開発環境では、<code>ActionMailer::Preview</code> を継承したクラスを置くと、<code>/rails/mailers</code> でメールの表示を確かめられます
             <Ref n={1} />。デモでは rspec-rails（RSpec は<ChapterLink n={20} />）の既定の置き場所である spec/mailers/previews に置きました。
+          </p>
+          <Code
+            lang="ruby"
+            title="プレビューのクラスの例（spec/mailers/previews/article_mailer_preview.rb）"
+            code={`
+class ArticleMailerPreview < ActionMailer::Preview
+  def published
+    ArticleMailer.with(article: Article.first).published
+  end
+end
+`}
+          />
+          <p>
+            プレビューのメソッドは、<code>deliver_now</code> を呼ばずに、メーラーのアクションを呼んだ結果を返します。<code>/rails/mailers/article_mailer/published</code>{' '}
+            を開くと、Rails はこのメールを SMTP サーバーに送らずに作り、ヘッダーと本文をブラウザーに表示します。
           </p>
         </>
       ),
@@ -583,7 +770,10 @@ subject=記事「変更後のタイトル」を公開しました mime=multipart
         <>
           <p>
             <code>ArticleMailer.with(article: a).published</code> は、メールを作らずに ActionMailer::MessageDelivery を返します。MessageDelivery は Mail::Message の代わりをするオブジェクトで、メッセージが必要になったときに初めてメーラーのアクションを実行します
-            <Ref n={5} />。
+            <Ref n={5} />。Mail::Message は、ActionMailer が内部で使う mail という gem のクラスで、ヘッダーと本文を持つ1通のメールを表します。
+          </p>
+          <p>
+            <code>deliver_now</code> も <code>deliver_later</code> も呼ばなければ、アクションは実行されず、メールは送られません。アクションがいつ実行されるかを、MessageDelivery のソースで確かめます。
           </p>
           <Code
             lang="ruby"
@@ -603,6 +793,23 @@ subject=記事「変更後のタイトル」を公開しました mime=multipart
     end
 `}
           />
+          <ul>
+            <li>
+              MessageDelivery は Ruby の標準ライブラリの Delegator を継承しています（19行目）。Delegator は、自分に定義されていないメソッドが呼ばれると、<code>__getobj__</code>{' '}
+              が返すオブジェクトにその呼び出しを渡します。たとえば <code>subject</code> を呼ぶと、<code>__getobj__</code> が返す Mail::Message の <code>subject</code> が呼ばれます。
+            </li>
+            <li>
+              <code>processed_mailer</code>（136〜140行目）は、メーラーのインスタンスを作り、アクション（published）を実行して返すメソッドです。<code>.message</code>{' '}
+              はそのメーラーが作った Mail::Message です。<code>||=</code> で結果を覚えるので、アクションの実行は1回だけです。
+            </li>
+            <li>
+              <code>processed?</code> は、2つのインスタンス変数のどちらかに値があればその値を、どちらも nil なら nil を返します。
+            </li>
+            <li>
+              <code>deliver_later</code> は <code>enqueue_delivery</code> を呼ぶだけで、<code>__getobj__</code> を呼びません。<code>enqueue_delivery</code>（142〜156行目）は、メーラーのクラス名、アクション名、
+              <code>"deliver_now"</code>、引数を渡してジョブを投入します。
+            </li>
+          </ul>
           <p>
             デモで <code>processed?</code> を見ると、作った直後は nil で、<code>message</code> を呼んだ後はメーラーのインスタンス（真）になりました。<code>deliver_now</code>{' '}
             はその場でアクションを実行し、設定された配送方法（本番では SMTP など）で送ります。SMTP サーバーの応答を待つ間、Puma のスレッド（要求を処理する実行の流れ。<ChapterLink n={23} section="thread" />）は止まります。
@@ -630,18 +837,93 @@ subject=記事「変更後のタイトル」を公開しました mime=multipart
 `}
           />
           <p>
+            <code>arguments</code> の1〜3番目は、メーラーのクラス名、アクション名、ジョブの実行時に呼ぶメソッド名です。4番目のハッシュの <code>params</code> が <code>with</code>{' '}
+            で渡した値で、記事は <code>gid://demo/Article/1</code> という GlobalID になっています。<code>_aj_</code> で始まるキーは、ActiveJob が値を元の型に戻すために付けたものです（
+            <ChapterLink n={18} section="serialize" />
+            ）。ジョブを実行するプロセスは、この引数から <code>ArticleMailer.with(article: 記事).published.deliver_now</code> に相当する呼び出しをします。
+          </p>
+          <p>
             保存されるのはメーラーの名前、アクションの名前、params と引数だけです。記事は GlobalID で渡るので、ジョブが実行されたときに記事を読み直して、その時点のデータでメールを描画します（図
-            19-3）。投入の後で記事を変更すれば、変更後の内容が送られます。<ChapterLink n={18} section="transaction" />
+            22-3）。投入の後で記事を変更すれば、変更後の内容が送られます。<ChapterLink n={18} section="transaction" />
             で見たとおり、トランザクションの中で <code>deliver_later</code> を呼ぶと、COMMIT 前にジョブが実行されて記事を見つけられないことがあります。
           </p>
           <p>
+            ジョブに渡るのは引数だけなので、<code>deliver_later</code> の前に <code>message</code> や <code>subject</code> を呼んでアクションを実行済みにすると、<code>enqueue_delivery</code>{' '}
+            は例外を発生させます。作ったメールにその場で加えた変更が、ジョブの実行時には失われるためです。
+          </p>
+          <p>
+            次の図は MessageDelivery を作った直後の状態と、アクションを実行した後の状態を左右に並べたものです。上の段の矢印に書いたメソッドを呼ぶと、左の状態から右の状態に移ります。下の段はそれぞれの状態で <code>deliver_later</code>{' '}
+            を呼んだときの結果です。
+          </p>
+          <Figure
+            title="MessageDelivery の2つの状態と deliver_later"
+            caption="上に引用した message_delivery.rb と、デモで processed? を表示した結果をもとにした模式図。実線の矢印はメソッドの呼び出し。右の状態で subject などをもう一度呼んでも、アクションは実行されない。"
+          >
+            <DeliveryStateFigure />
+          </Figure>
+          <p>
+            <code>deliver_later</code> を呼んだのにメールが送られないときは、次の順に確かめます。メールを作って送る処理はジョブを実行するプロセスの中で動くので、失敗の記録も Web
+            の要求のログではなく、そのプロセスのログに出ます。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>確かめること</th>
+                  <th>当てはまるときに起きること</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ジョブがキューに入ったか</td>
+                  <td>
+                    <code>deliver_later</code> の行まで処理が進んでいなければ、ジョブは入らない。開発環境のログには、投入のときに Enqueued ActionMailer::MailDeliveryJob の行が出る
+                  </td>
+                </tr>
+                <tr>
+                  <td>ジョブを実行するプロセス（Sidekiq など）が動いていて、そのキューからジョブを取り出しているか</td>
+                  <td>動いていない、または別のキューだけを見ていると、ジョブはキューに残ったままになる</td>
+                </tr>
+                <tr>
+                  <td>ジョブが例外で失敗していないか</td>
+                  <td>
+                    記事が削除されていたり、COMMIT 前に実行されたりすると ActiveJob::DeserializationError になる（
+                    <ChapterLink n={18} section="serialize" />
+                    ）。テンプレートの例外や SMTP の接続の失敗も、ここで起きる
+                  </td>
+                </tr>
+                <tr>
+                  <td>ジョブを実行するプロセスの配送方法の設定</td>
+                  <td>
+                    <code>delivery_method</code> と <code>smtp_settings</code> は、ジョブを実行するプロセスが読み込んだ環境の値が使われる
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
             キューの名前は default でした。ActionMailer の <code>deliver_later_queue_name</code> の既定値は :mailers ですが、<code>load_defaults 6.1</code> 以降では nil
             になり、ActiveJob の既定のキューが使われます
-            <Ref n={2} />。Sidekiq を <code>-q mailers</code> などで起動している既存のアプリケーションでは、load_defaults を上げるとメールのジョブが別のキューに入るので確かめます。
+            <Ref n={2} />。<code>load_defaults</code> は、config/application.rb で、指定した版の Rails の既定値をまとめて適用する設定です（
+            <ChapterLink n={7} section="app-class" />
+            ）。Sidekiq の <code>-q</code> は、ジョブを取り出すキューの名前の指定です。Sidekiq を <code>-q mailers</code> などで起動している既存のアプリケーションでは、load_defaults
+            を上げるとメールのジョブが別のキューに入るので確かめます。そのキューを見ているプロセスが無いと、メールのジョブだけが実行されずに残ります。
           </p>
-          <Figure n="19-3" title="deliver_later の処理経路" caption="Rails 8.1.4.1 の message_delivery.rb・mail_delivery_job.rb と、デモで投入されたジョブをもとにした模式図。">
+          <Figure n="22-3" title="deliver_later の処理経路" caption="Rails 8.1.4.1 の message_delivery.rb・mail_delivery_job.rb と、デモで投入されたジョブをもとにした模式図。">
             <DeliverFigure />
           </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'mail-review',
+      title: "本番メールの接続設定を分ける",
+      body: (
+        <>
+          <p>
+            メーラーで本文と URL を確認したら、配備先から送信できるようにします。SMTP による送信を選ぶなら <code>config.action_mailer.smtp_settings</code> のホスト・ポート・認証・TLS と送信元を環境ごとに設定します。認証用の値は秘密情報から渡し、開発やテストで利用者に送信しない設定を確かめます。<Ref n={19} />
+          </p>
+          <p>配信事業者が送信を受け付けた後も、受信側で迷惑メールに分類される場合があります。送信ドメインが許可した送信元を示す SPF と、署名を検証する DKIM の DNS 設定を配信事業者の指示に合わせ、実際の受信ヘッダーで認証結果を確認します。プレビュー・ジョブの完了・受信箱への到達を別々に観察できます。</p>
         </>
       ),
     },
@@ -730,7 +1012,7 @@ Processing by ProbeController#echo as */*
             <Ref n={17} />。ファイルを残すには、要求を処理している間に、別の場所へ保存します。
           </p>
           <p>
-            保存先にはサーバーのディスクとクラウドのストレージがあります（図 19-4）。ディスクに保存すると手軽ですが、ファイルはそのサーバーの中にしかないので、サーバーが複数台あると、ほかのサーバーからは読めません。クラウドのストレージは Amazon
+            保存先にはサーバーのディスクとクラウドのストレージがあります（図 22-4）。ディスクに保存すると手軽ですが、ファイルはそのサーバーの中にしかないので、サーバーが複数台あると、ほかのサーバーからは読めません。クラウドのストレージは Amazon
             S3 のように、ファイルを保存して後から取り出せるサービスで、どのサーバーからも同じファイルを読み書きできます。どちらに保存しても、どのファイルがどの記事のものかを、データベースに記録しておく必要があります。
           </p>
           <p>
@@ -758,7 +1040,7 @@ local:
             が作るファイルではコメントになっています。どのサービスを使うかは環境ごとの設定ファイルで選び、デモの開発環境は <code>config.active_storage.service = :local</code> です。次の節では、ActiveStorage
             がファイルを添付したときに、データベースのどのテーブルに何を記録するかを確かめます。
           </p>
-          <Figure n="19-4" title="ファイルのアップロードと保存先" caption="Rails 8.1.4.1 のデモでの実測（フォームの HTML、要求の本文、ログ）と、Rack 3.2.8 の tempfile_reaper.rb をもとにした模式図。">
+          <Figure n="22-4" title="ファイルのアップロードと保存先" caption="Rails 8.1.4.1 のデモでの実測（フォームの HTML、要求の本文、ログ）と、Rack 3.2.8 の tempfile_reaper.rb をもとにした模式図。">
             <UploadFigure />
           </Figure>
         </>
@@ -805,14 +1087,18 @@ path: storage/ov/8a/ov8aaow7e2mjrsfdyd1vgfwb9bzr
 `}
           />
           <p>
-            blob の <code>key</code> はランダムな文字列で、ディスクのサービスでは先頭の4文字で2段のディレクトリを作って保存します。元のファイル名はファイルシステムに使われません。添付すると記事の updated_at
-            も更新されます（<code>touch</code>。楽観的ロックの lock_version も増えています）。
+            2つ目の INSERT の値は、列の順に「<code>cover</code> という添付」「<code>Article</code> の 1 番」「blob の 1 番」を表します。
+            <code>record_id</code> と <code>blob_id</code> が今回はどちらも 1 ですが、前者は記事を、後者はファイルの情報を指します。
+          </p>
+          <p>
+            blob の行には元の名前 <code>cover.png</code> と大きさ 17,983 バイトがあります。画像本体の置き場所を決めるのは <code>key</code> です。
+            このディスクサービスでは、先頭4文字の <code>ov8a</code> を2文字ずつ使い、出力の最後にある <code>storage/ov/8a/…</code> に保存します。記事の行では更新日時と <code>lock_version</code> が更新されています。
           </p>
           <p>
             COMMIT の後、Attachment の <code>after_create_commit</code> が ActiveStorage::AnalyzeJob を投入しました。このジョブが画像の幅と高さなどを調べて metadata に書き込みます。解析と、後で述べる事前のバリアントの生成は ActiveJob
             で行われるので、Sidekiq などのワーカーが動いていないと metadata は埋まりません。
           </p>
-          <Figure n="19-5" title="ActiveStorage のテーブル" caption="activestorage 8.1.4.1 のマイグレーションと、デモで添付・バリアントの生成をしたときに作られた行をもとにした図。">
+          <Figure n="22-5" title="ActiveStorage のテーブル" caption="activestorage 8.1.4.1 のマイグレーションと、デモで添付・バリアントの生成をしたときに作られた行をもとにした図。">
             <TablesFigure />
           </Figure>
           <p>
@@ -869,10 +1155,9 @@ end
 `}
           />
           <p>
-            S3 を使う場合、2回目の要求はブラウザーから S3 に直接送られ、Puma を通りません。一方、<code>rails_storage_proxy_path</code> を使うプロキシ方式では、Rails がストレージからファイルを読んでブラウザーに返します（図
-            19-6）。CDN を前に置いてキャッシュさせる用途ですが、CDN にキャッシュが無い間は、大きなファイルの転送の間 Puma のスレッドを使います。
+            S3 を使う場合、2回目の要求はブラウザーから S3 に直接送られ、Puma を通りません。一方、<code>rails_storage_proxy_path</code> を使うプロキシ方式では、Rails がストレージからファイルを読んでブラウザーに返します（図 22-6）。CDN を前に置いてキャッシュさせる用途ですが、CDN にキャッシュが無い間は、大きなファイルの転送の間 Puma のスレッドを使います。
           </p>
-          <Figure n="19-6" title="リダイレクト方式とプロキシ方式" caption="Active Storage Overview と activestorage 8.1.4.1 の blobs/redirect_controller.rb・proxy_controller.rb をもとにした模式図。">
+          <Figure n="22-6" title="リダイレクト方式とプロキシ方式" caption="Active Storage Overview と activestorage 8.1.4.1 の blobs/redirect_controller.rb・proxy_controller.rb をもとにした模式図。">
             <ModeFigure />
           </Figure>
           <Callout kind="warn" title="URL を知っていれば誰でも取得できる">
@@ -890,11 +1175,9 @@ end
       body: (
         <>
           <p>
-            フォームで普通にファイルを送ると、ファイルの本体が Nginx と Puma を通ります。受信そのものは Nginx と Puma の reactor が受け持ちますが（<ChapterLink n={23} section="cluster" />
-            ）、Rails がファイルを S3 などに転送する間は Puma のスレッドがふさがります。大きなファイルは Nginx の{' '}
-            <code>client_max_body_size</code> にも当たります（<ChapterLink n={24} />
-            ）。<code>form.file_field :cover, direct_upload: true</code> と ActiveStorage の JavaScript を使うと、ブラウザーがストレージに直接ファイルを送ります
-            <Ref n={4} />（図 19-7）。最初の要求を、デモで JSON を送って確かめました。
+            <code>form.file_field :cover, direct_upload: true</code> と Active Storage の JavaScript を使うと、ブラウザーはまずファイル名やサイズを Rails に送り、アップロード先を問い合わせます。
+            図 22-7 は保存先が S3 の場合です。画像本体はブラウザーから S3 に届くので、Rails が画像を転送する間、Puma のスレッドを使うこともありません。<Ref n={4} />
+            下のログは、保存先にローカルディスクを使ったデモで、最初の問い合わせに返った応答です。
           </p>
           <Code
             lang="text"
@@ -905,10 +1188,14 @@ POST /rails/active_storage/direct_uploads  {"blob":{"filename":"photo.png","byte
 `}
           />
           <p>
-            Rails はこの時点で blob の行だけを作り、アップロード先の署名付き URL を返します。S3 などのサービスでは、ブラウザーから別のドメインに PUT するので、バケットに CORS（別のドメインのページからの要求を許可する設定）が必要です。ファイルがアップロードされた後、フォームはファイルの代わりに{' '}
-            <code>signed_id</code> を送り、コントローラーの <code>attach</code> がその blob を記事に結び付けます。フォームが送信されなかった blob は、どのレコードにも付かないまま残ります。
+            応答のうち、次の PUT に使うのが <code>direct_upload.url</code> です。デモでは <code>/rails/active_storage/disk/…</code> を指し、Rails が受け取ってディスクに保存します。
+            S3 を使うと、ここに S3 の URL が入ります。アプリのページから別のドメインに PUT できるよう、S3 側で許可する送信元とメソッドを設定します。この仕組みを CORS と呼びます。<Ref n={4} /><Ref n={22} />
           </p>
-          <Figure n="19-7" title="直接アップロードの流れ" caption="Active Storage Overview（Direct Uploads）と、デモでの direct_uploads の応答をもとにした模式図。">
+          <p>
+            もう1つの <code>signed_id</code> は、最後に記事フォームで Rails に送る値です。これでどの blob を記事の表紙にするかが決まります。
+            PUT が成功しても、その後に利用者がフォームを閉じたら、保存されたファイルと blob の行は記事に結び付かずに残ります。
+          </p>
+          <Figure n="22-7" title="直接アップロードの流れ" caption="S3 に画像を置く場合。②で受け取る URL は③のファイル転送に、signed_id は④の記事の保存に使う。">
             <DirectFigure />
           </Figure>
         </>
@@ -948,6 +1235,16 @@ variant_records: 1 blobs: 2
             <li>変換に libvips を使う。ガイドによると、ImageMagick より最大で10倍速く、メモリーの使用量は10分の1程度です</li>
           </ul>
           <p>
+            次の図は既定の設定と <code>preprocessed: true</code> で、変換が行われる時点を比べたものです。上の段が既定、下の段が <code>preprocessed: true</code>{' '}
+            で、左から右へ時間が進みます。紫の箱が、要求を処理している Puma のスレッドで変換する所です。
+          </p>
+          <Figure
+            title="バリアントを変換する時点"
+            caption="上の段はこの節のデモの実測、下の段は activestorage 8.1.4.1 の attachment.rb（after_create_commit）をもとにした模式図。下の段は、TransformJob が1回目の GET より先に終わった場合。58ms と 8ms は 800×600 の画像での値。attachments の行の作成は省略した。"
+          >
+            <VariantTimingFigure />
+          </Figure>
+          <p>
             また、ガイドは、利用者が入力した値を変換のパラメーターに渡すことは安全でないとしています。変換の内容は、上の <code>:thumb</code> のように名前を付けてモデルに定義しておきます。
           </p>
           <Callout kind="note" title="デモの変換処理">
@@ -967,6 +1264,27 @@ variant_records: 1 blobs: 2
       ),
     },
     {
+      id: 'attachment-lifecycle',
+      title: "添付の追加・削除とオブジェクトストレージ",
+      body: (
+        <>
+          <p>
+            <code>has_one_attached :cover</code> は一件、<code>has_many_attached :photos</code> は複数のファイルを関連付けます。<code>article.cover.attach(upload)</code> で添付し、<code>attached?</code> で有無を調べ、<code>image_tag article.cover</code> などで表示できます。ダウンロードを伴う配信では、リンクを作る処理と、実際にファイルへアクセスできる条件を確認します。<Ref n={20} />
+          </p>
+          <p>
+            <code>purge</code> は添付の関連と不要になった blob・保管先のファイルを削除する操作で、<code>purge_later</code> はジョブで行います。ファイル自体を残して接続だけ外したい場合は <code>detach</code> を使います。複数の添付が同じ blob を参照することや、直接アップロード後にフォームが未送信で残った blob も扱えるよう、削除対象を確認します。<Ref n={20} />
+          </p>
+          <h3>S3 などを使う場合</h3>
+          <p>
+            <code>config/storage.yml</code> にサービスを記述し、配備する環境で <code>config.active_storage.service</code> に選んだサービスを指定します。S3 用のアダプターには <code>aws-sdk-s3</code> が必要です。バケット、リージョン、アプリに必要な権限を設定し、認証情報は配備先の役割や秘密情報から取得します。直接アップロードを使う場合は、ブラウザーの公開元からアップロードできるようにストレージの CORS も設定します（<ChapterLink n={19} section="direct-upload">直接アップロードの経路</ChapterLink>）。<Ref n={20} />
+          </p>
+          <p>
+            添付の形式やバイト数はサーバー側でも検証でき、必要なら Active Storage 用の検証 gem や自分の検証を使います。利用者の申告する Content-Type だけで公開を決めず、許可した内容と配信方法を確認します。機密ファイルでは認可を通す独自の配信経路を用意し、既定の Active Storage ルートを無効にするなど、既知のリンクだけで開ける経路が残らないようにします。<Ref n={20} /><Ref n={21} />
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'summary',
       title: 'まとめ',
       body: (
@@ -979,7 +1297,7 @@ variant_records: 1 blobs: 2
           <li>file_field を含むフォームは multipart/form-data で送られ、ファイルは一時ファイルを持つ UploadedFile として届きます。一時ファイルは応答の後に消されるので、ディスクかクラウドのストレージに保存し、データベースに記録します。</li>
           <li>ActiveStorage は blobs・attachments・variant_records の3つのテーブルを使い、添付の COMMIT の後に AnalyzeJob で解析します。一覧では with_attached_* で N+1 を避けます。</li>
           <li>既定のリダイレクト方式では、期限の無い Rails の URL から、期限5分のストレージの URL にリダイレクトします。URL を知っていれば誰でも取得できます。</li>
-          <li>直接アップロードでは、ファイルの本体が Rails を通らずにストレージに送られます。</li>
+          <li>直接アップロードでは、先に画像を指定された URL に送り、あとで記事のフォームに signed_id を付けて送ります。S3 を使う場合、画像本体はブラウザーから S3 に届きます。</li>
           <li>バリアントは最初の要求で変換され、その間 Puma のスレッドを使います。preprocessed: true で事前に変換できます。</li>
         </ul>
       ),
@@ -1004,6 +1322,10 @@ variant_records: 1 blobs: 2
     { title: 'RFC 7578: Returning Values from Forms: multipart/form-data', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc7578', accessed: '2026-11-16', version: 'RFC 7578', note: 'boundary で区切った部分ごとに、欄の名前・ファイル名・種類・中身を入れること。curl -F で送った要求を実測。' },
     { title: 'rack: lib/rack/tempfile_reaper.rb', publisher: 'rack/rack（GitHub）', url: 'https://github.com/rack/rack/blob/v3.2.8/lib/rack/tempfile_reaper.rb', accessed: '2026-11-16', version: 'Rack 3.2.8', note: 'multipart の解析で作った一時ファイルを、応答の本文を閉じたときに削除すること。デモのミドルウェアの一覧にも Rack::TempfileReaper がある。' },
     { title: 'ruby/net-smtp', publisher: 'ruby/net-smtp（GitHub）', url: 'https://github.com/ruby/net-smtp', accessed: '2026-11-16', version: 'net-smtp 0.5.1（Ruby 4.0.9 に同梱）', note: 'Net::SMTP.start と send_message。' },
+    { title: "Action Mailer Basics", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/action_mailer_basics.html", accessed: "2026-11-20", version: "Rails 8.1", note: "メールの設定、プレビュー、送信時の URL。" },
+    { title: "Active Storage Overview", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/active_storage_overview.html", accessed: "2026-11-20", version: "Rails 8.1", note: "添付ファイル、配信、サービス設定、直接アップロード。" },
+    { title: "File Upload Cheat Sheet", publisher: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html", accessed: "2026-11-20", note: "ファイル形式・サイズと配信の認可。" },
+    { title: 'ActiveStorage::Service::DiskService#url_for_direct_upload', publisher: 'Ruby on Rails API', url: 'https://api.rubyonrails.org/classes/ActiveStorage/Service/DiskService.html#method-i-url_for_direct_upload', accessed: '2026-11-23', note: 'ローカルディスクに直接アップロードする場合、Rails のディスクサービスへの URL を返す。' },
   ],
 }
 

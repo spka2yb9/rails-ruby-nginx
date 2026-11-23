@@ -7,7 +7,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const AWS = 'https://docs.aws.amazon.com/elasticloadbalancing/latest/application'
 
-/* ---------- 図 25-1 ロードバランサーによる振り分け ---------- */
+/* ---------- 図 28-1 ロードバランサーによる振り分け ---------- */
 function BalanceFigure() {
   const panel = (x: number, title: string, a1: string, a2: string, down: boolean) => (
     <g>
@@ -27,7 +27,7 @@ function BalanceFigure() {
   )
   return (
     <Svg
-      id="25-1"
+      id="28-1"
       w={780}
       h={320}
       label="左は2台とも動いているとき。ロードバランサー役の Nginx は、20件の要求を app1 に12件、app2 に8件振り分けた。右は app2 がポート 80 で接続を受け付けないとき。app2 に接続できなかった要求は app1 に送り直され、20件すべてを app1 が処理した。下は ALB のヘルスチェックで、利用者の要求とは別に、決まった間隔で各サーバーへ確認の要求を送り、正常な応答が返らないサーバーには利用者の要求を送らない"
@@ -48,7 +48,7 @@ function BalanceFigure() {
   )
 }
 
-/* ---------- 図 25-2 接続ごとに見える IP アドレス ---------- */
+/* ---------- 図 28-2 接続ごとに見える IP アドレス ---------- */
 function IpFigure() {
   const nodes = [
     { x: 20, t: 'curl のホスト', s: '172.29.0.1' },
@@ -63,7 +63,7 @@ function IpFigure() {
   ]
   return (
     <Svg
-      id="25-2"
+      id="28-2"
       w={780}
       h={270}
       label="curl のホスト 172.29.0.1 から、ロードバランサー役 172.29.0.12 のポート 443、Nginx 172.29.0.7 のポート 80、Puma 172.29.0.14 のポート 3000 の順に、別々の接続で要求が送られる。ロードバランサー役から見た接続の相手は 172.29.0.1、Nginx から見た相手は 172.29.0.12、Rails の REMOTE_ADDR は Nginx の 172.29.0.7。元の IP アドレスは X-Forwarded-For に書き足されて、Rails には 172.29.0.1, 172.29.0.12 が届く"
@@ -98,7 +98,7 @@ function IpFigure() {
   )
 }
 
-/* ---------- 図 25-3 ヘッダーの受け渡し ---------- */
+/* ---------- 図 28-3 ヘッダーの受け渡し ---------- */
 function HeadersFigure() {
   const hops = [
     { x: 20, t: 'ブラウザー', s: '203.0.113.7（例）' },
@@ -108,7 +108,7 @@ function HeadersFigure() {
   ]
   return (
     <Svg
-      id="25-3"
+      id="28-3"
       w={780}
       h={300}
       label="ブラウザーは ALB に HTTPS で接続する。ALB は TLS を終端し、Nginx には HTTP で、X-Forwarded-For にブラウザーの IP を加え、X-Forwarded-Proto に https を入れて送る。Nginx は X-Forwarded-For に ALB の IP を加え、X-Forwarded-Proto は ALB の値をそのまま渡し、X-Request-Id に自分で作った ID を入れて Puma に送る。Rails は RemoteIp で X-Forwarded-For から信頼するプロキシの IP を除いてクライアントの IP を求め、X-Forwarded-Proto で https の要求と判断し、X-Request-Id をログの印に使う"
@@ -143,13 +143,13 @@ function HeadersFigure() {
   )
 }
 
-/* ---------- 図 25-4 タイムアウトの関係 ---------- */
+/* ---------- 図 28-4 タイムアウトの関係 ---------- */
 function TimeoutFigure() {
   const x0 = 170
   const s = 7 // 1秒あたりの幅
   return (
     <Svg
-      id="25-4"
+      id="28-4"
       w={780}
       h={300}
       label="ALB のアイドルタイムアウトの既定値は60秒、Nginx の proxy_read_timeout の既定値も60秒で、Puma には要求の処理時間の上限が無い。デモでは、ロードバランサー役の Nginx のタイムアウトを5秒にして、8秒かかる要求を送った。ロードバランサーは5秒で 504 を返し、後段の Nginx のログには 499（クライアントが接続を閉じた）が残り、Rails は処理を続けて8秒後に 200 で完了とログに書いた"
@@ -192,6 +192,8 @@ function TimeoutFigure() {
         LB（応答 504）
       </T>
       <rect x={x0} y={166} width={5 * 40} height={18} rx={3} fill="var(--fig-box)" stroke="var(--fig-line)" />
+      {/* 結果の文字の下を背景色で塗り、目盛りの点線が文字に重ならないようにする */}
+      <rect x={x0 + 5 * 40 + 3} y={168} width={84} height={16} fill="var(--fig-bg)" />
       <T x={x0 + 5 * 40 + 6} y={176} fs={10.5} tone="danger">
         5.006s で 504
       </T>
@@ -199,6 +201,7 @@ function TimeoutFigure() {
         Nginx（ログ 499）
       </T>
       <rect x={x0} y={196} width={5 * 40} height={18} rx={3} fill="var(--fig-box)" stroke="var(--fig-line)" />
+      <rect x={x0 + 5 * 40 + 3} y={198} width={96} height={16} fill="var(--fig-bg)" />
       <T x={x0 + 5 * 40 + 6} y={206} fs={10.5} tone="muted">
         LB が切断 → 499
       </T>
@@ -206,6 +209,7 @@ function TimeoutFigure() {
         Rails（ログ 200）
       </T>
       <rect x={x0} y={226} width={8 * 40} height={18} rx={3} fill="var(--fig-box5)" stroke="var(--fig-line)" />
+      <rect x={x0 + 8 * 40 + 3} y={228} width={146} height={16} fill="var(--fig-bg)" />
       <T x={x0 + 8 * 40 + 6} y={236} fs={10.5} tone="muted">
         8001ms で Completed 200
       </T>
@@ -213,11 +217,11 @@ function TimeoutFigure() {
   )
 }
 
-/* ---------- 図 25-5 502・504 の切り分け ---------- */
+/* ---------- 図 28-5 502・504 の切り分け ---------- */
 function TriageFigure() {
   return (
     <Svg
-      id="25-5"
+      id="28-5"
       w={780}
       h={430}
       label="502 か 504 かを受けたら、まずどの層が応答を作ったかを確かめる。ALB のアクセスログで target_status_code が - なら ALB が作った応答で、Nginx の応答なら Nginx のアクセスログに同じ要求がある。ALB が作った 502 は、ターゲットが接続を拒否・切断した場合で、Nginx の keep-alive がアイドルタイムアウトより短い場合も含む。ALB が作った 504 は、ターゲットへの接続が10秒以内にできないか、アイドルタイムアウトまで応答が無い場合。Nginx が作った 502 は、Puma への接続の失敗（connect() failed）か、処理中の切断（upstream prematurely closed connection）。Nginx が作った 504 は upstream timed out。Rails のログに同じ要求の Completed があれば、処理は最後まで続いている"
@@ -245,21 +249,208 @@ function TriageFigure() {
   )
 }
 
+/* ---------- X-Forwarded-Proto の上書きとリダイレクトの繰り返し（番号なし） ---------- */
+function ProtoLoopFigure() {
+  const ys = [36, 100, 164, 228, 292, 356]
+  const col = (px: number, ok: boolean) => {
+    const cx = px + 105
+    return (
+      <g>
+        <Box x={px} y={ys[0]} w={210} h={42} lines={['ブラウザー', 'https://…/articles/1']} fs={12.5} fill="bg" subTone="muted" />
+        <Box x={px} y={ys[1]} w={210} h={42} lines={['ロードバランサー役', 'X-Forwarded-Proto: https']} fs={12.5} subTone="muted" />
+        <Box x={px} y={ys[2]} w={210} h={42} lines={['後段の Nginx', `X-Forwarded-Proto: ${ok ? 'https' : 'http'}`]} fs={12.5} subTone={ok ? 'muted' : 'danger'} />
+        <Box x={px} y={ys[3]} w={210} h={42} lines={['ActionDispatch::SSL', `request.ssl? が ${ok}`]} fs={12.5} fill="box5" subTone={ok ? 'muted' : 'danger'} />
+        <Box x={px} y={ys[4]} w={210} h={42} lines={['Rails::Rack::Logger', ok ? 'ログを書く' : '届かない（ログは 0 行）']} fs={12.5} fill={ok ? 'box' : 'bg'} dashed={!ok} subTone="muted" />
+        <Box x={px} y={ys[5]} w={210} h={42} lines={['アクション', ok ? '200 を返す' : '届かない']} fs={12.5} fill={ok ? 'box' : 'bg'} dashed={!ok} subTone="muted" />
+        {[0, 1, 2, 3, 4].map((i) => (i < 3 || ok) && <Arrow key={i} x1={cx} y1={ys[i] + 42} x2={cx} y2={ys[i + 1] - 2} />)}
+        <T x={cx + 8} y={89} fs={11.5} tone="muted">
+          HTTPS
+        </T>
+        <T x={cx + 8} y={153} fs={11.5} tone="muted">
+          HTTP
+        </T>
+      </g>
+    )
+  }
+  return (
+    <Svg
+      id="ch25-proto-loop"
+      w={780}
+      h={436}
+      label="左は後段の Nginx が X-Forwarded-Proto を $scheme で上書きする前章の設定。ブラウザーは HTTPS でロードバランサー役に接続し、ロードバランサー役は X-Forwarded-Proto: https を付けて HTTP で後段の Nginx に送る。後段の Nginx は X-Forwarded-Proto を http に上書きし、ActionDispatch::SSL では request.ssl? が false になって、同じ URL への 301 を返す。要求は Rails::Rack::Logger にもアクションにも届かず、ログは0行。ブラウザーは同じ URL を要求し直し、これを繰り返す。右は後段の Nginx が $http_x_forwarded_proto で ALB の値をそのまま渡す設定。X-Forwarded-Proto は https のまま届き、request.ssl? が true になり、Rails::Rack::Logger がログを書き、アクションが 200 を返す"
+    >
+      <T x={20} y={18} bold fs={12}>
+        X-Forwarded-Proto $scheme（前章の設定）
+      </T>
+      <T x={410} y={18} bold fs={12}>
+        X-Forwarded-Proto $http_x_forwarded_proto
+      </T>
+      <line x1={395} y1={30} x2={395} y2={400} stroke="var(--fig-line)" strokeDasharray="2 4" opacity={0.6} />
+      {col(20, false)}
+      {col(410, true)}
+      <Arrow d="M 230 249 H 270 V 57 H 232" accent />
+      <T x={278} y={112} fs={11.5} tone="danger" bold>
+        301
+      </T>
+      <T x={278} y={132} fs={11.5} tone="muted">
+        Location は
+      </T>
+      <T x={278} y={150} fs={11.5} tone="muted">
+        同じ URL
+      </T>
+      <T x={278} y={186} fs={11.5} tone="muted">
+        ブラウザーは
+      </T>
+      <T x={278} y={204} fs={11.5} tone="muted">
+        同じ URL を
+      </T>
+      <T x={278} y={222} fs={11.5} tone="muted">
+        要求し直す
+      </T>
+      <T x={20} y={422} fs={11.5} tone="muted">
+        Rails の設定は両方とも force_ssl = true、assume_ssl = false
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- X-Forwarded-For を右から見る（番号なし） ---------- */
+function RemoteIpFigure() {
+  const xs = [20, 200, 380]
+  const ips = ['1.2.3.4', '172.29.0.1', '172.29.0.6']
+  const rows = [
+    { y: 130, title: '既定：プライベートな IP の範囲をすべて信頼する', subs: ['最初に残る', '除く（プライベート）', '除く（プライベート）'], pick: 0, ip: '1.2.3.4', note: '偽の値が採用された' },
+    { y: 218, title: 'trusted_proxies を2台（172.29.0.6・172.29.0.5）に絞る', subs: ['見ない', '最初に残る', '除く（指定した IP）'], pick: 1, ip: '172.29.0.1', note: '本物のクライアント' },
+  ]
+  return (
+    <Svg
+      id="ch25-remote-ip"
+      w={780}
+      h={306}
+      label="クライアントが X-Forwarded-For: 1.2.3.4 を付けて送ると、ロードバランサー役が 172.29.0.1 を、後段の Nginx が 172.29.0.6 を右に書き足し、Rails には 1.2.3.4, 172.29.0.1, 172.29.0.6 が届く。RemoteIp は右から順に見て、信頼するプロキシの IP を除く。既定ではプライベートな範囲をすべて信頼するので、172.29.0.6 と 172.29.0.1 を除き、最初に残った 1.2.3.4 が remote_ip になる。trusted_proxies を 172.29.0.6 と 172.29.0.5 の2台に絞ると、172.29.0.6 だけを除き、最初に残った 172.29.0.1 が remote_ip になり、1.2.3.4 は見ない"
+    >
+      <T x={20} y={18} bold fs={12}>
+        Rails に届いた X-Forwarded-For（クライアントが偽の値を付けた要求）
+      </T>
+      {ips.map((ip, i) => (
+        <Box key={ip} x={xs[i]} y={32} w={150} h={36} lines={ip} mono fs={12.5} fill="box4" />
+      ))}
+      {['クライアントが付けた', 'ロードバランサーが書き足した', 'Nginx が書き足した'].map((t, i) => (
+        <T key={t} x={xs[i] + 75} y={84} anchor="middle" fs={11.5} tone="muted">
+          {t}
+        </T>
+      ))}
+      <T x={570} y={42} fs={11.5} tone="muted">
+        右（Rails に近い側）から順に見て、
+      </T>
+      <T x={570} y={60} fs={11.5} tone="muted">
+        信頼する IP を除く
+      </T>
+      {rows.map((r) => (
+        <g key={r.title}>
+          <T x={20} y={r.y - 14} bold fs={12}>
+            {r.title}
+          </T>
+          {ips.map((ip, i) => (
+            <Box
+              key={ip}
+              x={xs[i]}
+              y={r.y}
+              w={150}
+              h={44}
+              lines={[ip, r.subs[i]]}
+              fs={12.5}
+              fill={i === r.pick ? 'box5' : 'bg'}
+              dashed={i !== r.pick}
+              accent={i === r.pick}
+              subTone="muted"
+            />
+          ))}
+          {[1, 2].map((i) => i > r.pick && <Arrow key={i} x1={xs[i] - 2} y1={r.y + 22} x2={xs[i] - 28} y2={r.y + 22} />)}
+          <T x={570} y={r.y + 12} fs={12} mono tone={r.pick === 0 ? 'danger' : 'acc'}>
+            {`remote_ip = ${r.ip}`}
+          </T>
+          <T x={570} y={r.y + 32} fs={11.5} tone="muted">
+            {r.note}
+          </T>
+        </g>
+      ))}
+      <T x={20} y={290} fs={11.5} tone="muted">
+        172.29.0.1 は Docker のホスト（本物のクライアント）、172.29.0.6 はロードバランサー役、172.29.0.5 は後段の Nginx
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 2つの ID で3つのログをつなぐ（番号なし） ---------- */
+function LogJoinFigure() {
+  const acc = { fill: 'var(--fig-accent)' }
+  const logs = [
+    { y: 22, h: 62, title: 'ALB のアクセスログ', lines: [<>… 504 … "GET …/lab/slow?s=8 HTTP/1.1" … <tspan style={acc}>"Root=1-…"</tspan></>] },
+    { y: 122, h: 62, title: '後段の Nginx のアクセスログ', lines: [<>… 499 trace=<tspan style={acc}>"Root=1-…"</tspan> request_id=<tspan style={acc}>b07c47fe…</tspan></>] },
+    {
+      y: 222,
+      h: 80,
+      title: 'Rails のログ（log_tags = [ :request_id ]）',
+      lines: [<><tspan style={acc}>[b07c47fe…]</tspan> Started GET "/lab/slow?s=8" …</>, <><tspan style={acc}>[b07c47fe…]</tspan> Completed 200 OK in 8001ms</>],
+    },
+  ]
+  const layers = ['ALB', '後段の Nginx', 'Puma・Rails']
+  return (
+    <Svg
+      id="ch25-log-join"
+      w={780}
+      h={318}
+      label="ALB は要求に X-Amzn-Trace-Id を付けて後段の Nginx に送り、自分のアクセスログにも Root=1-… の値を書く。後段の Nginx は受け取った X-Amzn-Trace-Id と、自分で作った request_id b07c47fe… の両方をアクセスログの同じ行に書き、request_id を X-Request-Id で Puma に渡す。Rails は log_tags の設定で、ログの各行の先頭に [b07c47fe…] を付ける。ALB の行と Nginx の行は Trace-Id で、Nginx の行と Rails の Started・Completed の行は request_id で結び付けられる"
+    >
+      {layers.map((t, i) => (
+        <g key={t}>
+          <Box x={20} y={30 + i * 100} w={150} h={46} lines={t} fs={12.5} />
+          <Arrow x1={170} y1={53 + i * 100} x2={228} y2={53 + i * 100} />
+          {i < 2 && <Arrow x1={95} y1={76 + i * 100} x2={95} y2={128 + i * 100} />}
+        </g>
+      ))}
+      <T x={103} y={102} fs={11.5} mono tone="muted">
+        X-Amzn-Trace-Id
+      </T>
+      <T x={103} y={202} fs={11.5} mono tone="muted">
+        X-Request-Id
+      </T>
+      {logs.map((l) => (
+        <g key={l.title}>
+          <Box x={230} y={l.y} w={530} h={l.h} fill="box4" />
+          <T x={244} y={l.y + 18} bold fs={12}>
+            {l.title}
+          </T>
+          {l.lines.map((line, j) => (
+            <T key={j} x={244} y={l.y + 40 + j * 20} mono fs={11.5}>
+              {line}
+            </T>
+          ))}
+        </g>
+      ))}
+      <Arrow x1={600} y1={86} x2={600} y2={120} dashed both />
+      <T x={612} y={103} fs={11.5} tone="muted">
+        同じ Trace-Id で探す
+      </T>
+      <Arrow x1={600} y1={186} x2={600} y2={220} dashed both />
+      <T x={612} y={203} fs={11.5} tone="muted">
+        同じ request_id で探す
+      </T>
+    </Svg>
+  )
+}
+
 const ch25: Chapter = {
   number: 25,
   part: 5,
-  title: 'ロードバランサー配下の構成と障害の切り分け',
+  title: 'ロードバランサー配下の構成と障害対応',
   summary:
-    'サーバーを複数台にする理由とロードバランサーによる振り分け、ヘルスチェック、IP アドレスとポート、状態コード（とくに 502・504）、HTTPS と TLS の証明書を、Nginx を動かして確かめます。そのうえで、ALB の後ろに Nginx と Puma を置く構成で、TLS の終端、クライアントの IP、X-Forwarded-Proto と force_ssl、ヘルスチェック、各層のタイムアウトがどう関係するかを、ロードバランサー役の Nginx を前に置いて再現します。502 と 504 の原因の切り分け方と、X-Request-Id でログを突き合わせる方法も扱います。',
+    'ブラウザーに 504 が表示されても、Rails 側では同じ要求を処理し終えていることがあります。ロードバランサーが要求を振り分ける構成で、誰が応答を返し、誰が待つのをやめたのかをログから調べます。',
   goals: [
-    'ロードバランサーが要求を複数のサーバーに振り分け、ヘルスチェックで異常なサーバーを外す仕組みを説明できる',
-    'プロキシを通るたびに接続が分かれ、後ろのサーバーからは1つ手前の IP アドレスしか見えないことと、502・504 が転送する側の作る状態コードであることを説明できる',
-    'TLS を終端するロードバランサーの後ろで、X-Forwarded-Proto を正しく渡さないと force_ssl がリダイレクトを繰り返す理由を説明できる',
-    'X-Forwarded-For と RemoteIp・trusted_proxies、Nginx の real_ip でクライアントの IP を求める仕組みを説明できる',
-    '/up のヘルスチェックが force_ssl のリダイレクトで失敗する場合と、その対処を説明できる',
-    'ALB・Nginx・Puma のタイムアウトの関係と、前段が切っても Rails の処理が続くことを説明できる',
-    '502 と 504 を、どの層が応答を作ったかから切り分けられる',
-    'X-Request-Id で Nginx と Rails のログを突き合わせられる',
+    '接続元の IP と HTTPS の情報が、ロードバランサーから Rails までどう伝わるかを説明できる',
+    'ヘルスチェックが成功する条件と、タイムアウトがどの接続にかかるかを確かめられる',
+    '502・504 を返した場所を特定し、同じ要求の Nginx と Rails のログを照合できる',
   ],
   prerequisites: [6, 21, 23, 24],
   sections: [
@@ -345,7 +536,7 @@ $ for i in $(seq 1 20); do curl -s http://127.0.0.1:8080/; done | sort | uniq -c
           <p>
             app2 に接続できなかった要求は、ロードバランサー役が app1 に送り直したので、20件すべてに app1 が応答しました。error.log には、app2 への接続が拒否されたこと（Connection refused）と、app2
             を一時的に使わないこと（temporarily disabled）が記録されています。説明書によると、接続に失敗したサーバーは fail_timeout（既定10秒）の間、振り分けの対象から外れます
-            <Ref n={12} />。app2 の listen を 80 に戻すと、10秒以上たってから、再び振り分けられました（図 25-1）。
+            <Ref n={12} />。app2 の listen を 80 に戻すと、10秒以上たってから、再び振り分けられました（図 28-1）。
           </p>
           <p>
             このロードバランサー役は利用者の要求を送って失敗したときに、初めてサーバーの異常に気づきます。ALB は利用者の要求とは別に、決まった間隔で各サーバーへ確認の要求を送り、期待した応答が返らないサーバーには利用者の要求を送りません。この確認を
@@ -353,7 +544,7 @@ $ for i in $(seq 1 20); do curl -s http://127.0.0.1:8080/; done | sort | uniq -c
             の説明書によると、定期的なヘルスチェックは商用版の機能です
             <Ref n={12} />。
           </p>
-          <Figure n="25-1" title="ロードバランサーによる振り分け" caption="ロードバランサー役の Nginx 1.30.6 で20件ずつ要求したときの実測と、ALB のヘルスチェックをもとにした模式図。">
+          <Figure n="28-1" title="ロードバランサーによる振り分け" caption="ロードバランサー役の Nginx 1.30.6 で20件ずつ要求したときの実測と、ALB のヘルスチェックをもとにした模式図。">
             <BalanceFigure />
           </Figure>
         </>
@@ -405,8 +596,7 @@ HTTP_X_FORWARDED_FOR="172.29.0.1, 172.29.0.12"
 `}
           />
           <p>
-            ロードバランサー役から見た接続の相手は curl のホスト（172.29.0.1）、Nginx から見た相手はロードバランサー役（172.29.0.12）、Puma から見た相手（REMOTE_ADDR）は Nginx（172.29.0.7）でした（図
-            25-2）。プロキシを1つ通るたびに新しい接続が作られるので、後ろのサーバーが接続から直接知れるのは、1つ手前の相手の IP アドレスだけです。元のクライアントの IP アドレスは、途中のプロキシが
+            ロードバランサー役から見た接続の相手は curl のホスト（172.29.0.1）、Nginx から見た相手はロードバランサー役（172.29.0.12）、Puma から見た相手（REMOTE_ADDR）は Nginx（172.29.0.7）でした（図 28-2）。プロキシを1つ通るたびに新しい接続が作られるので、後ろのサーバーが接続から直接知れるのは、1つ手前の相手の IP アドレスだけです。元のクライアントの IP アドレスは、途中のプロキシが
             X-Forwarded-For ヘッダーに書き足して伝えます。その扱いは「クライアントの IP」の節で詳しく見ます。
           </p>
           <p>
@@ -416,9 +606,20 @@ HTTP_X_FORWARDED_FOR="172.29.0.1, 172.29.0.12"
             IP」の節）。この章の図ではインターネットから来るブラウザーの IP アドレスとして、説明用の例のアドレス 203.0.113.7 を使います（203.0.113.0/24 は説明書や本で例に使うために用意された範囲です
             <Ref n={17} />）。
           </p>
-          <Figure n="25-2" title="接続ごとに見える IP アドレス" caption="デモの3段の構成（Nginx 1.30.6・Puma 8.0.2）で /lab/headers を1回要求したときの実測をもとにした図。">
+          <Figure n="28-2" title="接続ごとに見える IP アドレス" caption="デモの3段の構成（Nginx 1.30.6・Puma 8.0.2）で /lab/headers を1回要求したときの実測をもとにした図。">
             <IpFigure />
           </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'dns',
+      title: "URL のホスト名から接続先を調べる",
+      body: (
+        <>
+          <p>
+            ブラウザーは URL を開くと、ホスト名の接続先を DNS（Domain Name System）で調べます。DNS の応答などから IP アドレスを得た後で接続を作り、HTTPS なら TLS で相手を確認して HTTP の要求を送ります。名前に複数の候補アドレスがある場合や、以前の問い合わせをキャッシュしていた場合もあります。DNS が決めるのは名前に対応する候補で、URL のパスや Rails のアクションを選ぶのは後の処理です。<Ref n={22} />
+          </p>
         </>
       ),
     },
@@ -668,10 +869,10 @@ server {
           <p>
             ALB の説明書によると、ALB は X-Forwarded-For が無ければクライアントの IP で作り、あれば末尾に追加します（既定の append モード）。X-Forwarded-Proto には、クライアントが ALB
             に接続したプロトコル（http か https）を入れます
-            <Ref n={1} />。どのヘッダーが Rails のどこで使われるかは図 25-3 のとおりです。後段の Nginx の設定は、Host を <code>$http_host</code> にし、<code>X-Request-Id $request_id</code>{' '}
+            <Ref n={1} />。どのヘッダーが Rails のどこで使われるかは図 28-3 のとおりです。後段の Nginx の設定は、Host を <code>$http_host</code> にし、<code>X-Request-Id $request_id</code>{' '}
             を加えた以外は前章と同じです。
           </p>
-          <Figure n="25-3" title="ヘッダーの受け渡し" caption="ALB の説明書（X-Forwarded headers）と、デモの3段の構成での実測をもとにした模式図。">
+          <Figure n="28-3" title="ヘッダーの受け渡し" caption="ALB の説明書（X-Forwarded headers）と、デモの3段の構成での実測をもとにした模式図。">
             <HeadersFigure />
           </Figure>
         </>
@@ -725,6 +926,16 @@ Rails のログに出た /articles/1 の行: 0
         @app.call(env)
 `}
           />
+          <p>
+            次の図は、1件の要求が通る順を上から並べたものです。左の列は前章の設定のままの場合、右の列は後段の Nginx で ALB の値をそのまま渡した場合（下の対処の1つ目）です。左の列では、ActionDispatch::SSL が上の
+            <code>request.ssl?</code> の分岐で 301 を返すので、要求は Rails::Rack::Logger に届きません。
+          </p>
+          <Figure
+            title="X-Forwarded-Proto の上書きとリダイレクトの繰り返し"
+            caption="この節のデモをもとにした模式図。ロードバランサー役と後段の Nginx の箱の2行目は、その層が次に送る X-Forwarded-Proto の値。破線の箱は要求が届かない層。太い青の矢印は 301 の応答で、実際には後段の Nginx とロードバランサー役を通ってブラウザーに戻る。Puma は省いた。"
+          >
+            <ProtoLoopFigure />
+          </Figure>
           <p>対処は2通りあります。</p>
           <ul>
             <li>
@@ -816,6 +1027,15 @@ HTTP_X_FORWARDED_FOR="1.2.3.4, 172.29.0.1, 172.29.0.6"
 request.remote_ip=172.29.0.1
 `}
           />
+          <p>
+            次の図は、偽の値を付けた要求の X-Forwarded-For を、既定の設定（上の段）と trusted_proxies を絞った設定（下の段）で、RemoteIp が右から順に見ていく様子を並べたものです。一番上の行でそれぞれの値をどの層が付けたかを確かめてから、各段を右の箱から左へ読んでください。
+          </p>
+          <Figure
+            title="X-Forwarded-For を右から見る"
+            caption="この節の2つの実行例をもとにした模式図。破線の箱は信頼するプロキシとして除いた値か、見ない値。紫の箱が最初に残った値で、request.remote_ip になる。細い矢印は見ていく順。REMOTE_ADDR の扱いは省いた。"
+          >
+            <RemoteIpFigure />
+          </Figure>
           <p>
             Nginx のアクセスログの <code>$remote_addr</code> は、直前の接続の相手（ロードバランサー）の IP です。Nginx の realip モジュールを使うと、信頼するアドレスから来た要求について、X-Forwarded-For
             からクライアントの IP を復元して $remote_addr に入れます
@@ -928,7 +1148,7 @@ upstream timed out (110: Connection timed out) while reading response header fro
           />
           <p>
             ブラウザーは5秒で 504 を受け取りましたが、Rails は処理を続けて8秒後に 200 と記録しました。後段の Nginx の 499 は、応答を返す前にクライアント（ここではロードバランサー）が接続を閉じたときに Nginx
-            がログに記録するコードで、HTTP の標準のコードではありません。Rails のログだけを見ると成功に見えるので、利用者が見たエラーとログが食い違います（図 25-4）。前段がタイムアウトしても、DB の更新などは最後まで実行されるので、利用者が再送すると二重に実行されることもあります。
+            がログに記録するコードで、HTTP の標準のコードではありません。Rails のログだけを見ると成功に見えるので、利用者が見たエラーとログが食い違います（図 28-4）。前段がタイムアウトしても、DB の更新などは最後まで実行されるので、利用者が再送すると二重に実行されることもあります。
           </p>
           <p>
             keep-alive の接続を閉じるタイミングにも順序があります。ALB の説明書は、アプリケーション側のアイドルタイムアウトを ALB のものより長くするよう勧めています。アプリケーションが先に接続を閉じると、ALB
@@ -936,7 +1156,7 @@ upstream timed out (110: Connection timed out) while reading response header fro
             <Ref n={5} />。ALB の次が Nginx なら Nginx の <code>keepalive_timeout</code>（公式イメージの設定では65秒）、Nginx を置かずに Puma なら <code>persistent_timeout</code>（既定 65 秒）が、ALB の60秒より長くなっています。ALB
             のアイドルタイムアウトを延ばすときは、これらも合わせて延ばします。
           </p>
-          <Figure n="25-4" title="タイムアウトの関係" caption="既定値は ALB と Nginx の説明書による。下段はデモ（ロードバランサー役のタイムアウトを5秒にした）での実測。">
+          <Figure n="28-4" title="タイムアウトの関係" caption="既定値は ALB と Nginx の説明書による。下段はデモ（ロードバランサー役のタイムアウトを5秒にした）での実測。">
             <TimeoutFigure />
           </Figure>
         </>
@@ -1003,11 +1223,12 @@ upstream timed out (110: Connection timed out) while reading response header fro
             <li>504：接続のタイムアウト（10秒）までにターゲットに接続できない、接続できたがアイドルタイムアウトまでに応答が無い、Content-Length が実際の本文より大きい、など</li>
           </ul>
           <p>
-            切り分けでは、まずどの層が応答を作ったかを確かめます（図 25-5）。ALB のアクセスログでは、<code>target_status_code</code> はターゲットが応答を返した場合だけ記録され、そうでなければ{' '}
-            <code>-</code> になります。<code>target_processing_time</code> が -1 なら、ALB は要求をターゲットに送れなかったか、アイドルタイムアウトまで応答が無かったことを表します
-            <Ref n={7} />。ターゲットが応答を返していれば、Nginx のアクセスログと error.log で、Nginx が作った応答か Puma の応答かを確かめます。最後に、Rails のログで同じ要求の Started と Completed を探します。
+            たとえば利用者が 504 を受け取ったら、まず ALB のアクセスログで同じ行の2つの欄を見ます。<code>elb_status_code</code> は利用者に返したコード、<code>target_status_code</code> は後ろのサーバーから受け取ったコードです。後者が <code>-</code> なら、ALB は転送先から応答コードを受け取れませんでした。<code>target_processing_time</code> が -1 なら、ターゲットへ送れなかった場合や、期限までに応答を受け取れなかった場合を調べます。<Ref n={7} />
           </p>
-          <Figure n="25-5" title="502・504 の切り分け" caption="ALB の説明書（Troubleshoot・Access logs）と、デモで各層を止めたり遅くしたりした結果をもとにまとめた手順。">
+          <p>
+            後者にも 504 があれば、今回は後ろのサーバーが 504 を返しています。そのサーバーの Nginx で同じ要求のアクセスログとエラーログを開き、Puma から応答を待っていたかを調べます。Rails まで届いていれば、同じ要求の Started と Completed に進みます（図 28-5）。
+          </p>
+          <Figure n="28-5" title="502・504 の切り分け" caption="ALB の説明書（Troubleshoot・Access logs）と、デモで各層を止めたり遅くしたりした結果をもとにまとめた手順。">
             <TriageFigure />
           </Figure>
         </>
@@ -1046,20 +1267,51 @@ upstream timed out (110: Connection timed out) while reading response header fro
 `}
           />
           <p>
-            本番環境の設定ファイルの <code>config.log_tags = [ :request_id ]</code> により、Rails のログの各行の先頭にこの ID が付きます。前節の 504 の例では、Nginx のアクセスログの{' '}
-            <code>request_id=b07c47fe380d1468dd0ec1a4fa4bb9c6</code> と、Rails のログの <code>[b07c47fe380d1468dd0ec1a4fa4bb9c6]</code> が一致しました。応答の X-Request-Id
-            ヘッダーにも同じ値が返るので、利用者から受け取ったエラー画面の情報からも辿れます。
+            本番環境の <code>config.log_tags = [ :request_id ]</code> は、Rails のログの先頭に要求 ID を付ける設定です。前節の 504 の例では、Nginx の <code>request_id=b07c47fe380d1468dd0ec1a4fa4bb9c6</code> と Rails の <code>[b07c47fe380d1468dd0ec1a4fa4bb9c6]</code> が一致しました。こうすると利用者に 504 を返した記録と、後から Rails の処理が終わった記録を結び付けられます。
+          </p>
+          <p>
+            Rails の応答がブラウザーまで届いた場合は、応答の <code>X-Request-Id</code> にも同じ値が入ります。前段が自分でエラーを返した場合は、その応答に Rails の ID があるとは限りません。
           </p>
           <p>
             ALB は、要求に <code>X-Amzn-Trace-Id</code> ヘッダーを付け、アクセスログにも記録します
-            <Ref n={9} />。Nginx の log_format に <code>$http_x_amzn_trace_id</code> を加えれば、ALB のアクセスログとも突き合わせられます。
+            <Ref n={9} />。これは後段の Nginx が作る <code>X-Request-Id</code> と別の値です。Nginx の <code>log_format</code> に <code>$http_x_amzn_trace_id</code> と <code>$request_id</code> の両方を入れておけば、同じ1行から前者で ALB、後者で Rails の記録を探せます。
           </p>
+          <p>
+            次の図は、前節の 504 の要求について、3つのログの記録を2つの ID で結び付けたものです。左の列はヘッダーで ID を渡す順、右の列は各層のログで、青い文字はログどうしで一致する値を示します。真ん中の Nginx の行が、上の ALB の行と下の Rails の行の両方につながります。
+          </p>
+          <Figure
+            title="2つの ID で3つのログをつなぐ"
+            caption="前節の 504 の例をもとにした模式図。ALB の行は形式を簡略化した例。Nginx の行の trace= は、log_format に $http_x_amzn_trace_id を加えた場合に出る値で、デモのログには無い。実線の矢印はヘッダーの受け渡しとログへの書き込み、破線の矢印は同じ値で探せる記録どうしを表す。"
+          >
+            <LogJoinFigure />
+          </Figure>
           <Callout kind="v72">
             <p>
               RemoteIp・SSL・AssumeSSL・RequestId・/up の HealthController は Rails 7.2.4 にもあります（AssumeSSL と /up は 7.1 から）。<code>silence_healthcheck_path</code>{' '}
               による /up のログの抑制は 8.0 から（railties の 8.0.0 の CHANGELOG）なので、7.2 のアプリケーションでは /up の要求も Rails のログに出ます。
             </p>
           </Callout>
+        </>
+      ),
+    },
+    {
+      id: 'production-observability',
+      title: "本番で監視し、異常時に復旧する",
+      body: (
+        <>
+          <p>
+            死活監視の <code>/up</code> に加え、要求の成功率、応答時間、同時実行、DB の接続や遅い SQL、キューの待ち時間、ディスクの残量を見ます。「利用者の一部がログインできない」「メールが通常より遅い」のように、利用者が受ける影響とメトリクスを結び付けてアラートを設定します。ログにはリクエスト ID と操作がわかる項目を含め、同じ要求を Nginx・Rails・ジョブへ追えるようにします。この本のリクエスト ID の例で見た方法は、障害の範囲を限定するのにも使えます。<Ref n={18} />
+          </p>
+          <p>
+            DB の遅い問い合わせは、本番で集めた遅い SQL の記録や監視の集計から候補を見つけ、条件・件数・実行計画を確かめます。たとえば PostgreSQL では <code>log_min_duration_statement</code>、MySQL ではスロークエリログの設定が出発点です。機密値やログ量を考慮し、再現や実行付きの計画確認は影響の少ない環境で行います。Rails が使う接続数も、Web とジョブの両方を含めて確認します。<Ref n={19} /><Ref n={20} />（<ChapterLink n={12} section="explain">実行計画</ChapterLink>、<ChapterLink n={23} section="sizing">接続数</ChapterLink>）。
+          </p>
+          <h3>障害対応と報告</h3>
+          <ul>
+            <li>発生時刻と、どの機能・利用者が影響を受けるかを確かめます。直前のリリースやアラートを確認し、一次報告には判明した影響、実施中の対応、次の報告時刻を書きます。原因が確定する前でも、既知の事実を共有できます。</li>
+            <li>影響を止める措置を優先します。転送先を旧版に戻す、対象の機能を止めるなど、今のデータと構成で実行できる手段を選び、復旧指標を確認します。意図せず範囲を広げないよう、変更の主体と記録を揃えます。</li>
+            <li>復旧後は時系列と検知・復旧を妨げた条件を調べ、再発を減らす対策を担当・期限と共に決めます。個人の責任追及では原因や対策を確認できないので、変更手順や検知がどう働いたかを振り返ります。<Ref n={18} /><Ref n={21} /></li>
+          </ul>
+          <p>障害のときに原因をたどれるように、ログ・メトリクス・トレースを残す考え方は、<ChapterLink n={89} /> で原則として扱います。</p>
         </>
       ),
     },
@@ -1101,6 +1353,11 @@ upstream timed out (110: Connection timed out) while reading response header fro
     { title: 'RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc8446.html', accessed: '2026-11-16', version: 'RFC 8446', note: 'TLS が盗み見・改ざん・なりすましを防ぐための取り決めであること。実行例は curl 8.23.0 と nginx 1.30.6 で実測。' },
     { title: 'Create an HTTPS listener for your Application Load Balancer', publisher: 'AWS Documentation', url: `${AWS}/create-https-listener.html`, accessed: '2026-11-16', version: '—', note: 'HTTPS のリスナーでは、ロードバランサーが証明書を使ってクライアントとの接続を終端し、要求を復号してからターゲットに送ること。' },
     { title: 'RFC 5737: IPv4 Address Blocks Reserved for Documentation', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc5737.html', accessed: '2026-11-16', version: 'RFC 5737', note: '203.0.113.0/24 が説明のための例に使う範囲であること。' },
+    { title: "Managing Incidents", publisher: "Google SRE", url: "https://sre.google/sre-book/managing-incidents/", accessed: "2026-11-20", note: "障害の影響、役割、記録、復旧。" },
+    { title: "Error Reporting and Logging", publisher: "PostgreSQL Documentation", url: "https://www.postgresql.org/docs/current/runtime-config-logging.html", accessed: "2026-11-20", note: "log_min_duration_statement とログ設定。" },
+    { title: "The Slow Query Log", publisher: "MySQL Reference Manual", url: "https://dev.mysql.com/doc/refman/8.4/en/slow-query-log.html", accessed: "2026-11-20", version: "MySQL 8.4", note: "時間を要する問い合わせの記録。" },
+    { title: "Postmortem Culture: Learning from Failure", publisher: "Google SRE", url: "https://sre.google/sre-book/postmortem-culture/", accessed: "2026-11-20", note: "障害後の振り返りと再発予防。" },
+    { title: "RFC 1034: Domain Names", publisher: "IETF", url: "https://www.rfc-editor.org/rfc/rfc1034.html", accessed: "2026-11-20", note: "ホスト名の問い合わせとキャッシュ。" },
   ],
 }
 

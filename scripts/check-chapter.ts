@@ -3,6 +3,7 @@
 import { createServer } from 'vite'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createElement } from 'react'
+import { labelFor, APPENDIX_ID, CHAPTER_ORDER } from '../src/content/label.ts'
 import type { Chapter } from '../src/content/types'
 
 const want = process.argv.slice(2).map(Number)
@@ -10,9 +11,19 @@ const server = await createServer({ server: { middlewareMode: true }, appType: '
 let failed = false
 
 try {
-  const mod = (await server.ssrLoadModule('/src/content/all-chapters.ts')) as { chapters: Chapter[] }
+  // 章ごとに読み込む。並行して編集中の別の章が壊れていても、指定した章は検査できる。
+  const mod: { chapters: Chapter[] } = { chapters: [] }
+  for (const id of [...CHAPTER_ORDER, APPENDIX_ID]) {
+    try {
+      const m = (await server.ssrLoadModule(`/src/chapters/ch${String(id).padStart(2, '0')}.tsx`)) as { default: Chapter }
+      mod.chapters.push(m.default)
+    } catch (e) {
+      if (!want.length || want.includes(id)) throw e
+      console.log(`      · ${labelFor(id)}（ID ${id}）を読み込めないため、この章へのリンクは検査していません: ${(e as Error).message.split('\n')[0]}`)
+    }
+  }
   const known = new Set(mod.chapters.map((c) => c.number))
-  const approved = new Set(Array.from({ length: 29 }, (_, i) => i + 1)) // 第1〜28章と付録A（29）
+  const approved = new Set([...CHAPTER_ORDER, APPENDIX_ID])
   for (const ch of mod.chapters) {
     if (want.length && !want.includes(ch.number)) continue
     const problems: string[] = []
@@ -57,10 +68,10 @@ try {
       if (!/^https?:\/\//.test(s.url)) problems.push(`URL が不正: ${s.url}`)
     }
     if (chars < 4000) problems.push(`本文が短い（${chars} 文字。コード・図を除く）`)
-    if (figs < 2 && ch.number < 29) problems.push(`図が ${figs} 点（2点以上が目安）`)
+    if (figs < 2 && ch.number !== APPENDIX_ID) problems.push(`図が ${figs} 点（2点以上が目安）`)
     const status = problems.length ? 'NG' : 'OK'
     if (problems.length) failed = true
-    console.log(`[${status}] 第${ch.number}章 ${ch.title} — 節 ${ch.sections.length} / 本文 ${chars} 文字 / 図 ${figs} / コード ${codes} / 出典 ${ch.sources.length}`)
+    console.log(`[${status}] ${labelFor(ch.number)} ${ch.title} — 節 ${ch.sections.length} / 本文 ${chars} 文字 / 図 ${figs} / コード ${codes} / 出典 ${ch.sources.length}`)
     for (const p of problems) console.log(`      - ${p}`)
     for (const p of notes) console.log(`      · ${p}`)
   }

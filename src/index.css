@@ -110,6 +110,9 @@ img, svg { max-width: 100%; height: auto; }
 .nav-sections { margin: 2px 0 6px 2.4em !important; border-left: 1px solid var(--line); }
 .nav-sections a { padding: 2px 10px; font-size: 13px; color: var(--fg-muted); display: block; }
 .nav-sections a[aria-current='location'] { color: var(--accent); font-weight: 600; }
+.nav-exercises > summary { padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+.nav-exercises > summary:hover { background: var(--accent-soft); }
+.nav-exercises[open] > summary { font-weight: 600; }
 .sidebar-backdrop { display: none; }
 
 .main { padding: calc(var(--topbar-h) + 24px) 32px 80px; margin-left: var(--sidebar-w); margin-right: var(--outline-w); }
@@ -124,6 +127,10 @@ img, svg { max-width: 100%; height: auto; }
 .outline li a { display: block; padding: 4px 10px; color: var(--fg-muted); text-decoration: none; }
 .outline li a[aria-current='location'], .outline li a:hover { color: var(--accent); }
 
+/* 第6部（Linux の実習）は、実習ページを本文の場所いっぱいに埋め込む（components/LinuxView.tsx） */
+.linux-mode .main { padding: var(--topbar-h) 0 0; margin-right: 0; }
+.linux-frame { display: block; width: 100%; height: calc(100dvh - var(--topbar-h)); border: 0; }
+
 @media (max-width: 1100px) {
   .outline { display: none; }
   .main { margin-right: 0; }
@@ -135,6 +142,8 @@ img, svg { max-width: 100%; height: auto; }
   .nav-open .sidebar-backdrop { display: block; position: fixed; inset: var(--topbar-h) 0 0 0; background: rgba(0,0,0,0.35); z-index: 20; }
   .main { margin-left: 0; padding-left: 16px; padding-right: 16px; }
   .search-btn span { display: none; }
+  .linux-mode .search-btn span { display: inline; }
+  .linux-mode .search-btn kbd { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
@@ -265,3 +274,5 @@ img, svg { max-width: 100%; height: auto; }
 
 /* 長いファイルパスや識別子が狭い画面からはみ出さないよう、必要な位置で折り返す */
 .chapter :not(pre) > code, .code-title, .sources li, .chapter h1, .chapter h2, .chapter h3 { overflow-wrap: anywhere; }
+/* code で囲まずに本文に書いた識別子（ActiveRecord::ReadonlyAttributeError など）も、はみ出すときだけ折り返す。break-word は表の列幅の計算に影響しない */
+.chapter p, .chapter li, .chapter figcaption, .chapter .callout { overflow-wrap: break-word; }

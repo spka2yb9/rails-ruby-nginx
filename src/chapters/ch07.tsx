@@ -365,20 +365,241 @@ function OnLoadFigure() {
   )
 }
 
+/* ---------- config.名前 の呼び出しと method_missing の分岐（番号なし） ---------- */
+function ConfigMissingFigure() {
+  const branches = [
+    { x: 110, label: 'はい' },
+    { x: 307, label: 'いいえ' },
+    { x: 489, label: 'はい' },
+    { x: 658, label: 'いいえ' },
+  ]
+  return (
+    <Svg
+      id="ch07-config-missing"
+      w={760}
+      h={414}
+      label="config.名前 を呼んだとき、config にその名前のメソッドが無いと method_missing が呼ばれる。名前が = で終わる代入のとき、after_initialize のように config の実際のメソッドと同じ名前なら NoMethodError になり、それ以外は @@options に保存する。config.force_sll = true のような綴りの誤りもエラーにならずに保存される。= で終わらない参照のとき、その名前が @@options にあれば保存された値を返し、無ければ super を呼んで NoMethodError になる。@@options はクラス変数のハッシュで、すべての Railtie とアプリケーションの config で共有される"
+    >
+      <Box x={230} y={14} w={300} h={44} lines={['config.名前 を呼ぶ', '定義されたメソッドが無いと method_missing']} fs={12.5} subTone="muted" />
+      <Arrow x1={380} y1={58} x2={380} y2={86} />
+      <Box x={255} y={88} w={250} h={36} lines="名前が = で終わる？（代入）" fs={12} />
+      <Arrow d="M255,106 H190 V158" />
+      <T x={206} y={96} fs={11.5}>
+        はい
+      </T>
+      <Arrow d="M505,106 H570 V158" />
+      <T x={516} y={96} fs={11.5}>
+        いいえ（参照）
+      </T>
+      <Box x={40} y={160} w={300} h={44} lines={['config のメソッドと同じ名前？', 'actual_method?(key)']} fs={12.5} subTone="muted" />
+      <Box x={420} y={160} w={300} h={44} lines={['その名前が @@options にある？', '@@options.key?(name)']} fs={12.5} subTone="muted" />
+      {branches.map((b) => (
+        <g key={b.x}>
+          <Arrow x1={b.x} y1={204} x2={b.x} y2={234} />
+          <T x={b.x + 8} y={220} fs={11.5}>
+            {b.label}
+          </T>
+        </g>
+      ))}
+
+      <Box x={20} y={236} w={180} h={88} fill="bg" lines={[]} />
+      <T x={110} y={258} anchor="middle" fs={12} tone="danger" mono>
+        NoMethodError
+      </T>
+      <T x={110} y={280} anchor="middle" fs={11.5}>
+        代入させない
+      </T>
+      <T x={110} y={302} anchor="middle" fs={11.5} tone="muted">
+        after_initialize などの名前
+      </T>
+
+      <Box x={212} y={236} w={190} h={88} fill="box5" lines={[]} />
+      <T x={307} y={254} anchor="middle" fs={12} bold>
+        @@options に保存
+      </T>
+      <T x={307} y={274} anchor="middle" fs={11.5} mono>
+        config.my_gem = …
+      </T>
+      <T x={307} y={292} anchor="middle" fs={11.5} mono>
+        config.force_sll = true
+      </T>
+      <T x={307} y={312} anchor="middle" fs={11.5} tone="danger">
+        綴りの誤りもエラーにならない
+      </T>
+
+      <Box x={414} y={236} w={150} h={88} lines={[]} />
+      <T x={489} y={268} anchor="middle" fs={12}>
+        保存された値を返す
+      </T>
+      <T x={489} y={290} anchor="middle" fs={11.5} mono>
+        config.my_gem
+      </T>
+
+      <Box x={576} y={236} w={164} h={88} fill="bg" lines={[]} />
+      <T x={658} y={258} anchor="middle" fs={12} mono>
+        super を呼ぶ
+      </T>
+      <T x={658} y={280} anchor="middle" fs={12} tone="danger" mono>
+        NoMethodError
+      </T>
+      <T x={658} y={302} anchor="middle" fs={11.5} tone="muted">
+        保存されていない名前
+      </T>
+
+      <Arrow x1={307} y1={324} x2={307} y2={354} dashed />
+      <T x={315} y={340} fs={11.5} tone="muted">
+        書く
+      </T>
+      <Arrow x1={489} y1={324} x2={489} y2={354} dashed />
+      <T x={497} y={340} fs={11.5} tone="muted">
+        読む
+      </T>
+      <Box x={212} y={356} w={352} h={44} fill="box4" lines={['@@options（クラス変数のハッシュ）', 'すべての Railtie とアプリケーションの config で共有']} fs={12.5} subTone="muted" />
+    </Svg>
+  )
+}
+
+/* ---------- config に書く時点と、値を読む初期化処理（番号なし） ---------- */
+function ConfigTimingFigure() {
+  type Row = { n: string[]; write?: boolean; lines: string[]; fill?: 'box4' | 'box5'; notes?: { text: string; tone: 'muted' | 'acc' | 'danger' }[] }
+  const rows: Row[] = [
+    { n: ['initialize!', 'より前'], write: true, lines: ['config/application.rb', 'クラス本体の config.…'], fill: 'box4', notes: [{ text: 'initialize! の中のすべての処理が読む', tone: 'muted' }] },
+    { n: ['10〜13'], write: true, lines: ['config/environments/production.rb', '環境名のファイル'], fill: 'box4', notes: [{ text: '14 番以降のすべての処理が読む', tone: 'muted' }] },
+    { n: ['14〜41'], lines: ['initialize_logger・initialize_cache', 'config.log_level・config.cache_store を読む'] },
+    { n: ['42〜135'], lines: ['my_gem.setup（Engine でない Railtie）', 'config.my_gem.enabled を読む'] },
+    {
+      n: ['136'],
+      write: true,
+      lines: ['config/initializers/*.rb', 'load_config_initializers が辞書順に load'],
+      fill: 'box5',
+      notes: [
+        { text: '136 番より前の処理は、この値を読まない', tone: 'danger' },
+        { text: '137 番以降の処理は、この値を読む', tone: 'acc' },
+      ],
+    },
+    { n: ['173'], lines: ['build_middleware_stack', 'config.middleware を読む'] },
+    { n: ['178'], lines: ['finisher_hook', 'after_initialize のブロックを実行'] },
+  ]
+  const top = 40
+  const pitch = 54
+  const rowH = 42
+  return (
+    <Svg
+      id="ch07-config-timing"
+      w={760}
+      h={top + rows.length * pitch + 6}
+      label="デモのアプリケーションの初期化処理の番号の順に、config に値を書くファイルと、その値を読む初期化処理を上から並べた図。config/application.rb のクラス本体は initialize! より前に実行され、その値は initialize! の中のすべての処理が読む。config/environments の環境名のファイルは 10〜13 番で読み込まれ、その値は 14 番以降のすべての処理が読む。14〜41 番の Bootstrap の initialize_logger と initialize_cache は config.log_level と config.cache_store を読む。Engine でない Railtie の初期化処理である my_gem.setup は 42〜135 番に並び、config.my_gem.enabled を読む。config/initializers のファイルは 136 番の load_config_initializers で辞書順に読み込まれるので、136 番より前の処理はその値を読まない。173 番の build_middleware_stack は config.middleware を読み、178 番の finisher_hook は after_initialize のブロックを実行する。この2つは 137 番以降なので、config/initializers で書いた値を読む"
+    >
+      <T x={62} y={18} anchor="middle" fs={12} tone="muted">
+        番号（実行順）
+      </T>
+      <T x={120} y={18} fs={12} tone="muted">
+        config に値を書くファイル
+      </T>
+      <T x={430} y={18} fs={12} tone="muted">
+        config の値を読む初期化処理
+      </T>
+      {rows.map((r, i) => {
+        const y = top + i * pitch
+        const cy = y + rowH / 2
+        return (
+          <g key={r.lines[0]}>
+            {r.n.map((s, j) => (
+              <T key={s} x={62} y={cy + (j - (r.n.length - 1) / 2) * 18} anchor="middle" fs={r.n.length > 1 ? 11.5 : 12.5} bold={r.n.length === 1} mono={j === 0}>
+                {s}
+              </T>
+            ))}
+            <Box x={r.write ? 120 : 430} y={y} w={r.write ? 290 : 310} h={rowH} lines={r.lines} fill={r.fill ?? 'box'} fs={12.5} mono subTone="muted" />
+            {r.notes?.map((note, j) => (
+              <T key={note.text} x={430} y={cy + (j - ((r.notes?.length ?? 1) - 1) / 2) * 20} fs={11.5} tone={note.tone}>
+                {note.text}
+              </T>
+            ))}
+          </g>
+        )
+      })}
+    </Svg>
+  )
+}
+
+/* ---------- 初期化ファイルが ActiveRecord::Base を先に参照した場合（番号なし） ---------- */
+function EarlyTouchFigure() {
+  return (
+    <Svg
+      id="ch07-early-touch"
+      w={780}
+      h={366}
+      label="config/initializers に zz1_touch.rb がある場合と無い場合を比べた図。どちらも 136 番より前に、active_record.set_configs が on_load(:active_record) でブロックを登録している。zz1_touch.rb がある場合は、136 番の load_config_initializers の中で zz1_touch.rb が ActiveRecord::Base を参照した時点で ActiveRecord::Base が読み込まれ、set_configs のブロックがその場で実行されて table_name_prefix に空文字列を渡す。その後に zz2_conf.rb が config に app_ を書いても、ブロックは実行済みなので渡されず、起動後の table_name_prefix は空文字列のままになる。zz1_touch.rb が無い場合は、zz2_conf.rb が app_ を書いた後、config/initializers のファイルをすべて読み込んだ後で ActiveRecord::Base が読み込まれ、set_configs のブロックが app_ を渡す。起動後の table_name_prefix は app_ になる"
+    >
+      <T x={20} y={18} fs={12} tone="muted">
+        横軸：時間の流れ
+      </T>
+      <T x={20} y={40} fs={11.5} tone="muted">
+        どちらも、136 番より前に active_record.set_configs が on_load(:active_record) でブロックを登録している
+      </T>
+      <T x={345} y={64} anchor="middle" fs={11.5} tone="muted">
+        load_config_initializers（136 番）
+      </T>
+      <T x={665} y={64} anchor="middle" fs={11.5} tone="muted">
+        config/initializers の後
+      </T>
+
+      {/* zz1_touch.rb あり */}
+      <T x={20} y={130} fs={12.5} bold mono>
+        zz1_touch.rb
+      </T>
+      <T x={20} y={150} fs={12.5} bold>
+        あり
+      </T>
+      <rect x={140} y={76} width={410} height={128} rx={6} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      <Box x={152} y={86} w={185} h={44} lines={['zz1_touch.rb', 'ActiveRecord::Base を参照']} fs={12.5} subTone="muted" />
+      <Arrow x1={244} y1={130} x2={244} y2={150} accent />
+      <T x={236} y={141} anchor="end" fs={11.5} tone="acc">
+        その場で実行
+      </T>
+      <Box x={152} y={152} w={185} h={44} lines={['ActiveRecord::Base の読み込み', 'set_configs が "" を渡す']} fs={11.5} fill="box5" accent />
+      <Arrow x1={337} y1={108} x2={351} y2={108} />
+      <Box x={353} y={86} w={185} h={44} lines={['zz2_conf.rb', 'config に "app_" を書く']} fs={12.5} subTone="muted" />
+      <T x={445} y={160} anchor="middle" fs={11.5} tone="danger">
+        ブロックは実行済みなので
+      </T>
+      <T x={445} y={180} anchor="middle" fs={11.5} tone="danger">
+        "app_" は渡されない
+      </T>
+      <Arrow x1={538} y1={108} x2={568} y2={108} />
+      <Box x={570} y={86} w={190} h={44} lines={['起動後の table_name_prefix', '""（既定値のまま）']} fs={12.5} fill="bg" subTone="danger" />
+
+      {/* zz1_touch.rb なし */}
+      <T x={20} y={278} fs={12.5} bold mono>
+        zz1_touch.rb
+      </T>
+      <T x={20} y={298} fs={12.5} bold>
+        なし
+      </T>
+      <rect x={140} y={224} width={410} height={128} rx={6} fill="var(--fig-bg)" stroke="var(--fig-line)" />
+      <Box x={152} y={234} w={185} h={44} fill="none" dashed lines={[]} />
+      <T x={244} y={256} anchor="middle" fs={11.5} tone="muted">
+        zz1_touch.rb を置かない
+      </T>
+      <Box x={353} y={234} w={185} h={44} lines={['zz2_conf.rb', 'config に "app_" を書く']} fs={12.5} subTone="muted" />
+      <Arrow x1={538} y1={256} x2={568} y2={256} />
+      <Box x={570} y={234} w={190} h={44} lines={['ActiveRecord::Base の読み込み', 'set_configs が "app_" を渡す']} fs={11.5} fill="box5" accent />
+      <Arrow x1={665} y1={278} x2={665} y2={298} />
+      <Box x={570} y={300} w={190} h={44} lines={['起動後の table_name_prefix', '"app_"']} fs={12.5} fill="bg" subTone="acc" />
+    </Svg>
+  )
+}
+
 const ch07: Chapter = {
   number: 7,
   part: 2,
   title: 'Rails の起動と初期化',
   summary:
-    'bin/rails server を実行してから要求を受け付けるまでの段階、gem・Bundler・require の関係、development・test・production の環境と設定ファイルの役割を実際に動かして確かめてから、config.ru から Rails.application.initialize! までにどのファイルがどの順で読み込まれ、Railtie・Engine・Application がどう組み合わさって初期化処理が並べられるかを説明します。設定ファイルが読まれる時点と、ActiveSupport.on_load を使う理由が分かります。',
+    'bin/rails server を実行してから、最初の記事を表示できるまでに何が準備されるのでしょうか。ファイルを読み込む順をたどり、自分の設定がいつアプリケーションに反映されるかを確かめます。',
   goals: [
-    'bin/rails server の起動時に1回だけ行う準備と、要求ごとに行う処理を区別できる',
-    'Gemfile・Gemfile.lock・bundle exec・require の関係と、環境ごとの設定ファイルの役割を説明できる',
-    '起動時に config.ru・environment.rb・application.rb・boot.rb が読み込まれる順を説明できる',
-    'Railtie・Engine・Application の継承関係と、それぞれが持つ役割を説明できる',
-    '初期化処理（initializer）の before・after と tsort による並べ替えを理解する',
-    'config/environments と config/initializers が読まれる時点と、5つの初期化イベントの順を説明できる',
-    'ActiveSupport.on_load の仕組みと、初期化中にモデルの基底クラスを参照してはいけない理由を説明できる',
+    '起動時に一度だけ行う準備と、要求のたびに動く処理を区別できる',
+    'Gemfile.lock と環境別の設定ファイルが、それぞれ何を決めるかを説明できる',
+    'gem とアプリが登録した初期化処理の順を追い、必要なクラスが読み込まれてから設定を適用できる',
   ],
   prerequisites: [5, 6],
   sections: [
@@ -755,7 +976,17 @@ Rails.application.configure do
           <Figure n="7-4" title="起動時のファイルの読み込み順" caption="Rails 8.1.4.1 の rails new が生成するファイルに沿った順。1と9は Puma が評価する config.ru の中、8が初期化処理の本体。">
             <BootFilesFigure />
           </Figure>
-          <p>生成されるファイルの中身は次のとおりです（コメントを除く）。</p>
+          <p>生成されるファイルの中身は次のとおりです（コメントを除く）。図 7-4 の番号と見比べながら、config.ru から順に読みます。</p>
+          <Code
+            lang="ruby"
+            title="config.ru"
+            code={`
+require_relative "config/environment"
+
+run Rails.application
+Rails.application.load_server
+`}
+          />
           <Code
             lang="ruby"
             title="config/environment.rb"
@@ -803,12 +1034,48 @@ end
 `}
           />
           <p>
+            <code>require_relative</code> は、その行を書いたファイルの場所を起点にした相対パスでファイルを読み込むメソッドです。<code>require</code>{' '}
+            と同じく、読み込み済みのファイルはもう一度実行しません
+            <Ref n={14} />。config.ru の1行目が environment.rb を、environment.rb の1行目が application.rb を、application.rb の1行目が boot.rb を読み込みます。3つのファイルは1行目で次のファイルを読み込み、その読み込みが終わってから2行目に進みます。そのため、2行目以降が実行される順は boot.rb、application.rb、environment.rb、config.ru です。図 7-4 の4番から9番がこの順に当たります。
+          </p>
+          <p>
+            boot.rb の1行目は、環境変数 BUNDLE_GEMFILE が設定されていないときに、アプリケーションの Gemfile の絶対パスを入れます（<code>||=</code> は、左辺が nil か false のときだけ代入する書き方です）。Bundler は、この環境変数に書かれたパスの Gemfile を使います。
+          </p>
+          <p>
             <code>bundler/setup</code> は Gemfile.lock に書かれたバージョンの gem だけが <code>require</code> できるように読み込みパス（<code>$LOAD_PATH</code>）を設定し、<code>bootsnap/setup</code>{' '}
             はファイルの検索結果やコンパイル結果をキャッシュ（一度求めた結果を保存して、次から使い回すこと）して起動を速くします。rails new の既定の application.rb には <code>require "rails/all"</code> と書かれ、ActiveRecord・ActiveStorage・ActionController・ActionView・ActionMailer・ActiveJob・ActionCable
             などの Railtie や Engine を定義するファイルを順に <code>require</code> します
-            <Ref n={2} />。デモのアプリケーションは ActionMailbox・ActionText・Minitest を外して作ったので（<ChapterLink n={1} section="versions" />
+            <Ref n={2} />。Railtie と Engine は、フレームワークや gem が起動時の処理と設定を Rails に登録するためのクラスで、次の節で説明します。デモのアプリケーションは ActionMailbox・ActionText・Minitest を外して作ったので（<ChapterLink n={1} section="versions" />
             ）、使うフレームワークのファイルを1つずつ <code>require</code> しています。<code>Bundler.require(*Rails.groups)</code> は、Gemfile のうち default グループと現在の環境のグループの gem を <code>require</code> します。sidekiq のような gem
             が自分の Railtie を定義するのはこの時点です。
+          </p>
+          <p>
+            グループは Gemfile の中で gem をどの環境で使うかを分ける書き方です。<code>Rails.groups</code> は、development で起動したときは{' '}
+            <code>[:default, "development"]</code> を返します（<code>railties/lib/rails.rb</code> の 113〜122 行目）。次の Gemfile では、puma はどの環境でも <code>require</code> され、debug は development と test
+            でだけ <code>require</code> されます。<code>require: false</code> を付けた gem は、どの環境でも <code>Bundler.require</code> の対象になりません。
+          </p>
+          <Code
+            lang="ruby"
+            title="Gemfile のグループの例（説明用）"
+            code={`
+gem "puma", ">= 5.0"            # group の指定が無い gem は default グループ
+
+group :development, :test do
+  gem "debug"                   # development と test でだけ require される
+end
+
+gem "rubocop", require: false   # Bundler.require では require されない
+`}
+          />
+          <p>
+            手元では動くコードが、本番で <code>NameError: uninitialized constant</code> になることがあります。そのときは、使っている gem が Gemfile の <code>group :development</code>{' '}
+            の中に入っていないか、<code>require: false</code> が付いていないかを確かめます。production で起動すると <code>Rails.groups</code> に development が入らないので、その gem は <code>require</code>{' '}
+            されず、gem のクラスの定数が定義されません。
+          </p>
+          <p>
+            application.rb の <code>class Application</code> の中の3行は設定です。<code>load_defaults</code> は「アプリケーションクラスの定義と load_defaults」の節で扱います。<code>autoload_lib</code>{' '}
+            は lib ディレクトリのクラスを自動で読み込む対象に加える設定です（<ChapterLink n={8} />）。<code>config.generators.system_tests = nil</code> は、<code>bin/rails generate</code>{' '}
+            がシステムテストのファイルを作らないようにします。
           </p>
           <p>
             <code>bin/rails server</code> で起動した場合は、まず <code>bin/rails</code> が <code>config/boot.rb</code> を読み込み、サーバーのコマンドが Rackup::Server（rackup gem の、Rack アプリケーションを Web サーバーで起動するクラス）のサブクラスである{' '}
@@ -829,10 +1096,60 @@ end
             <Term>Engine</Term> は Railtie のサブクラスで、app/ や config/routes.rb などのディレクトリ構成を持つ部品です。アプリケーション本体の Rails::Application も Engine
             のサブクラスです。
           </p>
+          <p>Railtie という名前を知らなくても、次の所ですでに Railtie を使っています。</p>
+          <ul>
+            <li>
+              config/application.rb の <code>require "rails/all"</code>（デモでは <code>require "active_record/railtie"</code> などの8行）は、各フレームワークの Railtie や Engine を定義するファイルを読み込みます。
+            </li>
+            <li>
+              config/application.rb や config/environments のファイルに書く <code>config.active_record.…</code> や <code>config.action_mailer.…</code> は、それぞれのフレームワークの Railtie が用意した設定です。
+            </li>
+            <li>
+              Gemfile に gem を足すだけで、その gem の設定や rake タスクが使えるようになるのは、gem が Railtie を定義していて、<code>Bundler.require</code> のときにそのファイルが読み込まれるためです。
+            </li>
+            <li>
+              config/application.rb の <code>class Application {'<'} Rails::Application</code> は、アプリケーション自身を Engine の一種として定義しています。アプリケーションの app/ や config/routes.rb は、Engine
+              から継承した仕組みで読み込まれます。
+            </li>
+          </ul>
+          <p>
+            gem が Railtie を定義するコードは、次のような形です。クラス本体に書いた <code>config.…</code> の行はファイルを <code>require</code> した時点で実行され、<code>initializer</code> と{' '}
+            <code>rake_tasks</code> に渡したブロックは、登録だけされて後で実行されます。
+          </p>
+          <Code
+            lang="ruby"
+            title="gem が定義する Railtie の例（説明用。my_gem という架空の gem）"
+            code={`
+module MyGem
+  class Railtie < Rails::Railtie
+    # config.my_gem.enabled の形で読み書きできる設定を用意する
+    config.my_gem = ActiveSupport::OrderedOptions.new
+    config.my_gem.enabled = true
+
+    # 起動時に実行する処理を、名前を付けて登録する（初期化処理）
+    initializer "my_gem.setup" do |app|
+      MyGem.enabled = app.config.my_gem.enabled
+    end
+
+    # bin/rails のタスクを登録する
+    rake_tasks do
+      load "my_gem/tasks.rake"
+    end
+  end
+end
+`}
+          />
+          <p>
+            アプリケーションの側では、config/application.rb か config/environments のファイルに <code>config.my_gem.enabled = false</code> と書くと、この gem の設定を変えられます。gem
+            の初期化メソッドをアプリケーションのコードから呼ぶ行は要りません。config/initializers のファイルに書いた場合にこの例で反映されない理由は、「設定ファイルが読まれる時点」の節で説明します。Engine の例として、Rails ガイドは認証の機能を提供する Devise を挙げています。Engine は gem の中に app/controllers や app/views
+            を持てるので、gem の中のコントローラーやビューを、アプリケーションのものと同じように使えます。
+          </p>
           <Figure n="7-5" title="Railtie・Engine・Application のクラス階層" caption="デモのアプリケーション（rails/all のうち ActionMailbox・ActionText などを除いたものと propshaft を読み込む構成）で読み込まれた Railtie の一部。ActionView::Railtie は名前に反して Engine のサブクラスである。">
             <RailtieFigure />
           </Figure>
-          <p>Railtie のクラスメソッドのうち、インスタンスの作り方と並び順に関わる部分を引用します。</p>
+          <p>
+            Railtie のクラスメソッドのうち、インスタンスの作り方と並び順に関わる部分を引用します。確かめるのは、Railtie がいくつも読み込まれたときに、どの順に並ぶかです。この並び順は、後の節で見る初期化処理の実行順に関わります。
+          </p>
           <Code
             lang="ruby"
             title="railties/lib/rails/railtie.rb（182〜200行目）"
@@ -859,6 +1176,27 @@ end
       end
 `}
           />
+          <ul>
+            <li>
+              引用した4つのメソッドは <code>class {'<<'} self</code> の中に書かれたクラスメソッドです（<ChapterLink n={3} section="class-methods" />）。<code>ActiveRecord::Railtie.instance</code>{' '}
+              のように、クラスに対して呼びます。
+            </li>
+            <li>
+              <code>@instance ||= new</code> は、<code>@instance</code> が nil なら <code>new</code> でインスタンスを作って入れ、2回目からは入っているものを返します。
+            </li>
+            <li>
+              <code>configure</code> は、インスタンスの側の <code>configure</code>（同じファイルの 254〜256 行目）にブロックを渡します。インスタンスの側は、ブロックを自分の上で{' '}
+              <code>instance_eval</code> します（<ChapterLink n={4} section="self-switch" />）。config/environments/production.rb の <code>Rails.application.configure do ... end</code>{' '}
+              の中で <code>config</code> と書くとアプリケーションの config を指すのは、ブロックの中の self がアプリケーションのインスタンスになるためです。
+            </li>
+            <li>
+              <code>inherited(subclass)</code> は、<code>class Railtie {'<'} Rails::Railtie</code> のようにサブクラスが定義されたときに Ruby が呼ぶメソッドです。<code>increment_load_index</code>
+              （同じファイルの 205〜208 行目）は、すべての Railtie で共有するカウンターを1増やし、その値をサブクラスの <code>@load_index</code> に入れます。
+            </li>
+            <li>
+              <code>{'<=>'}</code> は、並べ替えのときに2つの要素のどちらが前かを決めるメソッドです。<code>load_index</code> の小さいほう、つまり先に定義された Railtie が前になります。
+            </li>
+          </ul>
           <p>
             Railtie の <code>new</code> は private で、各クラスのインスタンスは <code>instance</code> で作られる1つだけです。<code>inherited</code> フック（<ChapterLink n={3} />
             ）でサブクラスが定義された順に番号を振り、<code>{'<=>'}</code> でその番号を比べます
@@ -868,7 +1206,7 @@ end
           </p>
           <p>
             各 Railtie の <code>config</code> は Railtie::Configuration のインスタンスで、メソッドが定義されていない名前の代入と参照を <code>method_missing</code>（<ChapterLink n={2} />
-            ）で受け取ります。
+            ）で受け取ります。次の引用で、<code>config.my_gem = ...</code> のように、Rails が知らない名前に代入したときに何が起きるかを確かめます。
           </p>
           <Code
             lang="ruby"
@@ -890,11 +1228,40 @@ end
       end
 `}
           />
+          <ul>
+            <li>
+              Ruby では、<code>config.my_gem = 値</code> は <code>my_gem=</code> という名前のメソッドの呼び出しです。config にこの名前のメソッドは無いので、<code>method_missing</code> が{' '}
+              <code>name</code> に <code>:my_gem=</code>、<code>args</code> に値の配列を受け取ります。
+            </li>
+            <li>
+              <code>name.end_with?("=")</code> が真なら代入です。<code>name[0..-2]</code> で末尾の <code>=</code> を除いた <code>:my_gem</code> をキーにして、<code>@@options</code>{' '}
+              というハッシュに値を保存します。
+            </li>
+            <li>
+              <code>actual_method?(key)</code> は、<code>after_initialize</code> のように config に実際に定義されたメソッドと同じ名前かを調べます。同じ名前なら、代入させずに NoMethodError にします。
+            </li>
+            <li>
+              <code>elsif</code> の行は参照です。<code>config.my_gem</code> のように <code>=</code> の無い名前で呼ばれ、その名前が <code>@@options</code> に保存されていれば、値を返します。
+            </li>
+            <li>
+              どちらでもなければ <code>super</code> を呼び、通常の NoMethodError になります。
+            </li>
+          </ul>
+          <p>
+            この実装から、設定の名前を打ち間違えたときの動作が分かります。代入はどんな名前でも保存されるので、<code>config.force_sll = true</code> のように名前を間違えてもエラーになりません。どこからも読まれない値が保存されるだけで、<code>force_ssl</code>{' '}
+            は変わりません。設定を書いたのに動作が変わらないときは、まず名前の綴りを確かめます。保存されていない名前を参照したときは NoMethodError になります。
+          </p>
           <p>
             値の保存先 <code>@@options</code> はクラス変数（<code>@@</code> で始まり、そのクラスとサブクラスで共有される変数）なので、すべての Railtie とアプリケーションの config が同じハッシュを共有します
             <Ref n={4} />。ActiveRecord::Railtie はクラス本体で <code>config.active_record = ActiveSupport::OrderedOptions.new</code> を実行しており（OrderedOptions は、ハッシュのように値を入れ、<code>.xxx</code> の形のメソッドで読み書きできるオブジェクト）、アプリケーションの{' '}
             <code>config.active_record.xxx = ...</code> はこのオブジェクトに値を書き込みます。
           </p>
+          <p>
+            次の図は、<code>config.名前</code> の呼び出しが method_missing のどの分岐に進むかを、上から順にたどれるようにしたものです。下の段の4つの箱には、この節に出てきた呼び出しの例を、進む分岐ごとに書いています。
+          </p>
+          <Figure title="config.名前 の呼び出しと method_missing の分岐" caption="上の引用（configuration.rb の 99〜111 行目）を図にしたもの。実線の矢印は判定の流れ、破線の矢印は @@options への保存と参照を表す。">
+            <ConfigMissingFigure />
+          </Figure>
         </>
       ),
     },
@@ -904,7 +1271,13 @@ end
       body: (
         <>
           <p>
-            <code>class Application {'<'} Rails::Application</code> を実行した時点で、Rails::Application の <code>inherited</code> が呼ばれます。
+            この節では、config/application.rb の <code>class Application {'<'} Rails::Application</code> の行と、その中の <code>config.load_defaults 8.1</code>{' '}
+            の行が実行されたときに何が起きるかを見ます。どちらも rails new が書く行で、Rails のバージョンを上げる作業では <code>load_defaults</code> の数字を変えるかどうかを判断することになります。
+          </p>
+          <p>
+            <code>class Application {'<'} Rails::Application</code> を実行した時点で、Rails::Application の <code>inherited</code> が呼ばれます。<code>inherited</code>{' '}
+            は、サブクラスが定義されたときに Ruby が親クラスに対して呼ぶメソッドで、引数の <code>base</code> には定義されたサブクラス（デモでは Demo::Application）が入ります（<ChapterLink n={3} section="hooks" />
+            ）。
           </p>
           <Code
             lang="ruby"
@@ -925,11 +1298,13 @@ end
             定義されたクラスを <code>Rails.app_class</code> に記録し、アプリケーションの lib/ を <code>$LOAD_PATH</code> に加え、<code>before_configuration</code>{' '}
             のフック（決まった時点で呼ばれるように登録しておく処理）を実行します。この後でクラス本体が評価されます
             <Ref n={5} />。<code>Rails.application</code> は <code>app_class.instance</code> を返すメソッドで、ここでアプリケーションのインスタンスが1つ作られます（<code>railties/lib/rails.rb</code>{' '}
-            の 44〜46 行目）。
+            の 44〜46 行目）。config/environment.rb の <code>Rails.application.initialize!</code> や config.ru の <code>run Rails.application</code> が、クラス名の Demo::Application
+            を書かずにアプリケーションを指せるのは、この記録があるためです。
           </p>
           <p>
             クラス本体の <code>config.load_defaults 8.1</code> は、Rails の各バージョンで変わった設定の既定値をまとめて設定するメソッドです。バージョンごとの <code>when</code> 節が1つ前のバージョンの{' '}
-            <code>load_defaults</code> を呼ぶので、8.1 を指定すると 5.0 から 8.1 までの既定値が古い順に適用されます。
+            <code>load_defaults</code> を呼ぶので、8.1 を指定すると 5.0 から 8.1 までの既定値が古い順に適用されます。次の引用は、<code>case target_version.to_s</code>{' '}
+            で始まる分岐のうち、8.1 を指定したときに実行される部分です。8.1 で何の値が変わるかを確かめます。
           </p>
           <Code
             lang="ruby"
@@ -963,16 +1338,38 @@ end
           end
 `}
           />
+          <ul>
+            <li>
+              <code>load_defaults "8.0"</code> が、1つ前のバージョンの分岐を先に実行する行です。8.0 の分岐も先頭で 7.2 を呼ぶので、古いバージョンの既定値から順に書き込まれます。
+            </li>
+            <li>
+              このメソッドは config のメソッドなので、<code>self.yjit = ...</code> は <code>config.yjit = ...</code> と書くのと同じです。<code>action_controller.escape_json_responses = false</code> は{' '}
+              <code>config.action_controller.escape_json_responses = false</code> と同じです。
+            </li>
+            <li>
+              <code>if respond_to?(:action_controller)</code> のような条件は、そのフレームワークを読み込んだアプリケーションでだけ値を書くためのものです。
+            </li>
+          </ul>
           <p>
             <code>load_defaults</code> は config に値を書くだけで、フレームワークのクラスには触れません。<code>respond_to?(:active_record)</code> は、ActiveRecord::Railtie が読み込まれて{' '}
             <code>config.active_record</code> が定義されているかを確かめています
             <Ref n={6} />。書いた値が実際のクラスに反映されるのは、後で説明する初期化処理と on_load のときです。
+          </p>
+          <p>
+            <code>load_defaults</code> は呼ばれた時点で値を代入するだけなので、同じ設定を後から代入すれば上書きできます。application.rb のクラス本体で <code>load_defaults</code>{' '}
+            の行より後に書いた設定、config/environments のファイル、config/initializers のファイルに書いた設定は、どれも <code>load_defaults</code> より後に実行されるので、そちらの値が残ります。逆に、<code>load_defaults</code>{' '}
+            の行より前に書いた設定は、<code>load_defaults</code> が同じ設定を持っていれば上書きされます。rails new が生成する application.rb では、<code>load_defaults</code> の行がクラス本体の先頭にあります。レビューでは、追加した設定がその行より後にあるかを確かめます。
           </p>
           <Callout kind="note">
             <p>
               業務のアプリケーションの <code>load_defaults</code> の値が Rails 本体のバージョンより古いことがあります。その場合は、新しいバージョンで変わった既定値が適用されていません。Rails ガイドの設定の章には、バージョンごとに{' '}
               <code>load_defaults</code> で変わる値の一覧があります
               <Ref n={7} />。
+            </p>
+            <p>
+              Rails のバージョンを上げるときに <code>bin/rails app:update</code> を実行すると、<code>config/initializers/new_framework_defaults_8_1.rb</code>{' '}
+              のような名前のファイルが作られます。新しい既定値が1つずつコメントにして書かれたファイルで、コメントを外した設定だけが新しい値になります。すべての設定を新しい値で動かせると確かめてから、このファイルを消して{' '}
+              <code>load_defaults</code> の数字を上げます（ファイルの先頭のコメントにこの手順が書かれています）。
             </p>
           </Callout>
         </>
@@ -985,8 +1382,15 @@ end
         <>
           <p>
             <code>Rails.application.initialize!</code> は、登録された<Term en="initializer">初期化処理</Term>を順に実行するメソッドです。初期化処理は、Railtie のクラス本体で{' '}
-            <code>initializer "名前" do ... end</code> と書いて登録します。登録するメソッドは次のとおりです。
+            <code>initializer "名前" do ... end</code> と書いて登録します。「Railtie・Engine・Application」の節の MyGem::Railtie では、<code>initializer "my_gem.setup" do |app| ... end</code>{' '}
+            がこれに当たります。
           </p>
+          <p>
+            ここでいう初期化処理は、config/initializers ディレクトリのファイルとは別のものです。初期化処理は Railtie のクラスに登録された名前付きのブロックで、デモのアプリケーションには184個あります。config/initializers
+            のファイルは、そのうちの1つである <code>load_config_initializers</code> という初期化処理の中で読み込まれます（次の節）。この節では、184個がどの順に実行されるかを見ます。業務では、gem
+            の設定が効かないときや、起動中の例外のバックトレースに初期化処理の名前が出たときに、その処理が config/initializers のファイルより前か後かを調べるために使います。
+          </p>
+          <p>登録するメソッドは次のとおりです。引数の <code>before</code> と <code>after</code> がどう扱われるかを確かめます。</p>
           <Code
             lang="ruby"
             title="railties/lib/rails/initializable.rb（130〜136行目）"
@@ -1001,12 +1405,31 @@ end
       end
 `}
           />
+          <ul>
+            <li>
+              <code>name</code> は初期化処理の名前、<code>opts</code> は <code>before: :別の名前</code> や <code>after: :別の名前</code> を受け取るハッシュ、<code>&blk</code>{' '}
+              は <code>do ... end</code> で渡したブロックです（<ChapterLink n={4} section="block-to-proc" />）。
+            </li>
+            <li>
+              <code>initializers</code> は、このクラスに登録済みの初期化処理の一覧です。<code>initializers.last&.name</code> は、一覧の最後の要素の名前を返します。<code>&.</code>{' '}
+              は、一覧が空で <code>last</code> が nil のときに、エラーにせず nil を返す書き方です。
+            </li>
+            <li>
+              3行目は <code>after</code> の指定が無いときに、直前に登録した初期化処理の名前を <code>after</code> に入れます。ただし、<code>before</code>{' '}
+              に同じクラスの登録済みの名前が指定されているときは入れません。
+            </li>
+            <li>
+              最後に、名前・<code>before</code>・<code>after</code>・ブロックをまとめた Initializer のオブジェクトを作り、一覧に加えます。ブロックはこの時点では実行されません。
+            </li>
+          </ul>
           <p>
             各初期化処理は名前、ブロック、<code>before</code>・<code>after</code> を持ちます。<code>after</code> を指定しなければ、同じクラスで直前に登録した初期化処理の名前が入ります。つまり、1つのクラスの中では書いた順に実行され、別のクラスの初期化処理との前後関係は{' '}
             <code>before:</code>・<code>after:</code> で指定します
             <Ref n={8} />。
           </p>
-          <p>アプリケーションが実行する初期化処理の一覧は、次のように3つをつないだものです。</p>
+          <p>
+            次に、config/environment.rb が呼ぶ <code>initialize!</code> の本体を読みます。確かめるのは、実行する初期化処理の一覧をどこから集めているかです。一覧は、次のように3つをつないだものです。
+          </p>
           <Code
             lang="ruby"
             title="railties/lib/rails/application.rb（436〜447行目）"
@@ -1026,10 +1449,23 @@ end
     end
 `}
           />
+          <ul>
+            <li>
+              <code>initialize!</code> の1行目は、2回呼ばれたときに例外を出します。初期化はプロセスの中で1回だけです。
+            </li>
+            <li>
+              <code>run_initializers(group, self)</code> の <code>self</code> はアプリケーションのインスタンスです。この値が、初期化処理のブロックの引数（<code>do |app|</code> の <code>app</code>）になります。
+            </li>
+            <li>
+              <code>initializers</code> の <code>+</code> は一覧をつなぐ演算で、書いた順に Bootstrap、Railtie、Finisher と並びます。<code>super</code> は Engine
+              から継承した、アプリケーション自身の初期化処理の一覧です。
+            </li>
+          </ul>
           <p>
             Bootstrap は最初に行う準備（ロガー、キャッシュ、オートローダーなど）、<code>railties_initializers</code> は各 Railtie と Engine、アプリケーション自身の初期化処理、Finisher
             は最後にまとめて行う処理です
-            <Ref n={5} />。この一覧を <code>run_initializers</code> が並べ替えて実行します。
+            <Ref n={5} />。<code>railties_initializers</code>（同じファイルの 612〜622 行目）は、読み込まれた Railtie と Engine の初期化処理を並び順につなぎ、既定ではアプリケーション自身の初期化処理を最後に置きます。この一覧を{' '}
+            <code>run_initializers</code> が並べ替えて実行します。
           </p>
           <Code
             lang="ruby"
@@ -1045,11 +1481,74 @@ end
     end
 `}
           />
+          <ul>
+            <li>
+              <code>initializers</code> が返すのは Collection（Rails::Initializable::Collection）のオブジェクトです。Collection は初期化処理の一覧を持つクラスで、同じファイルの 37〜98 行目に定義されています。
+            </li>
+            <li>
+              <code>tsort_each</code> は、並べ替えた順に初期化処理を1つずつブロックに渡します。
+            </li>
+            <li>
+              <code>belongs_to?(group)</code> は、その初期化処理を今回の <code>initialize!</code> で実行するかを調べます。<code>initializer</code> に <code>group:</code>{' '}
+              を付けなければ :default になり、<code>initialize!</code> も既定では :default を渡すので、通常はすべて実行されます。<code>group: :all</code> は、どの group を渡されても実行するという指定です（同じファイルの 19〜21 行目）。
+            </li>
+          </ul>
           <p>
-            <code>tsort_each</code> は Ruby の tsort ライブラリ（<Term en="topological sort">トポロジカルソート</Term>）のメソッドです。「この初期化処理より先に実行すべきもの」を先に出しながら、一覧を前から順にたどります。Rails
+            <code>tsort_each</code> は Ruby の tsort ライブラリ（<Term en="topological sort">トポロジカルソート</Term>）のメソッドです。トポロジカルソートは、「A は B より後」という前後関係の集まりから、すべての関係を満たす1列の順を作る並べ替えです。「この初期化処理より先に実行すべきもの」を先に出しながら、一覧を前から順にたどります。Rails
             8.1 の Collection は、<code>before</code>・<code>after</code> を名前で引けるハッシュに登録しており、依存先を名前で解決します（同じファイルの 63〜79 行目）。そのため、複数の Engine
             に同じ名前の初期化処理（<code>set_load_path</code> など）があると、それらは続けて実行されます。<code>initializer.run</code> はブロックを Railtie のインスタンスの上で{' '}
-            <code>instance_exec</code> します（<ChapterLink n={4} />）。
+            <code>instance_exec</code> します（<ChapterLink n={4} />）。初期化処理のブロックの中で <code>config</code> や <code>paths</code> と書くと、そのブロックを登録した Railtie や Engine
+            のメソッドが呼ばれるのはこのためです。
+          </p>
+          <p>
+            tsort の動作を、Rails を使わない小さなプログラムで確かめます。Collection と同じく、<code>TSort</code> を include して2つのメソッドを定義します。3つの処理を、実行したい順とは違う順に登録しました。
+          </p>
+          <Code
+            lang="ruby"
+            title="tsort07.rb"
+            code={`
+require "tsort"
+
+class Steps
+  include TSort
+
+  # deps は「処理の名前 => それより先に実行する処理の名前の配列」のハッシュ
+  def initialize(deps)
+    @deps = deps
+  end
+
+  # すべての処理を、登録した順に1つずつブロックに渡す
+  def tsort_each_node(&block)
+    @deps.each_key(&block)
+  end
+
+  # name より先に実行する処理を、1つずつブロックに渡す
+  def tsort_each_child(name, &block)
+    @deps[name].each(&block)
+  end
+end
+
+steps = Steps.new({
+  "ミドルウェアを組み立てる" => ["設定ファイルを読む"],
+  "ロガーを作る" => [],
+  "設定ファイルを読む" => ["ロガーを作る"],
+})
+steps.tsort_each { |name| puts name }
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+ロガーを作る
+設定ファイルを読む
+ミドルウェアを組み立てる
+`}
+          />
+          <p>
+            <code>tsort_each</code> は、登録順で先頭の「ミドルウェアを組み立てる」から始めます。その前に実行する「設定ファイルを読む」を先に出そうとし、さらにその前の「ロガーを作る」を先に出します。その結果、登録した順とは逆の順で出力されました。Rails
+            の Collection では、<code>tsort_each_node</code> が登録された初期化処理を順に渡し、<code>tsort_each_child</code> が <code>before</code>・<code>after</code>{' '}
+            で決まる「先に実行する初期化処理」を渡します。
           </p>
           <p>デモのアプリケーションで、実行順に並べた初期化処理を数えると184個でした。主なものの位置は次のとおりです。</p>
           <Code
@@ -1067,6 +1566,15 @@ list.size # => 184
 # 178     finisher_hook                Finisher
 `}
           />
+          <p>
+            1行目の <code>tsort_each.to_a</code> は、並べ替えた後の初期化処理を配列にします。コメントの番号はこの配列の添字（0 から始まる位置）で、小さいほど先に実行されます。図 7-6
+            は、この184個を上の帯に左から右へ並べ、4つの区間に分けたものです。下の4つの箱が各区間の主な処理で、帯の 136 の位置の矢印が、config/initializers のファイルを読み込む{' '}
+            <code>load_config_initializers</code> です。
+          </p>
+          <p>
+            自分のアプリケーションでは、<code>bin/rails initializers</code> で同じ順の一覧を表示できます。1行が「初期化処理を持つクラス.初期化処理の名前」の形で、実行される順に並びます。gem
+            の初期化処理の行が、アプリケーションのクラスの <code>load_config_initializers</code> の行より上にあれば、その処理は config/initializers のファイルより前に実行されます。
+          </p>
           <Figure n="7-6" title="initialize! で実行される初期化処理" caption="デモのアプリケーション（Rails 8.1.4.1）で tsort_each の順に並べた184個を、4つの区間に分けた図。区間の名前は本書によるもの。番号は読み込む gem によって変わる。">
             <InitTimelineFigure />
           </Figure>
@@ -1086,7 +1594,7 @@ list.size # => 184
         <>
           <p>
             アプリケーションの設定ファイルは、それぞれ決まった初期化処理の中で読み込まれます。<code>config/environments/production.rb</code> などは Engine の <code>load_environment_config</code>{' '}
-            で、<code>config/initializers/*.rb</code> は <code>load_config_initializers</code> で読み込まれます。
+            で、<code>config/initializers/*.rb</code> は <code>load_config_initializers</code> で読み込まれます。次の引用で、2つの初期化処理がどのファイルをどの順に読み込むかを確かめます。
           </p>
           <Code
             lang="ruby"
@@ -1106,15 +1614,86 @@ list.size # => 184
     end
 `}
           />
+          <ul>
+            <li>
+              どちらも Rails::Engine のクラス本体に書かれた初期化処理です。Rails::Application は Engine を継承しているので、アプリケーションもこの2つを持ちます。
+            </li>
+            <li>
+              <code>paths["config/environments"]</code> は、アプリケーションでは config/environments ディレクトリの、現在の環境の名前のファイル（production なら production.rb）を指します（<code>railties/lib/rails/engine/configuration.rb</code>{' '}
+              の 96 行目）。<code>existent</code> は実際に存在するファイルだけを配列で返し、それを <code>require</code> します。
+            </li>
+            <li>
+              <code>config.paths["config/initializers"]</code> は、config/initializers 以下の拡張子が .rb のファイルすべてを指します。サブディレクトリの中のファイルも含みます（同じファイルの 97 行目）。
+            </li>
+            <li>
+              <code>load_config_initializer</code>（<code>engine.rb</code> の 690〜694 行目）は、渡されたファイルを <code>load</code> で実行します。
+            </li>
+          </ul>
           <p>
-            <code>load_environment_config</code> は <code>before: :load_environment_hook</code> を指定しているので、Bootstrap より前に実行されます。ロガーやキャッシュの設定を環境別ファイルに書けるのはこのためです。
+            <code>load_environment_config</code> は <code>before: :load_environment_hook</code> を指定しているので、Bootstrap より前に実行されます。ロガーやキャッシュの設定を環境別ファイルに書けるのはこのためです。Bootstrap
+            の <code>initialize_logger</code> は <code>config.logger</code> と <code>config.log_level</code> を読んで <code>Rails.logger</code> を用意し、<code>initialize_cache</code> は{' '}
+            <code>config.cache_store</code> を読んで <code>Rails.cache</code> を作ります（<code>railties/lib/rails/application/bootstrap.rb</code> の 34〜64 行目、80〜91 行目）。環境別のファイルがその前に読み込まれているので、production.rb
+            に書いた値がここで使われます。
             <code>config/initializers</code> のファイルは、パスを <code>sort</code> した順（ファイル名の辞書順）に <code>load</code>（require と違い、呼ぶたびにファイルを実行するメソッド）されます
             <Ref n={10} />。Rails ガイドは、初期化ファイルの間に依存がある場合は1つのファイルにまとめることを勧めています
             <Ref n={7} />。
           </p>
           <p>
+            読み込まれる時点が違うので、同じ <code>config</code> への代入でも、書くファイルによって反映されるかどうかが変わります。デモのアプリケーションの番号で並べると次のとおりです。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>書く場所</th>
+                  <th>実行される時点</th>
+                  <th>書いた値を読める初期化処理</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>config/application.rb のクラス本体</td>
+                  <td>initialize! より前</td>
+                  <td>すべて</td>
+                </tr>
+                <tr>
+                  <td>config/environments の環境名のファイル</td>
+                  <td>10〜13 番</td>
+                  <td>14 番の Bootstrap 以降のすべて</td>
+                </tr>
+                <tr>
+                  <td>config/initializers のファイル</td>
+                  <td>136 番</td>
+                  <td>137 番以降（ミドルウェアの組み立て、一括読み込み、after_initialize など）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            たとえば、config/initializers のファイルに <code>Rails.application.config.cache_store = :memory_store</code> と書いても、<code>Rails.cache</code> は変わりません。<code>Rails.cache</code>{' '}
+            を作る <code>initialize_cache</code> は Bootstrap（14〜41 番）の中にあり、136 番の時点では実行が終わっているためです。<code>config.log_level</code>{' '}
+            も同じです。この2つは config/application.rb か config/environments のファイルに書きます。一方、<code>config.middleware.use</code> でミドルウェアを足す行（<ChapterLink n={6} section="customize" />
+            ）は config/initializers に書いても反映されます。ミドルウェアを組み立てる <code>build_middleware_stack</code> が 173 番で、136 番より後だからです。
+          </p>
+          <p>
+            「Railtie・Engine・Application」の節の MyGem::Railtie も同じ理由で説明できます。<code>my_gem.setup</code> は Engine でない Railtie の初期化処理で、<code>before</code>・<code>after</code>{' '}
+            の指定がありません。Engine でない Railtie の初期化処理は、一覧の中でアプリケーションの初期化処理より前に並ぶので、<code>my_gem.setup</code> はアプリケーションの{' '}
+            <code>load_config_initializers</code> より前に実行されます。config/initializers のファイルで <code>config.my_gem.enabled</code> を変えても、<code>my_gem.setup</code>{' '}
+            はすでに元の値を読み終えています。gem の設定を config/initializers に書いても効かないときは、<code>bin/rails initializers</code> でその gem の初期化処理の位置を確かめます。gem
+            の側は、設定の値を読む処理を <code>after_initialize</code> や <code>on_load</code> のブロックの中に書けば、config/initializers のファイルより後に値を読めます。ActiveRecord::Railtie の{' '}
+            <code>active_record.set_configs</code> がこの形です（次の節）。
+          </p>
+          <p>
+            次の図は、デモのアプリケーションの番号の順に、config に値を書くファイル（左の列）と、その値を読む初期化処理（右の列）を上から並べたものです。136 番の config/initializers より上にある処理は、config/initializers で書いた値を読みません。
+          </p>
+          <Figure title="config に書く時点と、値を読む初期化処理" caption="番号はデモのアプリケーションのもの。my_gem.setup は架空の gem の初期化処理で、Engine でない Railtie の初期化処理が並ぶ範囲に置いた。読む処理は本文で挙げたものだけを載せた。">
+            <ConfigTimingFigure />
+          </Figure>
+          <p>
             Rails には、初期化の途中に処理を差し込むための5つのイベントがあります
-            <Ref n={7} />。デモのアプリケーションでの位置と合わせて表にまとめます。
+            <Ref n={7} />。<code>config.after_initialize do ... end</code> のように、config のイベントと同じ名前のメソッドにブロックを渡して登録します。config/application.rb のクラス本体、config/environments
+            のファイル、Railtie のクラス本体に書けます。config/initializers のファイルでは <code>Rails.application.config.after_initialize do ... end</code>{' '}
+            と書きます。デモのアプリケーションでの位置と合わせて表にまとめます。
           </p>
           <div className="table-wrap">
             <table>
@@ -1176,8 +1755,27 @@ list.size # => 184
       body: (
         <>
           <p>
-            <code>ActiveSupport.on_load(:active_record) {'{ ... }'}</code> は、「ActiveRecord::Base の読み込みが終わったらこのブロックを実行する」という予約です。実装は ActiveSupport::LazyLoadHooks
-            にあります。
+            <code>ActiveSupport.on_load(:active_record) {'{ ... }'}</code> は、「ActiveRecord::Base の読み込みが終わったらこのブロックを実行する」という予約です。既存のアプリケーションの config/initializers のファイルや、gem の導入手順に載っているコードに出てきます。すべてのモデルにモジュールを include する処理を例にして、直接参照する書き方と on_load を使う書き方を並べます。
+          </p>
+          <Code
+            lang="ruby"
+            title="config/initializers/my_extension.rb（説明用。MyExtension は架空のモジュール）"
+            code={`
+# 直接参照する書き方。この行を実行した時点で ActiveRecord::Base が読み込まれる
+ActiveRecord::Base.include(MyExtension)
+
+# on_load を使う書き方。ブロックは ActiveRecord::Base が読み込まれたときに実行される
+ActiveSupport.on_load(:active_record) do
+  include MyExtension
+end
+`}
+          />
+          <p>
+            on_load のブロックの中では self が ActiveRecord::Base になるので、<code>include MyExtension</code> は <code>ActiveRecord::Base.include(MyExtension)</code>{' '}
+            と同じ結果になります。違いは実行される時点です。<code>:active_record</code> はフックの名前で、どのクラスの読み込みに対応するかは Rails の側で決まっています。
+          </p>
+          <p>
+            実装は ActiveSupport::LazyLoadHooks にあります。次の引用で、ブロックがどこに保存され、いつ、どのオブジェクトを self にして実行されるかを確かめます。
           </p>
           <Code
             lang="ruby"
@@ -1207,6 +1805,23 @@ list.size # => 184
     end
 `}
           />
+          <ul>
+            <li>
+              <code>@load_hooks</code> と <code>@loaded</code> は、<code>:active_record</code> のような名前をキーにしたハッシュで、値は配列です（同じファイルの 46〜47 行目）。<code>@load_hooks[name]</code>{' '}
+              には登録されたブロックが、<code>@loaded[name]</code> にはその名前で読み込みが終わったクラスが入ります。
+            </li>
+            <li>
+              <code>on_load</code> の最初の3行は、読み込みが終わったクラスがすでにあれば、そのクラスに対してブロックをすぐに実行します。まだ無ければ <code>@loaded[name]</code>{' '}
+              は空の配列なので、何も実行しません。最後の行でブロックを保存します。
+            </li>
+            <li>
+              <code>run_load_hooks</code> は、読み込みが終わったクラス（<code>base</code>）を <code>@loaded</code> に記録してから、保存されているブロックを登録順に実行します。
+            </li>
+            <li>
+              <code>execute_hook</code>（同じファイルの 91〜103 行目）は、<code>base</code> がクラスかモジュールなら <code>base.class_eval(&block)</code> でブロックを実行します。<code>class_eval</code>{' '}
+              はブロックの中の self をそのクラスにするメソッドです（<ChapterLink n={4} section="self-switch" />）。
+            </li>
+          </ul>
           <p>
             <code>on_load</code> はブロックを名前ごとの配列に保存し、すでにその名前の読み込みが終わっていればすぐに実行します。<code>run_load_hooks</code> は、保存されたブロックを{' '}
             <code>base</code> の上で <code>class_eval</code> して実行します（同じファイルの 91〜103 行目）
@@ -1229,8 +1844,22 @@ ActiveSupport.on_load(:active_record) { puts "[on_load] self=#{self}" }
 Rails.application.config.after_initialize { puts "[after_initialize] AR::Base loaded? #{loaded.call}" }
 `}
           />
+          <ul>
+            <li>
+              1行目の <code>{'-> { ... }'}</code> は、後で呼ぶ処理を変数に入れる書き方（lambda。<ChapterLink n={4} section="proc-lambda" />）で、<code>loaded.call</code>{' '}
+              で実行します。中身は、読み込み済みのファイルの一覧 <code>$LOADED_FEATURES</code> に active_record/base.rb があるか、つまり ActiveRecord::Base を定義するファイルが読み込み済みかを true か false で返します。
+            </li>
+            <li>2行目はこの初期化ファイルが実行された時点で ActiveRecord::Base が読み込み済みかを表示します。</li>
+            <li>3行目は self を表示するブロックを on_load で登録します。<code>[on_load]</code> の行が出た位置が、ブロックが実行された時点です。</li>
+            <li>4行目は after_initialize の時点で ActiveRecord::Base が読み込み済みかを表示します。</li>
+          </ul>
+          <p>
+            出力のうち <code>[script]</code> で始まる2行はスクリプトが表示した行で、<code>initialize!</code> が終わった直後と、<code>Article.first</code> を実行した直後を示します。development と production
+            で、<code>[on_load]</code> の行の位置を比べます。
+          </p>
           <Code
             lang="text"
+            title="実行結果（== の行は環境の名前）"
             code={`
 == development
 [initializer] AR::Base loaded? false
@@ -1249,6 +1878,10 @@ Rails.application.config.after_initialize { puts "[after_initialize] AR::Base lo
           <Figure n="7-7" title="on_load のブロックが実行される時点" caption="上の実行結果を図にしたもの。development では最初にモデルを参照したとき、production では初期化中の一括読み込みのときに ActiveRecord::Base が読み込まれる。">
             <OnLoadFigure />
           </Figure>
+          <p>
+            どちらの環境でも、1行目の <code>[initializer]</code> は false です。config/initializers のファイルが実行される時点では、ActiveRecord::Base はまだ読み込まれていません。<code>[on_load] self=ActiveRecord::Base</code>{' '}
+            の行から、ブロックの中の self が ActiveRecord::Base であることも確かめられます。
+          </p>
           <p>
             development では、初期化が終わっても ActiveRecord::Base は読み込まれておらず、<code>Article</code> を初めて参照したときにブロックが実行されました。production では、Finisher の{' '}
             <code>eager_load!</code> がアプリケーションのモデルを読み込む過程で ActiveRecord::Base も読み込まれ、after_initialize より前にブロックが実行されました。
@@ -1272,6 +1905,18 @@ Rails.application.config.active_record.table_name_prefix = "app_"
 `}
           />
           <p>
+            <code>table_name_prefix</code> は、モデルに対応するテーブル名の前に付ける文字列の設定です。コメントの最後の2行が結果です。zz1_touch.rb があると、zz2_conf.rb が <code>"app_"</code>{' '}
+            を書く前に ActiveRecord::Base が読み込まれます。<code>active_record.set_configs</code> が登録したブロックは、その時点の <code>config.active_record</code> の値を ActiveRecord::Base
+            に渡します。後から書いた <code>"app_"</code> は渡されず、既定値の空文字列のままになりました。zz1_touch.rb を置かなければ、ブロックは config/initializers のファイルをすべて読み込んだ後に実行されるので、<code>"app_"</code>{' '}
+            が渡されます。
+          </p>
+          <p>
+            次の図は、zz1_touch.rb がある場合（上の段）と無い場合（下の段）を、左から時間の順に並べたものです。中央の枠が 136 番の load_config_initializers です。set_configs のブロックは、上の段では枠の中で zz2_conf.rb より前に、下の段では枠の後に実行されます。
+          </p>
+          <Figure title="ActiveRecord::Base を先に参照した場合の table_name_prefix" caption="上の実験の結果を図にしたもの。config/initializers のファイルは辞書順に読み込まれる。zz1_touch.rb が無い場合に ActiveRecord::Base が読み込まれる時点は、図 7-7 のとおり環境によって変わる。">
+            <EarlyTouchFigure />
+          </Figure>
+          <p>
             Rails ガイドは、クラスに直接設定したい場合は初期化ファイルの中で on_load を使い、初期化が終わる前にクラスをオートロードしないように求めています<Ref n={7} />。理由は対象によって違います。ActiveRecord::Base のようなフレームワークのクラスは、早く読み込むと上の実験のように後の設定が反映されず、起動も遅くなります。ApplicationRecord や ApplicationController
             のようなアプリケーションのクラスは再読み込みの対象で、初期化中に参照すると再読み込みと両立しません（<ChapterLink n={8} section="reload" />
             ）。業務のアプリケーションで gem の設定ファイルがフレームワークのクラスを直接参照していたら、<code>on_load</code> で囲めるかを確認します。
@@ -1284,7 +1929,13 @@ Rails.application.config.active_record.table_name_prefix = "app_"
       title: 'Finisher と一括読み込み',
       body: (
         <>
-          <p>Finisher の初期化処理のうち、一括読み込みと after_initialize の部分を引用します。</p>
+          <p>
+            Finisher は、<code>initialize!</code> の一覧の最後につながれる初期化処理のまとまりです（デモでは 170〜183 番）。config/initializers のファイルまで読み込んだ後の設定を使って、ミドルウェアを組み立て、必要ならアプリケーションのクラスをまとめて読み込み、after_initialize
+            のブロックを実行します。「環境ごとの設定」の節で見た production.rb の <code>config.eager_load = true</code> が使われるのはここです。
+          </p>
+          <p>
+            Finisher の初期化処理のうち、一括読み込みと after_initialize の部分を引用します。<code>config.eager_load</code> の値で何が変わるかと、after_initialize がどの時点で実行されるかを確かめます。
+          </p>
           <Code
             lang="ruby"
             title="railties/lib/rails/application/finisher.rb（76〜94行目）"
@@ -1311,15 +1962,48 @@ Rails.application.config.active_record.table_name_prefix = "app_"
       end
 `}
           />
+          <ul>
+            <li>
+              <code>initializer :eager_load! do |app|</code> の <code>app</code> はアプリケーションのインスタンスです。<code>if config.eager_load</code>{' '}
+              が偽なら、この初期化処理は何もしません。development でモデルが最初に参照されるまで読み込まれないのはこのためです。
+            </li>
+            <li>
+              <code>ActiveSupport.run_load_hooks(:before_eager_load, self)</code> は、前の節で見た <code>run_load_hooks</code> です。<code>config.before_eager_load</code>{' '}
+              で登録されたブロックをここで実行します。
+            </li>
+            <li>
+              <code>Zeitwerk::Loader.eager_load_all</code> の Zeitwerk は、Rails がクラスのファイルを自動で読み込むために使う gem です（<ChapterLink n={8} />
+              ）。この行が、app/models や app/controllers などのファイルをすべて読み込みます。
+            </li>
+            <li>
+              <code>Rails.eager_load!</code> は、Rails モジュールが持つクラスのうち、使うときまで読み込まない指定になっているもの（Rails::HealthController など）を読み込みます。
+            </li>
+            <li>
+              <code>config.eager_load_namespaces.each(&:eager_load!)</code> は、配列の各要素に対して <code>eager_load!</code> を呼びます。<code>eager_load_namespaces</code> に入っているのは、ActiveRecord
+              のようなフレームワークのモジュールと Engine です。ActiveRecord::Railtie のクラス本体には <code>config.eager_load_namespaces {'<<'} ActiveRecord</code> の行があります。
+            </li>
+            <li>
+              <code>if config.reloading_enabled?</code> の部分は、一括読み込みとコードの再読み込みの両方を有効にした場合に、再読み込みのたびに一括読み込みをやり直すためのものです。
+            </li>
+            <li>
+              <code>finisher_hook</code> は <code>:after_initialize</code> の名前で <code>run_load_hooks</code> を呼びます。<code>config.after_initialize</code>{' '}
+              で登録されたブロックは、ここで実行されます。<code>eager_load!</code> の次に登録されているので、一括読み込みより後です。
+            </li>
+          </ul>
           <p>
             <code>config.eager_load</code> が true（production の既定）のとき、<code>Zeitwerk::Loader.eager_load_all</code> が app/ 以下などのファイルをすべて読み込みます
-            <Ref n={13} />。リクエストを受ける前に全部のクラスを読み込んでおくことには、次の利点があります。
+            <Ref n={13} />。リクエストを受ける前に全部のクラスを読み込んでおくことには、次の利点があります。スレッドは1つのプロセスの中で並行して進む処理の単位で、Puma
+            は複数のスレッドでリクエストを同時に処理します（<ChapterLink n={23} section="thread" />）。
           </p>
           <ul>
             <li>リクエストの処理中にファイルを読み込まないので、複数のスレッドが同時に同じ定数を読み込む状況が起きない。</li>
             <li>ファイル名と定数名の食い違いなどの誤りが、起動時に例外として見つかる（<ChapterLink n={8} />）。</li>
-            <li>Puma のクラスタモードで親プロセスが読み込んでから fork（実行中のプロセスを複製して子プロセスを作ること）すると、読み込んだコードのメモリーを子プロセスと共有できる（<ChapterLink n={23} />）。</li>
+            <li>Puma のクラスタモード（アプリケーションのプロセスを複数動かす設定）で親プロセスが読み込んでから fork（実行中のプロセスを複製して子プロセスを作ること）すると、読み込んだコードのメモリーを子プロセスと共有できる（<ChapterLink n={23} />）。</li>
           </ul>
+          <p>
+            2つ目の利点はエラーの調査で使います。手元の development では起動できるのに、production や CI（図 7-3 のとおり、環境変数 CI があると test でも eager_load が true になります）でだけ起動時に例外が出ることがあります。そのときは、一括読み込みで初めて読み込まれたファイルが原因かを疑います。例外のバックトレースに <code>railties/lib/rails/application/finisher.rb</code>{' '}
+            の 79 行目前後（上の引用の <code>eager_load!</code> のブロックの中）が含まれていれば、この初期化処理の中で起きた例外です。
+          </p>
           <p>
             Finisher には、このほかに <code>build_middleware_stack</code>（<ChapterLink n={6} />）、ルートを読み込む準備をする <code>set_routes_reloader_hook</code>（<ChapterLink n={9} />
             ）、開発環境の再読み込みに関わる <code>set_clear_dependencies_hook</code>（<ChapterLink n={8} />）などがあります。最後の <code>enable_yjit</code> は、<code>config.yjit</code>{' '}

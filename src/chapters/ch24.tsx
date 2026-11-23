@@ -6,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const NG = 'https://nginx.org/en/docs'
 
-/* ---------- 図 24-1 HTTP の要求と応答 ---------- */
+/* ---------- 図 27-1 HTTP の要求と応答 ---------- */
 function MessageFigure() {
   const rows = [
     { label: '1行目', y: 50, h: 46, req: ['GET /hello.html HTTP/1.1', 'メソッド・パス・HTTP のバージョン'], res: ['HTTP/1.1 200 OK', 'HTTP のバージョン・状態コード・説明'], fill: 'box5' as const },
@@ -16,7 +16,7 @@ function MessageFigure() {
   ]
   return (
     <Svg
-      id="24-1"
+      id="27-1"
       w={780}
       h={300}
       label="curl が送った要求と Nginx が返した応答を、同じ並びで比べた図。要求の1行目はメソッド GET、パス /hello.html、HTTP のバージョン。応答の1行目は HTTP のバージョンと状態コード 200 OK。2行目からはヘッダーで、要求には Host・User-Agent・Accept、応答には Server・Content-Type・Content-Length がある。空の行でヘッダーが終わり、その後が本文。GET の要求には本文が無く、応答の本文は hello.html の中身"
@@ -44,11 +44,11 @@ function MessageFigure() {
   )
 }
 
-/* ---------- 図 24-2 リバースプロキシの流れ ---------- */
+/* ---------- 図 27-2 リバースプロキシの流れ ---------- */
 function ProxyFigure() {
   return (
     <Svg
-      id="24-2"
+      id="27-2"
       w={780}
       h={300}
       label="ブラウザー（ここでは curl）が Nginx のポート 80 に要求を送る。Nginx は proxy_pass に書いた Puma のポート 3000 に、同じ内容の要求を新しい接続で送る。Puma が Rails を呼び、Rails が作った応答を Nginx が受け取ってブラウザーに返す。ブラウザーと Nginx の間の接続では Nginx から見た相手は 172.29.0.1、Nginx と Puma の間の接続では Rails から見た相手は Nginx の 172.29.0.15 になる。静的ファイルは、設定すれば Nginx が Rails を通さずに返す"
@@ -96,11 +96,11 @@ function ProxyFigure() {
   )
 }
 
-/* ---------- 図 24-3 nginx.conf の階層 ---------- */
+/* ---------- 図 27-3 nginx.conf の階層 ---------- */
 function HierarchyFigure() {
   return (
     <Svg
-      id="24-3"
+      id="27-3"
       w={780}
       h={330}
       label="nginx.conf の一番外側（main）には worker_processes などのプロセスの設定があり、events ブロックに worker_connections がある。http ブロックには MIME タイプやログの設定があり、conf.d の設定ファイルを include する。その中の upstream ブロックが Puma のアドレスを、server ブロックが待ち受けるポートと root を決める。server の中の location ブロックが URI ごとの処理を決める。下の階層は上の階層の設定を引き継ぐが、proxy_set_header や add_header は、下の階層で1つでも書くと上の階層の値を引き継がない"
@@ -144,7 +144,7 @@ function HierarchyFigure() {
   )
 }
 
-/* ---------- 図 24-4 要求の振り分け ---------- */
+/* ---------- 図 27-4 要求の振り分け ---------- */
 function RoutingFigure() {
   const rows = [
     { u: '/assets/application-8b441ae0.css', l: 'location /assets/', r: 'public/assets から返す（200、1年キャッシュ）', fill: 'box4' as const },
@@ -155,7 +155,7 @@ function RoutingFigure() {
   ]
   return (
     <Svg
-      id="24-4"
+      id="27-4"
       w={780}
       h={rows.length * 46 + 40}
       label="デモの設定で、要求の URI ごとに選ばれた location と処理を並べた。/assets/ で始まる要求は location /assets/ が選ばれ、ファイルがあれば Nginx が返し、無ければ 404 を返して Rails には渡さない。/robots.txt は location / の try_files で public のファイルが見つかり、Nginx が返す。/articles/1 はファイルが無いので名前付きの location @app に移り、Puma に渡される。/cable は location /cable が選ばれ、Upgrade ヘッダーを付けて Puma に渡される"
@@ -185,11 +185,11 @@ function RoutingFigure() {
   )
 }
 
-/* ---------- 図 24-5 バッファリングの有無 ---------- */
+/* ---------- 図 27-5 バッファリングの有無 ---------- */
 function BufferFigure() {
   return (
     <Svg
-      id="24-5"
+      id="27-5"
       w={780}
       h={290}
       label="proxy_buffering が on なら、Nginx は Puma から応答をできるだけ速く受け取り、メモリーや一時ファイルに保存してから、遅いクライアントにゆっくり送る。Puma のスレッドはすぐに次の要求を処理できる。off なら、Nginx は受け取った分をそのままクライアントに送るので、クライアントが遅いと Puma のスレッドは応答を書き終わるまでふさがる。デモでは、3つのスレッドがすべてふさがり、別の要求が空きを 8.6 秒待った"
@@ -229,23 +229,190 @@ function BufferFigure() {
   )
 }
 
+/* ---------- location を探す順（番号なし） ---------- */
+function LocationSearchFigure() {
+  const yes = (y: number) => (
+    <>
+      <Arrow x1={380} y1={y} x2={458} y2={y} />
+      <T x={419} y={y - 12} anchor="middle" fs={11.5} tone="muted">
+        はい
+      </T>
+    </>
+  )
+  const no = (y: number) => (
+    <>
+      <Arrow x1={200} y1={y} x2={200} y2={y + 22} accent />
+      <T x={210} y={y + 11} fs={11.5} tone="muted">
+        いいえ
+      </T>
+    </>
+  )
+  return (
+    <Svg
+      id="ch24-location-search"
+      w={780}
+      h={412}
+      label="要求のパスに対して、まず接頭辞の location のうち最も長く一致するものを覚える。= の location が完全に一致すれば、その location を使って終わる。覚えた location に ^~ が付いていれば、正規表現を調べずにその location を使う。そうでなければ正規表現の location を書いた順に調べ、最初に一致したものを使う。1つも一致しなければ、覚えた接頭辞の location を使う。デモの /assets/application-8b441ae0.css は location / と location /assets/ に一致し、長いほうの /assets/ を覚える。デモの設定には =・^~・正規表現の location が無いので、location /assets/ が使われる"
+    >
+      <Box x={20} y={16} w={360} h={44} lines={['要求のパス', '例：/assets/application-8b441ae0.css']} fs={12.5} bold fill="bg" subTone="muted" />
+      <Arrow x1={200} y1={60} x2={200} y2={82} accent />
+      <Box x={20} y={84} w={360} h={44} lines={['接頭辞の location で最も長く一致するものを覚える', '例：/ と /assets/ が一致し、/assets/ を覚える']} fs={12.5} subTone="muted" />
+      <Arrow x1={200} y1={128} x2={200} y2={150} accent />
+      <Box x={20} y={152} w={360} h={40} lines="= の location が完全に一致したか" fs={12} fill="bg" />
+      {yes(172)}
+      <Box x={460} y={152} w={300} h={40} lines="その location を使う（ここで終わる）" fs={12} />
+      {no(192)}
+      <Box x={20} y={216} w={360} h={40} lines="覚えた location に ^~ が付いているか" fs={12} fill="bg" />
+      {yes(236)}
+      <Box x={460} y={216} w={300} h={40} lines="覚えた location を使う（正規表現は調べない）" fs={12} />
+      {no(256)}
+      <Box x={20} y={280} w={360} h={48} lines={['正規表現の location（~・~*）を', '書いた順に調べ、一致したものがあるか']} fs={12} fill="bg" />
+      {yes(304)}
+      <Box x={460} y={284} w={300} h={40} lines="最初に一致した location を使う" fs={12} />
+      {no(328)}
+      <Box x={20} y={352} w={360} h={44} lines={['覚えた接頭辞の location を使う', '例：location /assets/（X-Location: assets）']} fs={12.5} bold fill="box5" accent subTone="muted" />
+      <T x={460} y={374} fs={11.5} tone="muted">
+        デモの設定には =・^~・正規表現の location が無い
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- 接続 1 の値を接続 2 のヘッダーで送る（番号なし） ---------- */
+function HeaderRelayFigure() {
+  const rows = [
+    { y: 128, from: '接続の相手：172.29.0.1', header: 'X-Forwarded-For: 172.29.0.1', v: '← $proxy_add_x_forwarded_for' },
+    { y: 152, from: 'Host: 127.0.0.1:8080', header: 'Host: 127.0.0.1', v: '← $host' },
+    { y: 176, from: 'http で接続', header: 'X-Forwarded-Proto: http', v: '← $scheme' },
+  ]
+  const rails = [
+    { y: 284, k: 'REMOTE_ADDR', v: 'Nginx のコンテナの IP' },
+    { y: 306, k: 'request.remote_ip', v: '172.29.0.1' },
+    { y: 328, k: 'request.url', v: 'http://127.0.0.1/lab/headers' },
+  ]
+  return (
+    <Svg
+      id="ch24-header-relay"
+      w={780}
+      h={356}
+      label="ブラウザー（curl、172.29.0.1）から Nginx への接続 1 と、Nginx から Puma への接続 2 がある。接続 1 から Nginx が分かる値は、接続の相手 172.29.0.1、Host: 127.0.0.1:8080、http で接続したこと。Nginx はこれらを proxy_set_header で接続 2 のヘッダーに入れる。$proxy_add_x_forwarded_for で X-Forwarded-For: 172.29.0.1、$host でポート番号を除いた Host: 127.0.0.1、$scheme で X-Forwarded-Proto: http になる。Host を書かなければ、proxy_pass に書いた名前の app が送られる。Rails では REMOTE_ADDR が Nginx のコンテナの IP になるが、Nginx の IP は RemoteIp が信頼するプロキシの範囲なので、request.remote_ip は X-Forwarded-For から求めた 172.29.0.1 になる。request.url は http://127.0.0.1/lab/headers になる"
+    >
+      <Box x={20} y={16} w={200} h={44} lines={['ブラウザー（curl）', '172.29.0.1']} fs={12.5} bold fill="bg" subTone="muted" />
+      <Box x={300} y={16} w={180} h={44} lines="Nginx" fs={12.5} bold />
+      <Box x={580} y={16} w={180} h={44} lines="Puma・Rails" fs={12.5} bold />
+      <Arrow x1={220} y1={38} x2={298} y2={38} />
+      <T x={259} y={26} anchor="middle" fs={11.5} tone="muted">
+        接続 1
+      </T>
+      <Arrow x1={480} y1={38} x2={578} y2={38} />
+      <T x={529} y={26} anchor="middle" fs={11.5} tone="muted">
+        接続 2
+      </T>
+
+      <Box x={20} y={84} w={230} h={108} fill="bg" />
+      <T x={32} y={104} bold fs={12}>
+        接続 1 から分かること
+      </T>
+      <Box x={330} y={84} w={430} h={132} fill="box4" />
+      <T x={342} y={104} bold fs={12}>
+        接続 2 で Puma に送るヘッダー
+      </T>
+      {rows.map((r) => (
+        <g key={r.header}>
+          <T x={32} y={r.y} fs={11.5} mono={r.from.startsWith('Host')}>
+            {r.from}
+          </T>
+          <Arrow x1={250} y1={r.y} x2={328} y2={r.y} />
+          <T x={342} y={r.y} fs={11.5} mono>
+            {r.header}
+          </T>
+          <T x={548} y={r.y} fs={11.5} mono tone="muted">
+            {r.v}
+          </T>
+        </g>
+      ))}
+      <T x={342} y={200} fs={11.5} tone="muted">
+        Host を書かなければ Host: app（proxy_pass に書いた名前）
+      </T>
+
+      <Arrow x1={545} y1={216} x2={545} y2={240} />
+      <Box x={330} y={242} w={430} h={100} fill="box5" />
+      <T x={342} y={262} bold fs={12}>
+        Rails で読める値
+      </T>
+      {rails.map((r) => (
+        <g key={r.k}>
+          <T x={342} y={r.y} fs={11.5} mono>
+            {r.k}
+          </T>
+          <T x={482} y={r.y} fs={11.5} mono={!r.v.startsWith('Nginx')}>
+            {r.v}
+          </T>
+        </g>
+      ))}
+      <T x={20} y={284} fs={11.5} tone="muted">
+        Nginx の IP は RemoteIp が信頼する
+      </T>
+      <T x={20} y={306} fs={11.5} tone="muted">
+        プロキシの範囲なので、remote_ip は
+      </T>
+      <T x={20} y={328} fs={11.5} tone="muted">
+        X-Forwarded-For から求める
+      </T>
+    </Svg>
+  )
+}
+
+/* ---------- /cable の要求が通る検査（番号なし） ---------- */
+function CableCheckFigure() {
+  return (
+    <Svg
+      id="ch24-cable-check"
+      w={780}
+      h={376}
+      label="ブラウザーは GET /cable の要求に Upgrade: websocket と Connection: Upgrade、Origin: http://localhost:8080 を付けて送る。Nginx の location /cable は、Upgrade と Connection を proxy_set_header で書いたときだけ Puma に送る。ActionCable はまず Upgrade と Connection が届いたかを調べ、届かなければ Failed to upgrade to WebSocket をログに書いて 404 を返す（Upgrade の設定なし）。届いていれば、Origin と Host が同じかを調べる。Host を $host にすると Host は localhost になり、Origin の localhost:8080 と一致しないので、Request origin not allowed をログに書いて 404 を返す。$http_host なら Host は localhost:8080 で一致し、Successfully upgraded to WebSocket をログに書いて接続できる"
+    >
+      <Box x={20} y={16} w={380} h={62} lines={['ブラウザー：GET /cable', 'Upgrade: websocket・Connection: Upgrade', 'Origin: http://localhost:8080']} fs={12.5} bold fill="bg" subTone="muted" />
+      <Arrow x1={210} y1={78} x2={210} y2={98} accent />
+      <Box x={20} y={100} w={380} h={62} lines={['Nginx（location /cable）', 'Upgrade・Connection は', 'proxy_set_header で書いたときだけ送る']} fs={12.5} bold subTone="muted" />
+      <Arrow x1={210} y1={162} x2={210} y2={182} accent />
+      <Box x={20} y={184} w={380} h={40} lines="ActionCable：Upgrade・Connection が届いたか" fs={12} fill="bg" />
+      <Arrow x1={400} y1={204} x2={478} y2={204} />
+      <T x={439} y={192} anchor="middle" fs={11.5} tone="muted">
+        いいえ
+      </T>
+      <Box x={480} y={180} w={280} h={48} lines={['404（Upgrade の設定なし）', 'Failed to upgrade to WebSocket']} fs={12.5} fill="bg" subTone="danger" />
+      <Arrow x1={210} y1={224} x2={210} y2={246} accent />
+      <T x={220} y={235} fs={11.5} tone="muted">
+        はい
+      </T>
+      <Box x={20} y={248} w={380} h={48} lines={['Origin と Host が同じか', '$host：localhost／$http_host：localhost:8080']} fs={12.5} fill="bg" subTone="muted" />
+      <Arrow x1={400} y1={272} x2={478} y2={272} />
+      <T x={439} y={260} anchor="middle" fs={11.5} tone="muted">
+        いいえ
+      </T>
+      <Box x={480} y={248} w={280} h={48} lines={['404（Host $host のとき）', 'Request origin not allowed']} fs={12.5} fill="bg" subTone="danger" />
+      <Arrow x1={210} y1={296} x2={210} y2={318} accent />
+      <T x={220} y={307} fs={11.5} tone="muted">
+        はい
+      </T>
+      <Box x={20} y={320} w={380} h={44} lines={['接続できた（Host $http_host のとき）', 'Successfully upgraded to WebSocket']} fs={12.5} bold fill="box5" accent subTone="muted" />
+    </Svg>
+  )
+}
+
 const ch24: Chapter = {
   number: 24,
   part: 5,
   title: 'Nginx のリバースプロキシ設定',
   summary:
-    'Web サーバーが受け取る HTTP の要求と返す応答の中身、Nginx がファイルを返す様子と Puma に要求を転送する様子（リバースプロキシ）、Puma の前に Nginx を置く理由、設定ファイルのディレクティブとブロックの書き方を、実際に動かして確かめます。そのうえで、Rails の前段に置く Nginx の設定を、各行が何をしているかがわかるように、実際に Nginx 1.30.6 と Puma を動かして確かめます。設定の階層と location の選択、upstream と proxy_pass、proxy_set_header、静的ファイルの配信、遅いクライアントのために Puma のスレッドがふさがらないようにするバッファリング、client_max_body_size、WebSocket のプロキシを扱います。',
+    '同じサイトでも、CSS は Nginx がファイルを読み出して返し、記事ページは Puma に転送して Rails が作る構成があります。2つの URL を設定とログに当てはめ、どこから応答が返るかをたどります。',
   goals: [
-    'HTTP の要求と応答の1行目・ヘッダー・本文を読み、Nginx がファイルを返す場合と Puma に転送する場合の違いを説明できる',
-    'ディレクティブとブロックで Nginx の設定を書き、nginx -t で確かめてから nginx -s reload で読み込ませられる',
-    'nginx.conf の main・events・http・server・location の階層と、設定の引き継ぎの例外を説明できる',
-    'location の選択の順と、try_files で静的ファイルと Rails に振り分ける仕組みを説明できる',
-    'proxy_set_header の Host・X-Forwarded-For・X-Forwarded-Proto が Rails のどこに影響するかを説明できる',
-    'アセットを Nginx から返す設定と、キャッシュのヘッダー・圧縮の扱いを説明できる',
-    'proxy_buffering で、遅いクライアントのために Puma のスレッドがふさがらないようにする仕組みを説明できる',
-    'client_max_body_size の 413 と、WebSocket のプロキシに必要な設定を説明できる',
+    '要求のパスから使われる location を選び、ファイルを返すか Puma へ転送するかを追える',
+    'Puma に伝えるホスト名や元の接続方式と、転送時に設定するヘッダーを対応付けられる',
+    '大きな応答やアップロードを例に、Nginx が一時保存するデータと、待ち時間への影響を説明できる',
   ],
-  prerequisites: [16, 17, 23],
+  prerequisites: [16, 23],
   sections: [
     {
       id: 'web-server',
@@ -297,7 +464,7 @@ $ curl -sv http://127.0.0.1:8080/hello.html
           />
           <p>
             127.0.0.1 はコマンドを実行しているマシン自身を指す IP アドレス（ネットワークの中でコンピューターを区別する番号。<ChapterLink n={25} section="ip-port" />
-            ）です。curl の <code>-v</code> は送った要求の行に「&gt;」、受け取った応答の行に「&lt;」を付けて表示します（図 24-1）。
+            ）です。curl の <code>-v</code> は送った要求の行に「&gt;」、受け取った応答の行に「&lt;」を付けて表示します（図 27-1）。
           </p>
           <p>
             要求の1行目はメソッド（GET はデータを取り出す要求）、パス（/hello.html）、HTTP のバージョンです。2行目からはヘッダーで、「名前: 値」の形で要求に情報を添えます。Host は接続先のホスト名とポート番号、User-Agent
@@ -333,7 +500,7 @@ $ docker logs ch24-web
             hello.html のように、要求のたびに同じ内容を返すファイルを静的ファイルと呼びます。静的ファイルなら、Nginx はファイルを読むだけで応答を作れます。記事の一覧のように、要求のたびにデータベースを読んで HTML
             を作るページは、Rails でなければ作れません。そのようなページの要求は、次の節のように Nginx から Puma に転送します。
           </p>
-          <Figure n="24-1" title="HTTP の要求と応答" caption="curl -sv で hello.html を要求したときの出力（Nginx 1.30.6）をもとにした図。">
+          <Figure n="27-1" title="HTTP の要求と応答" caption="curl -sv で hello.html を要求したときの出力（Nginx 1.30.6）をもとにした図。">
             <MessageFigure />
           </Figure>
         </>
@@ -405,7 +572,7 @@ x-runtime: 0.113286
           />
           <p>
             Nginx のログの相手は curl を実行したマシン（172.29.0.1）ですが、Rails のログの <code>for 172.29.0.15</code> は Nginx のコンテナの IP アドレスです。ブラウザーと Nginx の間、Nginx と
-            Puma の間で別々の接続が作られ、Puma から見ると要求を送ってきたのは Nginx だからです（図 24-2）。元のブラウザーの IP アドレスを Rails に伝える方法は「proxy_set_header」の節で扱います。
+            Puma の間で別々の接続が作られ、Puma から見ると要求を送ってきたのは Nginx だからです（図 27-2）。元のブラウザーの IP アドレスを Rails に伝える方法は「proxy_set_header」の節で扱います。
           </p>
           <p>
             Puma は単独でも要求を受け付けられます。Puma の README もリバースプロキシなしで運用できると書いています
@@ -418,7 +585,7 @@ x-runtime: 0.113286
             <li>大きすぎる要求を、Puma に届く前に断る（「client_max_body_size」の節）</li>
             <li>パスごとに、ファイルを返すか Puma に転送するかを決める（「location の選択」の節）</li>
           </ul>
-          <Figure n="24-2" title="リバースプロキシの流れ" caption="最小の設定で /articles を要求したときの実測（IP アドレスはデモの値）と、後の節で加える静的ファイルの配信をもとにした模式図。">
+          <Figure n="27-2" title="リバースプロキシの流れ" caption="最小の設定で /articles を要求したときの実測（IP アドレスはデモの値）と、後の節で加える静的ファイルの配信をもとにした模式図。">
             <ProxyFigure />
           </Figure>
         </>
@@ -548,8 +715,7 @@ http {
 `}
           />
           <p>
-            設定は、一番外側（main）、<code>events</code>、<code>http</code>、その中の <code>server</code>、さらにその中の <code>location</code> という階層になっています（図
-            24-3）。Rails のための設定は、conf.d に置いた次のファイルに書きました。この章の実測はすべてこの設定（と一部を変えたもの）で行っています。
+            設定は、一番外側（main）、<code>events</code>、<code>http</code>、その中の <code>server</code>、さらにその中の <code>location</code> という階層になっています（図 27-3）。Rails のための設定は、conf.d に置いた次のファイルに書きました。この章の実測はすべてこの設定（と一部を変えたもの）で行っています。
           </p>
           <Code
             lang="nginx"
@@ -619,7 +785,7 @@ HTTP_HOST="app"         HTTP_X_FORWARDED_FOR="172.29.0.1"   HTTP_X_FORWARDED_PRO
           <p>
             location で Host を1行書いただけで、server の X-Forwarded-For と X-Forwarded-Proto が送られなくなりました。location に proxy_set_header を書くときは、必要なものをすべて書き直します。
           </p>
-          <Figure n="24-3" title="nginx.conf の階層" caption="nginx:1.30.6 のイメージの nginx.conf とデモの conf.d/default.conf をもとにした図。">
+          <Figure n="27-3" title="nginx.conf の階層" caption="nginx:1.30.6 のイメージの nginx.conf とデモの conf.d/default.conf をもとにした図。">
             <HierarchyFigure />
           </Figure>
         </>
@@ -641,6 +807,10 @@ HTTP_HOST="app"         HTTP_X_FORWARDED_FOR="172.29.0.1"   HTTP_X_FORWARDED_PRO
             </li>
             <li>正規表現が1つも一致しなければ、覚えておいた接頭辞の location を使う</li>
           </ul>
+          <p>次の図は、この順を上から下へ並べたものです。左の列を上からたどり、「はい」になった所で右の箱の location に決まります。</p>
+          <Figure title="location を探す順" caption="Nginx の説明書の手順をもとにした模式図。太い青の矢印は、デモの設定で /assets/application-8b441ae0.css を要求したときの経路です。">
+            <LocationSearchFigure />
+          </Figure>
           <p>
             正規表現を使わなければ、「最も長く一致する接頭辞」で決まります。デモの設定で、要求ごとに選ばれた location をヘッダー（<code>X-Location</code>）に出して確かめました
             <Ref n={3} />。
@@ -657,11 +827,12 @@ HTTP_HOST="app"         HTTP_X_FORWARDED_FOR="172.29.0.1"   HTTP_X_FORWARDED_PRO
 `}
           />
           <p>
-            <code>location /</code> の <code>try_files $uri @app</code> は、root の下に要求のパスと同じファイルがあれば返し、無ければ名前付きの location（<code>@app</code>
-            ）に処理を移します。public/robots.txt は Nginx が返し、/articles/1 は Puma に渡りました（図 24-4）。/assets/ の location は <code>try_files $uri =404</code>{' '}
-            なので、ファイルが無ければ Rails に渡さずに 404 を返します。デプロイの途中で古いページが新しいダイジェストのファイルを要求したときなどに、Rails に無駄な要求を送らないためです。
+            同じ 200 でも、<code>/robots.txt</code> の <code>X-Location: root</code> と <code>/articles/1</code> の <code>X-Location: app</code> は意味が違います。<code>try_files $uri @app</code> の <code>$uri</code> は要求のパスです。Nginx は <code>root</code> に指定したディレクトリの下でそのファイルを探します。robots.txt は見つかるので Nginx が返します。記事のパスにはファイルがないので、最後の <code>@app</code> に進み、Puma に要求を送ります（図 27-4）。
           </p>
-          <Figure n="24-4" title="要求の振り分け" caption="デモの設定（Nginx 1.30.6）で、要求ごとに選ばれた location を X-Location ヘッダーで確かめた結果。">
+          <p>
+            <code>/assets/nothing.css</code> も存在しないファイルですが、この場合は <code>location /assets/</code> が選ばれます。そこの <code>try_files $uri =404</code> は、見つからなければ Nginx から 404 を返す指定です。配備の前後で古い HTML がすでにない CSS を参照したときも、この要求は Rails まで届きません。
+          </p>
+          <Figure n="27-4" title="要求の振り分け" caption="デモの設定（Nginx 1.30.6）で、要求ごとに選ばれた location を X-Location ヘッダーで確かめた結果。">
             <RoutingFigure />
           </Figure>
         </>
@@ -703,6 +874,10 @@ SERVER_PROTOCOL="HTTP/1.1"
               <code>proxy_http_version 1.1;</code> と <code>proxy_set_header Connection "";</code> を書きます。業務の環境では <code>nginx -v</code> でバージョンを確かめ、そのバージョンの説明書の既定値で判断します。
             </p>
           </Callout>
+          <p>
+            Ruby の更新で新旧の Puma を別々に起動したときは、この <code>upstream</code> の転送先を切り替えます。新版を確認してから設定を再読み込みする手順は
+            <ChapterLink n={23} section="ruby-upgrade">Ruby 更新時の Puma とトラフィックの切り替え</ChapterLink>で扱います。
+          </p>
         </>
       ),
     },
@@ -772,6 +947,15 @@ HTTP_HOST="127.0.0.1:3200"
             デモでは <code>HTTP_X_FORWARDED_FOR="172.29.0.1"</code>、<code>HTTP_X_REQUEST_START="t=1794394142.962"</code> が届き、<code>request.remote_ip</code>{' '}
             は Nginx のコンテナの IP（REMOTE_ADDR）ではなく、ブラウザー側の IP（172.29.0.1）になりました。Nginx のアドレスが RemoteIp の信頼するプロキシ（プライベートな IP アドレス。会社や家庭の中のネットワークで使う範囲のアドレスで、<ChapterLink n={25} section="ip-port" /> で扱います）に含まれるからです。
           </p>
+          <p>
+            次の図は、接続 1 から分かる値が、接続 2 のどのヘッダーに入って Rails に届くかを、デモの値で並べたものです。中段の左の箱の各行から、右の箱の同じ高さの行へ矢印が向いています。
+          </p>
+          <Figure
+            title="接続 1 の値を接続 2 のヘッダーで送る"
+            caption="この節と「プロセスと設定の階層」の節の実測の値をもとにした模式図。中段の矢印は、Nginx が左の値を右のヘッダーに入れることを表します。X-Request-Start は省略しました。"
+          >
+            <HeaderRelayFigure />
+          </Figure>
         </>
       ),
     },
@@ -814,10 +998,7 @@ GET /assets/turbo.min-9fd88cd5.js（Accept-Encoding: gzip） → Content-Length:
       body: (
         <>
           <p>
-            <ChapterLink n={23} section="cluster" />
-            で見たとおり、Puma は応答の書き込みを Rails を実行したスレッドで行います。回線の遅いクライアントに大きな応答を返すと、送り終わるまでそのスレッドがふさがります。Nginx の{' '}
-            <code>proxy_buffering</code>（既定で on）は、Puma からの応答をできるだけ速く受け取ってメモリーや一時ファイルに保存し、クライアントには Nginx が送ります
-            <Ref n={2} />。
+            Nginx の <code>proxy_buffering</code> は、Puma が返した応答を一時保存する設定です（既定は on）。たとえば利用者が大きなファイルを受信中でも、Puma が Nginx に渡し切れば、そのスレッドは別の記事を表示できます。<Ref n={2} />
           </p>
           <p>
             Puma をワーカー1・スレッド3 にして、64MB の応答を 200KB/s で受け取るクライアントを3つ動かし、3秒ごとに別の要求（/lab/info）の時間を測りました（Docker のネットワークの中から実行）。
@@ -837,17 +1018,17 @@ GET /assets/turbo.min-9fd88cd5.js（Accept-Encoding: gzip） → Content-Length:
           />
           <p>
             Puma の統計は数秒おきに更新されるので、少し遅れて表示されます。buffering on では、3つの大きな応答を Nginx がすぐに受け取ったので、6秒後にはスレッドがすべて空き、別の要求もすぐに処理されました。off
-            では3つのスレッドが応答の書き込みでふさがり、3秒後に送った要求は空きを 8.6 秒待ちました（図 24-5）。その後スレッドが1つ空いた理由は確かめていませんが、残りの2つは書き込みを続けています。
+            では3つのスレッドが応答の書き込みでふさがり、3秒後に送った要求は空きを 8.6 秒待ちました（図 27-5）。その後スレッドが1つ空いた理由は確かめていませんが、残りの2つは書き込みを続けています。
           </p>
           <p>
-            要求の側も同じで、<code>proxy_request_buffering</code>（既定で on）により、Nginx が要求の本文を受け取り終えてから Puma に送ります。Puma 自身も reactor のスレッドで要求を読み切ってからスレッドに渡すので、遅いアップロードでスレッドがふさがることはありません。
+            反対向きの転送を扱うのが <code>proxy_request_buffering</code> です。既定の on では、画像のアップロードなどでブラウザーから届く要求の本文を Nginx が受け取り終えてから Puma に送ります。<code>request</code> が付くほうはブラウザーから送るデータ、付かないほうは Rails が返すデータに適用されます。
           </p>
           <p>
-            <code>ActionController::Live</code> や Server-Sent Events のように少しずつ送る応答は、バッファリングされると届かなくなります。その応答だけ Rails で{' '}
+            <code>ActionController::Live</code> や Server-Sent Events のように少しずつ送る応答は、一時保存すると、途中のデータがブラウザーにすぐには届かないことがあります。その応答だけ Rails で{' '}
             <code>X-Accel-Buffering: no</code> のヘッダーを付けると、Nginx はその応答のバッファリングをやめます
             <Ref n={2} />。
           </p>
-          <Figure n="24-5" title="バッファリングの有無" caption="Nginx 1.30.6・Puma 8.0.2（1ワーカー・3スレッド）での実測をもとにした模式図。">
+          <Figure n="27-5" title="バッファリングの有無" caption="Nginx 1.30.6・Puma 8.0.2（1ワーカー・3スレッド）での実測をもとにした模式図。">
             <BufferFigure />
           </Figure>
         </>
@@ -921,11 +1102,17 @@ socketerror Error during WebSocket handshake: Unexpected response code: 404
 `}
           />
           <p>
-            Upgrade のヘッダーが無いと、ActionCable は WebSocket の要求と認めず 404 を返します（<ChapterLink n={17} section="actioncable" />
-            ）。Upgrade があっても、Host を $host にした設定では Origin の検査で拒否されました。本番環境では allowed_request_origins を設定していないので、ActionCable は Origin と Host
+            Upgrade のヘッダーが無いと、ActionCable は WebSocket の要求と認めず 404 を返します。Upgrade があっても、Host を $host にした設定では Origin の検査で拒否されました。本番環境では allowed_request_origins を設定していないので、ActionCable は Origin と Host
             が同じかどうかで判断します（<code>allow_same_origin_as_host</code>、既定で true）。ブラウザーの Origin は http://localhost:8080 で、$host はポート番号を落とした localhost
             なので一致しませんでした。<code>$http_host</code> にすると接続できました。本番環境では、allowed_request_origins に公開する URL を書いておくのが確実です。
           </p>
+          <p>次の図は、/cable の要求が通る検査を上から順に並べ、3通りの設定がそれぞれどこで止まったかを示したものです。左の列を上からたどり、「いいえ」のときは右の箱の 404 で止まります。</p>
+          <Figure
+            title="/cable の要求が通る検査"
+            caption="本番環境の設定の Puma（allowed_request_origins は未設定）に、Chrome から3通りの設定で接続した結果をもとにした図。太い青の矢印は、接続できた設定の経路です。右の箱と一番下の箱の2行目は Rails のログの文言です。"
+          >
+            <CableCheckFigure />
+          </Figure>
           <p>
             説明書によると、プロキシ先から60秒間データが来ないと、Nginx は WebSocket の接続を閉じます（<code>proxy_read_timeout</code>
             ）。ActionCable はサーバーから3秒ごとに ping（接続が切れていないことを確かめる短いメッセージ）を送るので、この既定値のままで切れません。

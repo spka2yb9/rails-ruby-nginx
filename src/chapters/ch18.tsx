@@ -3,15 +3,16 @@ import { withExplanations } from '../explanations/shared'
 import { explanation18 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { JobRetryFigure } from '../visuals/rails-figures'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const SQ = 'https://github.com/sidekiq/sidekiq/blob/v8.1.7'
 
-/* ---------- 図 18-3 投入から実行まで ---------- */
+/* ---------- 図 21-3 投入から実行まで ---------- */
 function PipelineFigure() {
   return (
     <Svg
-      id="18-3"
+      id="21-3"
       w={780}
       h={340}
       label="Rails のプロセスで perform_later を呼ぶと、ActiveJob がジョブを JSON の Hash に変換し、Sidekiq のアダプターが Sidekiq::ActiveJob::Wrapper のジョブとして Redis のリスト queue:default に LPUSH する。待ち時間を指定したジョブは ZSET の schedule に入る。Sidekiq のプロセスでは、5つのスレッドがそれぞれ BRPOP でリストからジョブを取り出し、Wrapper の perform が ActiveJob::Base.execute を呼び、Rails の Executor の中でジョブの perform が実行される。スケジュールのポーラーは schedule と retry の ZSET から時刻の来たジョブをリストに戻す。失敗したジョブは retry に入り、再試行を使い切ると dead に入る"
@@ -69,11 +70,11 @@ function PipelineFigure() {
   )
 }
 
-/* ---------- 図 18-4 再試行の状態遷移 ---------- */
+/* ---------- 図 21-4 再試行の状態遷移 ---------- */
 function RetryFigure() {
   return (
     <Svg
-      id="18-4"
+      id="21-4"
       w={780}
       h={300}
       label="ジョブはキューから取り出されて実行される。成功すれば終わる。retry_on を指定した例外なら、ActiveJob がジョブを schedule に入れ直し、executions が attempts に達するまで繰り返す。retry_on の回数を使い切った例外や、retry_on の無い例外は Sidekiq に伝わり、Sidekiq が retry に入れる。retry からは (回数の4乗 + 15 秒 + 揺らぎ) の後にキューに戻る。Sidekiq の再試行の回数（既定 25 回、約3週間）を使い切ると dead に入り、6か月後に消える。discard_on を指定した例外は、その場でジョブを捨てる"
@@ -86,8 +87,11 @@ function RetryFigure() {
       <Arrow x1={318} y1={142} x2={396} y2={142} />
       <Box x={398} y={120} w={150} h={44} lines={['retry_on の例外', '（回数が残っている）']} fs={11.5} fill="box2" subTone="muted" />
       <Arrow d="M473,120 L473,100 L80,100 L80,118" dashed />
-      <T x={276} y={88} anchor="middle" fs={11} tone="muted">
-        ActiveJob が schedule に入れ直す（wait の後）
+      <T x={160} y={72} anchor="middle" fs={11} tone="muted">
+        ActiveJob が schedule に
+      </T>
+      <T x={160} y={88} anchor="middle" fs={11} tone="muted">
+        入れ直す（wait の後）
       </T>
       <Arrow x1={318} y1={156} x2={396} y2={222} />
       <Box x={398} y={200} w={150} h={44} lines={['それ以外の例外', '（retry_on を使い切った）']} fs={11.5} fill="box" subTone="muted" />
@@ -108,7 +112,7 @@ function RetryFigure() {
   )
 }
 
-/* ---------- 図 18-1 perform_now と perform_later ---------- */
+/* ---------- 図 21-1 perform_now と perform_later ---------- */
 function SyncAsyncFigure() {
   const x0 = 150
   const sx = 220 // 1 秒あたりの幅
@@ -122,7 +126,7 @@ function SyncAsyncFigure() {
   )
   return (
     <Svg
-      id="18-1"
+      id="21-1"
       w={780}
       h={300}
       label="perform_now では、Rails のプロセスがその場で perform を実行し、2秒待ってから戻る。要求の処理の中で呼べば、応答もその分遅れる。perform_later では、Rails のプロセスはジョブを Redis のキューに入れて約0.01〜0.05秒で戻り、別のプロセスの Sidekiq がキューから取り出して perform を約2秒かけて実行する"
@@ -174,11 +178,11 @@ function SyncAsyncFigure() {
   )
 }
 
-/* ---------- 図 18-2 キューとワーカー ---------- */
+/* ---------- 図 21-2 キューとワーカー ---------- */
 function QueueWorkerFigure() {
   return (
     <Svg
-      id="18-2"
+      id="21-2"
       w={780}
       h={330}
       label="左は1つのプロセスの中のキュー（Thread::Queue）。受付のメインスレッドが仕事を入れ、ワーカーのスレッドが取り出して実行する。プロセスが終わるとキューの中身も消え、ほかのプロセスからは仕事を入れられない。右はプロセスの外の Redis に置いたキュー。Puma のワーカーや bin/rails runner の別々のプロセスが LPUSH でリスト queue:default に入れ、Sidekiq のプロセスのスレッドが BRPOP で取り出して実行する"
@@ -230,21 +234,132 @@ function QueueWorkerFigure() {
   )
 }
 
+/* ---------- COMMIT の前と後に実行されたジョブ（transaction の節） ---------- */
+function CommitTimingFigure() {
+  const x = (t: number) => 170 + (t - 55.5) * 230 // 横軸は 10:09:55.5 からの時刻
+  const commit = x(57.696)
+  return (
+    <Svg
+      id="ch18-commit-timing"
+      w={780}
+      h={280}
+      label="Rails のプロセスは1つのトランザクションで記事 10004 と 10005 を作り、perform_later を2回呼んでから2秒待って COMMIT した。ArticleNoteJob はその場で投入され、Sidekiq のプロセスが 55.666 に実行を始めたが、COMMIT の前なので Sidekiq の接続からは記事 10004 が見つからず、55.727 に DeserializationError で失敗した。AfterCommitNoteJob の投入は COMMIT まで保留され、COMMIT の後に投入されて 57.695 に実行を始め、57.704 に記事 10005 を読んで実行した"
+    >
+      <rect x={170} y={28} width={commit - 170} height={162} rx={6} fill="none" stroke="var(--fig-line)" strokeDasharray="5 4" />
+      <T x={180} y={44} fs={11.5} tone="muted">
+        COMMIT 前：記事 10004・10005 は Sidekiq の接続から見つからない
+      </T>
+      <Arrow x1={commit} y1={28} x2={commit} y2={190} plain />
+      <T x={698} y={44} fs={11.5} tone="acc">
+        COMMIT 後
+      </T>
+      <T x={698} y={62} fs={11.5} tone="muted">
+        見つかる
+      </T>
+
+      <T x={20} y={92} fs={11.5}>
+        Rails のプロセス
+      </T>
+      <T x={200} y={66} fs={11.5} tone="muted">
+        perform_later を2回
+      </T>
+      <rect x={x(55.668)} y={80} width={commit - x(55.668)} height={24} rx={3} fill="var(--fig-box)" stroke="var(--fig-line)" />
+      <T x={x(55.668) + 8} y={92} fs={11.5}>
+        2秒待つ。AfterCommitNoteJob の投入は COMMIT まで保留
+      </T>
+
+      <Arrow x1={x(55.666)} y1={104} x2={x(55.666)} y2={156} />
+      <T x={x(55.666) + 8} y={130} fs={11.5} tone="muted">
+        その場で投入
+      </T>
+      <Arrow d={`M${commit + 1},96 L690,96 L690,156`} />
+      <T x={698} y={120} fs={11.5} tone="muted">
+        COMMIT 後に
+      </T>
+      <T x={698} y={138} fs={11.5} tone="muted">
+        投入
+      </T>
+
+      <T x={20} y={170} fs={11.5}>
+        Sidekiq のプロセス
+      </T>
+      <rect x={x(55.666)} y={158} width={x(55.727) - x(55.666)} height={24} rx={2} fill="var(--fig-box5)" stroke="var(--fig-danger)" />
+      <T x={x(55.727) + 8} y={170} fs={11.5} tone="danger">
+        ArticleNoteJob：記事 10004 が見つからず DeserializationError
+      </T>
+      <T x={x(55.727) + 8} y={206} fs={11.5} tone="muted">
+        55.666 開始、55.727 に失敗
+      </T>
+      <rect x={688} y={158} width={4} height={24} rx={1} fill="var(--fig-box)" stroke="var(--fig-line)" />
+      <T x={770} y={206} anchor="end" fs={11.5}>
+        AfterCommitNoteJob：記事 10005 を読めた
+      </T>
+      <T x={770} y={224} anchor="end" fs={11.5} tone="muted">
+        57.695 開始、57.704 に実行
+      </T>
+
+      <T x={20} y={250} fs={11.5} tone="muted">
+        時刻
+      </T>
+      <line x1={170} y1={250} x2={x(58)} y2={250} stroke="var(--fig-line)" />
+      {[56, 57, 58].map((t) => (
+        <g key={t}>
+          <line x1={x(t)} y1={246} x2={x(t)} y2={254} stroke="var(--fig-line)" />
+          <T x={x(t)} y={266} anchor="middle" fs={11.5} tone="muted" mono>
+            {`10:09:${t}`}
+          </T>
+        </g>
+      ))}
+    </Svg>
+  )
+}
+
+/* ---------- 停止の仕方と実行中のジョブ（idempotency の節） ---------- */
+function ShutdownFigure() {
+  return (
+    <Svg
+      id="ch18-shutdown"
+      w={780}
+      h={232}
+      label="Sidekiq が実行中のジョブは、BRPOP で取り出した時点で queue:default から削除されている。TERM を受けると、Sidekiq はジョブの終了を待つ。ジョブが終わらないまま先に Sidekiq のタイムアウトが来ると、ジョブを打ち切って queue:default に戻し、再起動の後に最初から実行する。デモでは 09.981 に Redis へ戻し、16.444 に最初から実行した。先にコンテナやサービス管理側の停止猶予が切れると、SIGKILL などで強制終了され、戻す処理が動かないので、ジョブは失われる"
+    >
+      <Box x={20} y={104} w={170} h={48} lines={['実行中のジョブ', 'queue:default には無い']} fs={11.5} />
+      <Arrow x1={190} y1={128} x2={208} y2={128} />
+      <Box x={210} y={104} w={160} h={48} lines={['TERM を受ける', 'ジョブの終了を待つ']} fs={11.5} />
+      <Arrow d="M370,128 L395,128 L395,60 L418,60" />
+      <Arrow d="M370,128 L395,128 L395,196 L418,196" />
+
+      <T x={420} y={22} fs={11.5} tone="muted">
+        先に Sidekiq のタイムアウトが来た
+      </T>
+      <Box x={420} y={36} w={170} h={48} lines={['打ち切って', 'queue:default に戻す']} fs={11.5} />
+      <Arrow x1={590} y1={60} x2={608} y2={60} />
+      <Box x={610} y={36} w={160} h={48} lines={['再起動の後に', '最初から実行']} fs={11.5} />
+      <T x={420} y={102} fs={11.5} tone="muted">
+        デモ：09.981 に Redis へ戻し、16.444 に最初から実行
+      </T>
+
+      <T x={420} y={158} fs={11.5} tone="muted">
+        先に停止猶予が切れた
+      </T>
+      <Box x={420} y={172} w={170} h={48} lines={['SIGKILL などで', '強制終了']} fs={11.5} />
+      <Arrow x1={590} y1={196} x2={608} y2={196} />
+      <Box x={610} y={172} w={160} h={48} lines={['戻す処理が動かない', 'ジョブは失われる']} fs={12.5} fill="box5" subTone="danger" />
+    </Svg>
+  )
+}
+
 const ch18: Chapter = {
   number: 18,
   part: 4,
   title: '非同期処理（ActiveJob・Sidekiq）',
   summary:
-    '時間のかかる処理を要求の処理の外で行う理由、キューとワーカーと Redis の働き、ActiveJob のジョブの書き方と perform_later を、デモの実行結果で確かめてから、perform_later で投入したジョブがどんな JSON になり、Redis を経て Sidekiq のスレッドで実行されるかを、Redis の中身とログで追います。再試行と Dead、ActiveJob 経由と Sidekiq 直接の違い、トランザクションと投入の時刻、Solid Queue との違い、冪等性も扱います。',
+    'メールの送信が終わるまで利用者を待たせずに、先に画面を返したいことがあります。仕事を登録する Rails のコードと、後でそれを取り出して実行するプログラムを別々に追います。',
   goals: [
-    'perform_now と perform_later の違いと、時間のかかる処理を非同期にする理由を説明できる',
-    'キューとワーカーの役割と、キューをプロセスの外の Redis に置く理由を説明できる',
-    'ActiveJob が引数を JSON に変換する方法（GlobalID・シリアライザー）と、レコードが消えたときの例外を説明できる',
-    'Sidekiq が Redis のどのキーを使い、どのスレッドがジョブを取り出して実行するかを説明できる',
-    'ActiveJob の retry_on と Sidekiq の再試行の関係、retry と dead の集合を説明できる',
-    'ActiveJob 経由と Sidekiq::Job の直接利用の違いを説明できる',
-    'トランザクションの中で投入したジョブが COMMIT 前に実行される問題と、enqueue_after_transaction_commit を説明できる',
-    'Solid Queue の仕組みの概要と、ジョブを冪等にする必要がある理由を説明できる',
+    'perform_later を呼ぶ側と、キューから取り出して perform を実行する側を区別できる',
+    '保存したレコードをジョブに渡すとき、DB への変更が確定する時点を考えられる',
+    '途中で失敗して同じ仕事が再実行されても、二重に更新しない方法を説明できる',
+    'Sidekiq と Solid Queue の仕事の保存先を区別し、遅れや再試行の状況を調べられる',
   ],
   prerequisites: [8, 14, 15],
   sections: [
@@ -302,14 +417,14 @@ perform_later: 0.014 秒  job_id=08dd7d1e-ef5b-4bb6-8386-c9da7b29ca66
           />
           <p>
             perform_now はジョブの perform をその場で実行するので、2秒待ってから戻りました。コントローラーのアクションの中で呼べば、応答もその分だけ遅れます。perform_later はジョブをキューに入れて 0.05
-            秒以内に戻りました。perform は、Sidekiq という別のプロセスが後で実行します（図 18-1）。呼び出した処理が終わるのを待ってから次へ進む方式を同期、終わるのを待たずに先へ進む方式を
+            秒以内に戻りました。perform は、Sidekiq という別のプロセスが後で実行します（図 21-1）。呼び出した処理が終わるのを待ってから次へ進む方式を同期、終わるのを待たずに先へ進む方式を
             <Term en="asynchronous">非同期</Term>と呼びます。Rails のガイドは時間のかかる仕事を要求と応答のやり取りの外に出し、要求への応答を速く保つことを、バックグラウンドのジョブの目的としています
             <Ref n={2} />。
           </p>
           <p>
             非同期にすると、応答を返した時点では、メールはまだ送られていません。送信に失敗しても、利用者への応答はすでに成功として返っています。失敗したジョブをやり直す仕組みは「再試行と Dead」の節で扱います。
           </p>
-          <Figure n="18-1" title="perform_now と perform_later" caption="デモでの実測（bin/rails runner と Sidekiq のログの時刻）をもとにした模式図。">
+          <Figure n="21-1" title="perform_now と perform_later" caption="デモでの実測（bin/rails runner と Sidekiq のログの時刻）をもとにした模式図。">
             <SyncAsyncFigure />
           </Figure>
         </>
@@ -413,9 +528,9 @@ $ redis-cli RPOP demo18
           />
           <p>
             BRPOP は、別のプロセスが LPUSH するまで戻らず、値が入るとすぐに受け取りました。Sidekiq のワーカーはこの BRPOP で Redis のリストからジョブを取り出します。Puma のどのワーカーが入れたジョブも同じ
-            Redis のリストに並び、Sidekiq のプロセスが取り出して実行します（図 18-2）。
+            Redis のリストに並び、Sidekiq のプロセスが取り出して実行します（図 21-2）。
           </p>
-          <Figure n="18-2" title="キューとワーカー" caption="queue_worker.rb の実行結果と、redis-cli での実測をもとにした模式図。">
+          <Figure n="21-2" title="キューとワーカー" caption="queue_worker.rb の実行結果と、redis-cli での実測をもとにした模式図。">
             <QueueWorkerFigure />
           </Figure>
         </>
@@ -523,9 +638,17 @@ end
 `}
           />
           <p>
-            <code>ArticleNoteJob.perform_later(article, note: "メモ", tags: [:urgent])</code> を呼ぶと、Rails のプロセスでは引数を JSON に変換して Redis に入れるところまでを行い、すぐに戻ります。実行は別のプロセス（Sidekiq）が受け持ちます（図 18-3）。
+            このジョブは Notice18Job と違い、記事の id ではなく記事のオブジェクトを受け取ります。<code>note:</code> と <code>tags:</code> はキーワード引数です。<code>executions</code> は ActiveJob
+            がジョブごとに数えている実行の回数で、「再試行と Dead」の節で使います。
           </p>
-          <Figure n="18-3" title="投入から実行まで" caption="Sidekiq 8.1.7 の fetch.rb・processor.rb・scheduled.rb・job_retry.rb と、デモでの Redis の中身をもとにした模式図。">
+          <p>
+            <code>ArticleNoteJob.perform_later(article, note: "メモ", tags: [:urgent])</code> を呼ぶと、Rails のプロセスでは引数を JSON に変換して Redis に入れるところまでを行い、すぐに戻ります。実行は別のプロセス（Sidekiq）が受け持ちます（図 21-3）。
+          </p>
+          <p>
+            図 21-3 は左から右へ読みます。左の枠が投入する側の Rails のプロセス、中央が Redis、右の枠が実行する側の Sidekiq のプロセスです。左の枠の job.serialize は次の「引数のシリアライズと GlobalID」の節で扱います。アダプターと
+            Wrapper、中央の queue:default と schedule、右の枠の Processor とポーラーは「Sidekiq の構成と Redis の中身」の節で、retry と dead は「再試行と Dead」の節で扱います。
+          </p>
+          <Figure n="21-3" title="投入から実行まで" caption="Sidekiq 8.1.7 の fetch.rb・processor.rb・scheduled.rb・job_retry.rb と、デモでの Redis の中身をもとにした模式図。">
             <PipelineFigure />
           </Figure>
         </>
@@ -560,7 +683,32 @@ end
     end
 `}
           />
-          <p>上の呼び出しの <code>arguments</code> は次のようになりました。</p>
+          <p>Hash のキーのうち、ログや調査で目にするものは次のとおりです。</p>
+          <ul>
+            <li>
+              <code>job_class</code>：ジョブのクラス名の文字列（<code>"ArticleNoteJob"</code>）です。実行する側は、この名前からクラスを探してジョブのオブジェクトを作り直します。キューにジョブが残っているうちにクラス名を変えると、実行する側は古い名前のクラスを見つけられず、<code>ActiveJob::UnknownJobClassError</code>{' '}
+              になります。
+            </li>
+            <li>
+              <code>job_id</code> と <code>queue_name</code>：ログの Job ID と、<code>queue_as</code> で指定したキューの名前です。
+            </li>
+            <li>
+              <code>arguments</code>：perform_later に渡した引数です。<code>serialize_arguments_if_needed</code> が、JSON で表せる形に変換します。変換の結果はこの後で見ます。
+            </li>
+            <li>
+              <code>executions</code>：これまでに実行した回数です。投入した時点では 0 で、実行のたびに1増えます。
+            </li>
+            <li>
+              <code>locale</code> と <code>timezone</code>：投入した時点のロケール（表示に使う言語の設定）とタイムゾーンです。実行する側は、この2つに切り替えてから perform を呼びます。
+            </li>
+            <li>
+              <code>enqueued_at</code>：投入した時刻です。<code>iso8601(9)</code> は小数点以下9桁までの文字列にするので、「ActiveJob のジョブの書き方」の節のログの <code>enqueued at 2026-11-16T07:07:53.437226107Z</code>{' '}
+              の形になります。
+            </li>
+          </ul>
+          <p>
+            前の節の <code>ArticleNoteJob.perform_later(article, note: "メモ", tags: [:urgent])</code> では、<code>arguments</code> は次のようになりました。配列の1つ目が article、2つ目がキーワード引数の Hash です。
+          </p>
           <Code
             lang="json"
             code={`
@@ -583,6 +731,10 @@ end
             <Ref n={1} />。
           </p>
           <p>
+            記事のオブジェクトを渡しても、投入した時点のタイトルや本文はジョブに保存されません。投入の後で記事が更新されると、ジョブは更新後の値を読みます。投入した時点の値を使いたいときは、<code>perform_later(article, old_title: article.title)</code>{' '}
+            のように、その値を引数として渡します。
+          </p>
+          <p>
             投入してから実行するまでの間にレコードが削除されると、読み直しに失敗します。デモで、記事を作って投入した直後に削除したところ、Sidekiq のログに次の例外が出ました。
           </p>
           <Code
@@ -592,8 +744,29 @@ ActiveJob::DeserializationError (Error while trying to deserialize arguments: Co
 `}
           />
           <p>
+            <code>Couldn't find Article with 'id'="10003"</code> の部分は、実行する側が GlobalID から <code>Article.find</code> で読み直したときに、id が 10003 の行が無かったことを示しています。Notice18Job のように id
+            を渡して perform の中で find するジョブでは、同じ場面で <code>ActiveRecord::RecordNotFound</code> になります。
+          </p>
+          <p>
             この例外が起きたジョブは何度再試行しても成功しません。削除が起こりうるジョブでは、<code>discard_on ActiveJob::DeserializationError</code> でジョブを捨てるようにします
-            <Ref n={2} />。
+            <Ref n={2} />。<code>discard_on</code> はジョブのクラスの中に書きます。<code>rails new</code> で作られる app/jobs/application_job.rb には、この行がコメントの形で入っています。
+          </p>
+          <Code
+            lang="ruby"
+            title="レコードが削除されていたらジョブを捨てる"
+            code={`
+class ArticleNoteJob < ApplicationJob
+  queue_as :default
+  discard_on ActiveJob::DeserializationError
+
+  def perform(article, note:, tags: [])
+    # ...
+  end
+end
+`}
+          />
+          <p>
+            同じ例外は、レコードが削除されたときのほかに、レコードを作った側がまだ COMMIT していないときにも起きます。その場合の原因と直し方は「トランザクションと投入の時刻」の節で扱います。
           </p>
         </>
       ),
@@ -603,7 +776,11 @@ ActiveJob::DeserializationError (Error while trying to deserialize arguments: Co
       title: 'Sidekiq の構成と Redis の中身',
       body: (
         <>
+          <p>
+            この節では、perform_later が Redis のどのキーに何を入れ、Sidekiq のプロセスがそれをどう取り出して perform を呼ぶかを確かめます。ジョブが実行されないときや遅れて実行されるときに、Redis のどのキーを調べるかがここからわかります。
+          </p>
           <p>Sidekiq のアダプターは、ActiveJob のジョブを Sidekiq 自身のジョブ（Sidekiq::ActiveJob::Wrapper）に包んで投入します。このアダプターは Sidekiq の gem にあります。Rails 本体にも sidekiq のアダプターがありますが、8.1.4.1 では「Rails 8.2 で削除するので、Sidekiq 7.3.3 以上の gem のアダプターを使う」という非推奨の警告を出します。Sidekiq の gem を読み込むと、gem 側のアダプターが Rails のものを置き換えます。</p>
+          <p>次の引用で、Wrapper が実行のときに何を呼ぶかと、アダプターが投入のときに何を呼ぶかを確かめます。</p>
           <Code
             lang="ruby"
             title="sidekiq: lib/active_job/queue_adapters/sidekiq_adapter.rb（7〜18行目、63〜71行目から抜粋）"
@@ -633,6 +810,19 @@ ActiveJob::DeserializationError (Error while trying to deserialize arguments: Co
         end
 `}
           />
+          <ul>
+            <li>
+              <code>include Sidekiq::Job</code>：このモジュールを include したクラスは Sidekiq のジョブになります（「ActiveJob 経由と Sidekiq の直接利用」の節）。Sidekiq から見ると、ActiveJob のジョブはどれも Wrapper という1つのクラスのジョブです。
+            </li>
+            <li>
+              <code>perform(job_data)</code>：Sidekiq がジョブを実行するときに呼ぶメソッドです。<code>job_data</code> は前の節の serialize の Hash で、<code>jid</code> は Sidekiq がジョブに付けた ID です。<code>::ActiveJob::Base</code>{' '}
+              の先頭の <code>::</code> は、Sidekiq::ActiveJob ではなく Rails の ActiveJob を指すための書き方です。<code>execute</code> は、Hash からジョブのオブジェクトを作り直して perform を呼びます。
+            </li>
+            <li>
+              <code>enqueue(job)</code>：perform_later が最後に呼ぶメソッドです。<code>job</code> は ActiveJob のジョブのオブジェクトです。<code>Wrapper.set(options)</code> で元のクラス（wrapped）とキューの名前（queue）を指定し、<code>perform_async</code>{' '}
+              に serialize の Hash を渡します。perform_async は Sidekiq の投入のメソッドで、引数を JSON にして Redis に入れ、jid を返します。<code>options[:profile]</code> の行は、この流れには関係しません。
+            </li>
+          </ul>
           <p>投入した直後に Redis を見ると、キーは2つで、リストの queue:default に次の JSON が入っていました。</p>
           <Code
             lang="json"
@@ -650,6 +840,10 @@ KEYS: ["queue:default", "queues"]
 }
 `}
           />
+          <p>
+            <code>queues</code> は、Sidekiq がキューの名前を集めて入れておくキーです。JSON の <code>class</code> は Wrapper で、元のジョブのクラス名は <code>wrapped</code> に入っています。<code>retry</code> が true なのは、Sidekiq
+            の再試行（次の節）が有効であることを示します。<code>created_at</code> と <code>enqueued_at</code> はミリ秒単位の UNIX 時刻で、1794391677710 は 2026年11月11日 10時7分57秒（UTC）です。
+          </p>
           <p>
             ActiveJob の Hash は <code>args</code> の1つ目の要素にそのまま入っています。<code>jid</code> は Sidekiq のジョブの ID で、ActiveJob 側では <code>provider_job_id</code>{' '}
             になります。<code>set(wait: 1.hour)</code> で投入すると、リストではなく ZSET の <code>schedule</code> に、実行時刻（UNIX 時刻）をスコアとして入りました。
@@ -671,6 +865,11 @@ app/jobs/flaky_job.rb:5:in 'FlakyJob#perform'
   from sidekiq-8.1.7/lib/sidekiq/processor.rb:228:in 'Sidekiq::Processor#execute_job'
 `}
           />
+          <p>
+            FlakyJob は次の節で使う、例外を投げるデモのジョブです。下の行から順に読みます。一番下の processor.rb の行は、Sidekiq のスレッド（Processor）が取り出したジョブを実行している所です。その上の sidekiq_adapter.rb の14行目は、先ほど引用した Wrapper の perform の中の{' '}
+            <code>::ActiveJob::Base.execute</code> の行です。execution.rb の27行目から reloader.rb までの4行は、execute がジョブを Executor の中で実行している部分です。上の2行で ActiveJob の perform_now が FlakyJob の perform
+            を呼び、flaky_job.rb の5行目で例外が起きました。業務でジョブの例外のバックトレースを読むときも、sidekiq と activejob の行より上にある app/jobs の行が、アプリケーションのコードで例外が起きた場所です。
+          </p>
           <p>
             <code>ActiveJob::Base.execute</code> は、ジョブを Reloader（Executor）の中で実行します。<ChapterLink n={8} section="executor" />
             で見たとおり、Executor はリクエストと同じように、クエリキャッシュ（同じ SQL の結果をその間だけ覚えておく機能）の有効化や接続の返却をジョブの前後で行います。Sidekiq の5つのスレッドは同時に ActiveRecord を使うので、Sidekiq
@@ -736,9 +935,9 @@ FlakyJob retry=1 retry_count=1 error=RuntimeError: FlakyJob の失敗 n=1 入っ
           />
           <p>
             RetryOnJob は ActiveJob の再試行で3回実行された後、Sidekiq の retry に入りました。ActiveJob の再試行は Hash の <code>executions</code> に回数を持ち、Sidekiq の再試行は{' '}
-            <code>retry_count</code> に回数を持ちます。retry_on の回数を使い切った後も Sidekiq の再試行（既定 25 回、約3週間）が続くので、両方を使うと、実行の回数と期間がその分だけ増えます。どちらで回数を管理するかを決めておきます（図 18-4）。FlakyJob は、最初の失敗から約22秒後に再試行され、もう一度失敗して dead に入りました。
+            <code>retry_count</code> に回数を持ちます。retry_on の回数を使い切った後も Sidekiq の再試行（既定 25 回、約3週間）が続くので、両方を使うと、実行の回数と期間がその分だけ増えます。どちらで回数を管理するかを決めておきます（図 21-4）。FlakyJob は、最初の失敗から約22秒後に再試行され、もう一度失敗して dead に入りました。
           </p>
-          <Figure n="18-4" title="再試行の状態遷移" caption="activejob 8.1.4.1 の exceptions.rb と sidekiq 8.1.7 の job_retry.rb を読み、デモのログで確かめてまとめた模式図。">
+          <Figure n="21-4" title="再試行の状態遷移" caption="activejob 8.1.4.1 の exceptions.rb と sidekiq 8.1.7 の job_retry.rb を読み、デモのログで確かめてまとめた模式図。">
             <RetryFigure />
           </Figure>
         </>
@@ -791,7 +990,7 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
                 </tr>
                 <tr>
                   <td>テスト</td>
-                  <td>have_enqueued_job などの ActiveJob のマッチャー（第20章）</td>
+                  <td>have_enqueued_job などの ActiveJob のマッチャー（第23章）</td>
                   <td>Sidekiq::Testing（fake・inline）</td>
                 </tr>
                 <tr>
@@ -814,9 +1013,8 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
       body: (
         <>
           <p>
-            Redis はデータベースのトランザクションとは無関係なので、トランザクションの中で <code>perform_later</code> を呼ぶと、COMMIT を待たずにジョブが Redis に入ります。Sidekiq
-            がすぐに取り出すと、まだ COMMIT されていない行は、Sidekiq の接続からは見えません（<ChapterLink n={15} section="isolation" />
-            ）。デモで、トランザクションの中で記事を作って投入し、2秒待ってから COMMIT しました。
+            デモでは1つのトランザクションで記事を2件作り、それぞれの記事を読むジョブを <code>perform_later</code> で登録しました。片方だけに「COMMIT の後で投入する」設定を付けています。
+            Rails 側で2秒待ってから記事を確定すると、Sidekiq 側では次の結果になりました。
           </p>
           <Code
             lang="text"
@@ -834,9 +1032,15 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
 `}
           />
           <p>
-            ArticleNoteJob は COMMIT の2秒前に実行され、記事を見つけられませんでした。AfterCommitNoteJob には <code>self.enqueue_after_transaction_commit = true</code>{' '}
-            を書いてあり、COMMIT の後に投入されて正常に実行されています。この設定は、投入を <code>ActiveRecord.after_all_transactions_commit</code> に回します。
+            <code>ArticleNoteJob</code> は記事 10004 を見つけられず、引数を復元する段階で失敗しました。その時点では記事を作った側だけが変更を読めます（<ChapterLink n={38} section="isolation" />）。
+            <code>AfterCommitNoteJob</code> は記事 10005 を読めています。2つの違いは、確定を待つ <code>self.enqueue_after_transaction_commit = true</code> を後者に指定したことです。
           </p>
+          <p>
+            次の図は、上のログの時刻を横軸に並べたものです。上の段が Rails のプロセス、下の段が Sidekiq のプロセスで、破線の枠が COMMIT までの期間です。ArticleNoteJob は枠の中で実行され、AfterCommitNoteJob は COMMIT の後に実行されています。
+          </p>
+          <Figure title="COMMIT の前と後に実行されたジョブ" caption="上のログの時刻をもとにした図。縦の矢印は、Redis への投入から Sidekiq が取り出すまでをまとめて描いている。BEGIN の時刻はログに無いので、枠の左端は時刻を表さない。">
+            <CommitTimingFigure />
+          </Figure>
           <Code
             lang="ruby"
             title="activejob/lib/active_job/enqueue_after_transaction_commit.rb（25〜47行目から抜粋）"
@@ -860,9 +1064,11 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
 `}
           />
           <p>
-            Rails 8.1 では、この設定はジョブのクラスごとに持ち、既定値は false です。トランザクションの外で呼んだ場合は、すぐに投入されます。ロールバックされたときは投入されません
-            <Ref n={7} />。<code>after_create_commit</code> の中から投入する書き方（<ChapterLink n={14} section="after-commit" />
-            ）でも同じ問題を避けられます。
+            コードの2つの <code>super</code> は、どちらもキューへの投入処理を呼びます。Rails 8.1 の既定値 <code>false</code> では、末尾の <code>else</code> からその場で呼びます。
+            <code>true</code> では <code>super</code> が <code>after_all_transactions_commit</code> のブロックの中にあります。トランザクションが開いていれば確定後に実行され、取り消されれば実行されません。開いているトランザクションがなければ、その場で実行されます。<Ref n={7} />
+          </p>
+          <p>
+            設定はジョブのクラスごとに決められます。記事を新規作成したときだけ実行したい処理なら、記事の <code>after_create_commit</code> からジョブを登録する方法もあります（<ChapterLink n={14} section="after-commit" />）。
           </p>
           <Callout kind="v72">
             <p>
@@ -873,6 +1079,48 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
               に <code>self.enqueue_after_transaction_commit = true</code> を書くかどうかを決めます。
             </p>
           </Callout>
+        </>
+      ),
+    },
+    {
+      id: 'idempotency',
+      title: '再試行や停止に備える冪等性',
+      body: (
+        <>
+          <p>
+            途中まで処理したジョブが再試行されると、同じ操作がもう一度実行される場合があります。操作を繰り返しても1回実行したときと同じ結果になる性質を、冪等性と呼びます。Sidekiq では、ワーカーを停止したときにも再実行が起こり得ます。デモでは20秒かかるジョブの実行中に Sidekiq を停止（TERM、タイムアウト5秒）し、再び起動しました。
+          </p>
+          <Code
+            lang="text"
+            code={`
+10:09:05.026 jid=bb65ac649e53e9e9b6441026 class=LongJob: LongJob 開始 n=1 executions=1
+10:09:05.477 Shutting down
+10:09:05.978 Pausing to allow jobs to finish...
+10:09:09.980 Terminating 1 busy threads
+10:09:09.981 Pushed 1 jobs back to Redis
+10:09:10.484 Bye!
+（再起動）
+10:09:16.444 jid=bb65ac649e53e9e9b6441026 class=LongJob: LongJob 開始 n=1 executions=1
+`}
+          />
+          <p>
+            タイムアウトまでに終わらなかったジョブは、途中で打ち切られて Redis のキューに戻され（fetch.rb の <code>bulk_requeue</code>）、再起動後に最初から実行されました。デプロイのたびに起きうることです。一方、BRPOP は取り出した要素をリストから削除し、戻す処理は正常な停止のときにしか実行されません。そのため、プロセスが
+            SIGKILL などで強制終了されると、実行中のジョブは Redis に戻らず失われます。
+          </p>
+          <p>
+            次の図は、実行中のジョブが停止の仕方でどうなるかを、左から右へ並べたものです。上の段はデモのログと同じ流れで、下の段は Sidekiq のタイムアウトより先に、コンテナやサービス管理側の停止猶予が切れた場合です。
+          </p>
+          <Figure title="停止の仕方と実行中のジョブ" caption="この節のデモのログと fetch.rb の bulk_requeue をもとにした模式図。タイムアウトまでにジョブが終わった場合は省略している。停止猶予は、コンテナやサービス管理側が強制終了するまでに待つ時間（「Sidekiq の停止・監視とキューの移行」の節）。">
+            <ShutdownFigure />
+          </Figure>
+          <p>このため、ジョブは次のように書きます。</p>
+          <ul>
+            <li>2回実行されても結果が同じになるようにする（冪等にする）。例：状態を確かめてから処理する、送信済みであることを同じトランザクションで記録する、一意の索引（同じ値の行を2つ入れられないようにする索引）で二重登録を防ぐ</li>
+            <li>外部の API への送信など、取り消せない処理は、ジョブを小さく分けて、送信の前後で状態を保存する</li>
+            <li>処理時間の長いジョブは、Sidekiq の停止のタイムアウト（既定 25 秒）と、デプロイの手順の待ち時間を合わせる</li>
+          </ul>
+          <JobRetryFigure />
+          <p>同じ処理が2回実行されても結果を変えない書き方は、<ChapterLink n={83} /> で原則として詳しく扱います。</p>
         </>
       ),
     },
@@ -922,7 +1170,7 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
                 </tr>
                 <tr>
                   <td>実行中にプロセスが落ちたジョブ</td>
-                  <td>正常な停止なら Redis に戻す。強制終了では失われる（次節）</td>
+                  <td>正常な停止なら Redis に戻す。強制終了では失われる（<ChapterLink n={18} section="idempotency">停止時の実測</ChapterLink>）</td>
                   <td>ハートビートが途絶えたプロセスのジョブを失敗として記録する</td>
                 </tr>
               </tbody>
@@ -937,36 +1185,70 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
       ),
     },
     {
-      id: 'idempotency',
-      title: '冪等性',
+      id: 'queue-planning',
+      title: "キューの分割・優先度・同時実行",
       body: (
         <>
           <p>
-            同じジョブが2回以上実行されることがあります。再試行で同じジョブが実行されるのに加え、Sidekiq を停止したときも起きます。20秒かかるジョブの実行中に Sidekiq を停止（TERM、タイムアウト5秒）し、再び起動しました。
+            購入確認メールと夜間集計を同じキューで処理すると、長い集計ジョブが順番を占める場合があります。<code>queue_as :mailers</code> のように用途で分け、配備時にどのワーカーがどのキューを処理するかを設定します。<code>MyJob.set(wait: 10.minutes).perform_later(...)</code> や <code>wait_until:</code> は最初に実行可能になる時刻を指定します。混雑時の実行開始は、その時刻より後になります。優先度を設定する API と、実際の順序を決めるバックエンドの設定を合わせて確認します。<Ref n={15} />
+          </p>
+          <p>
+            Sidekiq のキューを選ぶには、利用する環境の <code>config.active_job.queue_adapter = :sidekiq</code> と、投入側の Web・コンソールと実行側の Sidekiq が同じキュー用 Redis を使うことを確かめます。<code>Sidekiq.configure_client</code> と <code>Sidekiq.configure_server</code> に対応する接続設定を渡します。キャッシュ用 Redis と共用するなら、これらのデータの寿命と破棄方針が違うことも確認します（<ChapterLink n={22} section="rails-cache">Redis の容量と削除方針</ChapterLink>）。<Ref n={16} /><Ref n={17} />
+          </p>
+          <p>
+            Sidekiq の <code>config/sidekiq.yml</code> では、並行に動くスレッド数（<code>:concurrency</code>）と処理するキューを設定できます。起動は <code>bundle exec sidekiq -C config/sidekiq.yml</code> です。キューの並び順を指定するモードでは先頭に仕事があり続けると後続を待たせ、重みを指定するモードでは選ばれる傾向を変えます。急ぐキューに別プロセスを割り当てれば、他のキューの負荷から分けられます。設定したスレッドが同時に DB や接続先を使うことを考え、Puma 用と合わせて接続数を見積もります（<ChapterLink n={23} section="sizing">プロセスごとの接続数</ChapterLink>）。<Ref n={18} />
+          </p>
+          <p>
+            Solid Queue は <code>bin/jobs</code> で起動できます。<code>config/queue.yml</code> のワーカーが取得するキューとプロセス・スレッド数、ディスパッチャーが予定時刻に達した仕事を配送する構成を見ます。<code>queue_with_priority</code> やジョブの <code>limits_concurrency</code> を使う場合は、ワーカーが処理するキューの順序と、同時実行を制限する単位も確かめます。DB バックエンドへ負荷が集まる構成では、アプリ用とキュー用の接続や DB の負荷を観測します。<Ref n={19} /><Ref n={15} />
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'recurring-jobs',
+      title: "定期実行と、実行予定の監視",
+      body: (
+        <>
+          <p>
+            一回だけ未来に実行する予約と、毎日などの周期で新しい仕事を作る定期実行があります。Solid Queue では <code>config/recurring.yml</code> に環境、ジョブ、スケジュールを書けます。たとえば次は毎日午前2時に集計を投入する設定です。スケジューラーが動くプロセス、実行時刻のタイムゾーン、休日の扱いを配備先で確認します。<Ref n={19} />
           </p>
           <Code
-            lang="text"
+            lang="yaml"
+            title={"config/recurring.yml"}
             code={`
-10:09:05.026 jid=bb65ac649e53e9e9b6441026 class=LongJob: LongJob 開始 n=1 executions=1
-10:09:05.477 Shutting down
-10:09:05.978 Pausing to allow jobs to finish...
-10:09:09.980 Terminating 1 busy threads
-10:09:09.981 Pushed 1 jobs back to Redis
-10:09:10.484 Bye!
-（再起動）
-10:09:16.444 jid=bb65ac649e53e9e9b6441026 class=LongJob: LongJob 開始 n=1 executions=1
+production:
+  refresh_article_counts:
+    class: RefreshArticleCountsJob
+    schedule: every day at 2am
 `}
           />
           <p>
-            タイムアウトまでに終わらなかったジョブは、途中で打ち切られて Redis のキューに戻され（fetch.rb の <code>bulk_requeue</code>）、再起動後に最初から実行されました。デプロイのたびに起きうることです。一方、BRPOP は取り出した要素をリストから削除し、戻す処理は正常な停止のときにしか実行されません。そのため、プロセスが
-            SIGKILL などで強制終了されると、実行中のジョブは Redis に戻らず失われます。
+            バックエンドを切り替えるときは、同じ時刻に旧・新の両方から出さないよう定期投入の責任を移します。 Solid Queue は同じタスクと時刻の組の投入を DB の一意索引で制御します。投入と、実行される処理の冪等性は別の保証です。<code>command:</code> で定期作業を指定することもできますが、テストや再実行が必要なら独立したジョブクラスにできます。Rails の Mission Control – Jobs のような管理画面を使う場合も、投入予定時刻と実際の開始・終了を区別して、止まった場合を見つけられるようにします。集計などの手順は、同じ日付でやり直せる形にしておけます。<Ref n={15} /><Ref n={19} /><Ref n={26} />
           </p>
-          <p>このため、ジョブは次のように書きます。</p>
-          <ul>
-            <li>2回実行されても結果が同じになるようにする（冪等にする）。例：状態を確かめてから処理する、送信済みであることを同じトランザクションで記録する、一意の索引（同じ値の行を2つ入れられないようにする索引）で二重登録を防ぐ</li>
-            <li>外部の API への送信など、取り消せない処理は、ジョブを小さく分けて、送信の前後で状態を保存する</li>
-            <li>処理時間の長いジョブは、Sidekiq の停止のタイムアウト（既定 25 秒）と、デプロイの手順の待ち時間を合わせる</li>
-          </ul>
+        </>
+      ),
+    },
+    {
+      id: 'job-operations',
+      title: "Sidekiq の停止・監視とキューの移行",
+      body: (
+        <>
+          <p>
+            ジョブワーカーを更新するときは、まず Sidekiq のプロセスに <code>TSTP</code> を送り、新しい仕事の取り出しを止めます。後で <code>TERM</code> で停止を要求し、処理中のジョブに終了の猶予を与えます。終了期限までに終わらない仕事は再実行されることがあるので、ジョブの更新を冪等にします。コンテナやサービス管理側の停止猶予を、Sidekiq の終了設定より先に使い切らないように揃えます。Web の Puma と、ジョブのワーカーの停止は別々に管理します（<ChapterLink n={23} section="ruby-upgrade">Ruby とプロセスの更新</ChapterLink>）。<Ref n={20} />
+          </p>
+          <p>
+            Sidekiq Web は処理件数、キューの長さ、予定・再試行・失敗の集合を確認できる管理画面です。管理者用に認証・認可を付けます。件数と併せて、最も古いジョブがどれだけ待っているか、再試行が増えた時刻、特定の依存先のエラーがないかを見ます。失敗が解消してから再投入し、必要なら <code>sidekiq_retries_exhausted</code> や死んだジョブを扱うフックで通知できます。 <code>death_handlers</code> は全ジョブに共通の通知などに使えます。通知経路の故障も想定し、実行しなくなったジョブを監視します。<Ref n={21} /><Ref n={22} />
+          </p>
+          <p>
+            Sidekiq の再試行設定では、<code>retry: false</code> は失敗後に再試行せず、失敗を Dead にも積みません。<code>retry: 0</code> なら再試行なしで Dead に移し、<code>dead: false</code> は再試行し尽くした仕事を Dead に保管しない指定です。失敗を後から直す必要がある処理では、どの設定で調査できる情報が残るかを確認します。強制終了やメモリー不足で停止すると、通常の取得方式では取り出した仕事がキューへ戻らない場合があります。クラス変数など複数スレッドで共有する状態に、ジョブごとの入力を置かないようにします。<Ref n={22} /><Ref n={23} />
+          </p>
+          <p>
+            古いコードでは <code>Sidekiq::Worker</code> という名称にも出会います。採用時は gem・契約ごとの機能を確認します。たとえば定期投入に sidekiq-cron、重複投入の抑止に sidekiq-unique-jobs があり、Sidekiq Pro の信頼性機能・Batches や Enterprise の一意ジョブ・頻度制限も選択肢です。キューで重複を制限する機能があっても、外部決済やメールなど実行先に重複が起きた場合の業務上の扱いを決めます。<Ref n={23} /><Ref n={24} /><Ref n={25} />
+          </p>
+          <p>
+            Sidekiq と Solid Queue の間で Active Job のアダプターを替えても、保存済みのキューや予定済みのジョブは元のストアにあります。新版で新しいアダプターのワーカーと DB を用意し、新規投入先を切り替えて、旧ワーカーで残りを処理する順を検討します。予定・再試行・失敗ジョブをどう扱うかも決めます。直接 <code>perform_async</code> する箇所や Sidekiq 固有のオプション、定期投入を走らせる場所は別途見直します。切り戻すときも両方のキューに残る仕事を確認します。<Ref n={17} /><Ref n={19} />
+          </p>
+          <p>Sidekiq の管理画面では、実行待ちの長さに加えて最古のジョブの待ち時間、Scheduled、Retry、Dead の増減を見ます。Ruby からも <code>require "sidekiq/api"</code> の後に <code>Sidekiq::RetrySet.new.size</code> などで調べられます。基本の取り出し方式と、有償版の super_fetch が用いる回復機構では、ワーカー異常終了後にジョブを回収できる条件が異なります。使っている版と設定に合わせて停止時の試験を行います。</p>
         </>
       ),
     },
@@ -983,8 +1265,9 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
           <li>待ち時間付きのジョブと再試行は ZSET に入り、ポーラーが平均5秒ごとにキューへ戻します。</li>
           <li>Sidekiq の再試行は25回（約3週間）で、使い切ると dead に入ります。retry_on と併用すると、retry_on の回数を使い切った後に Sidekiq の再試行が続きます。</li>
           <li>トランザクションの中で投入したジョブは COMMIT 前に実行されることがあります。8.1 では enqueue_after_transaction_commit をジョブのクラスで指定します。</li>
-          <li>Solid Queue はデータベースと SKIP LOCKED を使い、自動の再試行はありません。</li>
           <li>停止や再試行で同じジョブが再実行されるので、ジョブは冪等に書きます。</li>
+          <li>Solid Queue はデータベースと SKIP LOCKED を使い、自動の再試行はありません。</li>
+          <li>各ワーカーが読むキューとその順序を設定し、定期実行は投入予定と実際の開始・終了を確かめます。</li>
         </ul>
       ),
     },
@@ -1004,6 +1287,18 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
     { title: 'Data structure store（Redis の概要）', publisher: 'Redis', url: 'https://redis.io/docs/latest/develop/get-started/', accessed: '2026-11-16', version: 'Redis 8', note: 'Redis がメモリーにデータを置くデータ構造のサーバーであること。' },
     { title: 'Redis lists', publisher: 'Redis', url: 'https://redis.io/docs/latest/develop/data-types/lists/', accessed: '2026-11-16', version: 'Redis 8', note: 'LPUSH と RPOP でリストを先入れ先出しのキューとして使うこと、バックグラウンドのワーカーのキューに使うこと。redis-cli の実行例は Redis 8.10.3 で実測。' },
     { title: 'BRPOP', publisher: 'Redis', url: 'https://redis.io/docs/latest/commands/brpop/', accessed: '2026-11-16', version: 'Redis 8', note: 'RPOP の待つ版で、リストが空なら要素が入るまで接続を待たせること。' },
+    { title: "Active Job Basics", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/active_job_basics.html", accessed: "2026-11-20", version: "Rails 8.1", note: "ジョブの設定、キュー、再試行、定期実行。" },
+    { title: "Sidekiq Using Redis", publisher: "sidekiq/sidekiq", url: "https://github.com/sidekiq/sidekiq/wiki/Using-Redis", accessed: "2026-11-20", note: "クライアントとサーバーの接続、キャッシュとキューの分離。" },
+    { title: "Sidekiq Active Job", publisher: "sidekiq/sidekiq", url: "https://github.com/sidekiq/sidekiq/wiki/Active-Job", accessed: "2026-11-20", note: "Sidekiq と Active Job の連携と違い。" },
+    { title: "Sidekiq Advanced Options", publisher: "sidekiq/sidekiq", url: "https://github.com/sidekiq/sidekiq/wiki/Advanced-Options", accessed: "2026-11-20", note: "設定ファイル、同時実行、キュー順序と重み。" },
+    { title: "Solid Queue", publisher: "rails/solid_queue", url: "https://github.com/rails/solid_queue", accessed: "2026-11-20", note: "ワーカー、ディスパッチャー、スケジューラー、優先度・同時実行と定期実行。" },
+    { title: "Sidekiq Deployment", publisher: "sidekiq/sidekiq", url: "https://github.com/sidekiq/sidekiq/wiki/Deployment", accessed: "2026-11-20", note: "TSTP、TERM と立ち上げ・停止の順。" },
+    { title: "Sidekiq Monitoring", publisher: "sidekiq/sidekiq", url: "https://github.com/sidekiq/sidekiq/wiki/Monitoring", accessed: "2026-11-20", note: "管理画面と処理・待ち時間の計測。" },
+    { title: "Sidekiq Error Handling", publisher: "sidekiq/sidekiq", url: "https://github.com/sidekiq/sidekiq/wiki/Error-Handling", accessed: "2026-11-20", note: "再試行と使い切った場合のフック。" },
+    { title: "Sidekiq Reliability", publisher: "sidekiq/sidekiq", url: "https://github.com/sidekiq/sidekiq/wiki/Reliability", accessed: "2026-11-20", note: "通常のフェッチと、Pro の障害耐性オプション。" },
+    { title: "Sidekiq Enterprise Unique Jobs", publisher: "sidekiq/sidekiq", url: "https://github.com/sidekiq/sidekiq/wiki/Ent-Unique-Jobs", accessed: "2026-11-20", note: "一意のジョブの単位、有効期限と挙動。" },
+    { title: "Sidekiq-Cron", publisher: "sidekiq-cron/sidekiq-cron", url: "https://github.com/sidekiq-cron/sidekiq-cron", accessed: "2026-11-20", note: "定期実行に使う Sidekiq 向けの拡張。" },
+    { title: "Mission Control – Jobs", publisher: "rails/mission_control-jobs", url: "https://github.com/rails/mission_control-jobs", accessed: "2026-11-20", note: "対応アダプターとジョブの管理画面。" },
   ],
 }
 

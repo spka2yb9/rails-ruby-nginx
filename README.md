@@ -1,4 +1,4 @@
-# Rails・Ruby・Nginx 教科書
+# Railsアプリの仕組みと設計・運用
 
 Rails で開発を始めたエンジニアが、Rails の機能やプロセス・データベースなどの仕組みを実例で確かめながら、Ruby のオブジェクトモデル、Rails の起動とリクエストの処理経路、ActiveRecord の内部、前段の Puma と Nginx の設定の根拠までを、実際のソースコードとともに学ぶための日本語の Web 教科書です（Vite + React + TypeScript の静的サイト）。
 
@@ -23,11 +23,17 @@ npm run build
 
 `dist/` に静的ファイルが出力されます。ビルドは次の順で動きます。
 
-1. `npm run build:index` — 各章を描画して、全文検索の索引 `src/content/search-index.json` と、目次・前後の章・参考資料一覧に使う章の情報 `src/content/chapter-meta.json` を生成
+1. `npm run build:index` — 各章を描画して、全文検索の索引 `src/content/search-index.json` と、目次・前後の章・参考資料一覧に使う章の情報 `src/content/chapter-meta.json` を生成。第6部の入門・テーマ別の演習一覧 `src/content/linux-meta.json` も `public/linux/js/lessons/lessons.js` から生成
 2. `tsc -b` — 型チェック
 3. `vite build` — `dist/` へ出力
 
 ビルド結果の確認は `npm run preview` です。章の本文と検索の索引は、開いたときに読み込む別のファイル（`dist/assets/chNN-*.js`、`search-index-*.js`）に分かれています。
+
+## 第6部（Linux の実習）
+
+第6部「Railsエンジニアのためのサーバ運用」は `#/linux` を開くと最初の未回答の演習から始まります。教科書の目次を表示したまま、本文で手順と端末を見比べて回答できます。解説は選択肢の下に表示され、そこから次の演習に進めます。`public/linux/` にある実習ページを iframe で表示します（`src/components/LinuxView.tsx`）。各演習の URL は `#/linux/case04` の形です。教科書の検索で演習名・テーマ・主なコマンドを探せます。演習の追加方法は `public/linux/README.md` にあります。
+
+AWS の CASE（LEVEL 12〜）の `aws` コマンドには、aws-learning の AWS CLI のシミュレーターを組み込んだ `public/linux/vendor/aws-sim.min.js` が応答します。作り直す手順は `public/linux/README.md` の「AWS CLI のシミュレーター」にあります（ソースは `tools/aws-sim/`）。
 
 ## 章の検査
 
@@ -37,6 +43,8 @@ node --experimental-strip-types scripts/check-chapter.ts 3 4  # 指定した章
 ```
 
 節 ID の重複、出典番号と参考資料の対応、図のアクセシブル名、本文の分量などを機械的に検査します。
+
+引数の番号は URL に使う章 ID（`#/32` の 32）です。後から追加した章があるため、表示上の章番号とは一致しない場合があります。表示する章番号は `src/content/label.ts` の `CHAPTER_ORDER`（読む順）から決まります。
 
 ## 静的ホスティングでの公開手順
 

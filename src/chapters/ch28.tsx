@@ -4,7 +4,7 @@ import { explanation28 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
-/* ---------- 図 28-1 調査の手掛かり ---------- */
+/* ---------- 図 32-1 調査の手掛かり ---------- */
 function CluesFigure() {
   const clues = [
     ['応答', 'ステータス 500 とエラーの画面'],
@@ -14,7 +14,7 @@ function CluesFigure() {
   ]
   return (
     <Svg
-      id="28-1"
+      id="32-1"
       w={780}
       h={282}
       label="curl で GET /price?quantity=2 を送ると、Rails の PricesController#show が PriceCalculator#total を呼ぶ。調査の手掛かりは、応答（ステータス 500 とエラーの画面）、ログ（どの処理が動き、何を返したか）、例外とバックトレース（どこで、どんなエラーが起きたか）、止めた時点の変数の値（デバッガーで調べる）の4つ"
@@ -41,7 +41,7 @@ function CluesFigure() {
   )
 }
 
-/* ---------- 図 28-2 開発環境のエラー画面 ---------- */
+/* ---------- 図 32-2 開発環境のエラー画面 ---------- */
 function ErrorPageFigure() {
   const notes: [number, string][] = [
     [31, '例外のクラスと、起きたアクション'],
@@ -52,7 +52,7 @@ function ErrorPageFigure() {
   ]
   return (
     <Svg
-      id="28-2"
+      id="32-2"
       w={780}
       h={322}
       label="開発環境のエラー画面。一番上に例外のクラスと、例外が起きたアクション（TypeError in PricesController#show）、次にメッセージ（String can't be coerced into Integer）、例外が起きた行の前後のソース（3行目が強調される）、Application Trace としてアプリケーションのファイルの行だけのバックトレース、最後に要求のパラメーター（quantity は文字列の 2）が表示される"
@@ -101,6 +101,130 @@ function ErrorPageFigure() {
   )
 }
 
+/* ---------- ログの行が表すもの（番号なし） ---------- */
+function LogLinesFigure() {
+  const lines = [
+    'Started GET "/articles/1" for 172.29.0.1 at …',
+    'Processing by ArticlesController#show as */*',
+    '  Parameters: {"id" => "1"}',
+    '  Article Load (0.4ms)  SELECT … LIMIT 1',
+    '  ↳ app/controllers/articles_controller.rb:9:in …',
+    '  Rendering layout layouts/application.html.erb',
+    '  Rendering articles/show.html.erb within …',
+    '  Comment Load (0.4ms)  SELECT … LIMIT 2',
+    '  ↳ app/views/articles/show.html.erb:5',
+    '  Rendered collection of templates [0 times] …',
+    '  Rendered articles/show.html.erb within …',
+    '  Rendered layout layouts/application.html.erb …',
+    'Completed 200 OK in 70ms (Views: 29.0ms | ActiveRecord: 7.5ms …',
+  ]
+  const yOf = (i: number) => 46 + i * 19
+  const groups: [number, number, string[]][] = [
+    [0, 0, ['始まり：メソッド・パス・IP・時刻']],
+    [1, 2, ['処理したコントローラーとアクション', 'アクションが受け取った params']],
+    [3, 4, ['実行した SQL とかかった時間', '↳ は SQL を実行させたコードの場所']],
+    [5, 6, ['Rendering の行', 'HTML を作るテンプレート']],
+    [7, 8, ['同じく SQL と ↳ の行', 'ビューの5行目から実行された']],
+    [9, 11, ['Rendered の行', '描画したテンプレートと時間']],
+    [12, 12, ['終わり：ステータスと全体・ビュー・DB の時間']],
+  ]
+  return (
+    <Svg
+      id="ch28-log-lines"
+      w={780}
+      h={300}
+      label="GET /articles/1 のログの13行に、行が表すものを書き添えた図。Started の行は1件の始まりで、メソッド・パス・送信元の IP・時刻。Processing by の行は処理したコントローラーとアクション、Parameters の行はアクションが受け取った params。Article Load の行は実行した SQL とかかった時間で、その下の ↳ の行は SQL を実行させたコードの場所。Rendering と Rendered の行は HTML を作ったテンプレートで、その間の Comment Load と ↳ の行は、ビューの5行目から実行された SQL。Completed の行は1件の終わりで、ステータスと、全体・ビュー・DB の時間"
+    >
+      <T x={14} y={16} bold fs={12}>
+        GET /articles/1 のログ（上から出た順）
+      </T>
+      <T x={510} y={16} bold fs={12}>
+        行が表すもの
+      </T>
+      <Box x={12} y={32} w={478} h={256} fill="bg" />
+      {lines.map((l, i) => (
+        <text key={l} x={22} y={yOf(i)} fontSize={11.5} dominantBaseline="central" className="mono" style={{ whiteSpace: 'pre' }}>
+          {l}
+        </text>
+      ))}
+      {groups.map(([a, b, label]) => {
+        const mid = (yOf(a) + yOf(b)) / 2
+        return (
+          <g key={label[0]}>
+            <Arrow d={`M496,${yOf(a) - 7} L502,${yOf(a) - 7} L502,${yOf(b) + 7} L496,${yOf(b) + 7}`} plain />
+            {label.map((t, k) => (
+              <T key={t} x={510} y={mid + (k - (label.length - 1) / 2) * 18} fs={12} tone={k > 0 ? 'muted' : undefined}>
+                {t}
+              </T>
+            ))}
+          </g>
+        )
+      })}
+    </Svg>
+  )
+}
+
+/* ---------- バックトレースの行と呼び出しの順（番号なし） ---------- */
+function BacktraceOrderFigure() {
+  const rows = [
+    { line: "price.rb:3:in 'Integer#*': … (TypeError)", note: 'Integer#* の中で TypeError が起きた' },
+    { line: "from price.rb:3:in 'PriceCalculator#total'", note: '3行目で 1200 * "2" を計算した' },
+    { line: "from price.rb:9:in 'Object#checkout'", note: '9行目で params[:quantity] の "2" を渡した' },
+    { line: "from price.rb:13:in '<main>'", note: '13行目で checkout({ quantity: "2" }) を呼んだ' },
+  ]
+  const top = (i: number) => 30 + i * 64
+  return (
+    <Svg
+      id="ch28-backtrace-order"
+      w={780}
+      h={286}
+      label="ruby price.rb のバックトレースの4行を、出力と同じ順に上から並べた図。一番上は Integer#* の中で TypeError が起きた行、その下は PriceCalculator#total の3行目で 1200 掛ける文字列の 2 を計算した行、Object#checkout の9行目で params[:quantity] の文字列の 2 を渡した行、<main> の13行目で checkout を呼んだ行。呼び出した順は下から上で、<main> が checkout を、checkout が total を、total が Integer#* を呼んだ。Integer#* は Ruby の中のメソッドで、直すのは自分のコード。最初に出てくる自分のコードの行（PriceCalculator#total）から読み始め、渡された値の出どころを下の行へたどる"
+    >
+      <T x={200} y={14} bold fs={12}>
+        バックトレースの行（出力の順。上ほど新しい呼び出し）
+      </T>
+      {rows.map((r, i) => (
+        <g key={r.line}>
+          <Box x={200} y={top(i)} w={360} h={50} fill={i === 0 ? 'bg' : i === 1 ? 'box5' : 'box'} accent={i === 1} />
+          <T x={212} y={top(i) + 16} fs={12} mono>
+            {r.line}
+          </T>
+          <T x={212} y={top(i) + 35} fs={11.5} tone={i === 0 ? 'danger' : 'muted'}>
+            {r.note}
+          </T>
+        </g>
+      ))}
+      <Arrow x1={186} y1={top(3) + 25} x2={186} y2={top(0) + 25} />
+      <T x={174} y={142} anchor="end" bold fs={12}>
+        呼び出した順
+      </T>
+      <T x={174} y={160} anchor="end" fs={11.5} tone="muted">
+        下から上へ
+      </T>
+      <T x={580} y={top(0) + 16} fs={11.5} tone="muted">
+        Ruby の中のメソッド
+      </T>
+      <T x={580} y={top(0) + 34} fs={11.5} tone="muted">
+        直すのは自分のコード
+      </T>
+      <Arrow x1={598} y1={top(1) + 25} x2={564} y2={top(1) + 25} accent />
+      <T x={606} y={top(1) + 16} fs={12} bold tone="acc">
+        ここから読む
+      </T>
+      <T x={606} y={top(1) + 34} fs={11.5} tone="muted">
+        最初に出る自分のコード
+      </T>
+      <Arrow x1={580} y1={top(2) - 6} x2={580} y2={top(3) + 25} accent />
+      <T x={594} y={top(2) + 30} fs={12}>
+        渡された値の出どころを
+      </T>
+      <T x={594} y={top(2) + 48} fs={12}>
+        下の行へたどる
+      </T>
+    </Svg>
+  )
+}
+
 function InvestigationFigure() {
   const rows = [
     ['再現する', '入力・実行環境・操作順を固定する'],
@@ -108,7 +232,7 @@ function InvestigationFigure() {
     ['原因を絞る', '期待と実際が最初に違う位置を探す'],
     ['修正して確かめる', '再現ケースと周辺ケースをテストする'],
   ]
-  return <Svg id="28-3" w={700} h={332} label="調査の進め方。条件を固定して再現し、値や呼び出し元を観察し、期待と実際が分かれる箇所を特定して修正する。最後に同じ条件と周辺条件でテストする。">
+  return <Svg id="32-3" w={700} h={332} label="調査の進め方。条件を固定して再現し、値や呼び出し元を観察し、期待と実際が分かれる箇所を特定して修正する。最後に同じ条件と周辺条件でテストする。">
     {rows.map(([a, b], i) => <g key={a}>
       <Box x={20} y={14 + i * 80} w={180} h={58} lines={a} fs={14} bold />
       <Arrow x1={202} y1={43 + i * 80} x2={238} y2={43 + i * 80} />
@@ -119,7 +243,7 @@ function InvestigationFigure() {
 }
 
 function FramesFigure() {
-  return <Svg id="28-4" w={700} h={294} label="呼び出し履歴の模式図。コントローラーがサービスを呼び、サービスの掛け算でTypeErrorが発生する。呼び出しごとの実行状態をフレームと呼び、上のフレームへ移って入力の由来を調べる。">
+  return <Svg id="32-4" w={700} h={294} label="呼び出し履歴の模式図。コントローラーがサービスを呼び、サービスの掛け算でTypeErrorが発生する。呼び出しごとの実行状態をフレームと呼び、上のフレームへ移って入力の由来を調べる。">
     <Box x={20} y={18} w={300} h={62} lines={['#2 コントローラー', 'フォームから quantity = "2"']} fs={13} subTone="muted" />
     <Arrow x1={170} y1={80} x2={170} y2={110} />
     <Box x={20} y={112} w={300} h={62} lines={['#1 PriceCalculator#total', 'unit_price = 1200 / quantity = "2"']} fs={12} subTone="muted" />
@@ -137,7 +261,7 @@ function ToolsFigure() {
     ['応答が遅い', 'rack-mini-profiler', '時間のかかる処理を絞る'],
     ['メールの内容がおかしい', 'letter_opener_web', '保存したメールを表示する'],
   ]
-  return <Svg id="28-5" w={760} h={352} label="症状と道具の対応。値や分岐にはdebugやpry-byebug、例外画面にはbetter_errorsやweb-console、SQLの繰り返しにはBullet、性能にはrack-mini-profiler、メールの確認にはletter_opener_webを使う。">
+  return <Svg id="32-5" w={760} h={352} label="症状と道具の対応。値や分岐にはdebugやpry-byebug、例外画面にはbetter_errorsやweb-console、SQLの繰り返しにはBullet、性能にはrack-mini-profiler、メールの確認にはletter_opener_webを使う。">
     {rows.map(([a, b, c], i) => <g key={a}>
       <Box x={20} y={12 + i * 68} w={230} h={54} lines={a} fs={12.5} />
       <Arrow x1={252} y1={39 + i * 68} x2={286} y2={39 + i * 68} />
@@ -149,19 +273,45 @@ function ToolsFigure() {
 const ch28: Chapter = {
   number: 28,
   part: 5,
-  title: 'Railsのデバッグ実践と調査用gem',
-  summary: '数量の文字列で例外になる画面を例に、Rails のログの読み方、例外とバックトレースの読み方、ブレークポイントで実行を止めて値を調べる方法を確かめます。そのうえで、不具合の再現から変数・呼び出し履歴の調査、修正の確認までを追います。debugに加え、業務アプリで確認したPry、Better Errors、Bullet、rack-mini-profiler、メール確認とログ・例外調査の道具を使い分けます。',
+  title: 'Rails の改修・デバッグ・コードレビュー',
+  summary:
+    '数量に「2」を入力すると、合計金額を表示する画面でエラーが起きます。入力した値が計算式に届くまでをログとデバッガで追い、修正後は同じ不具合を見つけられるテストを残します。',
   goals: [
-    'Rails のログから、要求を処理したアクション・SQL・ステータスと、起きた例外を読み取れる',
-    'バックトレースとエラーの画面から例外の場所と呼び出し元をたどり、ブレークポイントで止めて変数の値を確かめられる',
-    '再現条件を固定し、例外・ログ・値から原因を絞り込める',
-    'debugとpry-byebugで停止、ステップ実行、変数と呼び出し履歴の確認ができる',
-    'ブラウザーの例外画面、SQLの検出、性能計測の道具を目的に応じて選べる',
-    'メール・ログ・例外通知から不具合を調べる際の範囲と注意点を説明できる',
-    '修正を再現テストに残し、検証した範囲と未確認の範囲を区別できる',
+    '改修後に誰が何をできればよいかを、具体的な入力と結果で合意できる',
+    'エラーが出た行と呼び出し元を読み、実行を止めて数量の値と型を確かめられる',
+    '修正前に失敗して修正後に通るテストを作り、理由と確認結果をレビューで伝えられる',
   ],
   prerequisites: [1, 10, 13, 18, 19, 20, 22],
   sections: [
+    {
+      id: 'delivery-planning',
+      title: "改修の要件・見積もり・受け入れ条件を決める",
+      body: (
+        <>
+          <p>
+            「記事を予約公開したい」という依頼なら、「何時に誰からどう見えるか」を先に決めます。たとえば「10時に予約した記事は、一般の読者の一覧に9時59分には出ず、10時には出る」と書けば、作る人と確認する人が同じ条件で試せます。完成したと判断できるこうした条件を、受け入れ条件と呼びます。
+          </p>
+          <p>
+            画面については、誰が日時を設定できるか、予約を変更・取り消せるのはいつまでかを決めます。表示だけなら、一覧を取得する時刻と予約日時を比べる方法があります。「公開したときにメールも送る」なら、送信を始める仕組みと、送信済みかどうかの記録も必要です。必要な機能と保留した条件を Issue に残します。
+          </p>
+          <p>
+            最初の見積もりでは仕様や既存データに不明点が多く、調査により見積もりの幅を狭められます。この傾向を不確実性のコーンと呼びます。画面、モデル、DB、権限、試験、配備に分け、決められない箇所はまず調査の範囲と到達条件を合意します。幅を持つ見積もりには、データ量などの前提と、既存 API の変更有無など見積もりが動く理由を書きます。決まったことと保留したことが次の人にも伝わるよう、Issue や設計記録を更新します。
+          </p>
+          <p>未確定の外部 API がある場合は、調査の期限と成果物を「接続条件を確かめて実装案と再見積もりを出す」と定めます。既知の実装工数とリスク分の余裕を分け、レビュー待ちやデータ量など余裕を取った理由を示します。着手後は見積もりと実績の差を共有し、前提が変わった項目を更新します。</p>
+        </>
+      ),
+    },
+    {
+      id: 'gem-selection',
+      title: "改修に使う gem を選ぶ",
+      body: (
+        <>
+          <p>
+            追加する gem は、Rails 標準ですでに満たせる条件を確かめてから選びます。必要な Ruby・Rails の版、変更履歴、依存 gem、保守状況、ライセンス、セキュリティ対応、外すときの影響を確認します。ミドルウェアや Railtie を差し込むもの、他のクラスを変更するものは、どの経路が影響を受けるかも見ます。数行の業務規則ならアプリで持てますが、認証などでは実績のある仕組みと更新手順を使う利点があります。<Ref n={15} /><Ref n={16} />
+          </p>
+        </>
+      ),
+    },
     {
       id: 'bug-clues',
       title: '不具合の調査で確かめること',
@@ -205,10 +355,9 @@ x-request-id: f0f667f8-5e60-4452-9e2e-20e1c1979c9e
             期待した「合計: 2900 円」ではなく、ステータス 500（Internal Server Error。サーバーの中でエラーが起きたことを表す）が返りました。これが不具合です。不具合の調査は、期待した結果と実際の結果がどこで分かれたかを探し、その原因を突き止める作業です。
           </p>
           <p>
-            手掛かりは4つあります。1つ目は応答で、ステータスや画面から何が起きたかの見当を付けます。2つ目はログで、Rails がその要求をどう処理したかの記録です。3つ目は例外とバックトレースで、どこでどんなエラーが起きたかを示します。4つ目は実行を途中で止めて見る変数の値です（図
-            28-1）。次の3つの節で、ログ、例外とバックトレース、実行を止める方法を、この /price の不具合で順に確かめます。
+            手掛かりは4つあります。1つ目は応答で、ステータスや画面から何が起きたかの見当を付けます。2つ目はログで、Rails がその要求をどう処理したかの記録です。3つ目は例外とバックトレースで、どこでどんなエラーが起きたかを示します。4つ目は実行を途中で止めて見る変数の値です（図 32-1）。次の3つの節で、ログ、例外とバックトレース、実行を止める方法を、この /price の不具合で順に確かめます。
           </p>
-          <Figure n="28-1" title="不具合の調査の手掛かり" caption="デモのコピー（Rails 8.1.4.1）の /price を例にした図。">
+          <Figure n="32-1" title="不具合の調査の手掛かり" caption="デモのコピー（Rails 8.1.4.1）の /price を例にした図。">
             <CluesFigure />
           </Figure>
         </>
@@ -248,6 +397,10 @@ Completed 200 OK in 70ms (Views: 29.0ms | ActiveRecord: 7.5ms (2 queries, 0 cach
             <code>Article Load (0.4ms)</code> の行は実行した SQL とかかった時間で、その下の ↳ の行はその SQL を実行させたコードの場所です。Rendering と Rendered の行は、HTML を作ったテンプレートです。最後の行は応答のステータス（200
             OK）と全体の時間、そのうちビューと DB にかかった時間を示します。
           </p>
+          <p>次の図は、上のログの各行が何を表すかを、行の右に書き添えたものです。上の Started の行から順に、右の説明と見比べてください。</p>
+          <Figure title="ログの行が表すもの" caption="上の GET /articles/1 のログをもとにした図。長い行は途中や末尾を … で省いた。右の括弧は説明がどの行に当たるかを示す。">
+            <LogLinesFigure />
+          </Figure>
           <p>次は不具合の /price のログです。</p>
           <Code
             lang="text"
@@ -353,6 +506,10 @@ price.rb:3:in 'Integer#*': String can't be coerced into Integer (TypeError)
             （スタックトレース）と呼びます。下から読むと、ファイルの一番外側（&lt;main&gt;）の13行目が checkout を呼び、checkout の9行目が total を呼び、total の3行目の掛け算で例外が起きたことが分かります。例外が起きたのは
             Ruby の Integer#* の中ですが、直すのは自分のコードです。上から順に見て最初に出てくる自分のコードの行（price.rb:3）から読み始め、そこに渡された値がどこから来たかを、下の行へたどります。
           </p>
+          <p>次の図は、上の出力のバックトレースの4行を、出力と同じ順に上から並べたものです。左の矢印が呼び出した順、右の矢印が調べる順を表します。</p>
+          <Figure title="バックトレースの行と呼び出しの順" caption="ruby price.rb の出力をもとにした図。1行目のメッセージは … で省いた。実線の矢印は呼び出した順、強調色の矢印は調べる順、強調色の枠は最初に読む行を表す。">
+            <BacktraceOrderFigure />
+          </Figure>
           <p>rescue で例外を受け止めると、例外のオブジェクトからクラス・メッセージ・バックトレースを取り出せます。</p>
           <Code
             lang="ruby"
@@ -385,7 +542,7 @@ rescue したので、処理はここまで進む
 `}
           />
           <p>
-            Rails のアプリケーションで例外が起きたときも、同じ情報が出ます。開発環境で /price?quantity=2 をブラウザーで開くと、Rails は例外の情報を並べたエラーの画面を返します（図 28-2）。Extracted source
+            Rails のアプリケーションで例外が起きたときも、同じ情報が出ます。開発環境で /price?quantity=2 をブラウザーで開くと、Rails は例外の情報を並べたエラーの画面を返します（図 32-2）。Extracted source
             は例外が起きた行の前後のソースで、3行目が強調されます。Application Trace はバックトレースのうちアプリケーションのファイル（app や lib）の行だけ、Framework Trace は Rails などの gem
             の行だけ、Full Trace はすべての行です。前の節のログに出た3行も、Application Trace と同じ行です。Request の Parameters を見れば、quantity が文字列の "2" で届いたことも分かります。
           </p>
@@ -393,7 +550,7 @@ rescue したので、処理はここまで進む
             この画面は、設定の <code>config.consider_all_requests_local</code> が true のとき（開発環境とテスト環境の既定）に表示されます。本番環境では false なので、利用者にはソースやパラメーターを含まない汎用のエラーの画面が返り、調査にはログを使います
             <Ref n={14} />。
           </p>
-          <Figure n="28-2" title="開発環境のエラー画面" caption="デモのコピーで /price?quantity=2 を開いた画面をもとにした図。パスの先頭の /work/demo/ を省き、Request の下の欄を省略した。">
+          <Figure n="32-2" title="開発環境のエラー画面" caption="デモのコピーで /price?quantity=2 を開いた画面をもとにした図。パスの先頭の /work/demo/ を省き、Request の下の欄を省略した。">
             <ErrorPageFigure />
           </Figure>
         </>
@@ -485,7 +642,7 @@ break.rb:6:in 'Integer#*': String can't be coerced into Integer (TypeError)
           />
           <p>
             止まると、まわりのソースが表示され、=&gt; の付いた5行目が次に実行する行です。その下の #0 と #1 は止まった時点の呼び出しの並び（バックトレース）で、#0 には total
-            に渡された引数（unit_price=1200、quantity="2"）も出ます。p で調べる値は止まっている間に何度でも変えられます。c で再開すると、6行目で TypeError が起きました。
+            に渡された引数（unit_price=1200、quantity="2"）も出ます。停止中は <code>p quantity</code> で値を、<code>p quantity.class</code> で型を確認できます。この例では数量は文字列で、整数を使う計算にそのまま渡っています。c で再開すると、6行目で TypeError が起きました。
           </p>
           <p>
             rails new が作る Gemfile には、開発環境とテスト環境で使う debug gem が入っています。コントローラーやモデルに <code>debugger</code>（binding.break と同じ）を書いて要求を送ると、
@@ -498,7 +655,7 @@ break.rb:6:in 'Integer#*': String can't be coerced into Integer (TypeError)
     { id: 'workflow', title: '再現条件を固定して期待と実際を比べる', body: <>
       <p>デバッグでは、期待した結果と実際の結果が分かれた位置を探し、なぜそうなったかを確かめます。第1章では調査用のコマンドを紹介しました。本章では、どの場面で何を調べ、修正の確認までどう進めるかを扱います。</p>
       <p>最初に、操作順、入力、期待する結果、実際の結果を揃えます。同じ画面でも、利用者の権限、データの状態、環境変数、実行しているコードのバージョンによって動きが変わります。ローカルで作った架空のデータで再現できれば、調べる範囲を狭められます。失敗したリクエストやジョブを識別するIDは、複数のログを結び付ける手掛かりになります。</p>
-      <Figure n="28-3" title="再現から修正確認まで" caption="模式図。観察で仮説が外れたら、条件を整理して調べ直します。"><InvestigationFigure /></Figure>
+      <Figure n="32-3" title="再現から修正確認まで" caption="模式図。観察で仮説が外れたら、条件を整理して調べ直します。"><InvestigationFigure /></Figure>
       <p>値がおかしいのか、例外が発生したのか、応答が遅いのかで道具を選びます。停止するデバッガは値の調査に向きますが、止めた時間が混ざるので応答時間の測定には向きません。ログを増やす場合も、調べたい値と期間を絞ります。<Ref n={1} /></p>
     </> },
     { id: 'environments', title: '教材の環境と参照した業務アプリの構成', body: <>
@@ -565,8 +722,8 @@ binding.break
 (rdbg) continue
 `} />
       <p>catch TypeError は、TypeErrorが発生した時点を調べます。後でrescueされる例外でも止まるため、「レスポンスは返るが内部で失敗を握りつぶしている」ケースの調査にも使えます。実測では Integer#* の中で停止し、btでPriceCalculatorへ戻る経路を確認できました。</p>
-      <p>呼び出し1回ごとの変数や実行位置を持つ状態を<Term en="stack frame">フレーム</Term>と呼びます。図28-4は、Rubyだけの実測例をRailsのコントローラーから呼ぶ構成へ広げた模式図です。例外が出た最深部だけでなく、入力を渡した側も調べます。</p>
-      <Figure n="28-4" title="例外から入力の由来をたどる" caption="模式図。実際のフレーム番号はライブラリや停止位置によって変わります。"><FramesFigure /></Figure>
+      <p>呼び出し1回ごとの変数や実行位置を持つ状態を<Term en="stack frame">フレーム</Term>と呼びます。図32-4は、Rubyだけの実測例をRailsのコントローラーから呼ぶ構成へ広げた模式図です。例外が出た最深部だけでなく、入力を渡した側も調べます。</p>
+      <Figure n="32-4" title="例外から入力の由来をたどる" caption="模式図。実際のフレーム番号はライブラリや停止位置によって変わります。"><FramesFigure /></Figure>
       <p>Rails内部へ進みたいときは、<ChapterLink n={1} />の owner・source_location と、停止中の呼び出し履歴を組み合わせます。全メソッドを順に追うより、期待と実際が分かれる処理の開始位置で止める方が、調べる範囲を限定できます。条件式も実行されるコードなので、DBへの更新など副作用のある式は使いません。</p>
     </> },
     { id: 'pry', title: 'pry-byebugとpry-rails：既存アプリの道具を使う', body: <>
@@ -612,7 +769,7 @@ docker compose run --rm app bundle exec rspec spec/services/price_calculator_spe
     </> },
     { id: 'browser-tools', title: 'better_errors・binding_of_caller・web-console', body: <>
       <p>better_errorsは、例外のソース位置、呼び出し履歴、変数を調べやすいエラー画面を提供します。binding_of_callerは、呼び出し履歴にある実行状態へアクセスするための補助gemです。この2つを組み合わせると、各フレームで変数を確認したりRubyの式を評価したりできます。<Ref n={6} /></p>
-      <p>web-consoleは、ブラウザー内にRubyの対話コンソールを表示するgemです。エラー時だけでなく、ビューに一時的にconsoleを置いて、そのビューで参照できる値を調べる使い方もあります。第16章のテンプレートの変数が想定どおりか調べる場面に向きます。<Ref n={7} /></p>
+      <p>web-consoleは、ブラウザー内にRubyの対話コンソールを表示するgemです。エラー時だけでなく、ビューに一時的にconsoleを置いて、そのビューで参照できる値を調べる使い方もあります。第20章のテンプレートの変数が想定どおりか調べる場面に向きます。<Ref n={7} /></p>
       <Code lang="erb" title="web-consoleを有効にした開発環境での、一時的な調査例" code={`
 <% console %>
 `} />
@@ -661,7 +818,7 @@ end
       <p>遅い画面を開き、まずSQLに時間がかかるのか、それ以外の処理に時間がかかるのかを分けます。同じSQLが多数あればN+1を疑い、1回のSQLが遅ければ実行計画や索引を調べます。Ruby側の処理に時間がかかるなら、呼び出しごとの内訳を見る段階へ進みます。具体的な計測の考え方は<ChapterLink n={22} />と共通です。</p>
       <p>呼び出しの積み重なりと時間の割合を帯で表した図を<Term en="flame graph">フレームグラフ</Term>と呼びます。rack-mini-profilerでこの表示を使うにはstackprofなどの追加gemが必要です。メモリーの内訳にはmemory_profilerを追加できます。参照アプリのGemfileでは両者の直接指定は確認していないため、本章では追加候補として紹介します。<Ref n={9} /></p>
       <p>初回の読み込み、キャッシュ、データ量で時間は変わります。同じ条件で複数回測り、計測用ツール自体の負荷も考慮します。処理時間が短くなっても、必要な関連を落として表示が欠けていれば改善にはなりません。修正後は機能の確認と性能の確認を両方行います。</p>
-      <Figure n="28-5" title="症状に合わせた調査用gemの選択" caption="用途の対応図。すべてを同時に使う必要はありません。"><ToolsFigure /></Figure>
+      <Figure n="32-5" title="症状に合わせた調査用gemの選択" caption="用途の対応図。すべてを同時に使う必要はありません。"><ToolsFigure /></Figure>
     </> },
     { id: 'mail', title: 'letter_opener_webでメールを確認する', body: <>
       <p>メールの宛先や本文を調べるときは、実際に外へ送る前に、開発環境で生成結果を確認します。letter_opener_webは保存されたメールをブラウザーで読むための画面を提供します。delivery_methodを :letter_opener_web にすると、メールをこの仕組みに渡します。<Ref n={10} /></p>
@@ -698,7 +855,12 @@ end
       <p>例の外部サービスと例外クラスは仮の名前です。自動通知される例外を手動でも送ると重複する場合があるので、アプリの通知設定と捕捉方法に合わせます。contextは例外に添える情報です。リクエストの全パラメーター、Cookie、トークン、認証情報、メール本文などを一括で渡さず、必要な識別情報を選びます。例のraiseは例外を再送出します。これを取り除いて例外を呼び出し元に伝えないようにすると、ジョブの再試行など元の制御も変えてしまいます。</p>
     </> },
     { id: 'regression', title: '修正をテストに残して調査を終える', body: <>
-      <p>計算例では、数量として整数と数字の文字列を受け取り、不正な文字列と0以下を拒否する仕様にします。単価は整数で渡す前提です。to_iだけでは "abc" が0になるなど不正な入力を見逃すため、変換に失敗したときに例外になるIntegerを使います。</p>
+      <p>
+        修正前の画面では、数量が整数の <code>2</code> なら合計は 2900 円、フォームから来た文字列の <code>"2"</code> だと掛け算で例外になりました。この計算では、正の整数と、それを10進数で書いた文字列を受け付けたいとします。単価は整数で渡す前提です。
+      </p>
+      <p>
+        <code>Integer(quantity.to_s, 10)</code> は引数を文字列にそろえ、10進数の整数として読み取ります。<code>"abc"</code> や空欄ならここで例外になり、0 や負数は次の <code>positive?</code> の行で拒否します。数字以外を <code>to_i</code> で 0 にしてしまうと、入力が不正だったのか、実際に 0 を指定したのかを区別できません。
+      </p>
       <Code lang="ruby" title="lib/price_calculator.rb：仕様を明示した修正例" code={`
 class PriceCalculator
   def total(unit_price, quantity)
@@ -734,14 +896,33 @@ end
       <p>最後に、一時的なbinding.break・binding.pry・consoleや詳細ログを取り除きます。停止によってタイムアウトやロック待ちが起きていた場合は、通常の速度で再実行します。「どの条件で再現したか」「どの値が期待と違ったか」「どのテストで修正を確認したか」を残すと、同じ症状が出たときの調査にも使えます。</p>
       <Callout kind="v72"><p>ここで扱うgemはRailsとは別にバージョンが決まります。Rails 7.2から8.xへ上げる場合も、debuggerのコマンドや検出gemの対応状況はGemfile.lockと各gemの資料で確認します。Ruby 3.4で動いたpry-byebugを、そのままRuby 4.0でも確認済みとは扱いません。</p></Callout>
     </> },
+    {
+      id: 'dependency-and-review',
+      title: "変更を PR にまとめてレビューする",
+      body: (
+        <>
+          <p>
+            この数量の修正をプルリクエスト（PR）に出すなら、「フォームからの数量は文字列で届くため、掛け算で例外になっていた」と理由を書けます。確認結果には「数量が <code>"2"</code> でも整数の <code>2</code> でも 2900 円、不正な数量では例外」と残します。レビューする人は、テストの入力と期待値をこの説明に照らして読めます。<Ref n={17} />
+          </p>
+          <p>
+            提出前には一時的な <code>binding.break</code> や調査用の出力が差分に残っていないかを確認します。データや権限も変更する PR なら、失敗したときに何が残るか、配備の順番に条件があるかも書き添えます。レビューでは修正が必要な指摘と任意の提案に、その理由と確認方法を添えます。
+          </p>
+          <p>
+            変更を見直すときは、Rails のリリースノート、対象バージョンのガイドとソース、手元の再現条件をつなぎます。Ruby や Rails のコミュニティで事例を持ち寄ると、文書に載らない選択の背景も学べます。
+          </p>
+        </>
+      ),
+    },
     { id: 'summary', title: 'まとめ', body: <ul>
-      <li>Rails のログは要求ごとに Started から Completed までの行で、アクション・params・SQL・ステータスを記録します。本番環境ではリクエスト ID が付き、SQL の行は出ません。</li>
+      <li>着手前に期待する動作と受け入れ条件を決めます。見積もりには前提を書き、gem を加える場合は互換性・依存関係・保守状況を確かめます。</li>
+      <li>Rails のログは要求ごとに Started から Completed までの行で、アクション・params・SQL・ステータスを記録します。このデモの本番設定では要求 ID が付きます。SQL の詳細が出るかはログレベルなどの設定で変わります。</li>
       <li>バックトレースは例外が起きた時点の呼び出しの並びで、上ほど新しい呼び出しです。最初に出てくる自分のコードの行から読み、ブレークポイントで止めて値と型を確かめます。</li>
       <li>再現条件を固定し、値と型、例外、呼び出し元から期待と実際の違いを調べます。</li>
       <li>debugとpry-byebugのプロンプトやコマンドを区別し、入力できる端末で使います。</li>
       <li>Better Errors・web-consoleは例外や変数、Bulletは関連読み込み、rack-mini-profilerは処理時間の調査に使います。</li>
       <li>メールの生成・保存・実配送、ログの記録・例外の外部通知は、それぞれ別に確認します。</li>
       <li>元の不具合を再現するテストと周辺ケースを確かめ、一時的な停止位置を除いて調査を終えます。</li>
+      <li>PR に変更理由・確認した手順・データ変更や配備の影響を残し、仕様、権限、失敗時の整合性、性能をレビューします。</li>
     </ul> },
   ],
   sources: [
@@ -759,6 +940,9 @@ end
     { title: 'Honeybadger for Ruby', publisher: 'Honeybadger Docs', url: 'https://docs.honeybadger.io/lib/ruby/', accessed: '2026-11-12', note: '例外通知、context、機密情報のフィルタリングへの案内。外部送信は未実施。' },
     { title: 'class Exception', publisher: 'Ruby Documentation', url: 'https://docs.ruby-lang.org/en/4.0/Exception.html', accessed: '2026-11-16', version: 'Ruby 4.0', note: '例外の発生と rescue、message と backtrace。実行例は Ruby 4.0.9 で実測。' },
     { title: 'Configuring Rails Applications', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/configuring.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'consider_all_requests_local の既定値（開発・テストは true、本番は false）、log_level の既定値（本番は info）、log_tags。' },
+    { title: "RubyGems Command Reference", publisher: "RubyGems Guides", url: "https://guides.rubygems.org/command-reference/", accessed: "2026-11-20", note: "gem dependency による依存関係の確認。" },
+    { title: "Securing Rails Applications", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/security.html", accessed: "2026-11-20", version: "Rails 8.1", note: "認証、セッション、CSRF、入力、アップロードの安全性。" },
+    { title: "Reviewing changes in pull requests", publisher: "GitHub Docs", url: "https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests", accessed: "2026-11-20", note: "差分の確認とレビューの流れ。" },
   ],
 }
 export default withExplanations(ch28, explanation28)

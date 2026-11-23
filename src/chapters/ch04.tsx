@@ -260,20 +260,117 @@ function DslFigure() {
   )
 }
 
+/* ---------- 図（番号なし） with_log と yield の実行順 ---------- */
+function YieldSequenceFigure() {
+  // 列：呼び出し側 10〜186、with_log の本体 266〜466、ブロック 596〜770
+  return (
+    <Svg
+      id="ch04-yield-sequence"
+      w={780}
+      h={380}
+      label="yield_before_after.rb の with_log の実行順です。呼び出し側が with_log を呼ぶと、with_log の本体は「集計を開始」を表示し、result = yield の行で実行がブロックへ移ります。ブロックは「ブロックの中」を表示し、最後の式 [100, 250, 400].sum の値 750 が yield の戻り値として result に入ります。with_log の本体は次の行から続けて「集計を終了」を表示し、最後に result の 750 を返すので、呼び出し側の total は 750 です"
+    >
+      <Box x={10} y={10} w={176} h={34} lines="呼び出し側（トップレベル）" fs={12} fill="bg" />
+      <Box x={266} y={10} w={200} h={34} lines="with_log の本体" fs={12} fill="bg" />
+      <Box x={596} y={10} w={174} h={34} lines="ブロック（do … end）" fs={12} fill="bg" />
+
+      <Box x={10} y={62} w={176} h={48} lines={['total = with_log("集計")', 'do … end']} mono fs={11.5} />
+      <Arrow x1={186} y1={86} x2={264} y2={86} />
+      <T x={226} y={74} fs={11.5} tone="muted" anchor="middle">
+        呼び出す
+      </T>
+      <Box x={266} y={62} w={200} h={48} lines={['puts "#{label}を開始"', '出力：集計を開始']} mono fs={12.5} subTone="muted" />
+      <Arrow x1={366} y1={110} x2={366} y2={126} />
+
+      <Box x={266} y={128} w={200} h={104} lines="result = yield" mono fs={12} fill="box5" accent />
+      <Arrow x1={466} y1={150} x2={594} y2={150} accent />
+      <T x={531} y={138} fs={11.5} tone="acc" anchor="middle">
+        ブロックを実行
+      </T>
+      <Box x={596} y={128} w={174} h={44} lines={['puts "ブロックの中"', '出力：ブロックの中']} mono fs={12.5} subTone="muted" />
+      <Arrow x1={683} y1={172} x2={683} y2={186} />
+      <Box x={596} y={188} w={174} h={44} lines={['[100, 250, 400].sum', '最後の式の値は 750']} mono fs={12.5} subTone="muted" />
+      <Arrow x1={596} y1={210} x2={468} y2={210} accent />
+      <T x={531} y={198} fs={11.5} tone="acc" anchor="middle">
+        750 を返す
+      </T>
+
+      <Arrow x1={366} y1={232} x2={366} y2={248} />
+      <Box x={266} y={250} w={200} h={48} lines={['puts "#{label}を終了"', '出力：集計を終了']} mono fs={12.5} subTone="muted" />
+      <Arrow x1={366} y1={298} x2={366} y2={314} />
+      <Box x={266} y={316} w={200} h={48} lines={['result', 'with_log の戻り値は 750']} mono fs={12.5} subTone="muted" />
+      <Arrow x1={266} y1={340} x2={188} y2={340} />
+      <T x={226} y={328} fs={11.5} tone="muted" anchor="middle">
+        750 を返す
+      </T>
+      <Box x={10} y={322} w={176} h={36} lines="total に 750 が入る" fs={12} />
+    </Svg>
+  )
+}
+
+/* ---------- 図（番号なし） has_many のスコープを arity で分ける ---------- */
+function BuildScopeFigure() {
+  // 左の列 20〜370（引数のない lambda）、右の列 410〜760（引数を1つ取る lambda）
+  return (
+    <Svg
+      id="ch04-build-scope"
+      w={780}
+      h={450}
+      label="has_many に書いた lambda が保存されてから実行されるまでを、引数の数で左右に分けた図です。build_scope は if scope && scope.arity == 0 で分岐します。左の -> { order(:created_at) } は arity が 0 なので、返すのは proc { instance_exec(&scope) } で包んだ通常の Proc です。右の ->(article) { where(...) } は arity が 1 なので、lambda をそのまま返します。関連を読み込むときの呼び出しは、どちらも relation.instance_exec(owner, &scope) です。左では包んだ Proc が owner を使わず、instance_exec(&scope) で元の lambda を引数なしで実行し、右では owner が lambda の引数 article に入ります。どちらも self は relation です。左の lambda を包まずにこの形で実行すると、引数が1つ多いので ArgumentError になります"
+    >
+      <T x={20} y={14} fs={12} tone="muted">
+        has_many の2番目の引数に書いた lambda（build_scope の引数 scope）
+      </T>
+      <Box x={20} y={28} w={350} h={48} lines={['-> { order(:created_at) }', 'arity は 0']} mono fs={12.5} fill="bg" subTone="muted" />
+      <Box x={410} y={28} w={350} h={48} lines={['->(article) { where(...) }', 'arity は 1']} mono fs={12.5} fill="bg" subTone="muted" />
+      <Arrow x1={195} y1={76} x2={318} y2={105} />
+      <Arrow x1={585} y1={76} x2={462} y2={105} />
+
+      <Box x={230} y={106} w={320} h={48} lines={['build_scope', 'if scope && scope.arity == 0']} mono fs={12} />
+      <Arrow x1={300} y1={154} x2={197} y2={196} />
+      <T x={236} y={168} fs={11.5} tone="muted" anchor="end">
+        arity が 0
+      </T>
+      <Arrow x1={480} y1={154} x2={583} y2={196} />
+      <T x={544} y={168} fs={11.5} tone="muted">
+        それ以外
+      </T>
+
+      <Box x={20} y={198} w={350} h={48} lines={['proc { instance_exec(&scope) }', '通常の Proc で包んで返す']} mono fs={12.5} fill="box5" subTone="muted" />
+      <Box x={410} y={198} w={350} h={48} lines={['scope', 'lambda をそのまま返す']} mono fs={12.5} fill="bg" subTone="muted" />
+
+      <Arrow x1={195} y1={246} x2={195} y2={296} />
+      <Arrow x1={585} y1={246} x2={585} y2={296} />
+      <T x={390} y={271} fs={12} tone="muted" anchor="middle">
+        関連を読み込むとき（reflection.rb の scope_for）
+      </T>
+
+      <Box x={20} y={298} w={350} h={36} lines="relation.instance_exec(owner, &scope)" mono fs={12} fill="bg" />
+      <Box x={410} y={298} w={350} h={36} lines="relation.instance_exec(owner, &scope)" mono fs={12} fill="bg" />
+      <Arrow x1={195} y1={334} x2={195} y2={352} />
+      <Arrow x1={585} y1={334} x2={585} y2={352} />
+
+      <Box x={20} y={354} w={350} h={64} lines={['owner を使わず、instance_exec(&scope) で', '元の lambda を引数なしで実行', 'self は relation']} fs={12} />
+      <Box x={410} y={354} w={350} h={64} lines={['owner が lambda の引数 article に入る', 'self は relation']} fs={12} />
+
+      <T x={20} y={438} fs={11.5} tone="danger">
+        左の lambda を包まずにこの形で実行すると、引数が1つ多いので ArgumentError
+      </T>
+    </Svg>
+  )
+}
+
 const ch04: Chapter = {
   number: 4,
   part: 1,
   title: 'ブロック・Proc・lambda とスコープ',
   summary:
-    'each や map にブロックを渡す書き方と、Rails の routes.rb・transaction・respond_to・before_action がブロックをいつ実行するか、ローカル変数が見える範囲を確かめてから、ブロックとクロージャの性質、Proc と lambda の違い、新しいスコープが作られる場所、instance_eval・class_eval による self の切り替えを説明します。routes.rb や scope のブロックが Rails の中でどう実行されるかが分かります。',
+    '配列の each に渡した処理は要素ごとにすぐ動きます。一方、Rails には、受け取った処理を後で呼ぶメソッドもあります。ブロックをいつ、どのオブジェクトを相手に実行するかで、同じ書き方の意味がどう変わるかを確かめます。',
   goals: [
-    'each・map などにブロックを渡し、ブロックの引数と値の使われ方を説明できる',
-    'Rails のメソッドがブロックをすぐに実行するか、保存して後で実行するかを区別し、ローカル変数が見える範囲を説明できる',
-    'yield と &block の違いを理解し、ブロックを Proc として受け渡せる',
-    'Proc と lambda の引数と return の違いを説明できる',
-    'クロージャが変数そのものを参照することと、class・module・def が新しいスコープを作ることを説明できる',
-    'instance_eval・class_eval・instance_exec で self とメソッドの定義先がどう変わるかを説明できる',
-    'routes.draw や scope、has_many のスコープのブロックが Rails の中で実行される仕組みを説明できる',
+    'do と end で囲んだ処理に、どの値がいつ渡るかを追える',
+    'ブロックを Proc として保存する例を読み、Proc と lambda の引数や return の違いを説明できる',
+    'ブロックから読めるローカル変数と、実行時の self が持つ値を区別できる',
+    'routes.rb の中で、誰に対して get などのメソッドを呼んでいるかを確かめられる',
   ],
   prerequisites: [2, 3],
   sections: [
@@ -392,7 +489,7 @@ new_article_comment GET  /articles/:article_id/comments/new(.:format) comments#n
           </p>
           <h3>transaction</h3>
           <p>
-            データベースのトランザクションは、複数の変更をまとめて、すべて成功したときだけ確定し、途中で失敗したらすべて取り消す仕組みです（<ChapterLink n={15} section="transaction" />
+            データベースのトランザクションは、複数の変更をまとめて、すべて成功したときだけ確定し、途中で失敗したらすべて取り消す仕組みです（<ChapterLink n={38} section="transaction" />
             ）。Rails では <code>transaction</code> メソッドにブロックを渡して使います
             <Ref n={14} />。デモのアプリで、実行した SQL のログを画面に出しながら試しました。
           </p>
@@ -446,9 +543,13 @@ p result
           />
           <p>
             respond_to のブロックは引数 <code>format</code> を受け取ります。<code>format.turbo_stream</code> や <code>format.html</code>{' '}
-            は形式ごとの処理を登録するメソッドで、要求の形式に合ったものだけが実行されます。turbo_stream はページの一部だけを書き換えるための形式です（<ChapterLink n={17} section="streams" />
-            ）。動きを確かめるため、HTML と JSON を返す小さなコントローラーを bin/rails runner の中で定義し、要求の形式を変えて呼びました。要求の形式は要求に付ける
+            は形式ごとの処理を登録するメソッドで、要求の形式に合ったものだけが実行されます。turbo_stream はページの一部だけを書き換えるための形式です。動きを確かめるため、HTML と JSON を返す小さなコントローラーを bin/rails runner の中で定義し、要求の形式を変えて呼びました。要求の形式は要求に付ける
             Accept ヘッダー（ブラウザーなどが受け取りたい形式を伝える情報）で指定します。
+          </p>
+          <p>
+            コードの後半では、<code>Rack::MockRequest.env_for</code> で要求の内容を表す Hash を作り、<code>Basics04Controller.action(:show).call(env)</code>{' '}
+            でその要求に対して show アクションを実行しています。戻り値は状態コード、ヘッダー、本文の3つで、最後の puts がこの3つを1行に表示します。要求を Hash で渡して3つの値を受け取る呼び出し方は
+            <ChapterLink n={6} />で説明します。
           </p>
           <Code
             lang="ruby"
@@ -552,7 +653,8 @@ undefined local variable or method 'total' for main
           </p>
           <p>
             def で定義したメソッドの中からは、メソッドの外のローカル変数は見えません。show_total の中の total はローカル変数としてもメソッドとしても見つからず、NameError（名前が見つからないことを示す例外）になりました
-            <Ref n={4} />。メソッドの中で外の値を使いたいときは、引数で渡します。
+            <Ref n={4} />。メッセージの末尾の <code>for main</code> は、名前を探した相手がトップレベルの self である main だったことを表します（
+            <ChapterLink n={2} section="self" />）。メソッドの中で外の値を使いたいときは、引数で渡します。
           </p>
           <p>
             ブロックの中から外のローカル変数を使えるので、each や transaction のブロックでは、ブロックの前に用意した変数をそのまま使えます。ブロックが外の変数を参照する性質は、ブロックを保存して後で実行するときにも残ります。これは「クロージャ：作られた場所の変数を参照する」の節で扱います。
@@ -593,6 +695,67 @@ with_timing               # => "ブロックがありません"
             <code>transaction do ... end</code>、<code>respond_to do |format| ... end</code>、<code>run_callbacks(:save) {'{ ... }'}</code>{' '}
             （第5章で扱う、コールバックを実行するメソッド）など、「前後の処理はメソッドが行い、間の処理を呼び出し側が渡す」形でよく使われます。
           </p>
+          <p>
+            この形を小さなメソッドで確かめます。次の <code>with_log</code> はブロックを実行する前と後にメッセージを表示します。
+          </p>
+          <Code
+            lang="ruby"
+            title="yield_before_after.rb"
+            code={`
+def with_log(label)
+  puts "#{label}を開始"
+  result = yield            # ここでブロックを実行する
+  puts "#{label}を終了"
+  result
+end
+
+total = with_log("集計") do
+  puts "ブロックの中"
+  [100, 250, 400].sum
+end
+p total
+
+def call_block
+  yield
+end
+
+begin
+  call_block                # ブロックを付けずに呼ぶ
+rescue LocalJumpError => e
+  puts "#{e.class}: #{e.message}"
+end
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+集計を開始
+ブロックの中
+集計を終了
+750
+LocalJumpError: no block given (yield)
+`}
+          />
+          <p>
+            次の図は、yield_before_after.rb の前半で with_log を呼んでから total に 750 が入るまでを、上から下へ時間の順に並べたものです。列は左から呼び出し側、with_log
+            の本体、ブロックで、横向きの矢印は実行がほかの列へ移る所を表します。
+          </p>
+          <Figure
+            title="with_log と yield の実行順"
+            caption="模式図です。縦の矢印は同じ列の中で次の行へ進むこと、強調色の矢印は with_log の本体とブロックの間で実行が移ることを表します。箱の2行目は、その行の出力や値です。"
+          >
+            <YieldSequenceFigure />
+          </Figure>
+          <p>
+            最初の3行は「集計を開始」「ブロックの中」「集計を終了」の順に出ています。with_log の本体が yield の行まで進み、そこでブロックを実行し、ブロックが終わると yield
+            の次の行から続きを実行しました。ブロックの最後の式の値 750 は yield の戻り値として <code>result</code> に入り、with_log の戻り値になっています。「Rails でブロックを書く場面」の節の
+            transaction も、ブロックの実行が終わった後に COMMIT を送り、ブロックの最後の式の値を戻り値にしていました。メソッドがブロックの実行の前後に処理を足すという形は with_log と同じです。
+          </p>
+          <p>
+            最後の行の <code>LocalJumpError</code> は、ブロックを付けずに呼んだメソッドの中で yield を実行したときの例外です。<code>no block given (yield)</code>{' '}
+            というメッセージが出たら、呼び出し側でブロックを付け忘れていないかを確かめます。ブロックが無くても動くメソッドにするときは、最初の例のように <code>block_given?</code> で処理を分けます。
+          </p>
         </>
       ),
     },
@@ -619,6 +782,11 @@ def apply_twice(x, &block) = block.call(block.call(x))
 apply_twice(1) { |n| n * 10 } # => 100
 `}
           />
+          <p>
+            <code>capture</code> は受け取ったブロックを Proc にして、そのまま返すだけのメソッドです。<code>pr.class</code> が Proc なので、ブロックがオブジェクトになって変数 pr
+            に入ったことが分かります。<code>pr.call(1)</code> はブロックの引数 x に 1 を渡して実行します。<code>apply_twice</code> は yield の代わりに <code>block.call</code>{' '}
+            でブロックを2回実行しています。内側の <code>block.call(1)</code> が 10 を返し、その 10 を外側の <code>block.call</code> に渡すので、結果は 100 になります。
+          </p>
           <h3>Proc に保存した処理を map のブロックとして渡す</h3>
           <p>
             配列の <code>map</code> は、各要素をブロックに渡し、その結果を集めた新しい配列を返します。
@@ -720,7 +888,7 @@ double_lambda.call(3) # => 6
           <p>
             lambda も Proc クラスのオブジェクトです。この節では、<code>proc {'{ ... }'}</code> で作るものを「通常の Proc」、
             <code>lambda {'{ ... }'}</code> で作るものを「lambda」と呼び分けます。
-            主な違いは<strong>渡す引数の数が合わないときの動作</strong>と、<strong>中で return を書いたときに終了する範囲</strong>の2つです<Ref n={2} />。
+            主な違いは渡す引数の数が合わないときの動作と、中で return を書いたときに終了する範囲の2つです<Ref n={2} />。
           </p>
 
           <h3>違い①：引数の数が合わないとき</h3>
@@ -763,7 +931,7 @@ read_name.call()
           <h3>違い②：return で終了する範囲</h3>
           <p>
             普通のメソッドに書く <code>return</code> は、そのメソッドを途中で終了し、呼び出し元へ値を返します。
-            通常の Proc の中に書いた <code>return</code> も、<strong>その Proc を作ったメソッドを終了します</strong>。
+            通常の Proc の中に書いた <code>return</code> も、その Proc を作ったメソッドを終了します。
             次の例では <code>greet_with_proc</code> の中で Proc を作っているので、終了するのは greet_with_proc です。
           </p>
           <Code
@@ -786,7 +954,7 @@ greet_with_proc # => "こんにちは"
           </ol>
           <p>
             次は <code>proc</code> を <code>lambda</code> に変えた例です。
-            lambda の中の <code>return</code> は、<strong>その lambda の実行だけを終了します</strong>。
+            lambda の中の <code>return</code> は、その lambda の実行だけを終了します。
             そのため、<code>greeting.call</code> が値を返した後、メソッドの続きを実行します。
           </p>
           <Code
@@ -954,6 +1122,11 @@ add.call(1)                         # => 21（作った後に変えた x の値�
 add.binding.local_variable_get(:x)  # => 20
 `}
           />
+          <p>
+            コードの前半の <code>counter</code> は、ローカル変数 count と、count を使う2つの lambda を作り、lambda を配列に入れて返します。<code>inc, read = counter</code>{' '}
+            は、返された配列の1つ目を inc に、2つ目を read に代入します。inc を2回呼ぶと count は 2 になり、read は同じ count を読むので 2 を返します（図 4-3）。counter
+            をもう一度呼ぶと、新しい count と新しい2つの lambda が作られ、最初の count とは別に 0 から数えます。
+          </p>
           <Figure n="4-3" title="クロージャが変数を参照する" caption="模式図。counter が終わった後も、lambda が参照している count は残り続ける。">
             <ClosureFigure />
           </Figure>
@@ -963,7 +1136,12 @@ add.binding.local_variable_get(:x)  # => 20
             <Ref n={3} />。
           </p>
           <p>
-            この性質は、Rails の DSL に渡すブロックのように、後で実行されるブロックに関係します。ブロックの中から、ブロックを書いた場所のローカル変数を参照できます。ただし、変数そのものを参照するので、ブロックが後で実行されるときには、その時点の値が使われます。
+            コードの後半では、lambda を作った後で x を 20 に変えています。<code>add.call(1)</code> が 11 にならず 21 になるのは、lambda が作られた時点の値 10 を保存しておらず、変数 x
+            を参照しているからです。最後の行は add の binding から変数 x の今の値を取り出していて、20 が返ります。
+          </p>
+          <p>
+            この性質は、Rails の DSL（routes.rb の resources や、モデルの scope・has_many のように、宣言の形で書くメソッド呼び出し）に渡すブロックのように、後で実行されるブロックに関係します。ブロックの中から、ブロックを書いた場所のローカル変数を参照できます。ただし、変数そのものを参照するので、ブロックが後で実行されるときには、その時点の値が使われます。「Rails
+            の DSL でブロックが実行される仕組み」の節の例では、ルートを定義するブロックの中から、ブロックの外で作ったローカル変数 prefix を使います。
           </p>
         </>
       ),
@@ -995,6 +1173,16 @@ end
 Klass.new.show               # => "top"
 `}
           />
+          <p>
+            コードの前半の Gate は class と def で書いています。class の本体でも show の中でも <code>defined?(level)</code> は nil を返していて、トップレベルの level
+            は見えていません。「ローカル変数が見える範囲」の節で、def の中から外の total が見えなかったのと同じ動作です。
+          </p>
+          <p>
+            後半は同じ形のクラスを <code>Class.new</code> と <code>define_method</code> で書いています。<code>Class.new do … end</code>{' '}
+            は、ブロックをクラスの本体として実行し、新しいクラスを作るメソッドです（<ChapterLink n={2} section="class-is-object" />）。
+            <code>define_method(:show) {'{ level }'}</code> は、show という名前のメソッドを、ブロックを本体として定義するメソッドです。どちらに渡したものもブロックなので、中から level
+            が見えています。図 4-4 では、左の太い枠が外側の変数を見えなくする class と def、右の破線の枠が外側の変数を引き継ぐブロックです。
+          </p>
           <Figure n="4-4" title="スコープゲートとブロック" caption="class・module・def は新しいスコープを作る。Class.new や define_method に渡すブロックは外側のスコープを引き継ぐ。">
             <ScopeGateFigure />
           </Figure>
@@ -1002,7 +1190,95 @@ Klass.new.show               # => "top"
             <code>class</code> キーワードの代わりに <code>Class.new</code> を、<code>def</code> の代わりに <code>define_method</code>{' '}
             を使うと、ブロックを使ってクラスやメソッドを定義できるため、外側の変数を内側に持ち込めます。Rails が <code>define_method</code> を多用する理由の1つがこれです。たとえば第3章で見た{' '}
             <code>scope</code> の実装では、<code>define_method</code> のブロックの中から、<code>scope</code> メソッドの引数 <code>body</code> と、ブロックから作ったローカル変数 <code>extension</code>{' '}
-            を参照しています。
+            を参照しています。該当する行をもう一度引用します。
+          </p>
+          <Code
+            lang="ruby"
+            title="activerecord/lib/active_record/scoping/named.rb（171〜178行。scope メソッドの一部）"
+            href={`${GH}/activerecord/lib/active_record/scoping/named.rb#L171-L178`}
+            code={`
+          extension = Module.new(&block) if block
+
+          if body.respond_to?(:to_proc)
+            singleton_class.define_method(name) do |*args|
+              scope = all._exec_scope(*args, &body)
+              scope = scope.extending(extension) if extension
+              scope
+            end
+`}
+          />
+          <p>
+            モデルに <code>scope :published, -&gt; {'{ where(published: true) }'}</code> と書いた場合で読みます。
+          </p>
+          <ul>
+            <li>
+              <code>name</code> は <code>:published</code>、<code>body</code> は <code>-&gt; {'{ where(published: true) }'}</code> の lambda です。どちらも scope
+              メソッドの引数で、scope メソッドのローカル変数です。
+            </li>
+            <li>
+              1行目の <code>extension</code> は scope にブロックも付けて呼んだときだけモジュールが入るローカル変数です。この書き方ではブロックを付けていないので nil のままです。
+            </li>
+            <li>
+              <code>singleton_class.define_method(name) do |*args| … end</code> は、published という名前のクラスメソッドを、ブロックを本体として定義します。ブロックの中の{' '}
+              <code>body</code> と <code>extension</code> は、ブロックの外にある scope メソッドのローカル変数です。def で定義していたら、この2つは見えません。
+            </li>
+          </ul>
+          <p>
+            scope メソッドの実行はモデルのクラスを読み込んだ時点で終わります。それでも、後で <code>Article.published</code> を呼ぶたびに、定義されたメソッドの本体は body
+            を参照して lambda を実行できます。前の節の counter が終わった後も count が残ったのと同じで、ブロックが参照している body は残り続けるためです。
+          </p>
+          <h3>繰り返しの中でメソッドを定義する</h3>
+          <p>
+            アプリケーションのコードでも、配列の要素ごとに似たメソッドを作るときに <code>define_method</code> を使うことがあります。次の例は状態の名前から <code>draft?</code> と{' '}
+            <code>published?</code> を定義します。比較のため、同じことを def で書いた Broken クラスも実行します。
+          </p>
+          <Code
+            lang="ruby"
+            title="define_method_loop.rb"
+            code={`
+class Article
+  attr_reader :status
+  def initialize(status) = @status = status
+
+  ["draft", "published"].each do |name|
+    define_method("#{name}?") { status == name }   # name はブロックの外のローカル変数
+  end
+end
+
+article = Article.new("draft")
+p article.draft?
+p article.published?
+
+class Broken
+  ["draft"].each do |name|
+    def check = name        # def の内側からは name が見えない
+  end
+end
+
+begin
+  Broken.new.check
+rescue NameError => e
+  puts e.message
+end
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（Ruby 4.0.9）"
+            code={`
+true
+false
+undefined local variable or method 'name' for an instance of Broken
+`}
+          />
+          <p>
+            Article では each のブロックを2回実行し、1回目に <code>draft?</code>、2回目に <code>published?</code> を定義しています。define_method のブロックは each
+            のブロックの引数 name を参照しています。そのため draft? は status を "draft" と比べ、published? は "published" と比べます。status が "draft" の記事では、1行目が
+            true、2行目が false になりました。
+          </p>
+          <p>
+            Broken の <code>def check = name</code> は、def が新しいスコープを作るので、each のブロックの引数 name が見えません。メソッドを定義した時点ではエラーにならず、check
+            を呼んだ時点で NameError になります。コードレビューで each と define_method の組み合わせを見たときは、ブロックの外の変数をメソッドの中で使うために def を避けている、と読めます。
           </p>
         </>
       ),
@@ -1021,7 +1297,7 @@ Klass.new.show               # => "top"
           <ul>
             <li>
               <code>obj.instance_eval {'{ ... }'}</code>：<code>self</code> を <code>obj</code> にしてブロックを実行します。中で <code>def</code> すると、<code>obj</code>{' '}
-              の特異メソッドになります。
+              の特異メソッド（その1つのオブジェクトだけに定義されたメソッド。<ChapterLink n={3} section="singleton" />）になります。
             </li>
             <li>
               <code>obj.instance_exec(args) {'{ |...| ... }'}</code>：<code>instance_eval</code> と同じですが、ブロックに引数を渡せます。
@@ -1053,6 +1329,15 @@ Widget.instance_eval { def build = :class_method }
 Widget.build                     # => :class_method
 `}
           />
+          <p>
+            Widget には @secret を外から読むためのメソッドがありません。それでも <code>w.instance_eval {'{ @secret }'}</code> が 42 を返すのは、ブロックの中の self が w
+            になり、<code>@secret</code> が w のインスタンス変数を指すからです。instance_exec の行では、引数の 8 がブロックの引数 n に入り、42 + 8 で 50 になります。
+          </p>
+          <p>
+            残りの3組はブロックの中で def したメソッドがどこに定義されるかを比べています（図 4-5）。<code>w.instance_eval</code> の中で定義した only_me は w
+            だけが持つメソッドで、<code>w.singleton_methods</code> に出ます。別に作った Widget のインスタンスからは呼べません。図の <code>#&lt;Class:w&gt;</code> は w
+            の特異クラスで、特異メソッドの定義先になるクラスです。
+          </p>
           <Figure n="4-5" title="self とメソッドの定義先" caption="instance_eval はレシーバの特異クラスに、class_eval はレシーバのクラス自身に def の結果を定義する。">
             <EvalFigure />
           </Figure>
@@ -1064,6 +1349,53 @@ Widget.build                     # => :class_method
           <p>
             これらのメソッドはブロックの代わりに文字列を受け取ることもできます（<code>class_eval "def foo; end"</code>）。Rails はメソッドを生成するときに文字列版の{' '}
             <code>class_eval</code> をよく使います。その理由は<ChapterLink n={5} />で説明します。
+          </p>
+          <h3>設定ファイルの configure のブロック</h3>
+          <p>
+            アプリケーションのファイルにも、self を切り替えて実行されるブロックがあります。config/environments/development.rb などの環境ごとの設定ファイルは、次の形をしています。
+          </p>
+          <Code
+            lang="ruby"
+            title="config/environments/development.rb（rails new が作るファイルの形。一部を省略）"
+            code={`
+Rails.application.configure do
+  config.eager_load = false
+  # …
+end
+`}
+          />
+          <p>
+            ブロックの中の <code>config</code> はローカル変数としてどこにも代入されておらず、レシーバを省略したメソッド呼び出しです。どのオブジェクトの config
+            が呼ばれるのかを、<code>configure</code> の実装で確かめます。
+          </p>
+          <Code
+            lang="ruby"
+            title="railties/lib/rails/railtie.rb（254〜256行）"
+            href={`${GH}/railties/lib/rails/railtie.rb#L254-L256`}
+            code={`
+    def configure(&block) # :nodoc:
+      instance_eval(&block)
+    end
+`}
+          />
+          <ul>
+            <li>
+              <code>Rails.application</code> はアプリケーション全体を表すオブジェクトです。そのクラスは Rails::Railtie を継承しているので、この configure が呼ばれます。
+            </li>
+            <li>
+              <code>def configure(&block)</code> の <code>&block</code> は、development.rb に書いたブロックを Proc として受け取ります。
+            </li>
+            <li>
+              <code>instance_eval(&block)</code> は、レシーバを省略しているので self（Rails.application）に対する呼び出しです。受け取った Proc をブロックとして渡し、self を
+              Rails.application にして実行します。
+            </li>
+            <li>
+              <code># :nodoc:</code> はこのメソッドを API の説明書に載せないことを示すコメントで、動作には関係しません。
+            </li>
+          </ul>
+          <p>
+            ブロックの中の self は Rails.application なので、<code>config.eager_load = false</code> は <code>Rails.application.config.eager_load = false</code>{' '}
+            と同じ呼び出しになります。設定ファイルの中で config に続けて書ける項目を調べるときは、Rails.application.config が返すオブジェクトのメソッドを調べます。
           </p>
         </>
       ),
@@ -1081,6 +1413,10 @@ Widget.build                     # => :class_method
             <code>config/routes.rb</code> の <code>Rails.application.routes.draw do ... end</code> に渡したブロックの中では、<code>get</code> や <code>resources</code>{' '}
             をレシーバなしで呼べます。これは、Rails が <code>Mapper</code>（ルートの定義を受け付けるオブジェクト）を self として、そのブロックを <code>instance_exec</code> で実行しているからです。
           </p>
+          <p>
+            <code>Rails.application.routes</code> は、ActionDispatch::Routing::RouteSet というクラスのオブジェクトを返します。<code>draw</code>{' '}
+            はこのクラスのメソッドで、受け取ったブロックを同じクラスの <code>eval_block</code> に渡します。ブロックを実行しているのは eval_block なので、その実装を読みます。
+          </p>
           <Code
             lang="ruby"
             title="actionpack/lib/action_dispatch/routing/route_set.rb（472〜479行）"
@@ -1096,9 +1432,34 @@ Widget.build                     # => :class_method
       end
 `}
           />
+          <ul>
+            <li>
+              引数の <code>block</code> には routes.rb に書いた <code>do … end</code> のブロックが Proc として入っています。
+            </li>
+            <li>
+              <code>mapper = Mapper.new(self)</code> は、Mapper のオブジェクトを作ります。ここの self は RouteSet で、Mapper はルートを登録する先としてこの RouteSet を受け取ります。
+            </li>
+            <li>
+              <code>if default_scope</code> はすべてのルートに共通で付ける指定を RouteSet に設定している場合の分岐です。モデルに書く default_scope
+              とは別のものです。設定していなければ nil なので、else の行に進みます。設定している場合に呼ばれる with_default_scope も、その中で同じ{' '}
+              <code>instance_exec(&block)</code> を実行します。
+            </li>
+            <li>
+              <code>mapper.instance_exec(&block)</code> は、Proc をブロックとして渡し、self を mapper にして実行します。routes.rb のブロックの中に書いた{' '}
+              <code>resources :articles</code> は、<code>mapper.resources(:articles)</code> と同じ呼び出しになります。
+            </li>
+          </ul>
+          <p>
+            図 4-6 はこの流れを routes.rb から順にたどったものです。右の列を上から下へ読むと、ブロックが draw、eval_block、instance_exec の順に渡されます。左へ戻る矢印は instance_exec
+            が routes.rb のブロックの中身を実行することを表しています。
+          </p>
           <Figure n="4-6" title="routes.draw のブロックが実行される流れ" caption="ブロックは routes.rb で作られたクロージャのまま、self だけが Mapper のインスタンスに切り替わって実行される。">
             <DslFigure />
           </Figure>
+          <p>
+            routes.rb で使えるメソッドを調べるときは、Mapper のメソッドを探します。routes.rb でメソッド名を書き間違えたときの例外のメッセージも、末尾が{' '}
+            <code>for an instance of ActionDispatch::Routing::Mapper</code> になります。この部分は、メソッドを探した相手が Mapper のオブジェクトだったことを表しています。
+          </p>
           <p>同じ仕組みを、小さな例で再現すると次のようになります。</p>
           <Code
             lang="ruby"
@@ -1123,6 +1484,14 @@ draw {
 # => ["GET /articles → articles#index", "GET /admin/users → admin/users#index"]
 `}
           />
+          <p>
+            この例の <code>draw</code> が Rails の eval_block に、<code>RouteMapper</code> が Mapper に当たります。ブロックの中の get は self になった mapper の get
+            メソッドを呼び、<code>@routes</code> に文字列を1つずつ足します。draw は最後に mapper.routes を返すので、戻り値は足された2つの文字列の配列です。
+          </p>
+          <p>
+            2つ目の get では、ブロックの外のローカル変数 prefix を使えています。instance_exec が切り替えるのは self だけで、ブロックが外側のローカル変数を参照する性質は変わりません。routes.rb
+            でも、ブロックの中で作ったローカル変数を、入れ子の resources のブロックの中から使えます。
+          </p>
           <h3>scope：Relation を self としてブロックを実行する</h3>
           <p>
             <code>scope</code> は、渡されたものが呼び出し可能（<code>call</code> を持つ）かどうかを最初に検査します。
@@ -1139,13 +1508,22 @@ draw {
 `}
           />
           <p>
+            <code>scope :published, -&gt; {'{ … }'}</code> と書いた場合、引数の <code>name</code> は <code>:published</code>、<code>body</code> は2番目に渡した lambda
+            です。<code>body.respond_to?(:call)</code> は body が call メソッドを持つかどうかを返します。持たなければ、ArgumentError を発生させて scope の実行をやめます。
+          </p>
+          <p>
             <code>scope :published, where(published: true)</code> と書くと、クラスの読み込み時に <code>where</code> を実行し、その戻り値を scope に渡します。
             この戻り値は、検索条件や並び順を保持する Relation オブジェクトで、<code>call</code> を持たないためエラーになります。
             <code>-&gt; {'{ where(published: true) }'}</code> と書けば、where を実行する処理を lambda として渡せるので、スコープを呼ぶたびに条件を組み立てられます。
           </p>
           <p>
             次に、この lambda を実行するときの <code>self</code> と、<code>where</code> の呼び出し先を確認します。第3章で見た <code>scope</code> の実装は、
-            <code>all._exec_scope(*args, &body)</code> を呼んでいました。<code>_exec_scope</code> は次のとおりです。
+            <code>all._exec_scope(*args, &body)</code> を呼んでいました。
+          </p>
+          <p>
+            この呼び出しは、scope が定義したクラスメソッド（<code>Article.published</code>）の本体にあります。<code>all</code> は Article のすべての行を対象にした Relation
+            を返すメソッドです。<code>*args</code> は Article.published に渡した引数で、<code>&body</code> は scope に渡した lambda をブロックとして渡す指定です。つまり
+            _exec_scope は、Article.all が返した Relation に対して、lambda をブロックとして付けて呼ばれます。<code>_exec_scope</code> は次のとおりです。
           </p>
           <Code
             lang="ruby"
@@ -1166,6 +1544,23 @@ draw {
             <code>Article.all</code>）になります。<code>where</code> は Relation のメソッドとして呼ばれます。<code>|| self</code> により、lambda が <code>nil</code> や{' '}
             <code>false</code> を返した場合は、条件を加えない Relation がそのまま返ります。
           </p>
+          <p>残りの行は次のように読みます。</p>
+          <ul>
+            <li>
+              <code>@delegate_to_model = true</code> と、<code>ensure</code> の下の <code>@delegate_to_model = false</code> は、インスタンス変数 @delegate_to_model を lambda の実行中だけ true
+              にします。ensure の下の行は、途中で例外が起きても必ず実行されます。この変数は、次の節の末尾の注意書きにある、モデルのクラスメソッドへの転送で使われます。
+            </li>
+            <li>
+              <code>_scoping(nil, registry) {'{ … }'}</code> の <code>_scoping</code> は、渡したブロックを実行してその値を返すメソッドです。実行の前後で、モデルごとに記録している「現在のスコープ」という値を入れ替えて元に戻します。前の行の <code>registry</code>{' '}
+              はその記録を持つオブジェクトです。lambda
+              の self を決めているのは、ブロックの中の <code>instance_exec(...)</code> のほうです。
+            </li>
+          </ul>
+          <p>
+            スコープの lambda が引数を取る場合も、同じ経路で読めます。たとえば <code>scope :published_after, -&gt;(time) {'{ where("published_at > ?", time) }'}</code>{' '}
+            と書いて <code>Article.published_after(1.week.ago)</code> を呼ぶと、引数は <code>*args</code> で受け取られ、<code>instance_exec(*args, &body)</code> を通って lambda
+            の引数 time に入ります。self は同じく Relation なので、where は Relation のメソッドとして呼ばれます。
+          </p>
           <h3>has_many のスコープ：引数の数で実行方法を変える</h3>
           <p>
             <code>has_many :comments, -&gt; {'{ order(:created_at) }'}</code> のように関連にもスコープを付けられます。Rails は、lambda の引数の数（<code>arity</code>）を見て、実行方法を変えています。
@@ -1185,6 +1580,50 @@ draw {
 `}
           />
           <p>
+            引数の <code>scope</code> は、has_many の2番目の引数に書いた lambda です。モデルの scope メソッドのことではなく、同じ名前の変数です。<code>arity</code> は Proc
+            や lambda が受け取る引数の数を返します。
+          </p>
+          <Code
+            lang="ruby"
+            title="arity は引数の数を返す"
+            code={`
+no_arg  = -> { :ok }
+one_arg = ->(article) { article }
+
+no_arg.arity   # => 0
+one_arg.arity  # => 1
+`}
+          />
+          <ul>
+            <li>
+              <code>if scope && scope.arity == 0</code> は、lambda が渡されていて、その引数が0個の場合です。has_many に lambda を書かなかったときは scope が nil
+              なので、else に進みます。
+            </li>
+            <li>
+              <code>proc {'{ instance_exec(&scope) }'}</code> は、新しい通常の Proc を作って返します。この Proc は実行されると、Proc の中の self をそのまま self として、元の lambda
+              を実行します。
+            </li>
+            <li>
+              else の <code>scope</code> は引数を取る lambda（または nil）をそのまま返します。
+            </li>
+          </ul>
+          <p>
+            通常の Proc で包むことは、「Proc と lambda の違い」の節で見た引数の検査に関係します。関連を読み込むとき、Rails は{' '}
+            <code>relation.instance_exec(owner, &scope)</code> の形で、関連の持ち主であるモデルのインスタンス（owner）を引数に渡してスコープを実行します（activerecord/lib/active_record/reflection.rb
+            の scope_for）。引数を取らない lambda をこの形で直接実行すると、引数が1つ多いので ArgumentError になります。通常の Proc は余分な引数を使わずに処理を続けるので、包んだ Proc
+            は owner を渡されても実行でき、中の <code>instance_exec(&scope)</code> が引数なしで元の lambda を実行します。
+          </p>
+          <p>
+            次の図は、has_many に書いた lambda が build_scope を通って保存され、関連を読み込むときに実行されるまでを、引数の数で左右に分けたものです。上から順に、has_many に書いた
+            lambda、build_scope の分岐、保存されるもの、関連を読み込むときの呼び出し、lambda の実行され方を並べています。
+          </p>
+          <Figure
+            title="has_many のスコープを arity で分けて実行する"
+            caption="模式図です。実線の矢印は処理の流れを表します。scope_for の scope に入るのは build_scope が返したものです。has_many に lambda を書かなかったとき（scope が nil）も右の分岐に進みますが、図では省略しています。"
+          >
+            <BuildScopeFigure />
+          </Figure>
+          <p>
             引数のない lambda は <code>instance_exec</code> で包まれ、Relation を self として実行されます。<code>-&gt;(article) {'{ where(...) }'}</code>{' '}
             のように引数を1つ取る lambda はそのまま保存され、関連を読み込むときにモデルのインスタンスを引数として受け取ります。Proc の <code>arity</code> で引数の数がわかるので、Rails は書き方を区別できます。
           </p>
@@ -1199,6 +1638,10 @@ draw {
           <p>
             <code>instance_exec</code> で実行されるブロックでは、ローカル変数は外側のものが見えますが、<code>self</code>{' '}
             は切り替わります。インスタンス変数は <code>self</code> のものを指すので、外側のインスタンス変数は見えなくなります。
+          </p>
+          <p>
+            次の例は前の節の小さな例で定義した <code>RouteMapper</code> と <code>draw</code> をそのまま使います。draw はブロックを、self を RouteMapper
+            のインスタンスにして実行するメソッドでした。Page クラスのメソッドの中から draw を呼び、ブロックの中で Page のインスタンス変数とメソッドを使ってみます。
           </p>
           <Code
             lang="ruby"
@@ -1221,7 +1664,44 @@ Page.new.build2 # => ["GET /Page のタイトル → x#y"]
 `}
           />
           <p>
+            build のブロックの中の <code>@title</code> は、self になった mapper のインスタンス変数として読まれます。mapper は @title を持たないので nil になり、パスは{' '}
+            <code>"/"</code> だけになりました。例外は出ないので、戻り値を確かめないと気付けません。build2 は draw を呼ぶ前に @title をローカル変数 t
+            に入れています。ローカル変数はブロックの中からも見えるので、タイトルが入りました。
+          </p>
+          <p>
             同様に、外側のオブジェクトのメソッドをレシーバなしで呼ぶと、<code>self</code> である Mapper や Relation のメソッドとして探されます。DSL のブロックの中で外側の値を使いたい場合は、ローカル変数に入れてから参照します。
+          </p>
+          <p>メソッドの場合を、同じ RouteMapper と draw で確かめます。</p>
+          <Code
+            lang="ruby"
+            title="ブロックの中から外側のオブジェクトのメソッドを呼ぶ"
+            code={`
+class Page
+  def path = "/pages"
+
+  def build3
+    draw { get path, to: "x#y" }          # path は Page のメソッド
+  end
+
+  def build4
+    page = self                           # 外側の self をローカル変数に入れておく
+    draw { get page.path, to: "x#y" }
+  end
+end
+
+Page.new.build3
+# NameError: undefined local variable or method 'path' for an instance of RouteMapper
+Page.new.build4 # => ["GET /pages → x#y"]
+`}
+          />
+          <p>
+            build3 のブロックの中の <code>path</code> は、self になった mapper のメソッドとして探され、見つからないので NameError になりました。メッセージの末尾の{' '}
+            <code>for an instance of RouteMapper</code> は、名前を探した相手が Page ではなく RouteMapper のインスタンスだったことを表しています。build4 は外側の self
+            をローカル変数 page に入れ、<code>page.path</code> とレシーバを書いて呼んでいます。
+          </p>
+          <p>
+            Rails のブロックの中で「定義したはずのメソッドが見つからない」というエラーが出たときは、メッセージの <code>for</code>{' '}
+            の後ろに書かれたクラスを読みます。そこが自分のクラスと違い、Mapper や Relation などになっていれば、そのブロックは self を切り替えて実行されています。
           </p>
           <Callout kind="warn">
             <p>
