@@ -588,7 +588,7 @@ end
           </p>
           <h3>同じ入力を2つの画面に送る</h3>
           <p>
-            食い違いを確かめるために、同じ入力をマイページと管理画面の両方に送り、応答の状態コードと保存された値を表示するスクリプトを書きました。ケースごとに注文を作り、終わったらトランザクションを巻き戻します。
+            食い違いを確かめるために、同じ入力をマイページと管理画面の両方に送り、応答のステータスコードと保存された値を表示するスクリプトを書きました。ケースごとに注文を作り、終わったらトランザクションを巻き戻します。
           </p>
           <Code
             lang="ruby"
@@ -603,7 +603,7 @@ CASES = [
   ["倉庫で作業中（picking）の注文", {}, "picking"],
 ].freeze
 
-# 1つのケースを1つの画面に送り、「応答の状態コード 保存された郵便番号と都道府県 履歴の件数」を返す
+# 1つのケースを1つの画面に送り、「応答のステータスコード 保存された郵便番号と都道府県 履歴の件数」を返す
 def run_case(path_name, user, input, status, customer)
   result = nil
   ActiveRecord::Base.transaction do
@@ -635,7 +635,7 @@ end
 CS の担当者がマイページの URL に送ると：403 1000001 東京都 履歴0件
 `}
           />
-          <p>結果を行ごとに読みます。管理画面の 302 は変更に成功して編集画面へ移すときの状態コードです。</p>
+          <p>結果を行ごとに読みます。管理画面の 302 は変更に成功して編集画面へ移すときのステータスコードです。</p>
           <ul>
             <li>正しい入力ではどちらも配送先を変えますが、管理画面からは履歴が残りません。CS が後で履歴を調べても、CS 自身が変えた記録が見つかりません。</li>
             <li>全角の郵便番号はマイページでは半角の7桁にそろえて受け付け、管理画面では 422 で拒みます。電話で聞き取った番号を全角で入力すると、CS の担当者だけが入力し直すことになります。</li>
@@ -659,7 +659,7 @@ CS の担当者がマイページの URL に送ると：403 1000001 東京都 �
             <li>表示の整形：結果を利用者にどんな形の文字列で見せるか</li>
           </ul>
           <p>
-            さらに、HTTP の応答を返す <code>render</code> が、権限・注文の状態・入力の検証の3か所に書かれています。そのため、入力の検証の規則だけを読みたい人も、JSON の形と状態コードの行を読み分ける必要があります。2つのアクションのファイルから、関心事ごとの行を grep で探すと次のようになりました。
+            さらに、HTTP の応答を返す <code>render</code> が、権限・注文の状態・入力の検証の3か所に書かれています。そのため、入力の検証の規則だけを読みたい人も、JSON の形とステータスコードの行を読み分ける必要があります。2つのアクションのファイルから、関心事ごとの行を grep で探すと次のようになりました。
           </p>
           <Code
             lang="text"
@@ -910,7 +910,7 @@ ja:
                 この章で使う <code>params.expect(shipping_address: [:postal_code, :prefecture, :address_line])</code> は Rails 8.0 で入ったメソッドで、<code>params.require(:shipping_address).permit(:postal_code, :prefecture, :address_line)</code> の代わりに使います<Ref n={5} />。Rails 7.2 では require と permit で書いてください。
               </li>
               <li>
-                状態コード 422 を表すシンボルは、Rack 3.1 で <code>:unprocessable_entity</code> から <code>:unprocessable_content</code> に変わり、古いシンボルを使うと非推奨の警告が出るようになりました<Ref n={6} />。Rack 3.0 以前と組み合わせている Rails 7.x のアプリでは、<code>:unprocessable_entity</code> を使ってください。
+                ステータスコード 422 を表すシンボルは、Rack 3.1 で <code>:unprocessable_entity</code> から <code>:unprocessable_content</code> に変わり、古いシンボルを使うと非推奨の警告が出るようになりました<Ref n={6} />。Rack 3.0 以前と組み合わせている Rails 7.x のアプリでは、<code>:unprocessable_entity</code> を使ってください。
               </li>
             </ul>
           </Callout>
@@ -1066,7 +1066,7 @@ end
             <code>authorize</code> は許可されたときに渡したレコードを返すので<Ref n={7} />、<code>order = authorize Order.find(...)</code> のように1行で書けます。2つ目の引数の <code>:update_shipping_address?</code> は、呼ぶポリシーのメソッドの名前です。
           </p>
           <p>
-            コントローラーに残ったのは、注文を探すこと、権限の確認を頼むこと、受け付けるキーを決めること、Order のメソッドを呼ぶこと、結果を応答にすることです。応答の形（JSON か HTML か、状態コード、どの画面に移すか）は画面ごとに違うので、それぞれのコントローラーに書きます。2つのコントローラーで同じなのは、呼ぶポリシーのメソッドと Order のメソッドの名前だけです。編集画面のビューもエラーの一覧を <code>@order.errors</code> から表示し、都道府県を一覧から選ぶ欄に直しました。
+            コントローラーに残ったのは、注文を探すこと、権限の確認を頼むこと、受け付けるキーを決めること、Order のメソッドを呼ぶこと、結果を応答にすることです。応答の形（JSON か HTML か、ステータスコード、どの画面に移すか）は画面ごとに違うので、それぞれのコントローラーに書きます。2つのコントローラーで同じなのは、呼ぶポリシーのメソッドと Order のメソッドの名前だけです。編集画面のビューもエラーの一覧を <code>@order.errors</code> から表示し、都道府県を一覧から選ぶ欄に直しました。
           </p>
           <h3>手順7：テストを関心事ごとのファイルに分ける</h3>
           <Code
@@ -1112,7 +1112,7 @@ end
 `}
           />
           <p>
-            Order のテストはログインも HTTP のリクエストも使わずに、メソッドを直接呼んで確かめます。ポリシーのテストは利用者と注文の組み合わせだけを、ヘルパーのテストは保存しない Order の値だけを使います。request spec に残したのは、HTTP の関心事（状態コード・JSON のキー・画面の移動とエラーの表示）だけです。
+            Order のテストはログインも HTTP のリクエストも使わずに、メソッドを直接呼んで確かめます。ポリシーのテストは利用者と注文の組み合わせだけを、ヘルパーのテストは保存しない Order の値だけを使います。request spec に残したのは、HTTP の関心事（ステータスコード・JSON のキー・画面の移動とエラーの表示）だけです。
           </p>
           <Code
             lang="text"
@@ -1234,7 +1234,7 @@ CS の担当者がマイページの URL に送ると：200 1500001 東京都 �
 `}
           />
           <p>
-            4つのケースすべてで、2つの画面の保存された値と履歴が同じになりました。状態コードが 200 と 302、422 と 422 のように画面ごとに違うのは、HTTP の応答の形を画面ごとに決めているからです。
+            4つのケースすべてで、2つの画面の保存された値と履歴が同じになりました。ステータスコードが 200 と 302、422 と 422 のように画面ごとに違うのは、HTTP の応答の形を画面ごとに決めているからです。
           </p>
           <p>
             最後の行は直す前の 403 から 200 に変わりました。OrderPolicy で「CS の担当者はどの注文でも配送先を変えてよい」と決めたので、CS の担当者はどちらの画面から操作しても同じ判断を受けます。マイページの URL を会員だけに使わせたい場合、それは注文についての判断ではなく、画面を使えるかどうかの判断なので、Admin::BaseController と同じように、マイページのコントローラーの <code>before_action</code> に書きます。
@@ -1673,7 +1673,7 @@ Finished in 0.13853 seconds (files took 1.02 seconds to load)
     { title: 'Ruby on Rails 7.1 Release Notes', publisher: 'Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/7_1_release_notes.html', accessed: '2026-11-22', note: 'ActiveRecord::Base.normalizes が Rails 7.1 で入ったこと。' },
     { title: 'activemodel/lib/active_model/attributes/normalization.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activemodel/lib/active_model/attributes/normalization.rb#L76-L117`, accessed: '2026-11-22', version: 'Rails 8.1.4.1（手元の gem のソースで確認）', note: 'normalizes の処理が、属性に代入するときと検証するときに実行されること。Active Record は activerecord/lib/active_record/attributes.rb でこのモジュールを include している。' },
     { title: 'Ruby on Rails 8.0 Release Notes', publisher: 'Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/8_0_release_notes.html', accessed: '2026-11-22', note: 'params.expect(table: [:attr]) が params.require(:table).permit(:attr) の代わりとして入ったこと。' },
-    { title: 'CHANGELOG.md', publisher: 'rack/rack（GitHub）', url: 'https://github.com/rack/rack/blob/v3.2.8/CHANGELOG.md?plain=1#L289-L336', accessed: '2026-11-22', version: 'rack 3.2.8（手元の gem で確認）', note: 'Rack 3.1.0 で 422 の説明を更新し、古い状態コードのシンボルに非推奨の警告を出すようにしたこと。:unprocessable_entity を使うと :unprocessable_content を使うよう警告が出ることは、lib/rack/utils.rb と RSpec の実行で確かめた。' },
+    { title: 'CHANGELOG.md', publisher: 'rack/rack（GitHub）', url: 'https://github.com/rack/rack/blob/v3.2.8/CHANGELOG.md?plain=1#L289-L336', accessed: '2026-11-22', version: 'rack 3.2.8（手元の gem で確認）', note: 'Rack 3.1.0 で 422 の説明を更新し、古いステータスコードのシンボルに非推奨の警告を出すようにしたこと。:unprocessable_entity を使うと :unprocessable_content を使うよう警告が出ることは、lib/rack/utils.rb と RSpec の実行で確かめた。' },
     { title: 'varvet/pundit（README）', publisher: 'GitHub', url: 'https://github.com/varvet/pundit', accessed: '2026-11-13', version: '2.5.2（gem に同梱の README で確認）', note: 'ポリシーが user と record を受け取り、? で終わるメソッドで判断を返すこと。authorize が渡したインスタンスを返すこと（gem に同梱の README で 2026-11-22 に確認）。' },
     { title: 'Configuring Rails Applications', publisher: 'Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/configuring.html', accessed: '2026-11-22', version: 'Rails 8.1', note: 'config.action_controller.include_all_helpers を設定しないとき、すべてのヘルパーをどのコントローラーのビューでも使えること。' },
     { title: 'actionpack/lib/action_controller/metal/helpers.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_controller/metal/helpers.rb#L124-L127`, accessed: '2026-11-22', version: 'Rails 8.1.4.1（手元の gem のソースで確認）', note: 'コントローラーの helpers が view_context を返し、ビューの外からヘルパーを呼べること。' },

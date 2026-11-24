@@ -66,7 +66,7 @@ export interface Behavior {
   bootLogs?: string[];
   /** 起動して少しで終わってしまう（Rails の起動失敗など） */
   exit?: Exit;
-  /** ALB のヘルスチェック（/up）に返す状態コード。省くと 200 */
+  /** ALB のヘルスチェック（/up）に返すステータスコード。省くと 200 */
   healthCode?: number;
   /** SIGTERM を受けてから終わるまで。seconds が stopTimeout を超えると SIGKILL（終了コード 137）で、done は書かれない */
   shutdown?: { seconds: number; logs: { after: number; message: string }[]; done: string[] };

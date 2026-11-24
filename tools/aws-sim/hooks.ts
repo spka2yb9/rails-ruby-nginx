@@ -180,7 +180,7 @@ function initialHealth(env: AwsEnv, _tg: TargetGroup, backend: { kind: string; i
   return !!t?.startedAt && simNow < t.startedAt + ALB_INTERVAL_MS;
 }
 
-/** ALB のヘルスチェックに返す状態コード（undefined ならシミュレーターの判定のまま） */
+/** ALB のヘルスチェックに返すステータスコード（undefined ならシミュレーターの判定のまま） */
 function healthCode(env: AwsEnv, _tg: TargetGroup, backend: { kind: string; id: string }): number | undefined {
   if (backend.kind !== 'task') return undefined;
   const t = env.ecsTasks.find((x) => x.taskArn === backend.id);

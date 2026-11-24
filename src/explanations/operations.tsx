@@ -154,7 +154,7 @@ export const explanation24: Explanations = {
         要求の本文はヘッダーの後の空の行に続くデータです（「Web サーバーと HTTP の要求・応答」の節）。
         フォームに入力した値や、アップロードする画像のファイルは、POST の要求の本文として送られます。
         client_max_body_size は Nginx が受け付ける本文の大きさの上限で、1m は 1MB を表します。
-        上限を超えると、Nginx は本文が大きすぎることを表す状態コード 413 を返し、要求を Puma に転送しません。
+        上限を超えると、Nginx は本文が大きすぎることを表すステータスコード 413 を返し、要求を Puma に転送しません。
       </p>
     </>,
     websocket: cite => <>
@@ -164,7 +164,7 @@ export const explanation24: Explanations = {
       </p>
       <p>
         WebSocket の接続は HTTP の要求から始まります。ブラウザーは GET /cable の要求に Upgrade: websocket と Connection: Upgrade のヘッダーを付けて、この接続を WebSocket に切り替えたいと伝えます。
-        サーバーが状態コード 101（Switching Protocols）を返すと、それ以降は同じ接続で WebSocket のメッセージを双方向に送ります。
+        サーバーがステータスコード 101（Switching Protocols）を返すと、それ以降は同じ接続で WebSocket のメッセージを双方向に送ります。
         Origin は要求を送ったページのスキーム・ホスト名・ポート番号（例：http://localhost:8080）を表すヘッダーで、サーバーはこれを見て、ほかのサイトのページからの接続を断れます。{cite}
       </p>
     </>,
@@ -188,7 +188,7 @@ export const explanation25: Explanations = {
     </>,
     'tls-proto': cite => <>
       <p>
-        リダイレクトは状態コード 301 や 302 と Location ヘッダーで、ブラウザーに別の URL を開き直させる応答です（「状態コードと 502・504」の節）。
+        リダイレクトはステータスコード 301 や 302 と Location ヘッダーで、ブラウザーに別の URL を開き直させる応答です（「ステータスコードと 502・504」の節）。
         config.force_ssl = true にすると、Rails は http で届いた要求に、同じパスの https の URL へのリダイレクトを返します。
         https で届いた要求はそのまま処理し、応答に HSTS のヘッダー（このサイトには今後 https で接続するようブラウザーに指示するヘッダー）を付けます（<ChapterLink n={21} section="host-ssl-csp" />）。
       </p>
@@ -213,8 +213,8 @@ export const explanation25: Explanations = {
     health: () => <>
       <p>
         「ロードバランサーが要求を振り分ける」の節で見たとおり、ヘルスチェックは、ロードバランサーが決まった間隔で各サーバーに送る確認の要求です。
-        ALB ではターゲットグループごとに、確認に使うパス（/up など）、間隔、正常とみなす状態コードを設定します。
-        確認の要求も利用者の要求と同じように Nginx・Puma・Rails を通るので、Rails が返す状態コードがそのまま判定に使われます。
+        ALB ではターゲットグループごとに、確認に使うパス（/up など）、間隔、正常とみなすステータスコードを設定します。
+        確認の要求も利用者の要求と同じように Nginx・Puma・Rails を通るので、Rails が返すステータスコードがそのまま判定に使われます。
       </p>
       <p>
         ルートは URL のパスとコントローラーのアクションを対応付ける設定です（<ChapterLink n={9} />）。
@@ -224,7 +224,7 @@ export const explanation25: Explanations = {
     timeouts: () => <>
       <p>
         タイムアウトは待つ時間の上限です。上限を過ぎると、待っていた側は待つのをやめ、エラーを返したり接続を切ったりします。
-        ロードバランサーと Nginx はどちらも後ろのサーバーの応答を待ちます。「状態コードと 502・504」の節では、Nginx が Puma の応答を3秒待ってやめ、504 を返しました。
+        ロードバランサーと Nginx はどちらも後ろのサーバーの応答を待ちます。「ステータスコードと 502・504」の節では、Nginx が Puma の応答を3秒待ってやめ、504 を返しました。
         そのときも Rails は5秒かけて処理を最後まで続け、ログには 200 が残りました。
       </p>
       <p>
@@ -234,7 +234,7 @@ export const explanation25: Explanations = {
     </>,
     triage: () => <>
       <p>
-        「状態コードと 502・504」の節で見たとおり、502 と 504 は、要求を転送したサーバーが、転送先から応答を受け取れなかったときに自分で作る状態コードです。
+        「ステータスコードと 502・504」の節で見たとおり、502 と 504 は、要求を転送したサーバーが、転送先から応答を受け取れなかったときに自分で作るステータスコードです。
         この章の構成にはロードバランサーと Nginx の2つの転送するサーバーがあるので、まずどちらが作った 502・504 かを見分けます。
       </p>
       <p>
@@ -270,7 +270,7 @@ export const explanation26: Explanations = {
       <p>
         ここで読むアクセスログは、デモのために項目を決めた書式です（<ChapterLink n={24} section="web-server" /> で見た公式イメージの書式とは違います）。
         lb_time と rt は、そのサーバーが要求を読み始めてから応答を送り終えるまでの秒数、urt は後ろのサーバー（Puma）の応答を待って受け取るまでの秒数です。
-        upstream と upstream_status は転送先のアドレスと、転送先が返した状態コード、xff は受け取った X-Forwarded-For、request_id は Nginx が要求ごとに作った ID です（<ChapterLink n={25} section="request-id" />）。
+        upstream と upstream_status は転送先のアドレスと、転送先が返したステータスコード、xff は受け取った X-Forwarded-For、request_id は Nginx が要求ごとに作った ID です（<ChapterLink n={25} section="request-id" />）。
       </p>
     </>,
     rails: cite => <>

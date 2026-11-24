@@ -13,7 +13,7 @@ function ControllerRoleFigure() {
       id="10-1"
       w={780}
       h={310}
-      label="ブラウザーが GET /articles/1 を送ると、ルーティングが articles#show を選ぶ。ArticlesController の show は params[:id] の 1 を使って Article.find でデータベースから記事を読み出し、@article に代入する。アクションが終わると、ビューの show.html.erb が @article の title を HTML に埋め込む。できた HTML が状態コード 200 の応答としてブラウザーに返る"
+      label="ブラウザーが GET /articles/1 を送ると、ルーティングが articles#show を選ぶ。ArticlesController の show は params[:id] の 1 を使って Article.find でデータベースから記事を読み出し、@article に代入する。アクションが終わると、ビューの show.html.erb が @article の title を HTML に埋め込む。できた HTML がステータスコード 200 の応答としてブラウザーに返る"
     >
       <Box x={20} y={70} w={120} h={60} lines={['ブラウザー', 'GET /articles/1']} fs={12} fill="box" subTone="muted" />
       <Arrow x1={140} y1={100} x2={168} y2={100} />
@@ -510,7 +510,7 @@ const ch10: Chapter = {
     '記事を保存した後に HTML を返す場合と、別の URL を開くようブラウザーに伝える場合では、ログに残る要求の数が違います。フォームの入力がコントローラーに届いてから応答が返るまでを追います。',
   goals: [
     'params から保存に使う項目を取り出し、アクションの前に呼ばれる処理を確認できる',
-    'render と redirect_to の違いを、状態コードと次の要求の有無から読み取れる',
+    'render と redirect_to の違いを、ステータスコードと次の要求の有無から読み取れる',
     '要求をまたいでログイン状態を参照できる理由を Cookie とセッションで説明できる',
     'テンプレートの選択や例外の処理を経て、どの応答が返ったかをログで追える',
   ],
@@ -682,7 +682,7 @@ Completed 422 Unprocessable Content in 28ms (Views: 7.1ms | ActiveRecord: 0.0ms 
             Parameters の行には、フォームの入力欄のほかに2つの値があります。authenticity_token は Rails がフォームに埋め込む CSRF 対策のトークンで（<ChapterLink n={21} section="csrf" />）、ログでは値が [FILTERED] に置き換えられています。commit は送信ボタンの値です。
           </p>
           <p>
-            save が false を返したので、<code>render :new</code> が new.html.erb を使って HTML を作り、状態コード 422 で返しました。<code>render :new</code> は new
+            save が false を返したので、<code>render :new</code> が new.html.erb を使って HTML を作り、ステータスコード 422 で返しました。<code>render :new</code> は new
             アクションを実行するのではなく、new のテンプレートを使うだけです。<code>@article</code> は create で作った、入力値と検証の誤りを持つオブジェクトなので、返ったフォームには誤りの表示が付きました。
           </p>
           <Code
@@ -694,7 +694,7 @@ Completed 422 Unprocessable Content in 28ms (Views: 7.1ms | ActiveRecord: 0.0ms 
 `}
           />
           <p>
-            422 は送られた内容を処理できなかったことを表す状態コードです。Rails の既定で入っている Turbo は、フォームの送信に 200 の応答が返ると画面を書き換えないので、失敗したときは{' '}
+            422 は送られた内容を処理できなかったことを表すステータスコードです。Rails の既定で入っている Turbo は、フォームの送信に 200 の応答が返ると画面を書き換えないので、失敗したときは{' '}
             <code>status: :unprocessable_content</code> で 422 を指定します（<ChapterLink n={16} section="form" />）。
           </p>
           <p>タイトルを入れて送信すると、応答のヘッダーとログは次のようになりました。</p>
@@ -1145,7 +1145,7 @@ ActionController::Base::MODULES.size  # => 36
               <code>AbstractController::Base</code>：HTTP の処理を含まない、アクションの呼び出しの仕組み（<code>process</code>、<code>action_methods</code> など）。ActionMailer もこのクラスを使います。
             </li>
             <li>
-              <code>ActionController::Metal</code>：リクエストと応答のオブジェクトを持ち、Rack の応答の配列（状態コード、ヘッダー、本文の3つを並べた配列。<ChapterLink n={6} section="rack-contract" />）を返す最小限のコントローラー。
+              <code>ActionController::Metal</code>：リクエストと応答のオブジェクトを持ち、Rack の応答の配列（ステータスコード、ヘッダー、本文の3つを並べた配列。<ChapterLink n={6} section="rack-contract" />）を返す最小限のコントローラー。
             </li>
             <li>
               <code>ActionController::Base</code>：Metal に36個のモジュールを include したもの。描画、Strong Parameters、Cookie、CSRF 対策、コールバック（before_action のように、アクションの前後に呼ぶ処理）、例外処理などはモジュールが持ちます。
@@ -1828,7 +1828,7 @@ end
       body: (
         <>
           <p>
-            production で利用者に 404 や 500 のページが表示されたとき、そのページを誰が、どの状態コードで返したのかを、この節で追います。アクションの中で起きた例外は、まず <code>process_action</code> の連鎖にある ActionController::Rescue で捕捉されます。rescue_from で登録した処理がどこで呼ばれ、登録が無い例外がどうなるかを、次のコードで確かめます。
+            production で利用者に 404 や 500 のページが表示されたとき、そのページを誰が、どのステータスコードで返したのかを、この節で追います。アクションの中で起きた例外は、まず <code>process_action</code> の連鎖にある ActionController::Rescue で捕捉されます。rescue_from で登録した処理がどこで呼ばれ、登録が無い例外がどうなるかを、次のコードで確かめます。
           </p>
           <Code
             lang="ruby"
@@ -1942,7 +1942,7 @@ end
               <code>rescue Exception =&gt; exception</code>：内側のどこでも rescue されなかった例外が、ここに届きます。
             </li>
             <li>
-              <code>wrapper = ExceptionWrapper.new(backtrace_cleaner, exception)</code>：例外を ExceptionWrapper のオブジェクトで包みます。wrapper の status_code を呼ぶと、この例外に対応する状態コードが返ります。
+              <code>wrapper = ExceptionWrapper.new(backtrace_cleaner, exception)</code>：例外を ExceptionWrapper のオブジェクトで包みます。wrapper の status_code を呼ぶと、この例外に対応するステータスコードが返ります。
             </li>
             <li>
               <code>request.set_header "action_dispatch.exception", …</code>：例外を env に入れます。後で呼ばれる exceptions_app は、ここから例外を読めます。
@@ -1951,7 +1951,7 @@ end
               <code>if wrapper.show?(request)</code>：例外をエラー応答にするかどうかを、<code>config.action_dispatch.show_exceptions</code> の設定で決めます（この節の最後の補足）。しない場合は <code>raise exception</code> で外側へ投げ直します。
             </li>
             <li>
-              <code>status = wrapper.status_code</code>：状態コードを求めます。RecordNotFound なら 404 です。
+              <code>status = wrapper.status_code</code>：ステータスコードを求めます。RecordNotFound なら 404 です。
             </li>
             <li>
               <code>request.path_info = "/#{'{status}'}"</code> と <code>request.request_method = "GET"</code>：要求のパスを <code>/404</code> に、メソッドを GET に書き換えます。元のパスとメソッドは、その前の2行で env に残しています。
@@ -1960,7 +1960,7 @@ end
               <code>response = @exceptions_app.call(request.env)</code>：書き換えた要求で exceptions_app を呼びます。exceptions_app は、<code>GET /404</code> を受け取ったアプリケーションとして応答を作ります。
             </li>
             <li>
-              最後の行：exceptions_app が X-Cascade ヘッダーに pass と書いた応答を返したときは、本文が空でその状態コードの応答を返します。それ以外は、exceptions_app の応答をそのまま返します。
+              最後の行：exceptions_app が X-Cascade ヘッダーに pass と書いた応答を返したときは、本文が空でそのステータスコードの応答を返します。それ以外は、exceptions_app の応答をそのまま返します。
             </li>
           </ul>
           <p>
@@ -1971,7 +1971,7 @@ end
             <Ref n={9} />。<code>config.exceptions_app = routes</code> とすると、エラーページを通常のルートとコントローラーで作れます。パスが <code>/404</code> に書き換わっているので、routes.rb に <code>/404</code> や <code>/500</code> のルートを書けば、そのアクションがエラーページを作ります。
           </p>
           <p>
-            図 10-8 は例外が通る順を上から下へ並べたものです。左の列を上から順に見ます。Rescue と DebugExceptions の箱から右へ出る矢印は、その段階で応答が決まる場合です。右下の枠は ShowExceptions が状態コードを決めるときに使う rescue_responses の一部です。
+            図 10-8 は例外が通る順を上から下へ並べたものです。左の列を上から順に見ます。Rescue と DebugExceptions の箱から右へ出る矢印は、その段階で応答が決まる場合です。右下の枠は ShowExceptions がステータスコードを決めるときに使う rescue_responses の一部です。
           </p>
           <Figure n="10-8" title="例外の行き先" caption="Rails 8.1.4.1 の rescue.rb・debug_exceptions.rb・show_exceptions.rb・exception_wrapper.rb を読んでまとめた図。">
             <ExceptionFigure />
@@ -2188,7 +2188,7 @@ set-cookie: _demo_session=oKbhi2j91UHJi9RL01Jh…; path=/; secure; httponly; sam
     { title: 'actionpack/lib/action_dispatch/middleware/show_exceptions.rb・public_exceptions.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_dispatch/middleware/show_exceptions.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'ShowExceptions が exceptions_app を呼ぶ処理と、PublicExceptions が public/404.html などを返す処理。' },
     { title: 'actionpack/lib/action_dispatch/middleware/cookies.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/action_dispatch/middleware/cookies.rb`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'Cookies ミドルウェアの call、MAX_COOKIE_SIZE と CookieOverflow、暗号化の既定（aes-256-gcm）。セッションの保存は session/cookie_store.rb。' },
     { title: 'Action Controller Overview（Session Stores）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/action_controller_overview.html#session-stores', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'CookieStore が保存できるのは 4 kB 程度で、大きなデータやモデルを入れないこと。' },
-    { title: 'Layouts and Rendering in Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/layouts_and_rendering.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'render と redirect_to の違い、redirect_to の既定の状態コードが 302 であること、redirect_to の後のコードも実行されること。' },
+    { title: 'Layouts and Rendering in Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/layouts_and_rendering.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'render と redirect_to の違い、redirect_to の既定のステータスコードが 302 であること、redirect_to の後のコードも実行されること。' },
     { title: 'actionpack/lib/abstract_controller/rendering.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actionpack/lib/abstract_controller/rendering.rb`, accessed: '2026-11-16', version: 'Rails 8.1.4.1', note: 'view_assigns がコントローラーのインスタンス変数を集めてビューに渡すこと（62〜68行目）。' },
     { title: 'Using HTTP cookies', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies', accessed: '2026-11-16', note: 'HTTP は状態を持たないこと、Set-Cookie で渡した Cookie をブラウザーが Cookie ヘッダーで送り返すこと。' },
     { title: 'Redirections in HTTP', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections', accessed: '2026-11-16', note: '302 は GET 以外のメソッドを GET に変えるかどうかが決まっておらず、303 は GET に変えること。POST の後に 303 で移すと、再読み込みで操作が繰り返されないこと。' },

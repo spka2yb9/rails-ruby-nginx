@@ -102,7 +102,7 @@ function StructureFigure() {
       id="80-2"
       w={780}
       h={372}
-      label="ユースケースの構造。3つのコントローラーが RegisterForEvent の call を呼び、Result を受け取る。RegisterForEvent は、ApplicationRecord.transaction と lock! で MySQL の events の行をロックし、Event の register! に規則の確認と保存を任せる。Event は Registration を保存し、断るときは RegistrationRejected を投げる。RegisterForEvent は ActiveRecord.after_all_transactions_commit に RegistrationMailer の deliver_later を登録し、コミットの後に Sidekiq のキューにジョブが入る。RegisterForEvent は HTTP の状態コードやフラッシュを扱わない"
+      label="ユースケースの構造。3つのコントローラーが RegisterForEvent の call を呼び、Result を受け取る。RegisterForEvent は、ApplicationRecord.transaction と lock! で MySQL の events の行をロックし、Event の register! に規則の確認と保存を任せる。Event は Registration を保存し、断るときは RegistrationRejected を投げる。RegisterForEvent は ActiveRecord.after_all_transactions_commit に RegistrationMailer の deliver_later を登録し、コミットの後に Sidekiq のキューにジョブが入る。RegisterForEvent は HTTP のステータスコードやフラッシュを扱わない"
     >
       <Box
         x={20}
@@ -146,7 +146,7 @@ function StructureFigure() {
         コミットの後に投入する
       </T>
       <T x={20} y={356} fs={12} tone="muted">
-        RegisterForEvent は HTTP の状態コード・フラッシュ・CSV の行番号を扱わない
+        RegisterForEvent は HTTP のステータスコード・フラッシュ・CSV の行番号を扱わない
       </T>
     </Svg>
   )
@@ -358,7 +358,7 @@ const chapter: Chapter = {
   goals: [
     '同じ業務操作の手順が複数の呼び出し元に書かれると、どのような食い違いが起きるかを実行結果から説明できる',
     'ユースケース・モデル・コントローラーの受け持ちを分け、規則をモデルに、手順とトランザクションをユースケースに置ける',
-    '成功・断る理由・例外を区別した戻り値の形を決め、HTTP の状態コードや画面の文言への変換を呼び出し元に任せられる',
+    '成功・断る理由・例外を区別した戻り値の形を決め、HTTP のステータスコードや画面の文言への変換を呼び出し元に任せられる',
     'lock! で定員の競合を防ぎ、MySQL の REPEATABLE READ では lock! をトランザクションの最初の読み取りにする理由を説明できる',
     'Rails 8.1 の enqueue_after_transaction_commit の既定を確かめ、ActiveRecord.after_all_transactions_commit でコミットの後にメールを投入できる',
     'Repository パターンの目的と、Rails ではスコープとクラスメソッドで足りる理由、それでも分ける場合を説明できる',
@@ -652,7 +652,7 @@ APIから 高橋 → 201 {"id":32}
                 <tr>
                   <th scope="row">呼び出し元</th>
                   <td>RegistrationsController・Api::RegistrationsController・Admin::RegistrationImportsController</td>
-                  <td>リクエストや CSV の行を読んでユースケースの入力にし、結果を画面の文言・HTTP の状態コード・取り込みの報告に変える</td>
+                  <td>リクエストや CSV の行を読んでユースケースの入力にし、結果を画面の文言・HTTP のステータスコード・取り込みの報告に変える</td>
                 </tr>
                 <tr>
                   <th scope="row">ユースケース</th>
@@ -697,7 +697,7 @@ APIから 高橋 → 201 {"id":32}
             <li>トランザクションの範囲はユースケースが決める。1回の業務操作の保存を1つのトランザクションにまとめる。</li>
             <li>メールの送信や外部の API の呼び出しのように取り消せない処理は、トランザクションがコミットされた後に行う。</li>
             <li>満席のように業務上想定される失敗は、結果の値で返す。DB に接続できないなどの想定外の失敗は、例外のまま呼び出し元に伝える。</li>
-            <li>HTTP の状態コード、リクエストのオブジェクト、画面に表示する文言は、ユースケースで扱わない。</li>
+            <li>HTTP のステータスコード、リクエストのオブジェクト、画面に表示する文言は、ユースケースで扱わない。</li>
           </ul>
           <Callout title="Transaction Script と Domain Model">
             <p>
@@ -709,7 +709,7 @@ APIから 高橋 → 201 {"id":32}
             <StructureFigure />
           </Figure>
           <p>
-            図 80-2 は適用後のクラスの関係です。3つのコントローラーは RegisterForEvent の <code>call</code> だけを呼び、Result を受け取ります。RegisterForEvent は、トランザクションとロック、Event の <code>register!</code>、コミットの後のメールの投入の3つを順に使います。RegisterForEvent が知らないものも図の下に書きました。HTTP の状態コード、フラッシュ、CSV の行番号は呼び出し元が扱います。
+            図 80-2 は適用後のクラスの関係です。3つのコントローラーは RegisterForEvent の <code>call</code> だけを呼び、Result を受け取ります。RegisterForEvent は、トランザクションとロック、Event の <code>register!</code>、コミットの後のメールの投入の3つを順に使います。RegisterForEvent が知らないものも図の下に書きました。HTTP のステータスコード、フラッシュ、CSV の行番号は呼び出し元が扱います。
           </p>
           <Figure n="80-3" title="申し込みのシーケンス" caption="薄い色の範囲がトランザクションの中。①〜③はトランザクションの中、④はコミットの後。">
             <SequenceFigure />
@@ -853,7 +853,7 @@ SELECT \`registrations\`.* FROM \`registrations\` INNER JOIN \`events\` ON \`eve
             code={`
 app/
   controllers/registrations_controller.rb               # 画面。結果をフラッシュの文言に変える
-  controllers/api/registrations_controller.rb           # API。結果を状態コードと JSON に変える
+  controllers/api/registrations_controller.rb           # API。結果をステータスコードと JSON に変える
   controllers/admin/registration_imports_controller.rb  # CSV の行ごとに呼び、報告を返す
   services/register_for_event.rb                        # ユースケース（手順・トランザクション・結果の形）
   models/event.rb                                       # 申し込みの規則
@@ -1286,7 +1286,7 @@ APIから 佐藤 → 409 {"error":"already_registered"}
                 </tr>
                 <tr>
                   <th scope="row">spec/requests/registrations_spec.rb</th>
-                  <td>3つの呼び出し元が結果を文言・状態コード・報告に変えること</td>
+                  <td>3つの呼び出し元が結果を文言・ステータスコード・報告に変えること</td>
                   <td>例ごとのトランザクション</td>
                 </tr>
               </tbody>
@@ -1559,7 +1559,7 @@ Finished in 1.17 seconds (files took 0.91527 seconds to load)
               モデルの <code>register!</code> は「呼び出し元がロックしている」という前提を持ちます。コンソールや別のクラスから <code>register!</code> を直接呼ぶと、定員の保護が外れます。重複は一意索引で防げますが、定員は DB の制約では守れていません。
             </li>
             <li>規則をモデルに置くか、ユースケースに置くかを、そのつど判断する必要があります。</li>
-            <li>Result の <code>code</code> の値は呼び出し元との取り決めなので、値を足したら、文言の表・状態コード・報告のすべてを確かめます。</li>
+            <li>Result の <code>code</code> の値は呼び出し元との取り決めなので、値を足したら、文言の表・ステータスコード・報告のすべてを確かめます。</li>
           </ul>
           <h3>保守性とテストのしやすさへの影響</h3>
           <p>
@@ -1620,7 +1620,7 @@ end
           <h3>ユースケースが HTTP を知っている</h3>
           <Code
             lang="ruby"
-            title="誤用の例：params を受け取り、状態コードを返す"
+            title="誤用の例：params を受け取り、ステータスコードを返す"
             code={`
 class RegisterForEvent
   def call(params:, session:)
@@ -1633,7 +1633,7 @@ end
 `}
           />
           <p>
-            ユースケースが <code>params</code>・<code>session</code>・状態コード・画面の文言を扱うと、CSV の取り込みやコンソール、ジョブからは呼べなくなります。CSV の取り込みからこのクラスを使うには、行ごとに params の形のハッシュを作ることになります。入力はイベントや会員のオブジェクト（または ID）で受け取り、HTTP への変換はコントローラーで行います。
+            ユースケースが <code>params</code>・<code>session</code>・ステータスコード・画面の文言を扱うと、CSV の取り込みやコンソール、ジョブからは呼べなくなります。CSV の取り込みからこのクラスを使うには、行ごとに params の形のハッシュを作ることになります。入力はイベントや会員のオブジェクト（または ID）で受け取り、HTTP への変換はコントローラーで行います。
           </p>
           <h3>トランザクションの中で外部と通信する</h3>
           <Code
@@ -1741,7 +1741,7 @@ end
             <li>そのクラスは、1つの業務操作だけを扱っているか。</li>
             <li>業務の規則はモデルにあり、ユースケースは手順を呼ぶだけになっているか。</li>
             <li>トランザクションの範囲、ロックを取る位置、取り消せない処理を行う時点が、コードから読めるか。</li>
-            <li>ユースケースが HTTP の状態コード・リクエスト・画面の文言を知らないか。</li>
+            <li>ユースケースが HTTP のステータスコード・リクエスト・画面の文言を知らないか。</li>
             <li>想定される失敗は結果で、想定外の失敗は例外で伝わるか。</li>
             <li>同時実行とロールバックの振る舞いを、DB を使うテストで確かめているか。</li>
           </ol>

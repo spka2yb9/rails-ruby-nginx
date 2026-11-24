@@ -58,10 +58,10 @@ window.LFR.scenarios.add({
     { name: 'ターゲットのヘルスチェックの結果', cmd: "aws elbv2 describe-target-health --target-group-arn $TG --query 'TargetHealthDescriptions[].{ip:Target.Id,state:TargetHealth.State,reason:TargetHealth.Reason,description:TargetHealth.Description}' --output table",
       desc: 'ターゲット（タスクの IP）ごとの状態です。initial は最初のヘルスチェックの途中、\n' +
             'unhealthy なら Reason と Description に理由が出ます。\n' +
-            'Target.ResponseCodeMismatch は「期待した状態コードと違う応答が返った」という意味です。\n' +
+            'Target.ResponseCodeMismatch は「期待したステータスコードと違う応答が返った」という意味です。\n' +
             '（$TG は CASE33 と同じく、describe-target-groups で取り出したターゲットグループの ARN）' },
     { name: 'ヘルスチェックの設定', cmd: "aws elbv2 describe-target-groups --names jinzai-prod-web-tg --query 'TargetGroups[0].{protocol:HealthCheckProtocol,port:HealthCheckPort,path:HealthCheckPath,matcher:Matcher.HttpCode}'",
-      desc: 'ALB がどのプロトコル・ポート・パスでヘルスチェックを送り、どの状態コードを正常とみなすかです。\n' +
+      desc: 'ALB がどのプロトコル・ポート・パスでヘルスチェックを送り、どのステータスコードを正常とみなすかです。\n' +
             'traffic-port はターゲットのポート（3000）を指します。' },
     { name: '止められたタスクの理由', cmd: "aws ecs describe-tasks --cluster jinzai-prod --tasks <タスクID> --query 'tasks[0].{stopCode:stopCode,reason:stoppedReason}'",
       desc: 'ヘルスチェックに落ちて ECS が止めたタスクは、stopCode が ServiceSchedulerInitiated、\n' +
@@ -146,13 +146,13 @@ window.LFR.scenarios.add({
 '    TLS を前段（ALB）で終えている前提で、すべてのリクエストを https として扱う\n' +
 '  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }\n' +
 '    ヘルスチェックの /up だけ、リダイレクトから外す\n\n' +
-'ヘルスチェックの正常とみなす状態コードを 200-399 に広げる、という直し方はしません。\n' +
+'ヘルスチェックの正常とみなすステータスコードを 200-399 に広げる、という直し方はしません。\n' +
 '301 は /up に届く前に返るので、アプリが動いているかを確かめられなくなるからです。\n\n' +
 '--- このCASEで身につけてほしいこと ---\n\n' +
 '1. ヘルスチェックに落ちたタスクは、ECS が止めて入れ替える。デプロイは前のタスクを残したまま終わらない\n' +
 '2. 理由はサービスのイベントと describe-target-health の Reason / Description に出る\n' +
 '3. ヘルスチェックは利用者のリクエストとは別の、ALB からの HTTP のリクエスト。https を前提にした設定の影響を受ける\n' +
-'4. 状態コードの基準をゆるめるのではなくヘルスチェックのパスが正しく 200 を返すように直す',
+'4. ステータスコードの基準をゆるめるのではなくヘルスチェックのパスが正しく 200 を返すように直す',
     wrong: [
 'Rails が起動できずに落ちたのなら、stopCode は EssentialContainerExited になり、終了コードが付きます。\n\n' +
 '今回の stoppedReason は「Task failed ELB health checks」です。\n' +

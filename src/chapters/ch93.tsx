@@ -1599,7 +1599,7 @@ Failures:
             <EncapsulationTable />
           </Figure>
           <p>
-            Rails のテストでも考え方は同じです。request spec はコントローラーの private メソッドを呼ばずに、HTTP の要求と応答で確かめます。前の節の商品ページの例も応答の状態コードと本文、Rails.error への報告を確かめました。どの層にテストを置くかは、テストの章（<ChapterLink n={20} section="test-strategy" />）と DHH の思想の章（<ChapterLink n={31} section="behavior-tests" />）で扱っています。
+            Rails のテストでも考え方は同じです。request spec はコントローラーの private メソッドを呼ばずに、HTTP の要求と応答で確かめます。前の節の商品ページの例も応答のステータスコードと本文、Rails.error への報告を確かめました。どの層にテストを置くかは、テストの章（<ChapterLink n={20} section="test-strategy" />）と DHH の思想の章（<ChapterLink n={31} section="behavior-tests" />）で扱っています。
           </p>
         </>
       ),

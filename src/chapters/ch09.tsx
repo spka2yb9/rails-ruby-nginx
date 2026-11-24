@@ -486,7 +486,7 @@ $ curl -s -v -o /dev/null 'http://127.0.0.1:3300/articles/1?preview=true'
           <p>
             要求の1行目の <code>GET</code> が HTTP の<Term en="method">メソッド</Term>で、その後ろにパスとクエリ文字列が続きます。2行目からは<Term en="header">ヘッダー</Term>で、
             <code>名前: 値</code> の形で要求に情報を付け足します。Host は送り先のホスト、Accept は受け取りたいデータの種類です。応答の1行目の <code>200</code>{' '}
-            は状態コードで、要求の結果を3桁の数字で表します。200 は成功、404 は求められた情報が見つからないことを表します。応答のヘッダーの後には、空の行をはさんで本文（ここでは記事のページの HTML）が続きます。
+            はステータスコードで、要求の結果を3桁の数字で表します。200 は成功、404 は求められた情報が見つからないことを表します。応答のヘッダーの後には、空の行をはさんで本文（ここでは記事のページの HTML）が続きます。
           </p>
           <p>
             メソッドは、パスが指す情報に対して何をしたいかを表します。Web のアプリケーションでよく使うのは次の4つです
@@ -1335,7 +1335,7 @@ end
               <code>req.path_parameters = parameters</code> と <code>req.route = route</code>：選んだルートと、パスから取り出した値を要求のオブジェクトに保存します。
             </li>
             <li>
-              <code>_, headers, _ = response = route.app.serve(req)</code>：右から読みます。<code>route.app.serve(req)</code> がルートの呼び出し先を実行し、状態コード、ヘッダー、本文の配列を返します。その配列を{' '}
+              <code>_, headers, _ = response = route.app.serve(req)</code>：右から読みます。<code>route.app.serve(req)</code> がルートの呼び出し先を実行し、ステータスコード、ヘッダー、本文の配列を返します。その配列を{' '}
               <code>response</code> に入れ、同時に2番目の要素を <code>headers</code> に取り出しています。<code>_</code> は、使わない値を受け取るための変数の名前です。
             </li>
             <li>

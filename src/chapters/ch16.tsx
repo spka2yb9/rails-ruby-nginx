@@ -794,7 +794,7 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
           </p>
           <Code
             lang="text"
-            title="Chrome で /articles を開いたときの要求（Playwright で記録。開いてからの時間・パス・種類・状態コード）"
+            title="Chrome で /articles を開いたときの要求（Playwright で記録。開いてからの時間・パス・種類・ステータスコード）"
             code={`
  148ms GET /articles                                         document   200 text/html; charset=utf-8
  233ms GET /assets/application-bfcdf840.js                   script     200 text/javascript
@@ -1028,7 +1028,7 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
 `}
           />
           <p>
-            暗黙の描画で 406（求められた形式で応答を返せないことを表す状態コード）になりました。<ChapterLink n={10} section="render" />
+            暗黙の描画で 406（求められた形式で応答を返せないことを表すステータスコード）になりました。<ChapterLink n={10} section="render" />
             で見たのは、どの形式のテンプレートも無い場合（HTML を求めれば 406、それ以外は 204）でした。ここでは show.html.erb のように別の形式のテンプレートがあるので、implicit_render.rb は ActionController::UnknownFormat
             を投げ、これが 406 になります。<code>render</code> を明示的に呼んだ場合は ActionView::MissingTemplate になり、メッセージに探した条件と場所が出ます。
           </p>
@@ -1534,7 +1534,7 @@ flash[:notice] => "記事を作成しました"
               <Ref n={13} />。CSS でこのクラスに色を付ければ、エラーの項目を目立たせられます。
             </li>
             <li>
-              状態コードを 422 にするのは、送信が失敗したことをブラウザーに伝えるためです。Rails の既定で入っている Turbo（リンクやフォームの送信を JavaScript で処理するライブラリ）は、フォームの送信に 200 の応答が返ると画面を書き換えません。Rails ガイドには <code>:unprocessable_entity</code> と書いた例もありますが、Rails 8.1.4.1 はどちらも 422
+              ステータスコードを 422 にするのは、送信が失敗したことをブラウザーに伝えるためです。Rails の既定で入っている Turbo（リンクやフォームの送信を JavaScript で処理するライブラリ）は、フォームの送信に 200 の応答が返ると画面を書き換えません。Rails ガイドには <code>:unprocessable_entity</code> と書いた例もありますが、Rails 8.1.4.1 はどちらも 422
               に変換します（<code>response.rb</code> の 51〜59 行目）
               <Ref n={14} />。
             </li>

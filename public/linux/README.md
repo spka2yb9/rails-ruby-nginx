@@ -281,7 +281,7 @@ AWS のCASEでは、`aws` コマンドに aws-learning のシミュレーター�
 |---|---|
 | `bootLogs` | タスクが RUNNING になったら、起動ログを書く（Puma は第23章の実測、Sidekiq は sidekiq のソースの文言） |
 | `exit` | 起動して少しで、終了コード付きで終わる（`EssentialContainerExited`）。ECS は間をあけて次のタスクを起動する |
-| `healthCode` | ALB のヘルスチェックにこの状態コードを返す。基準に合わなければ、猶予期間 + 30秒 × 2回のあとに ECS が止めて入れ替える |
+| `healthCode` | ALB のヘルスチェックにこのステータスコードを返す。基準に合わなければ、猶予期間 + 30秒 × 2回のあとに ECS が止めて入れ替える |
 | `shutdown` | SIGTERM を受けてから終わるまでの秒数とログ。`stopTimeout`（既定30秒）を超えると SIGKILL（終了コード 137）で、最後のログは書かれない |
 | `commands` | `run-task` で command を差し替えたときの結果。`requiresSecurityGroup` のセキュリティグループが無いと DB に届かない |
 
@@ -308,7 +308,7 @@ aws-learning のファイルは書き換えず、`tools/aws-sim/vite.config.ts` 
 | `sim/containers.ts` | タスクの状態を進めるたびに `hooks.ts` を呼ぶ |
 | `sim/containers.ts` | 新しいデプロイ（前のリビジョンに戻す、`--force-new-deployment` を含む）で、動いているタスクを入れ替える。シミュレーターは「タスク定義が同じなら新しいデプロイのタスク」とみなすため、そのままでは入れ替わらない |
 | `sim/elb.ts` | RUNNING になったばかりのタスクは、最初のヘルスチェック（30秒）が終わるまで `initial`。これが無いと、新しいタスクが起動した瞬間に古いタスクが止められる |
-| `sim/elb.ts` | ヘルスチェックの状態コードを `healthCode` から決める |
+| `sim/elb.ts` | ヘルスチェックのステータスコードを `healthCode` から決める |
 | `sim/batch.ts` | ジョブのコンテナのふるまい（何を書き、どの終了コードで終わるか）を、ジョブ定義ごとに CASE が決める（`server.ts` の `batchJob`） |
 | `sim/vpc.ts` | 止まったタスクの IP も使用中に数える。aws-learning の不具合の回避（止まったタスクの IP が新しいタスクに渡り、ターゲットの登録と解除が同じ時刻の中で交互に起き続けて、時間が進まなくなる） |
 

@@ -852,7 +852,7 @@ r.to_a.size                             # => 1
 `}
           />
           <p>
-            <code>find</code> は主キー（id）で1件を取り出し、見つからなければ ActiveRecord::RecordNotFound を投げます。コントローラーの中でこの例外が起きると、Rails は 404（ページが見つからないことを表す HTTP の状態コード）
+            <code>find</code> は主キー（id）で1件を取り出し、見つからなければ ActiveRecord::RecordNotFound を投げます。コントローラーの中でこの例外が起きると、Rails は 404（ページが見つからないことを表す HTTP のステータスコード）
             の応答を返します（<ChapterLink n={10} section="exceptions" />）。<code>find_by</code> は条件に合う最初の1件を返し、見つからなければ nil を返します。<code>where</code>{' '}
             は条件に合うすべての行を表す Relation（検索条件を保存したオブジェクト）を返し、<code>each</code> や <code>to_a</code> で中身を使うときに初めて SQL を実行します（
             <ChapterLink n={12} />）。

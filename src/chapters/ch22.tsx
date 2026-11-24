@@ -435,7 +435,7 @@ Completed 200 OK in 7ms (Views: 3.6ms | ActiveRecord: 1.3ms (2 queries, 0 cached
           </p>
           <ul>
             <li>
-              <code>200 OK</code>：応答の状態コード
+              <code>200 OK</code>：応答のステータスコード
             </li>
             <li>
               <code>in 7ms</code>：コントローラーがアクションを処理するのにかかった時間

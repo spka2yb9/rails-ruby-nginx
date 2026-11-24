@@ -127,7 +127,7 @@ View.ancestors.first(3) # => [View, Greeting, Object]`} />
         name が <code>article[title]</code> の入力欄なら、Rails の params では <code>params[:article][:title]</code> で取り出せます（<ChapterLink n={10} section="params" />）。
       </p>
       <p>
-        応答の状態コードは要求の結果を表す3桁の数字です（<ChapterLink n={6} section="http-message" />）。この節には次の3つが出てきます。
+        応答のステータスコードは要求の結果を表す3桁の数字です（<ChapterLink n={6} section="http-message" />）。この節には次の3つが出てきます。
         200 は成功です。302 は「別の URL を取得し直してください」という指示（リダイレクト）で、移動先の URL は Location ヘッダーに入ります。422 は送られた内容を処理できなかったことを表します。
       </p>
       <p>
@@ -311,7 +311,7 @@ puts "locate: #{a.class} id=#{a.id} title=#{a.title}"
         ActiveStorage が出力する URL は Rails の URL で、Rails がその要求を受け取ってから、画像を返す方法を決めます。
       </p>
       <p>
-        リダイレクトは「別の URL を要求し直してほしい」と伝える応答です。状態コード 302 と、移動先の URL を入れた location ヘッダーを返すと、ブラウザーはその URL へ自動で要求を送り直します。
+        リダイレクトは「別の URL を要求し直してほしい」と伝える応答です。ステータスコード 302 と、移動先の URL を入れた location ヘッダーを返すと、ブラウザーはその URL へ自動で要求を送り直します。
         CDN は配信するファイルの複製を利用者に近い多数のサーバーに置いて返すサービスで、同じファイルへの要求を Rails まで届けずに返せます。
         署名付きの ID の「署名」は、値が書き換えられていないことを確かめるための文字列です（<ChapterLink n={21} section="secrets" />）。{cite}
       </p>
@@ -494,7 +494,7 @@ puts "パッドでもう一度 XOR: #{xor.(pad, masked)}"
 # 2回目 => Base64 にした値: zJOu4FuNPCMhf8Tqn9btsh7ZEXduNIGk / パッドでもう一度 XOR: SECRET-TOKEN`} />
       <p>
         実行するたびに出力される値は変わりますが、パッドで XOR し直すと、どちらも同じ SECRET-TOKEN に戻りました。Rails のトークンも同じ方法で、表示のたびに違う値を出力します。
-        HTTPS は通信を暗号化した HTTP です。422 は要求の内容を処理できなかったことを表す状態コードです。{cite}
+        HTTPS は通信を暗号化した HTTP です。422 は要求の内容を処理できなかったことを表すステータスコードです。{cite}
       </p>
     </>,
     xss: cite => <>
@@ -543,7 +543,7 @@ puts Article.where("title = ?", "it's").to_sql
     'host-ssl-csp': cite => <>
       <p>
         Host ヘッダーは要求の宛先のホスト名を入れるヘッダーです。<code>curl http://127.0.0.1:3300/up</code> は <code>Host: 127.0.0.1:3300</code> を送ります。ほかのヘッダーと同じく、送る側が書き換えられます。
-        HTTPS は通信を暗号化した HTTP で、途中の経路で中身を読まれたり書き換えられたりするのを防ぎます。301 は「この URL は別の URL に移った」ことを表すリダイレクトの状態コードです。
+        HTTPS は通信を暗号化した HTTP で、途中の経路で中身を読まれたり書き換えられたりするのを防ぎます。301 は「この URL は別の URL に移った」ことを表すリダイレクトのステータスコードです。
       </p>
       <p>
         HSTS（Strict-Transport-Security ヘッダー）は、「このサイトには今後、指定した期間は HTTPS だけで接続すること」をブラウザーに覚えさせるヘッダーです。Cookie の secure 属性はその Cookie を HTTPS の要求にだけ付けるようにする属性です。

@@ -8,7 +8,7 @@ export const explanation06: Explanations = {
       <p>
         ここまでの3つの節で、Web サーバーは HTTP の文字の並びを読み書きし、アプリケーションは要求の内容から応答の内容を作ることを見ました。
         Puma と Rails の間では、要求は Ruby のハッシュ、応答は Ruby の配列として受け渡されます。
-        たとえば応答の <code>[200, {`{ "content-type" => "text/plain" }`}, ["Hello"]]</code> は3要素の配列で、1つ目が状態コード、2つ目のハッシュがヘッダー、3つ目の <code>["Hello"]</code> が本文です。
+        たとえば応答の <code>[200, {`{ "content-type" => "text/plain" }`}, ["Hello"]]</code> は3要素の配列で、1つ目がステータスコード、2つ目のハッシュがヘッダー、3つ目の <code>["Hello"]</code> が本文です。
         本文を文字列の配列にしているのは、長い本文を部分に分けて順に渡せるようにするためです。
         Puma はこの配列を受け取り、「HTTP の要求と応答」の節で見た形の文字の並びにして送ります。{cite}
       </p>
@@ -265,7 +265,7 @@ puts r.routes
     recognize: cite => <>
       <p>
         Puma は要求を受け取ると、要求の情報を env というハッシュに入れて、Rails のアプリケーションの <code>call(env)</code>{' '}
-        を呼びます。アプリケーションは状態コード、ヘッダー、本文の3つを配列にして返します。この取り決めを Rack と呼びます（<ChapterLink n={6} section="rack-contract" />）。
+        を呼びます。アプリケーションはステータスコード、ヘッダー、本文の3つを配列にして返します。この取り決めを Rack と呼びます（<ChapterLink n={6} section="rack-contract" />）。
         Rails のアプリケーションは受け取った要求を、ミドルウェア（要求の前後に共通の処理をする部品）に外側から順に通し、最後に RouteSet の call を呼びます。この最後に呼ばれるものをエンドポイントと呼びます（
         <ChapterLink n={6} section="rails-stack" />）。
       </p>
@@ -284,7 +284,7 @@ puts r.routes
       </p>
       <p>
         development では、定数が初めて使われたときに、名前に対応するファイル（ArticlesController なら app/controllers/articles_controller.rb）を読み込みます。この仕組みをオートロードと呼びます（
-        <ChapterLink n={8} section="naming" />）。状態コードの 404 は「求められたものが無い」、500 は「サーバーの中で誤りが起きた」ことを表します。{cite}
+        <ChapterLink n={8} section="naming" />）。ステータスコードの 404 は「求められたものが無い」、500 は「サーバーの中で誤りが起きた」ことを表します。{cite}
       </p>
     </>,
     'url-generation': cite => <>
@@ -308,7 +308,7 @@ p View.new.article_path(1)    # => "/articles/1"`} />
     </>,
     mount: cite => <>
       <p>
-        Rack のアプリケーションは <code>call(env)</code> というメソッドを持ち、状態コード、ヘッダー、本文の配列を返すオブジェクトです（<ChapterLink n={6} section="rack-contract" />
+        Rack のアプリケーションは <code>call(env)</code> というメソッドを持ち、ステータスコード、ヘッダー、本文の配列を返すオブジェクトです（<ChapterLink n={6} section="rack-contract" />
         ）。lambda も call で呼べるので、次の lambda は Rack のアプリケーションとして使えます。
       </p>
       <Code lang="ruby" code={`->(env) { [200, { "content-type" => "text/plain" }, ["OK"]] }`} />
@@ -392,7 +392,7 @@ article[title]=%E3%83%AB%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%E3%81%AE%E
       <p>
         この節に出てくる一括代入は、<code>Article.new(title: "…", body: "…")</code> のように、ハッシュで複数の属性をまとめてモデルに入れることです。モデルに管理者かどうかを表す admin
         という属性があるとき、params をそのまま渡すと、利用者がフォームに無い <code>article[admin]=1</code> を足して送った場合に admin も代入されます。Strong Parameters
-        は、permit や expect で許可したキーだけをモデルに渡せるようにして、これを防ぎます。状態コードの 400 は、要求の形が正しくないという意味です。値の型の変換、モデルの検証、その利用者が操作してよいかの確認は、Strong
+        は、permit や expect で許可したキーだけをモデルに渡せるようにして、これを防ぎます。ステータスコードの 400 は、要求の形が正しくないという意味です。値の型の変換、モデルの検証、その利用者が操作してよいかの確認は、Strong
         Parameters とは別に行います。{cite}
       </p>
     </>,
@@ -402,8 +402,8 @@ article[title]=%E3%83%AB%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%E3%81%AE%E
         要求の Accept ヘッダーは受け取りたいデータの種類を表します。ブラウザーがページを開くときは text/html（HTML）を求め、JavaScript から呼ぶ API では application/json（JSON）を求めることがよくあります。
       </p>
       <p>
-        この節に出てくる状態コードの 406 は、求められた種類で応答を作れないこと、204 は成功したが本文が無いことを表します。<code>head :no_content</code>{' '}
-        は本文を付けずに状態コードだけを返すメソッドです。{cite}
+        この節に出てくるステータスコードの 406 は、求められた種類で応答を作れないこと、204 は成功したが本文が無いことを表します。<code>head :no_content</code>{' '}
+        は本文を付けずにステータスコードだけを返すメソッドです。{cite}
       </p>
     </>,
     exceptions: cite => <>
@@ -443,7 +443,7 @@ end
 end`} />
       <p>
         rescue_from で処理しない例外は、コントローラーの外のミドルウェアまで伝わり、エラーの画面になります。development では誤りの場所を示す詳しい画面、production では public/404.html や
-        public/500.html のような、前もって用意したページが返ります。状態コードの 404 は見つからない、400 は要求の形が正しくない、422 は送られた内容を処理できない、500
+        public/500.html のような、前もって用意したページが返ります。ステータスコードの 404 は見つからない、400 は要求の形が正しくない、422 は送られた内容を処理できない、500
         はサーバーの中で誤りが起きたことを表します。{cite}
       </p>
     </>,

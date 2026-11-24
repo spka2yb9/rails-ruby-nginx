@@ -827,7 +827,7 @@ end
 `}
           />
           <p>
-            <code>have_http_status</code> は応答の状態コードを、<code>redirect_to</code> はリダイレクト先を確かめるマッチャーです。デモで実行すると、2つとも成功しました。<code>eq</code>{' '}
+            <code>have_http_status</code> は応答のステータスコードを、<code>redirect_to</code> はリダイレクト先を確かめるマッチャーです。デモで実行すると、2つとも成功しました。<code>eq</code>{' '}
             のマッチャーが失敗したときは、たとえば <code>eq(0)</code> を <code>eq(1)</code> に変えると、
             <code>expected: 1</code>、<code>got: 0</code>、<code>(compared using ==)</code> と表示されます。request spec がミドルウェアからビューまでのどこを通るかは、
             <ChapterLink n={20} section="types">

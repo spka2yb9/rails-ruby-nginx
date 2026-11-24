@@ -9,7 +9,7 @@ const NG = 'https://nginx.org/en/docs'
 /* ---------- 図 27-1 HTTP の要求と応答 ---------- */
 function MessageFigure() {
   const rows = [
-    { label: '1行目', y: 50, h: 46, req: ['GET /hello.html HTTP/1.1', 'メソッド・パス・HTTP のバージョン'], res: ['HTTP/1.1 200 OK', 'HTTP のバージョン・状態コード・説明'], fill: 'box5' as const },
+    { label: '1行目', y: 50, h: 46, req: ['GET /hello.html HTTP/1.1', 'メソッド・パス・HTTP のバージョン'], res: ['HTTP/1.1 200 OK', 'HTTP のバージョン・ステータスコード・説明'], fill: 'box5' as const },
     { label: 'ヘッダー', y: 104, h: 72, req: ['Host: 127.0.0.1:8080', 'User-Agent: curl/8.23.0', 'Accept: */*'], res: ['Server: nginx/1.30.6', 'Content-Type: text/html', 'Content-Length: 26'], fill: 'box' as const },
     { label: '空の行', y: 184, h: 26, req: ['（ヘッダーの終わり）'], res: ['（ヘッダーの終わり）'], fill: 'bg' as const },
     { label: '本文', y: 218, h: 34, req: ['（GET の要求には無い）'], res: ['<h1>Hello from Nginx</h1>'], fill: 'box4' as const },
@@ -19,7 +19,7 @@ function MessageFigure() {
       id="27-1"
       w={780}
       h={300}
-      label="curl が送った要求と Nginx が返した応答を、同じ並びで比べた図。要求の1行目はメソッド GET、パス /hello.html、HTTP のバージョン。応答の1行目は HTTP のバージョンと状態コード 200 OK。2行目からはヘッダーで、要求には Host・User-Agent・Accept、応答には Server・Content-Type・Content-Length がある。空の行でヘッダーが終わり、その後が本文。GET の要求には本文が無く、応答の本文は hello.html の中身"
+      label="curl が送った要求と Nginx が返した応答を、同じ並びで比べた図。要求の1行目はメソッド GET、パス /hello.html、HTTP のバージョン。応答の1行目は HTTP のバージョンとステータスコード 200 OK。2行目からはヘッダーで、要求には Host・User-Agent・Accept、応答には Server・Content-Type・Content-Length がある。空の行でヘッダーが終わり、その後が本文。GET の要求には本文が無く、応答の本文は hello.html の中身"
     >
       <T x={130} y={30} bold fs={12}>
         要求（curl が送る）
@@ -473,7 +473,7 @@ $ curl -sv http://127.0.0.1:8080/hello.html
             <Ref n={10} />。
           </p>
           <p>
-            応答の1行目にある 200 は、要求が成功したことを表す状態コードです（状態コードは <ChapterLink n={25} section="status" /> で詳しく扱います）
+            応答の1行目にある 200 は、要求が成功したことを表すステータスコードです（ステータスコードは <ChapterLink n={25} section="status" /> で詳しく扱います）
             <Ref n={11} />。ヘッダーの Server は応答を返したプログラム、Content-Type は本文の種類（text/html は HTML）、Content-Length は本文のバイト数です。空の行の後が本文で、hello.html
             の中身がそのまま届きました。
           </p>
@@ -493,7 +493,7 @@ $ docker logs ch24-web
 `}
           />
           <p>
-            1行目と3行目はアクセスログ（access.log）の行です。要求ごとに、接続の相手の IP アドレス、時刻、要求の1行目、状態コード、本文のバイト数、User-Agent を1行に書きます。2行目はエラーログ（error.log）の行で、
+            1行目と3行目はアクセスログ（access.log）の行です。要求ごとに、接続の相手の IP アドレス、時刻、要求の1行目、ステータスコード、本文のバイト数、User-Agent を1行に書きます。2行目はエラーログ（error.log）の行で、
             /usr/share/nginx/html/nothing.html が無い（No such file or directory）ので、404（見つからない）を返したことがわかります。
           </p>
           <p>
@@ -657,7 +657,7 @@ $ docker exec ch24-nginx nginx -s reload
           />
           <p>
             セミコロンが無いので、Nginx は次の行の {'}'} までを proxy_pass の値の続きとして読もうとし、6行目の {'}'}{' '}
-            で誤りと判断しました。報告される行が直す行（5行目）の次の行になることがあります。誤りがあると <code>nginx -s reload</code> も同じ誤りを表示して止まり、動いている Nginx は前の設定のまま要求を処理し続けました（状態コード
+            で誤りと判断しました。報告される行が直す行（5行目）の次の行になることがあります。誤りがあると <code>nginx -s reload</code> も同じ誤りを表示して止まり、動いている Nginx は前の設定のまま要求を処理し続けました（ステータスコード
             200）。説明書によると、reload の合図を受けた Nginx も新しい設定を確かめ、使えない設定なら古い設定のまま動き続けます
             <Ref n={1} />。
           </p>
@@ -904,7 +904,7 @@ HTTP_HOST="127.0.0.1:3200"
           />
           <p>
             Host が <code>app</code> のままだと、<code>redirect_to</code> や <code>*_url</code> のヘルパーが作る URL が http://app/… になり、本番環境で <code>config.hosts</code>{' '}
-            を設定していれば HostAuthorization に 403（アクセスを拒否したことを表す状態コード）で拒否されます（<ChapterLink n={21} section="host-ssl-csp" />
+            を設定していれば HostAuthorization に 403（アクセスを拒否したことを表すステータスコード）で拒否されます（<ChapterLink n={21} section="host-ssl-csp" />
             ）。<code>$host</code> は要求の Host ヘッダーからポート番号を除いた値で、<code>$http_host</code> は Host ヘッダーそのままです。デモはポート 8080 で受けているので、$host
             ではポート番号が落ちました。通常の 80・443 番で公開する場合は、どちらでも同じになります。後で見る WebSocket では、この違いが問題になります。
           </p>
@@ -1132,7 +1132,7 @@ socketerror Error during WebSocket handshake: Unexpected response code: 404
       title: 'まとめ',
       body: (
         <ul>
-          <li>HTTP の要求は1行目（メソッド・パス・バージョン）・ヘッダー・本文、応答は1行目（状態コード）・ヘッダー・本文でできています。Nginx は静的ファイルなら自分で応答を作り、それ以外はリバースプロキシとして Puma に転送します。</li>
+          <li>HTTP の要求は1行目（メソッド・パス・バージョン）・ヘッダー・本文、応答は1行目（ステータスコード）・ヘッダー・本文でできています。Nginx は静的ファイルなら自分で応答を作り、それ以外はリバースプロキシとして Puma に転送します。</li>
           <li>リバースプロキシを通すと、ブラウザーと Nginx、Nginx と Puma の間に別々の接続ができ、Rails から見た相手は Nginx になります。</li>
           <li>設定はディレクティブ（; で終える）とブロック（{'{ }'} で囲む）で書き、nginx -t で確かめてから nginx -s reload で読み込ませます。誤りがあれば、動いている Nginx は前の設定のまま動き続けます。</li>
           <li>Nginx はマスターと複数のワーカーで動き、設定は main・events・http・server・location の階層です。proxy_set_header と add_header は、その階層に1つでも書くと上の値を引き継ぎません。</li>
@@ -1158,7 +1158,7 @@ socketerror Error during WebSocket handshake: Unexpected response code: 404
     { title: 'Sprockets README（Gzip）', publisher: 'rails/sprockets（GitHub）', url: 'https://github.com/rails/sprockets/blob/v4.4.1/README.md#gzip', accessed: '2026-11-11', version: 'Sprockets 4.4.1', note: 'コンパイルしたファイルの .gz を既定で作ること（CSS・JavaScript・SVG）。' },
     { title: 'Puma README', publisher: 'puma/puma（GitHub）', url: 'https://github.com/puma/puma/blob/v8.0.2/README.md', accessed: '2026-11-16', version: 'Puma 8.0.2', note: 'Puma はリバースプロキシなしでも運用できる（Standalone）と書いていること。' },
     { title: 'RFC 9112: HTTP/1.1', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9112.html', accessed: '2026-11-16', version: 'RFC 9112', note: '要求の1行目（メソッド・パス・バージョン）、応答の1行目（状態行）、ヘッダーの行、空の行、本文という HTTP/1.1 のメッセージの形式。' },
-    { title: 'RFC 9110: HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', version: 'RFC 9110', note: '状態コードの意味（200・404 など）、Host・Server・Content-Type・Content-Length の各ヘッダー。' },
+    { title: 'RFC 9110: HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', version: 'RFC 9110', note: 'ステータスコードの意味（200・404 など）、Host・Server・Content-Type・Content-Length の各ヘッダー。' },
     { title: 'Command-line parameters', publisher: 'nginx.org', url: `${NG}/switches.html`, accessed: '2026-11-16', version: 'nginx 1.30（説明書は最新の版）', note: 'nginx -t が設定の書き方を確かめること、nginx -s reload が新しい設定でワーカーを起動し直すこと。実行例は nginx 1.30.6 で実測。' },
     { title: 'Core functionality（include・worker_connections）', publisher: 'nginx.org', url: `${NG}/ngx_core_module.html`, accessed: '2026-11-16', version: 'nginx 1.30（説明書は最新の版）', note: 'include が別のファイルの内容を設定に読み込むこと。' },
     { title: 'docker container run', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/cli/docker/container/run/', accessed: '2026-11-16', version: 'Docker CLI', note: '-p（ポートの公開）・-v（ディレクトリのマウント）・--network の指定。' },

@@ -470,7 +470,7 @@ const ch25: Chapter = {
           </p>
           <p>
             Nginx もロードバランサーとして使えます。自分の名前だけを返す Nginx を2つ（app1 と app2）起動して後ろのサーバーの代わりにし、その前にロードバランサー役の Nginx を置きました。<code>return</code>{' '}
-            は要求を転送せずに、その場で状態コードと本文を返すディレクティブです。
+            は要求を転送せずに、その場でステータスコードと本文を返すディレクティブです。
           </p>
           <Code
             lang="nginx"
@@ -625,13 +625,13 @@ HTTP_X_FORWARDED_FOR="172.29.0.1, 172.29.0.12"
     },
     {
       id: 'status',
-      title: '状態コードと 502・504',
+      title: 'ステータスコードと 502・504',
       body: (
         <>
           <p>
-            応答の1行目にある3桁の数を状態コードと呼びます（<ChapterLink n={24} section="web-server" />
+            応答の1行目にある3桁の数をステータスコードと呼びます（<ChapterLink n={24} section="web-server" />
             ）。最初の桁が結果の種類を表し、2xx は成功、3xx はリダイレクト（別の URL を開き直させる応答）、4xx は要求の側の誤り、5xx はサーバーの側の失敗です
-            <Ref n={13} />。この章と前後の章に出てくる状態コードは次のとおりです。
+            <Ref n={13} />。この章と前後の章に出てくるステータスコードは次のとおりです。
           </p>
           <div className="table-wrap">
             <table>
@@ -703,14 +703,14 @@ HTTP_X_FORWARDED_FOR="172.29.0.1, 172.29.0.12"
             </table>
           </div>
           <p>
-            502 と 504 は、Nginx や ALB のように要求を転送するサーバーが、転送先から応答を受け取れなかったときに自分で作る状態コードです。RFC 9110 は 502
+            502 と 504 は、Nginx や ALB のように要求を転送するサーバーが、転送先から応答を受け取れなかったときに自分で作るステータスコードです。RFC 9110 は 502
             を「ゲートウェイやプロキシとして動くサーバーが、転送先から不正な応答を受け取った」、504 を「転送先から時間内に応答を受け取れなかった」と定めています
             <Ref n={13} />。Nginx を Puma の前に置いて確かめました。Puma の応答を待つ時間（proxy_read_timeout）を3秒にし、Puma が動いていない状態の代わりに、Puma が待っていないポート 3001
             に転送する location も用意しました。
           </p>
           <Code
             lang="nginx"
-            title="conf.d/default.conf（状態コードを確かめるための設定）"
+            title="conf.d/default.conf（ステータスコードを確かめるための設定）"
             code={`
 server {
     listen 80;
@@ -728,7 +728,7 @@ server {
           />
           <Code
             lang="text"
-            title="4つの要求の状態コードとかかった時間"
+            title="4つの要求のステータスコードとかかった時間"
             code={`
 $ curl -s -o /dev/null -w '%{http_code} %{time_total}s\\n' 'http://127.0.0.1:8080/articles/1'
 200 0.362758s
@@ -1322,7 +1322,7 @@ upstream timed out (110: Connection timed out) while reading response header fro
         <ul>
           <li>ロードバランサーは1つの接続先で受けた要求を複数のサーバーに振り分けます。ALB はヘルスチェックで各サーバーを定期的に確かめ、正常でないサーバーには振り分けません。</li>
           <li>プロキシを通るたびに新しい接続ができるので、後ろのサーバーから接続で直接わかるのは1つ手前の IP アドレスだけです。10.0.0.0/8・172.16.0.0/12・192.168.0.0/16 はプライベートなアドレスです。</li>
-          <li>502 と 504 は、Nginx や ALB が転送先から応答を受け取れなかったときに自分で作る状態コードで、Rails のログには出ないことがあります。</li>
+          <li>502 と 504 は、Nginx や ALB が転送先から応答を受け取れなかったときに自分で作るステータスコードで、Rails のログには出ないことがあります。</li>
           <li>HTTPS は TLS で暗号化した接続で HTTP を送ります。証明書で相手のサーバーを確かめ、ロードバランサーが TLS を終端すると、後ろには HTTP で届きます。</li>
           <li>ALB が TLS を終端する構成では、後段の Nginx が X-Forwarded-Proto を $scheme で上書きすると、force_ssl が同じ URL へのリダイレクトを繰り返します。このリダイレクトは Rails のログに出ません。</li>
           <li>ALB の値をそのまま渡すか、assume_ssl を有効にします。assume_ssl は、外から直接届かない構成が前提です。</li>
@@ -1348,7 +1348,7 @@ upstream timed out (110: Connection timed out) while reading response header fro
     { title: 'Module ngx_http_core_module（Embedded Variables）', publisher: 'nginx.org', url: 'https://nginx.org/en/docs/http/ngx_http_core_module.html#var_request_id', accessed: '2026-11-11', version: 'nginx 1.30（説明書は最新の版）', note: '$request_id が16バイトの乱数の16進表記であること。' },
     { title: 'What is an Application Load Balancer?', publisher: 'AWS Documentation', url: `${AWS}/introduction.html`, accessed: '2026-11-16', version: '—', note: 'ロードバランサーがクライアントにとっての1つの接続先で、要求を複数のターゲットに振り分けること。リスナー・ターゲットグループ・ヘルスチェック。' },
     { title: 'Module ngx_http_upstream_module', publisher: 'nginx.org', url: 'https://nginx.org/en/docs/http/ngx_http_upstream_module.html', accessed: '2026-11-16', version: 'nginx 1.30（説明書は最新の版）', note: '既定の振り分けが重み付きラウンドロビンであること、失敗したら次のサーバーに送ること、max_fails（既定1）と fail_timeout（既定10秒）、zone がワーカーの間で状態を共有すること、定期的なヘルスチェックが商用版の機能であること。実行例は nginx 1.30.6 で実測。' },
-    { title: 'RFC 9110: HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', version: 'RFC 9110', note: '状態コードの種類（1xx〜5xx）と各コード（502・503・504 など）の意味、http は 80 番・https は 443 番が既定のポートであること、https での証明書の確認。' },
+    { title: 'RFC 9110: HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', version: 'RFC 9110', note: 'ステータスコードの種類（1xx〜5xx）と各コード（502・503・504 など）の意味、http は 80 番・https は 443 番が既定のポートであること、https での証明書の確認。' },
     { title: 'RFC 1918: Address Allocation for Private Internets', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc1918.html', accessed: '2026-11-16', version: 'RFC 1918', note: 'プライベートなアドレスの3つの範囲（10/8・172.16/12・192.168/16）。' },
     { title: 'RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc8446.html', accessed: '2026-11-16', version: 'RFC 8446', note: 'TLS が盗み見・改ざん・なりすましを防ぐための取り決めであること。実行例は curl 8.23.0 と nginx 1.30.6 で実測。' },
     { title: 'Create an HTTPS listener for your Application Load Balancer', publisher: 'AWS Documentation', url: `${AWS}/create-https-listener.html`, accessed: '2026-11-16', version: '—', note: 'HTTPS のリスナーでは、ロードバランサーが証明書を使ってクライアントとの接続を終端し、要求を復号してからターゲットに送ること。' },

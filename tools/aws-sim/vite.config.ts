@@ -49,7 +49,7 @@ const PATCHES: Record<string, { name: string; from: string; to: string }[]> = {
       to: "  if (b.starting) return { state: 'initial', reason: 'Elb.InitialHealthChecking', description: 'Initial health checks in progress' };\n  if ((globalThis as any).__awsSimHooks?.initialHealth?.(env, tg, b)) return { state: 'initial', reason: 'Elb.InitialHealthChecking', description: 'Initial health checks in progress' };",
     },
     {
-      name: 'ヘルスチェックの状態コード',
+      name: 'ヘルスチェックのステータスコード',
       from: '  const code = app.healthCheckPath === tg.healthCheck.path ? 200 : 404;',
       to: '  const code: number = (globalThis as any).__awsSimHooks?.healthCode?.(env, tg, b) ?? (app.healthCheckPath === tg.healthCheck.path ? 200 : 404);',
     },

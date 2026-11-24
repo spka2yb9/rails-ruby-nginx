@@ -548,7 +548,7 @@ p result
           </p>
           <p>
             コードの後半では、<code>Rack::MockRequest.env_for</code> で要求の内容を表す Hash を作り、<code>Basics04Controller.action(:show).call(env)</code>{' '}
-            でその要求に対して show アクションを実行しています。戻り値は状態コード、ヘッダー、本文の3つで、最後の puts がこの3つを1行に表示します。要求を Hash で渡して3つの値を受け取る呼び出し方は
+            でその要求に対して show アクションを実行しています。戻り値はステータスコード、ヘッダー、本文の3つで、最後の puts がこの3つを1行に表示します。要求を Hash で渡して3つの値を受け取る呼び出し方は
             <ChapterLink n={6} />で説明します。
           </p>
           <Code

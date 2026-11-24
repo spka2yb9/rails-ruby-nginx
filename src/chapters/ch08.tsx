@@ -1768,7 +1768,7 @@ end
               <code>complete!</code> を呼ぶ処理を加えます。この行では登録するだけで、まだ呼びません。
             </li>
             <li>
-              <code>response = @app.call(env)</code>：内側のミドルウェアとコントローラーを実行します。<code>response</code> は状態コード、ヘッダー、body の3要素の配列です（
+              <code>response = @app.call(env)</code>：内側のミドルウェアとコントローラーを実行します。<code>response</code> はステータスコード、ヘッダー、body の3要素の配列です（
               <ChapterLink n={6} section="rack-contract" />
               ）。
             </li>

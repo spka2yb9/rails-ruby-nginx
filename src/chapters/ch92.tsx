@@ -1103,7 +1103,7 @@ v1 の終了
               <code>travel_to</code> はブロックの中の現在時刻を指定した時刻にするテストのヘルパーです。終了日の前と後の2つの時刻で、v1 の応答を確かめています。
             </li>
             <li>
-              終了日を過ぎた v1 は 410 Gone と説明のページの URL を返します。410 は、資源がもう使えず、その状態がおそらく続くことを示す状態コードです<Ref n={22} />。移っていない利用者は、この状態コードと URL から v1 が終わったことを知ることができます。
+              終了日を過ぎた v1 は 410 Gone と説明のページの URL を返します。410 は、資源がもう使えず、その状態がおそらく続くことを示すステータスコードです<Ref n={22} />。移っていない利用者は、このステータスコードと URL から v1 が終わったことを知ることができます。
             </li>
             <li>
               v1 の JSON は ProductJson.v2 に price を足して作ります。税込みの価格を計算する場所は Product#price_including_tax の1か所だけなので、計算を直したときに v1 だけ直し忘れることがありません。そうしなかった場合のコードは、当てはめすぎの節で動かします。
@@ -1244,7 +1244,7 @@ Failures:
           </p>
           <h3>すべての振る舞いを守ろうとすると、何も変えられない</h3>
           <p>
-            Hyrum's Law のとおり、利用者が多い API では、文書に書いていない振る舞いにも誰かが依存します<Ref n={7} />。JSON のキーの並び順、エラーの文言、応答の速さまで変えないようにすると、バグの修正もできなくなります。AIP-180 も、意味の互換性の指針を広く読みすぎるとどんな変更もできなくなるが、それは意図していないと書いています<Ref n={4} />。守る対象は SemVer のように公開すると決めたもの（この章では項目の名前・型・意味と状態コード）に絞り<Ref n={1} />、それ以外は約束に含めないと API の文書に書いておきます。
+            Hyrum's Law のとおり、利用者が多い API では、文書に書いていない振る舞いにも誰かが依存します<Ref n={7} />。JSON のキーの並び順、エラーの文言、応答の速さまで変えないようにすると、バグの修正もできなくなります。AIP-180 も、意味の互換性の指針を広く読みすぎるとどんな変更もできなくなるが、それは意図していないと書いています<Ref n={4} />。守る対象は SemVer のように公開すると決めたもの（この章では項目の名前・型・意味とステータスコード）に絞り<Ref n={1} />、それ以外は約束に含めないと API の文書に書いておきます。
           </p>
           <h3>同じデプロイで直せる利用者に、互換のための層を作る</h3>
           <p>
@@ -1469,7 +1469,7 @@ PriceDropNoticeJob
     { title: 'activerecord/lib/active_record/relation.rb（Rails 7.2.0 の update_all）', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.0/activerecord/lib/active_record/relation.rb#L581-L600', accessed: '2026-11-22', version: 'Rails 7.2.0（rubygems.org の gem で確認）', note: '7.2.0 の update_all に distinct などを確かめる処理がなく、非推奨の警告を出さないこと（delete_all だけが INVALID_METHODS_FOR_DELETE_ALL で例外にする）。' },
     { title: 'railties/lib/rails/application.rb（Rails 7.2.0 の deprecators）', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.0/railties/lib/rails/application.rb#L232-L236', accessed: '2026-11-22', version: 'Rails 7.2.0（rubygems.org の gem で確認）', note: '7.2.0 に Rails.application.deprecators があること。' },
     { title: 'class Data', publisher: 'Ruby 4.0 Documentation', url: 'https://docs.ruby-lang.org/en/4.0/Data.html', accessed: '2026-11-22', note: 'Data.define で値を持つクラスを作ること。Ruby 3.2 で入ったことは Ruby 3.2 の NEWS（https://docs.ruby-lang.org/en/4.0/NEWS/NEWS-3_2_0_md.html）で確認した。' },
-    { title: 'RFC 9110: HTTP Semantics（15.5.11 410 Gone）', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html#name-410-gone', accessed: '2026-11-22', version: '2022年6月', note: '410 が、資源がもう使えず、その状態がおそらく続くことを示す状態コードであること。' },
+    { title: 'RFC 9110: HTTP Semantics（15.5.11 410 Gone）', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html#name-410-gone', accessed: '2026-11-22', version: '2022年6月', note: '410 が、資源がもう使えず、その状態がおそらく続くことを示すステータスコードであること。' },
     { title: 'activesupport/lib/active_support/railtie.rb（deprecation_behavior）', publisher: 'rails/rails（GitHub）', url: `${GH}/activesupport/lib/active_support/railtie.rb#L89-L105`, accessed: '2026-11-22', version: 'Rails 8.1.4.1', note: 'config.active_support.deprecation が app.deprecators（登録されたすべての deprecator）の behavior になること。report_deprecations が false なら警告を止めること。' },
     { title: 'railties/lib/rails/generators/rails/app/templates/config/environments/test.rb.tt', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/app/templates/config/environments/test.rb.tt#L46-L47`, accessed: '2026-11-22', version: 'Rails 8.1.4.1', note: '新しいアプリケーションのテストの環境が config.active_support.deprecation = :stderr であること。同じディレクトリの development.rb.tt の49〜50行目が :log、production.rb.tt の58〜59行目が report_deprecations = false であること。' },
   ],

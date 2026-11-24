@@ -20,7 +20,7 @@ function HttpMessageFigure() {
       id="6-1"
       w={780}
       h={316}
-      label="HTTP の要求と応答は、どちらも1行目、ヘッダー、空行、本文の順に並ぶ。要求の1行目は要求行で、GET /articles/1 HTTP/1.1 のようにメソッド、パス、バージョンを並べる。ヘッダーは Host、User-Agent、Accept。GET の要求には本文が無い。応答の1行目は状態行で、HTTP/1.1 200 OK のようにバージョン、状態コード、語句を並べる。ヘッダーは content-type、content-length、set-cookie、x-request-id など。空行の後の本文は HTML。行の区切りは CR LF"
+      label="HTTP の要求と応答は、どちらも1行目、ヘッダー、空行、本文の順に並ぶ。要求の1行目は要求行で、GET /articles/1 HTTP/1.1 のようにメソッド、パス、バージョンを並べる。ヘッダーは Host、User-Agent、Accept。GET の要求には本文が無い。応答の1行目は状態行で、HTTP/1.1 200 OK のようにバージョン、ステータスコード、語句を並べる。ヘッダーは content-type、content-length、set-cookie、x-request-id など。空行の後の本文は HTML。行の区切りは CR LF"
     >
       <T x={20} y={18} bold>
         要求（ブラウザー・curl → サーバー）
@@ -56,7 +56,7 @@ function HttpMessageFigure() {
       <Box x={482} y={194} w={288} h={48} lines={['<!DOCTYPE html>', '<html> …（2787 バイト）']} mono fs={11} fill="box4" align="start" />
 
       <T x={20} y={270} fs={11.5} tone="muted">
-        要求行・状態行：メソッド・パス・バージョン／バージョン・状態コード・語句を空白で区切る
+        要求行・状態行：メソッド・パス・バージョン／バージョン・ステータスコード・語句を空白で区切る
       </T>
       <T x={20} y={294} fs={11.5} tone="muted">
         ヘッダーは「名前: 値」を1行に1つ。行の区切りは CR LF（\r\n）で、空行がヘッダーの終わりを表す
@@ -555,7 +555,7 @@ const ch06: Chapter = {
   summary:
     'Puma はブラウザーから来た要求を Ruby の値にして Rails に渡します。小さな Ruby アプリで、要求を渡す順番と、できた応答にヘッダーを加えて返す順番を確かめます。',
   goals: [
-    'Rack の call が受け取る値と、返す状態コード・ヘッダー・本文を対応付けられる',
+    'Rack の call が受け取る値と、返すステータスコード・ヘッダー・本文を対応付けられる',
     'ミドルウェアが次の処理を呼ぶ場合と、自分で応答を返す場合を追える',
     'bin/rails middleware の並びから、追加した処理が要求と応答のどこで働くか判断できる',
   ],
@@ -619,7 +619,7 @@ $ curl -v http://127.0.0.1:3300/articles/1
             の要求には本文がありません。
           </p>
           <p>
-            <code>{'<'}</code> の行が応答です。1行目を状態行と呼び、バージョン、状態コード（<code>200</code>）、状態コードの意味を表す語句（<code>OK</code>
+            <code>{'<'}</code> の行が応答です。1行目を状態行と呼び、バージョン、ステータスコード（<code>200</code>）、ステータスコードの意味を表す語句（<code>OK</code>
             ）を並べます。続くヘッダーで、本文についての情報などを伝えます。content-type は本文の種類で、ここでは文字コードが UTF-8 の HTML です。content-length は本文のバイト数です。set-cookie
             はブラウザーに値を保存させるヘッダーで、ブラウザーは次の要求から cookie ヘッダーでその値を送り返します。Rails はこの値で同じブラウザーからの要求を見分けます（
             <ChapterLink n={10} section="cookies-session" />
@@ -655,14 +655,14 @@ $ curl -v -X POST http://127.0.0.1:3300/probe/echo/hello -d 'body=Hi'
             は受け取った値をそのまま JSON で返すように作った検証用のアクションで、応答の本文から、サーバーが本文の <code>body=Hi</code> を受け取ったことが分かります。
           </p>
           <p>
-            状態コードは3桁の数字で、最初の桁が種類を表します
+            ステータスコードは3桁の数字で、最初の桁が種類を表します
             <Ref n={17} />。
           </p>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>状態コード</th>
+                  <th>ステータスコード</th>
                   <th>種類</th>
                   <th>例</th>
                 </tr>
@@ -697,7 +697,7 @@ $ curl -v -X POST http://127.0.0.1:3300/probe/echo/hello -d 'body=Hi'
             </table>
           </div>
           <p>
-            デモで、ルートが無いパスと、例外を起こすように作った検証用のアクションを要求すると、それぞれ 404 と 500 が返りました（<code>{"-w '%{http_code}'"}</code> は状態コードだけを表示させるオプションです）。
+            デモで、ルートが無いパスと、例外を起こすように作った検証用のアクションを要求すると、それぞれ 404 と 500 が返りました（<code>{"-w '%{http_code}'"}</code> はステータスコードだけを表示させるオプションです）。
           </p>
           <Code
             lang="text"
@@ -797,10 +797,10 @@ GET /articles/1?page=2 を受け取りました
             </li>
             <li>POST などの本文のある要求で、content-length の長さだけ本文を読む。</li>
             <li>1つの接続で続けて届く要求を、接続を閉じずに処理する（keep-alive）。</li>
-            <li>形式の誤った要求に、400 などの状態コードで応答する。</li>
+            <li>形式の誤った要求に、400 などのステータスコードで応答する。</li>
           </ul>
           <p>
-            Rails はこれらを自分では行いません。Puma から受け取った要求の内容をもとに、状態コード・ヘッダー・本文を作ることだけを受け持ちます。小さなサーバーで言えば、<code>body</code>{' '}
+            Rails はこれらを自分では行いません。Puma から受け取った要求の内容をもとに、ステータスコード・ヘッダー・本文を作ることだけを受け持ちます。小さなサーバーで言えば、<code>body</code>{' '}
             を作る1行を、別のオブジェクトに任せる形です。Web サーバーとアプリケーションをこのように分けておくと、同じ Rails のアプリケーションを Puma 以外の Web サーバーでも動かせます。分けたことで、要求と応答の間に別の処理を挟むこともできるようになります。次の節でその書き方を見ます。
           </p>
         </>
@@ -836,7 +836,7 @@ content-length: 58166
             lang="ruby"
             title="wrap.rb"
             code={`
-# 応答を作る処理。要求（ハッシュ）を受け取り、[状態コード, 本文] を返す
+# 応答を作る処理。要求（ハッシュ）を受け取り、[ステータスコード, 本文] を返す
 app = ->(request) {
   puts "    アプリ: #{request[:path]} の本文を作る"
   [200, "#{request[:path]} のページ"]
@@ -852,7 +852,7 @@ class Announce
   def call(request)
     puts "→ #{@name}: 要求を受け取った"
     status, body = @app.call(request)   # 内側を呼ぶ
-    puts "← #{@name}: 状態コード #{status} を返す"
+    puts "← #{@name}: ステータスコード #{status} を返す"
     [status, body]
   end
 end
@@ -868,14 +868,14 @@ p wrapped.call({ method: "GET", path: "/articles/1" })
 → A: 要求を受け取った
 → B: 要求を受け取った
     アプリ: /articles/1 の本文を作る
-← B: 状態コード 200 を返す
-← A: 状態コード 200 を返す
+← B: ステータスコード 200 を返す
+← A: ステータスコード 200 を返す
 [200, "/articles/1 のページ"]
 `}
           />
           <p>
             <code>app</code> は lambda（<code>{'->(引数) { 処理 }'}</code> で作り、<code>call</code> で呼び出せる処理のまとまり。<ChapterLink n={4} section="proc-lambda" />
-            ）で、要求を表すハッシュを受け取り、<code>[状態コード, 本文]</code> の配列を返します。Announce も <code>call(request)</code> で呼べて、同じ形の配列を返します。そのため、呼ぶ側の{' '}
+            ）で、要求を表すハッシュを受け取り、<code>[ステータスコード, 本文]</code> の配列を返します。Announce も <code>call(request)</code> で呼べて、同じ形の配列を返します。そのため、呼ぶ側の{' '}
             <code>wrapped.call(...)</code> は、相手が app なのか Announce なのかを区別せずに呼べます。Announce は <code>new</code> のときに内側の処理を受け取って <code>@app</code>{' '}
             に入れ、<code>call</code> の中で <code>@app.call(request)</code> の前と後に表示をします。<code>status, body = ...</code>{' '}
             は返ってきた配列の要素を前から順に2つの変数に入れる書き方（多重代入）です。
@@ -889,7 +889,7 @@ p wrapped.call({ method: "GET", path: "/articles/1" })
             <WrapOrderFigure />
           </Figure>
           <p>
-            この例の request のハッシュと <code>[状態コード, 本文]</code> の配列は、この節のために決めた形です。Puma と Rails、それにいろいろな gem（インストールして使う Ruby のライブラリ）のミドルウェアを組み合わせるには、受け渡す値の形を全員で同じにしておく必要があります。その形を決めたものが
+            この例の request のハッシュと <code>[ステータスコード, 本文]</code> の配列は、この節のために決めた形です。Puma と Rails、それにいろいろな gem（インストールして使う Ruby のライブラリ）のミドルウェアを組み合わせるには、受け渡す値の形を全員で同じにしておく必要があります。その形を決めたものが
             Rack です。
           </p>
         </>
@@ -927,7 +927,7 @@ run ->(env) {
           />
           <p>
             <code>run</code> は引数のオブジェクトを、Web サーバーが呼ぶ Rack アプリケーションとして登録するメソッドです。この lambda は env から <code>REQUEST_METHOD</code>・<code>PATH_INFO</code>・
-            <code>QUERY_STRING</code> の3つの値を読み、状態コードの 200、content-type だけのヘッダー、文字列1つの配列の本文を返します。Web サーバーで動かした結果は「ミドルウェアの形」の節に載せます。
+            <code>QUERY_STRING</code> の3つの値を読み、ステータスコードの 200、content-type だけのヘッダー、文字列1つの配列の本文を返します。Web サーバーで動かした結果は「ミドルウェアの形」の節に載せます。
           </p>
           <p>
             Rack アプリケーションは <code>call</code> を持つ Ruby のオブジェクトなので、Web サーバーを起動しなくても呼べます。同じ lambda に、手で作ったハッシュを env として渡しました。
@@ -958,7 +958,7 @@ GET /hello?x=1
 `}
           />
           <p>
-            1行目が状態コード、2行目がヘッダーのハッシュです。3行目は、body の <code>each</code> で本文の文字列を1つずつ取り出して表示したものです。Puma がしていることも同じで、HTTP の要求から env
+            1行目がステータスコード、2行目がヘッダーのハッシュです。3行目は、body の <code>each</code> で本文の文字列を1つずつ取り出して表示したものです。Puma がしていることも同じで、HTTP の要求から env
             のハッシュを作って <code>call</code> に渡し、戻り値の3要素を HTTP の応答の文字の並びにして送ります。Rails の統合テスト（ActionDispatch::IntegrationTest）が Web
             サーバーを起動せずにアプリケーション全体を実行できるのも、env を作って <code>call</code> を呼べば応答の配列を受け取れるためです。
           </p>
@@ -1370,7 +1370,7 @@ p wrapped.call(env)                 # 2回目：ファイルがある
               <code>body.close if body.respond_to?(:close)</code>：元の body が <code>close</code> を持っていれば、捨てる前に呼んでいます。
             </li>
             <li>
-              <code>response[2] = []</code>：配列の3番目の要素を空の配列に置き換えています。状態コードとヘッダーは内側が返したままなので、HEAD の応答は GET と同じヘッダーで、本文だけが無くなります。
+              <code>response[2] = []</code>：配列の3番目の要素を空の配列に置き換えています。ステータスコードとヘッダーは内側が返したままなので、HEAD の応答は GET と同じヘッダーで、本文だけが無くなります。
             </li>
           </ul>
         </>
@@ -2233,8 +2233,8 @@ Rack::MockRequest.new(Rack::Lint.new(bad)).get("/")
       title: 'まとめ',
       body: (
         <ul>
-          <li>HTTP の要求と応答は、1行目（要求行・状態行）、ヘッダー、空行、本文の順に並んだ文字の並びです。状態コードの最初の桁が、成功・リダイレクト・要求の誤り・サーバーの誤りを表します。</li>
-          <li>Web サーバーは接続を受け付けて要求を読み、応答を書き出します。Rails は要求の内容から状態コード・ヘッダー・本文を作ることだけを受け持ちます。</li>
+          <li>HTTP の要求と応答は、1行目（要求行・状態行）、ヘッダー、空行、本文の順に並んだ文字の並びです。ステータスコードの最初の桁が、成功・リダイレクト・要求の誤り・サーバーの誤りを表します。</li>
+          <li>Web サーバーは接続を受け付けて要求を読み、応答を書き出します。Rails は要求の内容からステータスコード・ヘッダー・本文を作ることだけを受け持ちます。</li>
           <li>本体と同じ呼び出し方ができるオブジェクトで本体を呼ぶと、前後に処理を挟めます。要求は外側から、応答は内側から順に処理されます。</li>
           <li>Rack アプリケーションは、env を受け取って [ステータス, ヘッダー, body] を返す call を持つオブジェクトです。</li>
           <li>Puma は HTTP の解析と env の作成、応答の書き出しを行い、各リクエストで Rails.application.call(env) を1回呼びます。</li>
@@ -2263,7 +2263,7 @@ Rack::MockRequest.new(Rack::Lint.new(bad)).get("/")
     { title: 'railties/lib/rails/application/default_middleware_stack.rb', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.4/railties/lib/rails/application/default_middleware_stack.rb', accessed: '2026-11-11', version: 'Rails 7.2.4', note: '7.2 の既定のスタックに SilenceRequest が無いこと（8.1.4.1 との差分で確認）。' },
     { title: 'railties/CHANGELOG.md', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v8.0.0/railties/CHANGELOG.md', accessed: '2026-11-11', version: 'Rails 8.0.0', note: 'Rails::Rack::SilenceRequest と config.silence_healthcheck_path の追加、ルートの描画を最初のリクエストまで遅らせる変更が 8.0 の項目にあること。' },
     { title: 'RFC 9112 HTTP/1.1', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9112.html', accessed: '2026-11-16', version: 'RFC 9112', note: 'メッセージの形（1行目・ヘッダーの行・空行・本文、行の区切りの CRLF）と、要求行（メソッド・要求の対象・バージョン）・状態行の書き方。' },
-    { title: 'RFC 9110 HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', version: 'RFC 9110', note: '要求と応答、ヘッダーの名前が大文字と小文字を区別しないこと（5.1節）、状態コードの5つの種類（15節）。' },
+    { title: 'RFC 9110 HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', version: 'RFC 9110', note: '要求と応答、ヘッダーの名前が大文字と小文字を区別しないこと（5.1節）、ステータスコードの5つの種類（15節）。' },
     { title: 'class TCPServer', publisher: 'Ruby Documentation', url: 'https://docs.ruby-lang.org/en/4.0/TCPServer.html', accessed: '2026-11-16', version: 'Ruby 4.0', note: 'TCPServer.new でポートを開き、accept が接続を待って TCPSocket を返すこと。tiny_server.rb の実行結果は Ruby 4.0.9 で実測。' },
     { title: 'curl man page', publisher: 'curl project', url: 'https://curl.se/docs/manpage.html', accessed: '2026-11-16', version: 'curl 8.23.0（実行に使った版）', note: '-v で送ったヘッダーを > 、受け取ったヘッダーを < で示すこと。-i・-d・-X・-w の働き。' },
   ],

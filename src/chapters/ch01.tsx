@@ -174,7 +174,7 @@ function HttpFigure() {
       id="1-1"
       w={780}
       h={330}
-      label="ブラウザー（curl）がサーバーに要求を送り、サーバーが応答を返す。要求の1行目は GET /articles HTTP/1.1 で、メソッド・パス・HTTP のバージョンを並べたもの。続く行は Host・User-Agent・Accept のヘッダー。応答の1行目は状態行の HTTP/1.1 200 OK で、200 が状態コード。続いて content-type と content-length のヘッダー、空行、HTML の本文が並ぶ"
+      label="ブラウザー（curl）がサーバーに要求を送り、サーバーが応答を返す。要求の1行目は GET /articles HTTP/1.1 で、メソッド・パス・HTTP のバージョンを並べたもの。続く行は Host・User-Agent・Accept のヘッダー。応答の1行目は状態行の HTTP/1.1 200 OK で、200 がステータスコード。続いて content-type と content-length のヘッダー、空行、HTML の本文が並ぶ"
     >
       <Box x={20} y={128} w={120} h={60} lines={['ブラウザー', '（curl）']} fs={12} subTone="muted" />
       <Box x={640} y={128} w={120} h={60} lines={['サーバー', '（Puma と Rails）']} fs={12} subTone="muted" />
@@ -214,7 +214,7 @@ function HttpFigure() {
         fill="bg"
       />
       <T x={470} y={236} fs={11} tone="muted">
-        状態行（状態コード 200）
+        状態行（ステータスコード 200）
       </T>
       <T x={470} y={262} fs={11} tone="muted">
         ヘッダー
@@ -293,7 +293,7 @@ function RequestFlowFigure() {
       id="1-3"
       w={780}
       h={390}
-      label="GET /articles の要求を処理する順番。ブラウザーの要求を Puma が受け取って Rails に渡す。1. ルーティング（config/routes.rb）が articles#index に決める。2. コントローラー ArticlesController#index が Article.order(:id).limit(3) で条件を作り、@articles に入れる。この時点では SQL を実行しない。3. ビュー articles/index.html.erb が記事を1件ずつ表示する。4. そのときモデル Article が SQL を MySQL の articles テーブルに送り、記事を取り出す。5. 状態コード 200 と HTML の応答がブラウザーに返る"
+      label="GET /articles の要求を処理する順番。ブラウザーの要求を Puma が受け取って Rails に渡す。1. ルーティング（config/routes.rb）が articles#index に決める。2. コントローラー ArticlesController#index が Article.order(:id).limit(3) で条件を作り、@articles に入れる。この時点では SQL を実行しない。3. ビュー articles/index.html.erb が記事を1件ずつ表示する。4. そのときモデル Article が SQL を MySQL の articles テーブルに送り、記事を取り出す。5. ステータスコード 200 と HTML の応答がブラウザーに返る"
     >
       <Box x={20} y={30} w={100} h={56} lines={['ブラウザー', '（curl）']} fs={12} subTone="muted" />
       <Box x={160} y={30} w={100} h={56} lines={['Puma', '要求を受け取る']} fs={12} subTone="muted" />
@@ -503,7 +503,7 @@ const ch01: Chapter = {
             <Ref n={14} />。
           </p>
           <p>
-            応答の1行目の <code>HTTP/1.1 200 OK</code> は状態行で、200 が<Term en="status code">状態コード</Term>です。状態コードは要求をどう処理したかを表す3桁の数で、200 は要求が成功したことを表します。続くヘッダーの
+            応答の1行目の <code>HTTP/1.1 200 OK</code> は状態行で、200 が<Term en="status code">ステータスコード</Term>です。ステータスコードは要求をどう処理したかを表す3桁の数で、200 は要求が成功したことを表します。続くヘッダーの
             content-type は本文が HTML であること、x-runtime は Rails が応答を作るのにかかった秒数、content-length は本文の長さが 2532 バイトであることを表します。空行の後に本文が続きます（図 1-1）。
           </p>
           <Figure n="1-1" title="HTTP の要求と応答" caption="curl -v の出力をもとにした模式図。ヘッダーの一部と本文の中身は省略しています。Puma は要求を受け取って Rails に渡すプログラムで、「1つの要求を処理する順番」の節で説明します。">
@@ -532,8 +532,8 @@ const ch01: Chapter = {
             <Term en="HyperText Markup Language">HTML</Term>は、ページの内容を <code>&lt;ul&gt;</code>（箇条書き）や <code>&lt;li&gt;</code>（その1項目）のようなタグで区切って書く形式です。ブラウザーは受け取った
             HTML を読んで、箇条書きなどの形で画面に表示します。<code>&lt;!--</code> と <code>--&gt;</code> で囲んだ部分は HTML のコメントで、画面には表示されません。このコメントは開発環境の Rails が書き込んだもので、どのファイルから作った部分かを示しています。「1つの要求を処理する順番」の節で、このファイルの中身を見ます。
           </p>
-          <h3>状態コード</h3>
-          <p>存在しないパスを要求すると、状態コード 404 が返りました。</p>
+          <h3>ステータスコード</h3>
+          <p>存在しないパスを要求すると、ステータスコード 404 が返りました。</p>
           <Code
             lang="text"
             title="curl -i http://127.0.0.1:3300/no_such_page の出力（一部を省略）"
@@ -543,14 +543,14 @@ content-type: text/html; charset=UTF-8
 `}
           />
           <p>
-            状態コードは先頭の数字で大まかな意味が決まっていて、200番台は成功、300番台は別の URL を示すもの、400番台は要求の側の誤り、500番台はサーバーの側のエラーを表します
+            ステータスコードは先頭の数字で大まかな意味が決まっていて、200番台は成功、300番台は別の URL を示すもの、400番台は要求の側の誤り、500番台はサーバーの側のエラーを表します
             <Ref n={15} />。Rails のアプリケーションでよく見るものを次の表に示します。
           </p>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>状態コード</th>
+                  <th>ステータスコード</th>
                   <th>意味</th>
                   <th>返る場面の例</th>
                 </tr>
@@ -625,7 +625,7 @@ title=はじめての記事
           />
           <p>
             要求のヘッダーの Content-Type は、本文がフォームと同じ「名前=値」の形式であることを表します。サーバーは本文から article[title] の値を取り出し、応答の本文で返しました。Rails
-            のアプリケーションは届いた要求のメソッドとパスに応じた処理をして、状態コード・ヘッダー・本文からなる応答の内容を作ります。次の節では、Rails がそのためにどんな部品を用意しているかを、新しいアプリケーションを作って確かめます。
+            のアプリケーションは届いた要求のメソッドとパスに応じた処理をして、ステータスコード・ヘッダー・本文からなる応答の内容を作ります。次の節では、Rails がそのためにどんな部品を用意しているかを、新しいアプリケーションを作って確かめます。
           </p>
         </>
       ),
@@ -991,7 +991,7 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
           <p>
             1行目の Started は要求を受け取ったこと、2行目の Processing by ArticlesController#index は、ルーティングで決まったアクションを実行し始めたことを表します。Rendering
             の行でビューの処理が始まり、その後の Article Load の行で SQL が実行されていて、次の <code>↳</code> の行から、その SQL を実行させたのがビューの index.html.erb
-            だと分かります。Rendered collection の行は _article.html.erb を3回使ったこと、最後の Completed 200 OK in 7ms は、状態コード 200 の応答を 7 ミリ秒で作り終えたことを表します。
+            だと分かります。Rendered collection の行は _article.html.erb を3回使ったこと、最後の Completed 200 OK in 7ms は、ステータスコード 200 の応答を 7 ミリ秒で作り終えたことを表します。
           </p>
           <p>
             次の図はこのログの行を出力された順に上から並べ、Processing の行から Completed の行までと、Rendering の行から同じファイル名の Rendered の行までを、それぞれ枠で囲んだものです。外側の枠から順に見ると、レイアウトの描画の中で
@@ -2012,7 +2012,7 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
       body: (
         <ul>
           <li>
-            HTTP の要求はメソッド・パス・ヘッダーからなり、応答は状態コード・ヘッダー・本文からなります。GET はページなどを取り出す要求、POST はフォームの内容などを本文に入れて送る要求です。
+            HTTP の要求はメソッド・パス・ヘッダーからなり、応答はステータスコード・ヘッダー・本文からなります。GET はページなどを取り出す要求、POST はフォームの内容などを本文に入れて送る要求です。
           </li>
           <li>
             rails new は、モデル・コントローラー・ビュー・ルーティング・マイグレーションなどを置く場所を決めたアプリケーションを作ります。Article モデルは articles テーブルに対応し、テーブルの1行が1つのインスタンスになります。
@@ -2052,7 +2052,7 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
     { title: 'class TracePoint', publisher: 'Ruby 4.0 Documentation', url: 'https://docs.ruby-lang.org/en/4.0/TracePoint.html', accessed: '2026-11-11', version: 'Ruby 4.0', note: ':call と :c_call イベント、defined_class・method_id・path・lineno。' },
     { title: 'An overview of HTTP', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview', accessed: '2026-11-16', note: 'HTTP はクライアントの要求とサーバーの応答をやり取りする規則であること。' },
     { title: 'HTTP messages', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages', accessed: '2026-11-16', note: '要求の1行目（メソッド・パス・バージョン）、ヘッダー、空行、本文と、応答の状態行の構成。' },
-    { title: 'RFC 9110: HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', note: 'GET と POST の意味（9.3.1・9.3.3）、状態コードの分類（15）と 200・302・404・422・500。' },
+    { title: 'RFC 9110: HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-11-16', note: 'GET と POST の意味（9.3.1・9.3.3）、ステータスコードの分類（15）と 200・302・404・422・500。' },
     { title: 'Getting Started with Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/getting_started.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'Rails はフレームワークであること、rails new が作るディレクトリの役割、MVC、Convention Over Configuration、generate model がマイグレーションとモデルを作ること。' },
     { title: 'Rails Routing from the Outside In', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/routing.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'resources が作るルートと、bin/rails routes の出力。' },
     { title: 'Active Record Basics', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_basics.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'クラス名を複数形にした名前のテーブルに対応すること、インスタンスがテーブルの1行を表すこと。' },

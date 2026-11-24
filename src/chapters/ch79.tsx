@@ -1051,7 +1051,7 @@ end`}
         <>
           <h3>Rails は例外を応答に変え、500 になるものだけを報告する</h3>
           <p>
-            Shore が勧めた全体の例外ハンドラーに当たる仕組みは、Rails にはじめから入っています。コントローラーのアクションから例外が出ると、ミドルウェアの ActionDispatch::ShowExceptions が例外を受け取り、例外のクラスに対応する HTTP の状態コードで応答を作ります。対応は ActionDispatch::ExceptionWrapper の rescue_responses という表で決まり、表に無い例外は 500 になります<Ref n={10} />。ShowExceptions は、例外が表にあるかどうかを要求の情報（action_dispatch.report_exception）に記録し、ActionDispatch::Executor は、表に無い例外だけを Rails.error に報告します<Ref n={9} /><Ref n={11} />。Rails Guides も、rescue_responses にある例外は 500 にならず、直す必要のあるバグでもないことが多いので報告しないと説明しています<Ref n={4} />。
+            Shore が勧めた全体の例外ハンドラーに当たる仕組みは、Rails にはじめから入っています。コントローラーのアクションから例外が出ると、ミドルウェアの ActionDispatch::ShowExceptions が例外を受け取り、例外のクラスに対応する HTTP のステータスコードで応答を作ります。対応は ActionDispatch::ExceptionWrapper の rescue_responses という表で決まり、表に無い例外は 500 になります<Ref n={10} />。ShowExceptions は、例外が表にあるかどうかを要求の情報（action_dispatch.report_exception）に記録し、ActionDispatch::Executor は、表に無い例外だけを Rails.error に報告します<Ref n={9} /><Ref n={11} />。Rails Guides も、rescue_responses にある例外は 500 にならず、直す必要のあるバグでもないことが多いので報告しないと説明しています<Ref n={4} />。
           </p>
           <Figure n="60-7" title="Rails が例外を変える応答と、報告するかどうか" caption="Rails 8.1.4.1 のソース（rescue_responses の表と、Active Record が加える対応）による。右の列はこの章で使った場面。">
             <div className="table-wrap">

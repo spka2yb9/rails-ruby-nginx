@@ -954,7 +954,7 @@ def({ id: 'aws-elbv2', names: ['aws elbv2'], title: 'aws elbv2 — ALB とター
 "  `TG=$(aws elbv2 describe-target-groups --names ... --query 'TargetGroups[0].TargetGroupArn' --output text)`\n" +
 '  のように --output text で取り出して変数に入れると、打ち間違えずに済みます。\n' +
 '・unhealthy の理由は TargetHealth の Reason と Description に出ます\n' +
-'  （Target.ResponseCodeMismatch ＝ 期待した状態コードと違う、Target.Timeout ＝ 時間内に返らない など）。',
+'  （Target.ResponseCodeMismatch ＝ 期待したステータスコードと違う、Target.Timeout ＝ 時間内に返らない など）。',
   pro:
 '502 / 503 が出たら、まずターゲットが healthy かを見ます。\n' +
 'ALB の後ろに healthy なターゲットがいなければ、Rails のログには何も出ていないことがあります。' });

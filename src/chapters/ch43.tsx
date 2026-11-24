@@ -300,7 +300,7 @@ const chapter: Chapter = {
               リクエスト ID：1つのリクエストに付ける識別子（例：<code>c697eb11-22e6-...</code>）です。アプリのログ、エラーの応答、応答のヘッダーに同じ ID を出しておくと、「このエラーが出た」という問い合わせを受けたときに、どのリクエストのどのログかを ID で探せます。呼び出し側が <code>X-Request-Id</code> ヘッダーで送ってくればその値を使い、無ければサーバーで作ります。
             </li>
             <li>認証：<code>Authorization: Bearer トークン</code> のヘッダーから利用者を特定し、特定できなければ 401 を返します。</li>
-            <li>アクセスログ：リクエストごとに、ID・メソッド・パス・状態コード・処理時間を JSON の1行で記録し、後から集計や調査に使います。</li>
+            <li>アクセスログ：リクエストごとに、ID・メソッド・パス・ステータスコード・処理時間を JSON の1行で記録し、後から集計や調査に使います。</li>
             <li>エラーの応答：例外が起きたときに、呼び出し側が機械的に読める同じ形式の JSON で返します。</li>
           </ul>
           <p>
@@ -423,7 +423,7 @@ end
           <p>Middleware Chain が必要になるのは、多くのリクエストに、業務とは別の同じ処理を行う場合です。対象がジョブや外部への HTTP リクエストの場合も同じ形を使います（alternatives の節の Sidekiq と Faraday）。</p>
           <ul>
             <li>認証：トークンやセッションから利用者を特定し、特定できなければ打ち切る</li>
-            <li>ロギング：リクエストの経路、応答の状態コード、処理時間を記録する</li>
+            <li>ロギング：リクエストの経路、応答のステータスコード、処理時間を記録する</li>
             <li>エラーの処理：例外を決まった形式のエラーの応答に変える</li>
             <li>リクエストの検証：本文の形式や大きさを確かめる</li>
             <li>そのほか：リクエスト ID、CORS（別のオリジンのページからのリクエストを許可するための応答ヘッダー）、圧縮、メンテナンス中の応答、リクエストの回数の制限など</li>
@@ -595,7 +595,7 @@ class ApiAccessLog
 
     status, headers, body = @app.call(env)
 
-    # 帰りの処理：内側の段が決めた状態コードと、入れ物（env）に残した値を記録する
+    # 帰りの処理：内側の段が決めたステータスコードと、入れ物（env）に残した値を記録する
     @log.call({
       request_id: env["action_dispatch.request_id"], # 外側の ActionDispatch::RequestId が入れた値
       method:, path:, status:,
@@ -750,7 +750,7 @@ run Ch43::Application.routes
           </ul>
           <h3>パターンを使っていないコードから直す順序</h3>
           <ol className="steps">
-            <li>今の動作をテストで固定する：成功、認証の失敗、本文の誤り、ほかの利用者の注文の4つの場面で、状態コード、ヘッダー、ログを確かめる request spec を書きます。ログの抜けと ID の食い違いは、直したい点としてテストに書いておきます。</li>
+            <li>今の動作をテストで固定する：成功、認証の失敗、本文の誤り、ほかの利用者の注文の4つの場面で、ステータスコード、ヘッダー、ログを確かめる request spec を書きます。ログの抜けと ID の食い違いは、直したい点としてテストに書いておきます。</li>
             <li>Rails の標準の段を使う：アクションの中の <code>SecureRandom.uuid</code> を消し、<code>request.request_id</code> を使います。</li>
             <li>外側の処理から移す：ログを ApiAccessLog に移してアクションから消し、<code>insert_after ActionDispatch::RequestId</code> で並びに入れます。</li>
             <li>打ち切る処理をコントローラーのチェーンに移す：認証を ApplicationController の before_action に、エラーの応答を rescue_from に移し、アクションは <code>current_user</code> を使うだけにします（controller-chain の節）。</li>
@@ -993,7 +993,7 @@ Completed 401 Unauthorized in 1ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries
             <li>ミドルウェアの単体のテスト：内側の段の代わりにラムダを渡し、行きと帰りの処理、打ち切りを確かめる。Rails のアプリを通さない。</li>
             <li>順序のテスト：Rack::Builder で2つの並びを組み、順序で結果が変わることを確かめる。</li>
             <li>並びのテスト：Rails のアプリの実際の並びで、段が意図した順にあることを確かめる。</li>
-            <li>request spec：ミドルウェアとコントローラーのチェーンを通した結果（状態コード、本文、ヘッダー、ログ）を確かめる。</li>
+            <li>request spec：ミドルウェアとコントローラーのチェーンを通した結果（ステータスコード、本文、ヘッダー、ログ）を確かめる。</li>
           </ul>
           <h3>ミドルウェアの単体のテスト</h3>
           <Code
@@ -1009,7 +1009,7 @@ RSpec.describe ApiAccessLog do
 
   def middleware(inner) = described_class.new(inner, log: ->(line) { lines << JSON.parse(line) }, clock: -> { ticks.next })
 
-  it "内側の応答の状態コードと、入れ物（env）に残った値を記録する" do
+  it "内側の応答のステータスコードと、入れ物（env）に残った値を記録する" do
     inner = ->(env) { env["app.user_id"] = 7; [201, {}, ["{}"]] }
     status, = middleware(inner).call(env)
 
@@ -1078,7 +1078,7 @@ end
 `}
           />
           <p>
-            Rack::Builder の <code>use</code> は書いた順に外側から並べます。Rails の本物の ShowExceptions を使い、env の <code>action_dispatch.show_exceptions</code> を本番と同じ <code>:all</code> にして、例外を 500 の応答に変えさせています。どちらの並びも利用者に返る状態コードは 500 で、違いはログにだけ現れます（図 79-3）。<code>Rack::Builder.new</code> のブロックの中では RSpec の <code>let</code> を呼べないので、ローカル変数に入れてから渡しています。
+            Rack::Builder の <code>use</code> は書いた順に外側から並べます。Rails の本物の ShowExceptions を使い、env の <code>action_dispatch.show_exceptions</code> を本番と同じ <code>:all</code> にして、例外を 500 の応答に変えさせています。どちらの並びも利用者に返るステータスコードは 500 で、違いはログにだけ現れます（図 79-3）。<code>Rack::Builder.new</code> のブロックの中では RSpec の <code>let</code> を呼べないので、ローカル変数に入れてから渡しています。
           </p>
           <h3>並びのテスト</h3>
           <Code
@@ -1160,7 +1160,7 @@ end
             title="実行結果（bundle exec rspec --format documentation）"
             code={`
 ApiAccessLog
-  内側の応答の状態コードと、入れ物（env）に残った値を記録する
+  内側の応答のステータスコードと、入れ物（env）に残った値を記録する
   内側が打ち切って返した 401 も記録する（user_id は nil）
   内側で起きた例外は記録せずに、そのまま外へ伝える
 
@@ -1180,7 +1180,7 @@ ApiAccessLog と ShowExceptions の順序
   RequestId → ApiAccessLog → MaintenanceMode → ShowExceptions の順に外側から並ぶ
 
 注文の API
-  成功したら、アクセスログに ID・利用者・状態コードを1行書き、ID を応答のヘッダーにも付ける
+  成功したら、アクセスログに ID・利用者・ステータスコードを1行書き、ID を応答のヘッダーにも付ける
   トークンが無ければ before_action で打ち切って 401 を返し、その応答もログに残す
   ほかの利用者の注文は 404 になる（rescue_from が同じ形式のエラーにする）
   本文に order が無ければ 400、値が不正なら 422 を、同じ形式で返す
