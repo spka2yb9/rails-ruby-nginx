@@ -3,14 +3,15 @@ import { withExplanations } from '../explanations/shared'
 import { explanation10 } from '../explanations/request'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { Stepper } from '../sims/Stepper'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 10-1 コントローラーとビューの分担 ---------- */
+/* ---------- 図 16-1 コントローラーとビューの分担 ---------- */
 function ControllerRoleFigure() {
   return (
     <Svg
-      id="10-1"
+      id="16-1"
       w={780}
       h={310}
       label="ブラウザーが GET /articles/1 を送ると、ルーティングが articles#show を選ぶ。ArticlesController の show は params[:id] の 1 を使って Article.find でデータベースから記事を読み出し、@article に代入する。アクションが終わると、ビューの show.html.erb が @article の title を HTML に埋め込む。できた HTML がステータスコード 200 の応答としてブラウザーに返る"
@@ -35,7 +36,7 @@ function ControllerRoleFigure() {
   )
 }
 
-/* ---------- 図 10-2 render と redirect_to ---------- */
+/* ---------- 図 16-2 render と redirect_to ---------- */
 function RenderRedirectFigure() {
   const msg = (x1: number, x2: number, y: number, text: string, lx: number) => (
     <g>
@@ -47,7 +48,7 @@ function RenderRedirectFigure() {
   )
   return (
     <Svg
-      id="10-2"
+      id="16-2"
       w={780}
       h={330}
       label="左は保存に失敗した場合。ブラウザーが POST /articles を送ると、create が render :new で new のテンプレートから HTML を作り、422 とフォームの HTML を返す。要求は1回。右は保存に成功した場合。create は redirect_to で 302 と location: /articles/4 を返し、ブラウザーは GET /articles/4 を送り直す。show が記事の HTML を作って 200 で返す。要求は2回"
@@ -88,43 +89,113 @@ function RenderRedirectFigure() {
   )
 }
 
-/* ---------- 図 10-3 Cookie とセッション ---------- */
-function CookieSessionFigure() {
-  const msg = (x1: number, x2: number, y: number, text: string) => (
-    <g>
-      <Arrow x1={x1} y1={y} x2={x2} y2={y} />
-      <T x={120} y={y - 9} fs={10.5} mono>
-        {text}
-      </T>
-    </g>
-  )
+/* ---------- 図 16-3 Cookie とセッション（段階送り） ---------- */
+type CookieStep = { req: string; res: string; proc: string; cookie: string; session: string }
+
+function CookieSnapshot({ i, step }: { i: number; step: CookieStep }) {
   return (
     <Svg
-      id="10-3"
-      w={780}
-      h={340}
-      label="ブラウザーが POST /login でメールアドレスを送ると、Rails は session の author_id に 1 を入れ、セッションの中身を暗号化した Cookie を set-cookie ヘッダーで返す。ブラウザーは Cookie を保存し、次の GET /articles/new の要求の cookie ヘッダーに付けて送る。Rails は Cookie を復号して、session の author_id から 1 を読み、作成のフォームを返す"
+      id={`16-3-${i}`}
+      w={760}
+      h={200}
+      label={`ブラウザーからの要求は ${step.req}。Rails の処理は ${step.proc}。応答は ${step.res}。応答の後にブラウザーが持つ Cookie は ${step.cookie}。復号したセッションの中身は ${step.session}`}
     >
-      <Box x={30} y={20} w={140} h={34} lines="ブラウザー" fs={12} />
-      <Box x={600} y={20} w={150} h={34} lines="Rails（サーバー）" fs={12} />
-      <Arrow x1={100} y1={54} x2={100} y2={325} plain dashed />
-      <Arrow x1={675} y1={54} x2={675} y2={325} plain dashed />
-      {msg(100, 673, 90, 'POST /login（email=author1@example.com）')}
-      <Box x={560} y={100} w={200} h={42} lines={['session[:author_id] = 1', '中身を暗号化して Cookie に']} fs={11} fill="box5" subTone="muted" />
-      {msg(673, 102, 166, '302 ＋ set-cookie: _demo_session=…')}
-      <Box x={20} y={176} w={160} h={32} lines="Cookie を保存" fs={11} fill="box4" />
-      {msg(100, 673, 240, 'GET /articles/new ＋ cookie: _demo_session=…')}
-      <Box x={560} y={250} w={200} h={42} lines={['Cookie を復号', 'session[:author_id] → 1']} fs={11} fill="box5" subTone="muted" />
-      {msg(673, 102, 312, '200 作成のフォーム')}
+      <Box x={10} y={10} w={120} h={76} lines="ブラウザー" fs={12} />
+      <Box x={630} y={10} w={120} h={76} lines="Rails" fs={12} />
+      <T x={380} y={22} anchor="middle" fs={11} mono>
+        {step.req}
+      </T>
+      <Arrow x1={132} y1={36} x2={626} y2={36} accent />
+      <T x={380} y={56} anchor="middle" fs={11} mono>
+        {step.res}
+      </T>
+      <Arrow x1={628} y1={70} x2={134} y2={70} />
+      <Box x={10} y={98} w={740} h={32} lines={`Rails の処理：${step.proc}`} fs={11.5} fill="box5" />
+      <Box x={10} y={140} w={300} h={50} lines={['ブラウザーが保存している Cookie', step.cookie]} fs={11} fill="box4" subTone="muted" />
+      <Box x={320} y={140} w={430} h={50} lines={['応答の後のセッション（復号した中身）', step.session]} fs={11} fill="box" subTone="muted" />
     </Svg>
   )
 }
 
-/* ---------- 図 10-4 before_action ---------- */
+const cookieSteps: { label: string; step: CookieStep; text: string }[] = [
+  {
+    label: 'フォームを開く',
+    step: {
+      req: 'GET /login（Cookie はまだない）',
+      res: '200 ログインのフォーム ＋ set-cookie: _demo_session=…',
+      proc: 'フォームに埋め込むトークンの元 _csrf_token をセッションに入れる',
+      cookie: '_demo_session=…（初めて保存）',
+      session: '{"session_id" => "0661c574…", "_csrf_token" => "zR5TNwMg…"}',
+    },
+    text: 'ログインのフォームを開くと、Rails はフォームに埋め込む CSRF 対策のトークンを作り、その元になる値 _csrf_token をセッションに入れます。セッションに値が入ったので、応答の set-cookie で _demo_session の Cookie が渡され、ブラウザーはこれを保存します。',
+  },
+  {
+    label: 'ログインを送る',
+    step: {
+      req: 'POST /login（email・トークン）＋ cookie',
+      res: '302 location: /articles/new ＋ set-cookie',
+      proc: 'reset_session で中身を消してから session[:author_id] = 1',
+      cookie: '_demo_session=LRrGVND1E5aWPELxK31r…',
+      session: '{"session_id" => "25a88747…", "author_id" => 1}',
+    },
+    text: 'フォームの送信には保存した Cookie とフォームのトークンが付きます。create は著者を見つけると reset_session でセッションを作り直し、author_id に 1 を入れます。新しい中身を暗号化した Cookie は応答の set-cookie で渡されました。session_id は新しい値に変わり、_csrf_token は消えました。',
+  },
+  {
+    label: '次の要求',
+    step: {
+      req: 'GET /articles/new ＋ cookie: _demo_session=LRrG…',
+      res: '200 作成のフォーム ＋ set-cookie',
+      proc: 'Cookie を復号し、session[:author_id] から 1 を読む',
+      cookie: '_demo_session=…（中身を更新）',
+      session: '{"session_id" => "25a88747…", "author_id" => 1, "_csrf_token" => "…"}',
+    },
+    text: 'ブラウザーは保存した Cookie を cookie ヘッダーに付けて送ります。Rails はこれを復号し、session[:author_id] から 1 を読みました。メソッドとパスだけでは分からない「どの著者がログインしているか」を、Cookie の中身から判断できます。作成のフォームを表示するときに _csrf_token が作り直されるので、author_id を残したまま中身を更新した Cookie も返ります。',
+  },
+  {
+    label: 'ログアウト',
+    step: {
+      req: 'DELETE /logout ＋ cookie',
+      res: '303 location: /articles ＋ set-cookie',
+      proc: 'reset_session でセッションを作り直す（author_id は消える）',
+      cookie: '_demo_session=…（新しいセッション）',
+      session: '{"session_id" => "b12488ae…"}',
+    },
+    text: 'ログアウトの destroy も reset_session を呼びます。応答は 303 で、set-cookie で新しいセッションの Cookie が渡されます。復号した中身は session_id だけで、author_id は消えていました。ブラウザーは location の /articles に GET を送ります。',
+  },
+  {
+    label: 'ログアウト後の要求',
+    step: {
+      req: 'GET /articles/new ＋ cookie',
+      res: '302 location: /login',
+      proc: 'session[:author_id] は nil。次の節の before_action がログインの画面へ移す',
+      cookie: '_demo_session=…（ログアウトで受け取った値）',
+      session: '{"session_id" => "b12488ae…"}',
+    },
+    text: 'ログアウトの後の Cookie には author_id がないので、session[:author_id] は nil を返します。次の節で足す before_action の require_login は、このとき作成の画面を表示せずにログインの画面へ redirect_to します。',
+  },
+]
+
+function CookieSessionStepper() {
+  return (
+    <Stepper
+      steps={cookieSteps.map((c, i) => ({
+        label: c.label,
+        detail: (
+          <>
+            <CookieSnapshot i={i + 1} step={c.step} />
+            <p>{c.text}</p>
+          </>
+        ),
+      }))}
+    />
+  )
+}
+
+/* ---------- 図 16-4 before_action ---------- */
 function BeforeActionFigure() {
   return (
     <Svg
-      id="10-4"
+      id="16-4"
       w={780}
       h={330}
       label="GET /articles/new の要求が届くと、アクションの前に before_action に登録した require_login が呼ばれ、セッションの author_id の著者を探す。ログインしていなければ redirect_to login_path で 302 を返し、new アクションは呼ばれない。ログインしていれば @current_author に著者が入り、new アクションが呼ばれて作成のフォームが 200 で返る"
@@ -154,7 +225,7 @@ function BeforeActionFigure() {
   )
 }
 
-/* ---------- 図 10-5 コントローラーのクラス階層 ---------- */
+/* ---------- 図 16-5 コントローラーのクラス階層 ---------- */
 function HierarchyFigure() {
   const groups = [
     { t: '描画', m: 'Rendering, ImplicitRender, Layouts など' },
@@ -166,7 +237,7 @@ function HierarchyFigure() {
   ]
   return (
     <Svg
-      id="10-5"
+      id="16-5"
       w={760}
       h={360}
       label="ArticlesController は ApplicationController を継承し、ApplicationController は ActionController::Base を継承する。ActionController::Base は ActionController::Metal を、Metal は AbstractController::Base を継承する。ActionController::API も Metal を継承する。ActionController::Base は36個のモジュールを include しており、描画、パラメーター、Cookie とフラッシュ、安全性、コールバックや例外処理などの機能はこれらのモジュールが持つ"
@@ -208,7 +279,7 @@ function HierarchyFigure() {
   )
 }
 
-/* ---------- 図 10-6 dispatch から応答の配列まで ---------- */
+/* ---------- 図 16-6 dispatch から応答の配列まで ---------- */
 function DispatchFigure() {
   const steps: { t: string; sub?: string; fill?: 'box' | 'box2' | 'box5' | 'bg'; indent?: number }[] = [
     { t: 'ArticlesController.dispatch(:show, req, res)', sub: 'Dispatcher から呼ばれるクラスメソッド' },
@@ -221,7 +292,7 @@ function DispatchFigure() {
   ]
   return (
     <Svg
-      id="10-6"
+      id="16-6"
       w={760}
       h={7 * 56 + 20}
       label="Dispatcher が ArticlesController.dispatch を呼ぶと、コントローラーのインスタンスが作られ、インスタンスの dispatch がリクエストと応答を設定してから process を呼ぶ。process はアクション名を確かめて process_action を呼び、process_action は ParamsWrapper、Instrumentation、Rescue、Callbacks などのモジュールの定義を super で順にたどり、最後に send_action で show メソッドを呼ぶ。show の後、まだ描画していなければ default_render がテンプレートを描画する。最後に flash を確定し、応答を status、headers、body の配列にして返す"
@@ -244,11 +315,11 @@ function DispatchFigure() {
   )
 }
 
-/* ---------- 図 10-7 params の合成 ---------- */
+/* ---------- 図 16-7 params の合成 ---------- */
 function ParamsFigure() {
   return (
     <Svg
-      id="10-7"
+      id="16-7"
       w={760}
       h={260}
       label="request.parameters は、リクエスト本文のパラメーターにクエリ文字列のパラメーターを上書きでマージし、さらにルーティングのパスパラメーターを上書きでマージして作られる。同じ名前があれば、パスパラメーター、クエリ文字列、本文の順に優先される。コントローラーの params は、これを ActionController::Parameters で包んだもので、permit や expect で許可したキーだけがモデルに渡せる"
@@ -275,11 +346,11 @@ function ParamsFigure() {
   )
 }
 
-/* ---------- 図 10-8 例外の行き先 ---------- */
+/* ---------- 図 16-8 例外の行き先 ---------- */
 function ExceptionFigure() {
   return (
     <Svg
-      id="10-8"
+      id="16-8"
       w={760}
       h={400}
       label="アクションで例外が起きると、まず process_action の連鎖にある ActionController::Rescue が rescue_from の登録を探す。対応するハンドラがあればそれが応答を作る。無ければ例外はミドルウェアまで上がり、DebugExceptions がログに出力し、ローカルのリクエストなら詳細なエラーページを返す。そうでなければ ShowExceptions が例外を受け取り、ExceptionWrapper の rescue_responses で例外クラスからステータスを決め、exceptions_app に渡す。既定の PublicExceptions は public の 404.html や 500.html を返す"
@@ -587,10 +658,10 @@ Completed 200 OK in 4ms (Views: 1.8ms | ActiveRecord: 0.7ms (1 query, 0 cached) 
 `}
           />
           <p>
-            ログの順に、params を受け取り、SQL で記事を読み出し、テンプレートで HTML を作り（Rendering と Rendered の行）、200 で応答しています（図 10-1）。layouts/application.html.erb
+            ログの順に、params を受け取り、SQL で記事を読み出し、テンプレートで HTML を作り（Rendering と Rendered の行）、200 で応答しています（図 16-1）。layouts/application.html.erb
             は全ページに共通の HTML を書いたテンプレートで、show.html.erb で作った部分はその中に入ります（<ChapterLink n={16} section="layout-partial" />）。
           </p>
-          <Figure n="10-1" title="コントローラーとビューの分担" caption="GET /articles/1 のログをもとにした図。">
+          <Figure n="16-1" title="コントローラーとビューの分担" caption="GET /articles/1 のログをもとにした図。">
             <ControllerRoleFigure />
           </Figure>
           <p>
@@ -694,8 +765,7 @@ Completed 422 Unprocessable Content in 28ms (Views: 7.1ms | ActiveRecord: 0.0ms 
 `}
           />
           <p>
-            422 は送られた内容を処理できなかったことを表すステータスコードです。Rails の既定で入っている Turbo は、フォームの送信に 200 の応答が返ると画面を書き換えないので、失敗したときは{' '}
-            <code>status: :unprocessable_content</code> で 422 を指定します（<ChapterLink n={16} section="form" />）。
+            内容を処理できなかったことをクライアントに伝えるため、<code>status: :unprocessable_content</code> で 422 を返します。応答の本文にはエラーメッセージ付きのフォームが入ります（<ChapterLink n={16} section="form" />）。
           </p>
           <p>タイトルを入れて送信すると、応答のヘッダーとログは次のようになりました。</p>
           <Code
@@ -724,11 +794,11 @@ Completed 200 OK in 11ms (Views: 4.5ms | ActiveRecord: 0.8ms (1 query, 0 cached)
           <p>
             <code>redirect_to @article</code> は、記事の URL（<code>article_path(@article)</code> の <code>/articles/4</code> にホスト名を付けたもの）を location
             ヘッダーに入れ、本文が空の 302 を返しました。ブラウザーは 302 を受け取ると、location の URL に GET の要求を送ります（curl は自動では送らないので、同じ GET を送りました）。ログに
-            Started の行が2つあるとおり、要求は2回で、記事の画面を作ったのは2回目の要求で呼ばれた show です（図 10-2）。redirect_to はアクションのコードの実行を止めないので、redirect_to
+            Started の行が2つあるとおり、要求は2回で、記事の画面を作ったのは2回目の要求で呼ばれた show です（図 16-2）。redirect_to はアクションのコードの実行を止めないので、redirect_to
             の後に書いたコードも実行されます
             <Ref n={12} />。
           </p>
-          <Figure n="10-2" title="render と redirect_to" caption="デモのアプリケーションのコピー（development）で、記事の作成のフォームを送信したときの要求と応答。">
+          <Figure n="16-2" title="render と redirect_to" caption="デモのアプリケーションのコピー（development）で、記事の作成のフォームを送信したときの要求と応答。">
             <RenderRedirectFigure />
           </Figure>
           <p>
@@ -839,11 +909,17 @@ set-cookie: _demo_session=LRrGVND1E5aWPELxK31r…; path=/; httponly; samesite=la
           />
           <p>
             ログインした後のセッションには author_id が入り、reset_session によって session_id も新しい値に変わりました。_csrf_token は CSRF 対策のトークンの元になる値で、reset_session
-            で消え、次にフォームを表示したときに作り直されました。Rails は要求の cookie ヘッダーから Cookie を読んで復号し、<code>session[:author_id]</code> で 1 を返します（図
-            10-3）。ログアウト（<code>DELETE /logout</code>）の後のセッションは <code>{'{"session_id" => "b12488ae…"}'}</code> だけになり、author_id は消えました。
+            で消え、次にフォームを表示したときに作り直されました。Rails は要求の cookie ヘッダーから Cookie を読んで復号し、<code>session[:author_id]</code> で 1 を返します。ログアウト（<code>DELETE /logout</code>）の後のセッションは <code>{'{"session_id" => "b12488ae…"}'}</code> だけになり、author_id は消えました。
           </p>
-          <Figure n="10-3" title="Cookie とセッション" caption="デモのアプリケーションのコピー（development）で、ログインしてから作成の画面を開いたときの要求と応答。">
-            <CookieSessionFigure />
+          <p>
+            図 16-3 ではログインのフォームを開いてからログアウトの後の要求までを5つの段階に分けています。段階を進めると、各段階の要求と応答のヘッダー、ブラウザーが保存している Cookie、復号したセッションの中身がどう変わるかを確かめられます。
+          </p>
+          <Figure
+            n="16-3"
+            title="Cookie とセッション（段階送り）"
+            caption="この節の curl の実行結果と Cookie を復号した結果（デモのアプリケーションのコピー、development）をもとにした概念モデルです。値は一部を省略しています。実際のブラウザーは 302 や 303 を受け取ると location の URL へ自動で GET を送り、その応答でも Cookie が更新されることがあります。Cookie の値は暗号化されているので、ブラウザーの側では中身を読めません。"
+          >
+            <CookieSessionStepper />
           </Figure>
         </>
       ),
@@ -915,7 +991,7 @@ Completed 302 Found in 37ms (ActiveRecord: 9.4ms (1 query, 0 cached) | GC: 0.0ms
           <p>
             ログインした状態で同じ要求を送ると、require_login の SQL は <code>WHERE `authors`.`id` = 1</code> になり、new のテンプレートが描画されて 200 が返りました（「Cookie
             とセッションでログインを覚える」の節）。続けて記事を作ると、INSERT の author_id に 1 が入りました。before_action のメソッドで代入した <code>@current_author</code>{' '}
-            を、create の中でそのまま使えます（図 10-4）。
+            を、create の中でそのまま使えます（図 16-4）。
           </p>
           <Code
             lang="text"
@@ -930,14 +1006,36 @@ Redirected to http://127.0.0.1:3309/articles/5
 Completed 302 Found in 548ms (ActiveRecord: 87.6ms (2 queries, 0 cached) | GC: 0.0ms)
 `}
           />
-          <Figure n="10-4" title="before_action でアクションの前に確認する" caption="デモのアプリケーションのコピー（development）のログをもとにした図。">
+          <Figure n="16-4" title="before_action でアクションの前に確認する" caption="デモのアプリケーションのコピー（development）のログをもとにした図。">
             <BeforeActionFigure />
           </Figure>
           <p>
             ここまでの節で使った params・render・redirect_to・session・before_action は、ArticlesController にも ApplicationController にも定義していません。ApplicationController
-            が継承している ActionController::Base と、Base が取り込んでいるモジュールのメソッドです。次の「コントローラーのクラス階層」の節からは、これらのメソッドがどこに定義されているかと、ルーティングから呼ばれたコントローラーが
-            params を作り、アクションを呼び、応答を返すまでを、Rails のソースで追います。
+            が継承している ActionController::Base と、Base が取り込んでいるモジュールのメソッドです。これらのメソッドがどこに定義されているかと、ルーティングから呼ばれたコントローラーが params を作り、アクションを呼び、応答を返すまでの処理は
+            <ChapterLink n={10} section="hierarchy" /> からの節で Rails のソースを使って追います。これらの節は Rails の内部の仕組みに進む人向けの内容で、Rails 基礎知識コースでは読み飛ばしてかまいません。
           </p>
+        </>
+      ),
+    },
+    {
+      id: 'flash-and-hooks',
+      title: '次の画面に通知を渡す Flash とアクションの前後処理',
+      body: (
+        <>
+          <p>記事を保存して別の URL に移るとき、保存したことを移動先で知らせるには <code>flash[:notice]</code> を使います。通常の Flash は次の要求まで残ります。同じ要求でフォームを描画し直す場合は <code>flash.now[:alert]</code> を使うと、通知が次の画面に持ち越されません。リダイレクトをもう一度挟む必要があれば、<code>flash.keep(:notice)</code> で通知をさらに次の要求へ渡せます。<Ref n={20} /></p>
+          <Code lang="ruby" title="保存後の通知と入力エラーの通知" code={`
+def create
+  @article = Article.new(params.expect(article: [:title, :body]))
+  if @article.save
+    redirect_to @article, notice: "記事を保存しました", status: :see_other
+  else
+    flash.now[:alert] = "入力内容を確認してください"
+    render :new, status: :unprocessable_content
+  end
+end
+`} />
+          <p>ビューは <code>flash[:notice]</code> と <code>flash[:alert]</code> を読み、値があるときに通知を表示します。フォームにどの項目の誤りがあるかは、別に <code>@article.errors</code> から表示します。</p>
+          <p><code>after_action</code> では、アクションが作った応答のステータスなどを記録できます。アクションが例外で中断すると実行されません。例外時も経過時間を記録するなら、<code>around_action</code> で <code>yield</code> してアクションを実行し、<code>ensure</code> に計測結果を記録する処理を書きます。時間差には時計の時刻補正に影響されない <code>Process.clock_gettime(Process::CLOCK_MONOTONIC)</code> が使えます。<Ref n={17} /></p>
         </>
       ),
     },
@@ -1152,13 +1250,13 @@ ActionController::Base::MODULES.size  # => 36
             </li>
           </ul>
           <p>
-            図 10-5 の左の列は継承の関係で、下のクラスが上のクラスを継承しています。右の枠は Base が include する36個のモジュールを役割ごとに分けて、一部の名前を載せたものです。ActionController::API は、JSON だけを返すアプリケーションのために、Base より少ないモジュールを Metal に include したクラスです。
+            図 16-5 の左の列は継承の関係で、下のクラスが上のクラスを継承しています。右の枠は Base が include する36個のモジュールを役割ごとに分けて、一部の名前を載せたものです。ActionController::API は、JSON だけを返すアプリケーションのために、Base より少ないモジュールを Metal に include したクラスです。
           </p>
-          <Figure n="10-5" title="コントローラーのクラス階層" caption="Rails 8.1.4.1 の ActionController::Base::MODULES の36個を、本書で役割ごとにまとめた図。">
+          <Figure n="16-5" title="コントローラーのクラス階層" caption="Rails 8.1.4.1 の ActionController::Base::MODULES の36個を、本書で役割ごとにまとめた図。">
             <HierarchyFigure />
           </Figure>
           <p>
-            祖先に並ぶ72個のクラスとモジュールの大半は、これらのモジュールです。<ChapterLink n={1} />の図 1-6 で見た <code>process_action</code> の7つの定義は、このうち ParamsWrapper、Instrumentation、Rescue、Callbacks
+            祖先に並ぶ72個のクラスとモジュールの大半は、これらのモジュールです。<ChapterLink n={1} />の図 2-6 で見た <code>process_action</code> の7つの定義は、このうち ParamsWrapper、Instrumentation、Rescue、Callbacks
             などのモジュールにあります。
           </p>
           <p>
@@ -1267,7 +1365,7 @@ ArticlesController.instance_method(:render).super_method     # super で呼ば�
 `}
           />
           <p>
-            後から include したモジュールほど、ancestors では前に並びます（<ChapterLink n={3} section="include" />）。最後に include した ParamsWrapper が最も前で、Instrumentation、Rescue、Callbacks の順に続きます。同じ名前のメソッドは ancestors の前から順に呼ばれ、<code>super</code> で次の定義に進むので、process_action は ParamsWrapper、Instrumentation、Rescue、Callbacks の順に通ります。図 1-6 の2番目から5番目がこの順です（1番目の ActiveRecord::Railties::ControllerRuntime は、ActiveRecord が後から足したモジュールです）。
+            後から include したモジュールほど、ancestors では前に並びます（<ChapterLink n={3} section="include" />）。最後に include した ParamsWrapper が最も前で、Instrumentation、Rescue、Callbacks の順に続きます。同じ名前のメソッドは ancestors の前から順に呼ばれ、<code>super</code> で次の定義に進むので、process_action は ParamsWrapper、Instrumentation、Rescue、Callbacks の順に通ります。図 2-6 の2番目から5番目がこの順です（1番目の ActiveRecord::Railties::ControllerRuntime は、ActiveRecord が後から足したモジュールです）。
           </p>
           <p>
             Rescue のコメントの「wrap as much as possible」は、できるだけ多くの処理を rescue の対象にするという意味です。Rescue の process_action は Callbacks の process_action より先に呼ばれ、その <code>super</code> の中で before_action のメソッドとアクションが実行されます。そのため、アクションの中の例外だけでなく、before_action のメソッド（「CRUD を保つコントローラーの書き方」の節の set_article が呼ぶ Article.find など）の中で起きた例外も、rescue_from で登録した処理の対象になります。
@@ -1277,7 +1375,7 @@ ArticlesController.instance_method(:render).super_method     # super で呼ば�
           </p>
           <Figure
             title="process_action の入れ子と rescue_from の範囲"
-            caption="Rails 8.1.4.1 の base.rb の include の順をもとにした模式図。橙の枠はモジュールの process_action で、枠の中のものは外側の process_action が呼んだ super の中で実行される。図 1-6 にある ControllerRuntime と ActionController::Rendering の定義は省略した。"
+            caption="Rails 8.1.4.1 の base.rb の include の順をもとにした模式図。橙の枠はモジュールの process_action で、枠の中のものは外側の process_action が呼んだ super の中で実行される。図 2-6 にある ControllerRuntime と ActionController::Rendering の定義は省略した。"
           >
             <RescueRangeFigure />
           </Figure>
@@ -1431,13 +1529,13 @@ end
             で show メソッドが呼ばれます。
           </p>
           <p>
-            図 10-6 はここまでの呼び出しを上から順に並べたものです。上の2つが metal.rb の2つの dispatch、3つ目から5つ目が abstract_controller/base.rb の process、process_action、send_action です。6つ目の default_render は「描画と応答のオブジェクト」の節で読みます。7つ目は dispatch の最後の2行です。
+            図 16-6 はここまでの呼び出しを上から順に並べたものです。上の2つが metal.rb の2つの dispatch、3つ目から5つ目が abstract_controller/base.rb の process、process_action、send_action です。6つ目の default_render は「描画と応答のオブジェクト」の節で読みます。7つ目は dispatch の最後の2行です。
           </p>
-          <Figure n="10-6" title="dispatch から応答の配列まで" caption="Rails 8.1.4.1 の metal.rb・abstract_controller/base.rb・basic_implicit_render.rb を読んでまとめた図。process_action の連鎖の詳細は図 1-6 を参照。">
+          <Figure n="16-6" title="dispatch から応答の配列まで" caption="Rails 8.1.4.1 の metal.rb・abstract_controller/base.rb・basic_implicit_render.rb を読んでまとめた図。process_action の連鎖の詳細は図 2-6 を参照。">
             <DispatchFigure />
           </Figure>
           <p>
-            この呼び出しの順は例外のバックトレース（例外が起きた場所までの、メソッドの呼び出しの履歴）に現れます。アクションの中で例外が起きると、バックトレースには app/controllers/articles_controller.rb の行に続いて、actionpack の metal/basic_implicit_render.rb（send_action）、abstract_controller/base.rb（process_action）、abstract_controller/callbacks.rb、metal/rescue.rb、metal/instrumentation.rb、metal/params_wrapper.rb などの行が並びます。図 10-6 を下から上へたどる順です。development のエラー画面では Framework Trace の欄に表示されます。これらはアクションを呼び出した側のメソッドで、誤りのある場所ではありません。原因を探すときは、app/ で始まる行から読みます。
+            この呼び出しの順は例外のバックトレース（例外が起きた場所までの、メソッドの呼び出しの履歴）に現れます。アクションの中で例外が起きると、バックトレースには app/controllers/articles_controller.rb の行に続いて、actionpack の metal/basic_implicit_render.rb（send_action）、abstract_controller/base.rb（process_action）、abstract_controller/callbacks.rb、metal/rescue.rb、metal/instrumentation.rb、metal/params_wrapper.rb などの行が並びます。図 16-6 を下から上へたどる順です。development のエラー画面では Framework Trace の欄に表示されます。これらはアクションを呼び出した側のメソッドで、誤りのある場所ではありません。原因を探すときは、app/ で始まる行から読みます。
           </p>
         </>
       ),
@@ -1523,9 +1621,9 @@ params => {"title":"from_path","b":"1","q":"1","controller":"probe","action":"ec
 `}
           />
           <p>
-            1行目が送った要求で、パスの <code>:title</code> の位置に from_path、クエリ文字列に <code>title=from_query</code>、本文に <code>title=from_body</code> を入れています。最後の行が、アクションの中で読んだ params です。title はパスの from_path になりました。b は本文だけに、q はクエリ文字列だけにあるので、どちらも入っています。controller と action は、ルーティングが入れたパスパラメーターです（図 10-7）。
+            1行目が送った要求で、パスの <code>:title</code> の位置に from_path、クエリ文字列に <code>title=from_query</code>、本文に <code>title=from_body</code> を入れています。最後の行が、アクションの中で読んだ params です。title はパスの from_path になりました。b は本文だけに、q はクエリ文字列だけにあるので、どちらも入っています。controller と action は、ルーティングが入れたパスパラメーターです（図 16-7）。
           </p>
-          <Figure n="10-7" title="params の合成" caption="上の実行結果を図にしたもの。">
+          <Figure n="16-7" title="params の合成" caption="上の実行結果を図にしたもの。">
             <ParamsFigure />
           </Figure>
           <p>
@@ -1971,9 +2069,9 @@ end
             <Ref n={9} />。<code>config.exceptions_app = routes</code> とすると、エラーページを通常のルートとコントローラーで作れます。パスが <code>/404</code> に書き換わっているので、routes.rb に <code>/404</code> や <code>/500</code> のルートを書けば、そのアクションがエラーページを作ります。
           </p>
           <p>
-            図 10-8 は例外が通る順を上から下へ並べたものです。左の列を上から順に見ます。Rescue と DebugExceptions の箱から右へ出る矢印は、その段階で応答が決まる場合です。右下の枠は ShowExceptions がステータスコードを決めるときに使う rescue_responses の一部です。
+            図 16-8 は例外が通る順を上から下へ並べたものです。左の列を上から順に見ます。Rescue と DebugExceptions の箱から右へ出る矢印は、その段階で応答が決まる場合です。右下の枠は ShowExceptions がステータスコードを決めるときに使う rescue_responses の一部です。
           </p>
-          <Figure n="10-8" title="例外の行き先" caption="Rails 8.1.4.1 の rescue.rb・debug_exceptions.rb・show_exceptions.rb・exception_wrapper.rb を読んでまとめた図。">
+          <Figure n="16-8" title="例外の行き先" caption="Rails 8.1.4.1 の rescue.rb・debug_exceptions.rb・show_exceptions.rb・exception_wrapper.rb を読んでまとめた図。">
             <ExceptionFigure />
           </Figure>
           <p>デモのアプリケーションを production で動かしたときの結果をまとめます。</p>

@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 57-1 場面の構成：3つの帳票と ReportBuilder ---------- */
+/* ---------- 図 74-1 場面の構成：3つの帳票と ReportBuilder ---------- */
 const sceneCallers = [
   { y: 36, lines: ['MonthlySalesReport（経理）', 'total_row'] },
   { y: 130, lines: ['PickingList（倉庫）', 'per_item・sort_by'] },
@@ -27,7 +28,7 @@ const sceneTables = [
 function SceneFigure() {
   return (
     <Svg
-      id="57-1"
+      id="74-1"
       w={780}
       h={420}
       label="3つの帳票のクラスが共通の ReportBuilder を呼ぶ。経理の MonthlySalesReport は total_row を、倉庫の PickingList は per_item と sort_by を、営業の ProductSalesReport は group_by・sort_by・desc・total_row を渡す。ReportBuilder の中には、to_csv、分岐で行の作り方を選ぶ rows、1注文を1行にする order_rows、明細ごとに1行にしてセット商品を中身に分ける item_rows、商品ごとに集計する grouped がある。ReportBuilder は orders・order_items・products・bundle_items の4つのテーブルを読む。要望4で item_rows を変え、倉庫と営業の両方がそこを通る。11月の CSV の合計は、経理が16800、営業が9000で、営業の CSV からギフトセットが消えた。倉庫の出荷リストはセット商品を中身に分けた"
@@ -84,7 +85,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 57-2 帳票ごとに通る ReportBuilder の分岐 ---------- */
+/* ---------- 図 74-2 帳票ごとに通る ReportBuilder の分岐 ---------- */
 const branchRows: { line: number; cond: string; desc: string; cells: string[] }[] = [
   { line: 19, cond: '@total_row', desc: '合計の行を出す', cells: ['真', '偽', '真'] },
   { line: 26, cond: '@per_item || @group_by', desc: '明細から行を作る（偽なら1注文を1行）', cells: ['偽', '真', '真'] },
@@ -102,7 +103,7 @@ const branchCols = [
 function BranchFigure() {
   return (
     <Svg
-      id="57-2"
+      id="74-2"
       w={780}
       h={376}
       label="Coverage で調べた、3つの帳票が ReportBuilder のどの分岐を通るか。19行の @total_row（合計の行）は経理と営業が真、倉庫が偽。26行の @per_item || @group_by（明細から行を作る）は倉庫と営業が真、経理が偽。27行の @group_by（商品ごとに集計）は営業だけが真。28行の @sort_by（並べ替え）は倉庫と営業が真。29行の @desc（逆の順）は営業だけが真。42行の bundle_items.any?（セット商品を中身に分ける）は経理は通らず、倉庫と営業が真と偽の両方を通る。営業がセット商品の分岐を通ることが問題。メソッドの中の26行のうち、経理は18行、倉庫は21行、営業は23行を通った。3つの帳票は、それぞれ違う組み合わせで分岐を通る"
@@ -154,7 +155,7 @@ function BranchFigure() {
   )
 }
 
-/* ---------- 図 57-3 誤った抽象化が育つ過程（Metz の手順と、この章の出来事） ---------- */
+/* ---------- 図 74-3 誤った抽象化が育つ過程（Metz の手順と、この章の出来事） ---------- */
 const growthRows: { metz: string; event: string[]; args: string; danger?: boolean }[] = [
   { metz: '1. A が重複を見つける', event: ['3つの帳票に、注文を CSV にする似たコード'], args: '' },
   { metz: '2. A が重複を取り出し、名前を付ける', event: ['ReportBuilder を作る（orders・columns）'], args: '2' },
@@ -169,7 +170,7 @@ const growthRows: { metz: string; event: string[]; args: string; danger?: boolea
 function GrowthFigure() {
   return (
     <Svg
-      id="57-3"
+      id="74-3"
       w={780}
       h={448}
       label="Sandi Metz の記事にある、誤った抽象化が育つ8つの手順と、この章の出来事の対応。1 A が重複を見つける：3つの帳票に注文を CSV にする似たコードがある。2 A が重複を取り出して名前を付ける：ReportBuilder を作り、引数は orders と columns の2個。3 A が重複を新しい抽象化に置き換える：3つの帳票が ReportBuilder を呼ぶ。4 時間がたつ。5 今の抽象化がほぼ合う新しい要件が来る：倉庫が明細ごとに棚の順に並べたいと頼む。6 B が引数を足し、その値で分岐する：per_item と sort_by を足し、引数は4個。7 次の要件・引数・分岐をくり返す：group_by・desc・total_row を足して引数は7個、セット商品の分岐も足すが引数は増えない。8 あなたが登場する：営業の合計が経理と合わない理由を調べる"
@@ -204,7 +205,7 @@ function GrowthFigure() {
   )
 }
 
-/* ---------- 図 57-4 DRY・WET・AHA：いつまとめるか ---------- */
+/* ---------- 図 74-4 DRY・WET・AHA：いつまとめるか ---------- */
 const wetCells = [
   { x: 190, w: 124, text: '書く', fill: 'bg' as const },
   { x: 320, w: 124, text: '写す（2回目まで）', fill: 'bg' as const },
@@ -215,7 +216,7 @@ const wetCells = [
 function WetAhaFigure() {
   return (
     <Svg
-      id="57-4"
+      id="74-4"
       w={780}
       h={384}
       label="同じ形のコードがある場所の数を横に、DRY・WET・AHA が何を問い、いつまとめるかを並べた図。DRY は同じ知識かを問い、1か所なら1か所に書き、同じ知識と分かれば場所の数によらず1か所にまとめる。WET は何回目かを問い、1回目は書き、2回目は写し、3回目でまとめ、4か所以上ではまとめた処理を使う。AHA は使い道と違いが分かったかを問い、回数では決めず、使い道と、違う所（引数にする所）が分かるまで写してよいとする。まとめた後に引数と分岐が増えたら、インライン化して戻す。この章の場面は3つの帳票がそろった時点でまとめたので WET の目安には合っていたが、使い道（会計・出荷・営業）が違った"
@@ -245,11 +246,11 @@ function WetAhaFigure() {
   )
 }
 
-/* ---------- 図 57-5 誤った抽象化を戻す手順 ---------- */
+/* ---------- 図 74-5 誤った抽象化を戻す手順 ---------- */
 const undoSteps: { lines: string[]; metz?: boolean; result?: string; ok?: boolean }[] = [
   { lines: ['手順1 3つの帳票の出力を spec で確かめる', '直す前は営業だけが失敗する'], result: '3 examples, 1 failure（営業）' },
   { lines: ['手順2 ReportBuilder の中身を3つの呼び出し側に写す', 'インライン化。渡していた引数の値を当てはめる'], metz: true },
-  { lines: ['手順3 その帳票が通る分岐だけを残す', '通らない分岐は図 57-2 で確かめて消す'], metz: true, result: '3 examples, 1 failure（同じ失敗）' },
+  { lines: ['手順3 その帳票が通る分岐だけを残す', '通らない分岐は図 74-2 で確かめて消す'], metz: true, result: '3 examples, 1 failure（同じ失敗）' },
   { lines: ['手順4 通っていても、その帳票に要らない部分を消す', '営業のセット商品の分岐（倉庫の要望）を消す'], metz: true, result: '3 examples, 0 failures', ok: true },
   { lines: ['手順5 ReportBuilder を消す', '3つの帳票は、それぞれの行の作り方だけを持つ'] },
   { lines: ['手順6 3つを並べ、同じ知識だけを引数なしでまとめる', 'Order の scope・OrderItem#subtotal・ReportCsv'], result: '3 examples, 0 failures', ok: true },
@@ -258,7 +259,7 @@ const undoSteps: { lines: string[]; metz?: boolean; result?: string; ok?: boolea
 function UndoFigure() {
   return (
     <Svg
-      id="57-5"
+      id="74-5"
       w={780}
       h={428}
       label="誤った抽象化を戻す6つの手順。手順1で3つの帳票の出力を spec で確かめ、直す前は営業だけが失敗する。手順2で ReportBuilder の中身を3つの呼び出し側に写し、渡していた引数の値を当てはめる。手順3でその帳票が通る分岐だけを残し、spec は同じ1件が失敗したまま。手順4で、通っていてもその帳票に要らない部分（営業のセット商品の分岐）を消し、spec はすべて通る。手順5で ReportBuilder を消す。手順6で3つを並べ、同じ知識だけを引数なしでまとめ（Order の scope、OrderItem#subtotal、ReportCsv）、spec はすべて通る。手順2から手順4が、Metz の記事にある3つの手順にあたる"
@@ -290,7 +291,7 @@ function UndoFigure() {
   )
 }
 
-/* ---------- 図 57-6 直す前と後：違いの置き場所と、依頼ごとに直すファイル ---------- */
+/* ---------- 図 74-6 直す前と後：違いの置き場所と、依頼ごとに直すファイル ---------- */
 const afterReports = [
   { y: 36, lines: ['MonthlySalesReport', '注文を1行ずつ・合計の行'] },
   { y: 96, lines: ['PickingList', '明細・セットを分ける・棚の順'] },
@@ -309,7 +310,7 @@ const changeRows = [
 function CompareFigure() {
   return (
     <Svg
-      id="57-6"
+      id="74-6"
       w={780}
       h={448}
       label="直す前は、MonthlySalesReport・PickingList・ProductSalesReport の3つが ReportBuilder を呼び、帳票の違いは ReportBuilder の7個の引数と6か所の分岐にある。直した後は、3つの帳票がそれぞれ行の作り方（注文を1行ずつと合計の行、明細とセットの分解と棚の順、商品ごとと金額の多い順）を持ち、同じ知識だけを Order の scope（counted_as_sales・ordered_in・to_ship_on）、OrderItem#subtotal、ReportCsv.generate(headers, rows) にまとめて呼ぶ。倉庫の「セット商品を中身に分ける」という依頼では、直す前は report_builder.rb を直して倉庫と営業の出力が変わり、営業の変化は意図しないもの。直した後は picking_list.rb を直し、倉庫の出力だけが変わる。売上に数える状態に配達済みを足す依頼では、直す前は経理と営業の where を2か所直し、片方を忘れると合計が合わない。直した後は Order.counted_as_sales の1行を直し、経理と営業がそろって変わる"
@@ -367,7 +368,7 @@ function CompareFigure() {
   )
 }
 
-/* ---------- 図 57-7 まとめるか、待つか、戻すか ---------- */
+/* ---------- 図 74-7 まとめるか、待つか、戻すか ---------- */
 const judgeCells = [
   { x: 165, y: 30, fill: 'box5' as const, lines: ['まとめる', '業務の言葉で名前を付ける', '例：Order.counted_as_sales、', 'OrderItem#subtotal、ReportCsv'] },
   { x: 465, y: 30, fill: 'box' as const, lines: ['同じ部分だけを引数なしで切り出す', '違う所は呼び出し側に残す', '例：売上に数える注文は scope に、', '列と並べ方は各帳票に'] },
@@ -378,7 +379,7 @@ const judgeCells = [
 function JudgeFigure() {
   return (
     <Svg
-      id="57-7"
+      id="74-7"
       w={780}
       h={428}
       label="2つの軸で、まとめるか待つか戻すかを分けた図。縦の軸は、変わる理由が同じと分かっているか。横の軸は、まとめたときに呼び出し側ごとの引数や分岐が要るか。分かっていて引数や分岐が要らないなら、まとめて業務の言葉で名前を付ける（例は Order.counted_as_sales、OrderItem#subtotal、ReportCsv）。分かっていて引数や分岐が要るなら、同じ部分だけを引数なしで切り出し、違う所は呼び出し側に残す（例は、売上に数える注文は scope に、列と並べ方は各帳票に）。まだ分からず引数や分岐が要らないなら、写したまま待ち、似ている場所をコメントに書いて両方にテストを置く（例は要望4の前の、倉庫と営業の明細の行）。まだ分からず引数や分岐が要るなら、まとめない。まとめてあればインライン化して戻す（例は ReportBuilder）。縦の軸を先に判断する"
@@ -598,7 +599,7 @@ end
           <h3>今の ReportBuilder と3つの呼び出し側</h3>
           <Code
             lang="ruby"
-            title="app/reports/report_builder.rb（直す前。図 57-2 の行番号はこのファイルの行）"
+            title="app/reports/report_builder.rb（直す前。図 74-2 の行番号はこのファイルの行）"
             code={`
 require "csv"
 
@@ -694,11 +695,11 @@ class ProductSalesReport
 end
 `}
           />
-          <Figure n="57-1" title="場面の構成：3つの帳票と ReportBuilder" caption="赤い文字は、次の項で確かめる問題。">
+          <Figure n="74-1" title="場面の構成：3つの帳票と ReportBuilder" caption="赤い文字は、次の項で確かめる問題。">
             <SceneFigure />
           </Figure>
           <p>
-            図 57-1 のとおり、3つの帳票は ReportBuilder に引数を渡すだけで、行の作り方はすべて ReportBuilder の中にあります。帳票ごとの違いは7個の引数と、<code>rows</code> の中の分岐で表しています。<code>item_rows</code> は出荷リストのためにセット商品を分けるように変えましたが、営業の ProductSalesReport も <code>group_by</code> を渡しているので、同じ <code>item_rows</code> を通ります。
+            図 74-1 のとおり、3つの帳票は ReportBuilder に引数を渡すだけで、行の作り方はすべて ReportBuilder の中にあります。帳票ごとの違いは7個の引数と、<code>rows</code> の中の分岐で表しています。<code>item_rows</code> は出荷リストのためにセット商品を分けるように変えましたが、営業の ProductSalesReport も <code>group_by</code> を渡しているので、同じ <code>item_rows</code> を通ります。
           </p>
           <h3>動かして確かめる</h3>
           <p>11月のデータで3つの帳票を作り、CSV を表示しました。</p>
@@ -894,11 +895,11 @@ results.each { |name, r| puts "#{name}が通った行：メソッドの中の #{
 営業が通った行：メソッドの中の 26 行のうち 23 行
 `}
           />
-          <Figure n="57-2" title="帳票ごとに通る ReportBuilder の分岐" caption="script/coverage.rb の実行結果を表にした。行番号は直す前の report_builder.rb の行。">
+          <Figure n="74-2" title="帳票ごとに通る ReportBuilder の分岐" caption="script/coverage.rb の実行結果を表にした。行番号は直す前の report_builder.rb の行。">
             <BranchFigure />
           </Figure>
           <p>
-            図 57-2 を横に読むと、6か所の分岐のどれについても、3つの帳票の通り方がそろっていないことが分かります。縦に読むと、3つの帳票は分岐をそれぞれ違う組み合わせで通っています。指定するかしないかで動きが変わる5つの引数（<code>per_item</code>・<code>group_by</code>・<code>sort_by</code>・<code>desc</code>・<code>total_row</code>）の組み合わせは32通りありますが、使っているのはこの3通りだけです。そして42行目のセット商品の分岐は、出荷リストのために足したものなのに、営業も真と偽の両方の枝を通っています。
+            図 74-2 を横に読むと、6か所の分岐のどれについても、3つの帳票の通り方がそろっていないことが分かります。縦に読むと、3つの帳票は分岐をそれぞれ違う組み合わせで通っています。指定するかしないかで動きが変わる5つの引数（<code>per_item</code>・<code>group_by</code>・<code>sort_by</code>・<code>desc</code>・<code>total_row</code>）の組み合わせは32通りありますが、使っているのはこの3通りだけです。そして42行目のセット商品の分岐は、出荷リストのために足したものなのに、営業も真と偽の両方の枝を通っています。
           </p>
           <h3>このコードの問題</h3>
           <ul>
@@ -906,7 +907,7 @@ results.each { |name, r| puts "#{name}が通った行：メソッドの中の #{
               倉庫の要望で <code>item_rows</code> を変えたら、営業の出力が変わりました。ProductSalesReport は <code>per_item</code> を渡していないので、呼び出し側の引数を読むだけでは、<code>item_rows</code> を通ることが分かりません。
             </li>
             <li>
-              ReportBuilder を変える人は、32通りの組み合わせのうちどれが使われているかを、3つの呼び出し側を読んで調べることになります。図 57-2 のように実行して数えないと、変更がどの帳票に届くかを確かめられません。
+              ReportBuilder を変える人は、32通りの組み合わせのうちどれが使われているかを、3つの呼び出し側を読んで調べることになります。図 74-2 のように実行して数えないと、変更がどの帳票に届くかを確かめられません。
             </li>
             <li>
               セット商品の中身の行の <code>amount: 0</code> は「倉庫では金額を使わない」という1つの帳票の都合で書いた値ですが、営業の集計にそのまま入りました。
@@ -948,9 +949,9 @@ results.each { |name, r| puts "#{name}が通った行：メソッドの中の #{
           </p>
           <h3>Sandi Metz の「The Wrong Abstraction」（2016年）</h3>
           <p>
-            Sandi Metz は RailsConf 2014 の講演「All the Little Things」で「重複は、誤った抽象化よりはるかに安い（duplication is far cheaper than the wrong abstraction）」と述べ、まとめで「誤った抽象化より重複を選ぶ」ように勧めました。この部分への反響が大きかったため、Metz はニュースレターに書いた文章を、2016年1月20日にブログの記事「The Wrong Abstraction」として公開しています<Ref n={2} />。記事は、誤った抽象化ができあがるまでを8つの手順で説明しています<Ref n={2} />。図 57-3 はその手順とこの章の出来事を並べたものです。
+            Sandi Metz は RailsConf 2014 の講演「All the Little Things」で「重複は、誤った抽象化よりはるかに安い（duplication is far cheaper than the wrong abstraction）」と述べ、まとめで「誤った抽象化より重複を選ぶ」ように勧めました。この部分への反響が大きかったため、Metz はニュースレターに書いた文章を、2016年1月20日にブログの記事「The Wrong Abstraction」として公開しています<Ref n={2} />。記事は、誤った抽象化ができあがるまでを8つの手順で説明しています<Ref n={2} />。図 74-3 はその手順とこの章の出来事を並べたものです。
           </p>
-          <Figure n="57-3" title="誤った抽象化が育つ過程（Metz の手順と、この章の出来事）" caption="Metz の記事の手順を短くして、前の節の要望と対応させた。">
+          <Figure n="74-3" title="誤った抽象化が育つ過程（Metz の手順と、この章の出来事）" caption="Metz の記事の手順を短くして、前の節の要望と対応させた。">
             <GrowthFigure />
           </Figure>
           <p>
@@ -968,16 +969,16 @@ results.each { |name, r| puts "#{name}が通った行：メソッドの中の #{
             <li>その呼び出し側に要らない部分を消す</li>
           </ol>
           <p>
-            これで抽象化と分岐の両方がなくなり、それぞれの呼び出し側には自分に要るコードだけが残ります。Metz はこうして戻すと、共通の抽象化を呼んでいるように見えた呼び出し側が、実際にはかなり違うコードを実行していたと分かることが多いと書いています。古い抽象化を取り除いた後で、重複を見直し、抽象化を取り出し直します<Ref n={2} />。前の節の図 57-2 は手順2で決める「その呼び出し側が実行する部分」を Coverage で数えたものに当たります。
+            これで抽象化と分岐の両方がなくなり、それぞれの呼び出し側には自分に要るコードだけが残ります。Metz はこうして戻すと、共通の抽象化を呼んでいるように見えた呼び出し側が、実際にはかなり違うコードを実行していたと分かることが多いと書いています。古い抽象化を取り除いた後で、重複を見直し、抽象化を取り出し直します<Ref n={2} />。前の節の図 74-2 は手順2で決める「その呼び出し側が実行する部分」を Coverage で数えたものに当たります。
           </p>
           <p>
             記事の結びでは共有のコードに引数を渡し、条件の分岐を足しているなら、その抽象化は誤っている、最初は正しかったかもしれないが、その時期は過ぎた、と書いています<Ref n={2} />。共通化した時点の ReportBuilder が正しく見えたことと、後から誤った抽象化になったことは、どちらもこの説明に合います。
           </p>
           <h3>WET との違い</h3>
           <p>
-            <ChapterLink n={60} />（WET）は、2回目までは写して書き、3回目の例が来てからまとめる、という回数の目安でした。AHA は回数を決めません。まとめる時期を決めるのは、使い道と、呼び出し側ごとに違う所が分かったかどうかです。図 57-4 は、DRY・WET・AHA が何を問い、いつまとめるかを並べたものです。
+            <ChapterLink n={60} />（WET）は、2回目までは写して書き、3回目の例が来てからまとめる、という回数の目安でした。AHA は回数を決めません。まとめる時期を決めるのは、使い道と、呼び出し側ごとに違う所が分かったかどうかです。図 74-4 は、DRY・WET・AHA が何を問い、いつまとめるかを並べたものです。
           </p>
-          <Figure n="57-4" title="DRY・WET・AHA：何を問い、いつまとめるか" caption="横は同じ形のコードがある場所の数。下の赤い文字はこの章の場面。">
+          <Figure n="74-4" title="DRY・WET・AHA：何を問い、いつまとめるか" caption="横は同じ形のコードがある場所の数。下の赤い文字はこの章の場面。">
             <WetAhaFigure />
           </Figure>
           <p>
@@ -1038,22 +1039,22 @@ results.each { |name, r| puts "#{name}が通った行：メソッドの中の #{
         <>
           <h3>直す順序</h3>
           <p>
-            Metz の手順に、前後の確認を足して6つの手順で直します。手順2〜4では1つの手順を終えるたびに spec を実行します。図 57-5 は手順と、それぞれの後に spec/reports を実行した結果です。
+            Metz の手順に、前後の確認を足して6つの手順で直します。手順2〜4では1つの手順を終えるたびに spec を実行します。図 74-5 は手順と、それぞれの後に spec/reports を実行した結果です。
           </p>
           <ol>
             <li>3つの帳票の出力を、同じデータで丸ごと確かめる spec を用意する（前の節の reports_spec.rb）。直す前は営業だけが失敗する</li>
             <li>ReportBuilder の中身を3つの呼び出し側に写し、渡していた引数の値を当てはめる</li>
-            <li>その帳票が通る分岐だけを残し、通らない分岐を消す。どの分岐を通るかは図 57-2 で確かめる</li>
+            <li>その帳票が通る分岐だけを残し、通らない分岐を消す。どの分岐を通るかは図 74-2 で確かめる</li>
             <li>通っていても、その帳票の要件ではない部分を消す。この手順は振る舞いを変えるので、ほかの手順と分けて spec で確かめる</li>
             <li>ReportBuilder を消す</li>
             <li>3つの帳票を並べ、同じ知識だと確かめられた所だけを、引数のない部品にまとめ直す</li>
           </ol>
-          <Figure n="57-5" title="誤った抽象化を戻す手順" caption="手順2〜4が Metz の記事の3つの手順にあたる。">
+          <Figure n="74-5" title="誤った抽象化を戻す手順" caption="手順2〜4が Metz の記事の3つの手順にあたる。">
             <UndoFigure />
           </Figure>
           <h3>手順2・3：呼び出し側にインライン化し、通る分岐だけを残す</h3>
           <p>
-            営業の ProductSalesReport に ReportBuilder の中身を写し、<code>group_by: :product</code>・<code>sort_by: :amount</code>・<code>desc: true</code>・<code>total_row: true</code> を当てはめました。図 57-2 の営業の列を見ながら、通らない分岐（<code>order_rows</code> と、<code>@per_item</code> の判定）を消した結果です。
+            営業の ProductSalesReport に ReportBuilder の中身を写し、<code>group_by: :product</code>・<code>sort_by: :amount</code>・<code>desc: true</code>・<code>total_row: true</code> を当てはめました。図 74-2 の営業の列を見ながら、通らない分岐（<code>order_rows</code> と、<code>@per_item</code> の判定）を消した結果です。
           </p>
           <Code
             lang="ruby"
@@ -1338,11 +1339,11 @@ Finished in 0.26918 seconds (files took 1.29 seconds to load)
             経理と倉庫の CSV は、前の節の実行結果と同じ内容でした。営業の合計は16800円になり、経理と一致しました。
           </p>
           <h3>直す前と後の比較</h3>
-          <Figure n="57-6" title="直す前と後：違いの置き場所と、依頼ごとに直すファイル" caption="上段は呼び出しの形、下段は依頼ごとに直すファイルと、出力が変わる帳票。">
+          <Figure n="74-6" title="直す前と後：違いの置き場所と、依頼ごとに直すファイル" caption="上段は呼び出しの形、下段は依頼ごとに直すファイルと、出力が変わる帳票。">
             <CompareFigure />
           </Figure>
           <p>
-            図 57-6 の上段のとおり、直す前は帳票ごとの違いが ReportBuilder の引数と分岐にあり、直した後は帳票ごとの違いがそれぞれのクラスにあります。3つの帳票が呼ぶのは、引数で動きを切り替えない部品（Order の scope、<code>OrderItem#subtotal</code>、<code>ReportCsv.generate</code>）だけです。
+            図 74-6 の上段のとおり、直す前は帳票ごとの違いが ReportBuilder の引数と分岐にあり、直した後は帳票ごとの違いがそれぞれのクラスにあります。3つの帳票が呼ぶのは、引数で動きを切り替えない部品（Order の scope、<code>OrderItem#subtotal</code>、<code>ReportCsv.generate</code>）だけです。
           </p>
           <p>
             下段は、依頼が来たときに直すファイルです。倉庫の「セット商品を中身に分ける」は、直す前は report_builder.rb を直す依頼で、営業の出力まで変わりました。直した後は picking_list.rb だけを直し、ほかの2つの帳票はこのファイルを通りません。2つ目の依頼（売上に数える状態を足す）は、次の節で実際に動かします。
@@ -1475,9 +1476,9 @@ Finished in 0.62547 seconds (files took 3.3 seconds to load)
           </p>
           <h3>待つ・まとめる・戻すの目安</h3>
           <p>
-            この章では、経理と営業の合計が合わないという同じ症状が、逆の2つの原因から起きました。違う知識をまとめた ReportBuilder と、同じ知識を写したままにした条件です。図 57-7 は似たコードを見つけたとき、またはすでにある共通の処理を見直すときに、まとめるか、待つか、戻すかを2つの軸で分けたものです。
+            この章では、経理と営業の合計が合わないという同じ症状が、逆の2つの原因から起きました。違う知識をまとめた ReportBuilder と、同じ知識を写したままにした条件です。図 74-7 は似たコードを見つけたとき、またはすでにある共通の処理を見直すときに、まとめるか、待つか、戻すかを2つの軸で分けたものです。
           </p>
-          <Figure n="57-7" title="まとめるか、待つか、戻すか" caption="模式図。縦の軸を先に判断する。">
+          <Figure n="74-7" title="まとめるか、待つか、戻すか" caption="模式図。縦の軸を先に判断する。">
             <JudgeFigure />
           </Figure>
           <p>
@@ -1511,9 +1512,9 @@ Finished in 0.62547 seconds (files took 3.3 seconds to load)
         <>
           <h3>ReportBuilder の引数と、Rails・Ruby にある機能</h3>
           <p>
-            ReportBuilder の引数を1つずつ見ると、多くは Active Record や Ruby の配列がメソッドとして持っている機能を、引数の値で呼び分けていました。図 57-8 は引数ごとに、直した後のコードで何を使ったかを並べたものです。
+            ReportBuilder の引数を1つずつ見ると、多くは Active Record や Ruby の配列がメソッドとして持っている機能を、引数の値で呼び分けていました。図 74-8 は引数ごとに、直した後のコードで何を使ったかを並べたものです。
           </p>
-          <Figure n="57-8" title="ReportBuilder の引数と、直した後に使ったもの" caption="直した後のコードで使ったものを並べた。">
+          <Figure n="74-8" title="ReportBuilder の引数と、直した後に使ったもの" caption="直した後のコードで使ったものを並べた。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1564,7 +1565,7 @@ Finished in 0.62547 seconds (files took 3.3 seconds to load)
             </div>
           </Figure>
           <p>
-            引数で呼び分けていたときは、帳票を読む人は ReportBuilder の中を読まないと処理の順序が分かりませんでした。直した後は、それぞれの帳票のコードに、絞り込み・行の作り方・並べ方・合計がそのまま並んでいます。まとめたのは、図 57-8 の最後の行の CSV の形と、図 57-6 の Order の scope と <code>OrderItem#subtotal</code> だけです。
+            引数で呼び分けていたときは、帳票を読む人は ReportBuilder の中を読まないと処理の順序が分かりませんでした。直した後は、それぞれの帳票のコードに、絞り込み・行の作り方・並べ方・合計がそのまま並んでいます。まとめたのは、図 74-8 の最後の行の CSV の形と、図 74-6 の Order の scope と <code>OrderItem#subtotal</code> だけです。
           </p>
           <h3>scope と merge：名前の付いた部品を呼び出し側で組み合わせる</h3>
           <p>
@@ -1626,6 +1627,29 @@ SELECT \`order_items\`.* FROM \`order_items\` INNER JOIN \`orders\` ON \`orders\
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          まとめる時期は例の数ではなく、使い道と呼び出し側ごとの違いが分かったかで決めます。この章では経理・倉庫・営業の3つの帳票を通していた ReportBuilder を呼び出し側に戻し、引数なしで書ける同じ知識だけをまとめ直しました。「売上に数える注文」のように変わる理由が同じと分かっている条件は、AHA を理由に写したままにしません。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、倉庫のためにセット商品を中身に分けると、営業の合計が 9000円になり、経理の 16800円と合わなくなった。戻した後は、帳票ごとの違いがそれぞれのクラスにあり、倉庫の同じ依頼は picking_list.rb だけを直す変更になった。営業の合計は 16800円になり、経理と一致した。</>,
+        basis: <><ChapterLink n={76} section="scene" />、<ChapterLink n={76} section="apply" /></>,
+      },
+      cost: {
+        text: <>1行の単位・並べ方・合計の行のように帳票ごとに違う部分は、3つのクラスに似た形で残る。似ている場所はコメントに書き、片方だけを変える依頼が来るかを、依頼のたびに確かめる必要がある。</>,
+        basis: <ChapterLink n={76} section="apply" />,
+      },
+      alternative: {
+        text: <>「売上に数える注文」は Order の scope（counted_as_sales）に、CSV の形は見出しと行だけを受け取る ReportCsv にまとめる。この条件を2つの帳票に写したままにした例では、配達済みの状態を足したときに青木さんの注文（3600円）が営業の集計から抜けた。scope にした後は1行の変更で両方に届いた。</>,
+        basis: <ChapterLink n={76} section="overuse" />,
+      },
+      criterion: {
+        text: <>共通の処理に、1つの呼び出し側しか渡さない引数（per_item・desc）があるか。1つの呼び出し側のための変更で、別の呼び出し側の出力が変わるか。反対に、一致しなければならない値を2か所で別々に求めていないか。</>,
+        basis: <ChapterLink n={76} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

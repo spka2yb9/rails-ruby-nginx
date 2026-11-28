@@ -6,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 5-1 Article の宣言と Rails が作ったメソッドの置き場所 ---------- */
+/* ---------- 図 8-1 Article の宣言と Rails が作ったメソッドの置き場所 ---------- */
 function GeneratedFigure() {
   const right: { y: number; lines: string[]; fill: 'box2' | 'box3' }[] = [
     { y: 30, lines: ['Article::GeneratedAssociationMethods', 'author / comments / comment_ids / tags …（37個）'], fill: 'box2' },
@@ -16,7 +16,7 @@ function GeneratedFigure() {
   ]
   return (
     <Svg
-      id="5-1"
+      id="8-1"
       w={780}
       h={320}
       label="デモの Article の宣言と、Rails が作ったメソッドの置き場所。belongs_to・has_many・has_one_attached からは、author、comments、comment_ids、tags などの37個のメソッドが Article::GeneratedAssociationMethods に作られる。enum :status からは draft? や draft! などの6個のメソッドが名前の無いモジュールに作られ、draft や published などのクラスメソッドも作られる。scope :recent からはクラスメソッド recent が Article の特異クラスに作られる。articles テーブルの列からは title、title=、title_changed? などの287個のメソッドが Article::GeneratedAttributeMethods に作られる。Article.ancestors では、Article の後ろに enum のモジュール、GeneratedAssociationMethods、GeneratedAttributeMethods の順に並ぶ"
@@ -63,7 +63,7 @@ function GeneratedFigure() {
   )
 }
 
-/* ---------- 図 5-2 DSL の宣言が登録するものと使われる時点 ---------- */
+/* ---------- 図 8-2 DSL の宣言が登録するものと使われる時点 ---------- */
 function DslRegisterFigure() {
   const rows = [
     ['resources :articles', 'ルートの一覧（URL とアクションの対応）', '要求が届いてアクションを選ぶとき'],
@@ -73,7 +73,7 @@ function DslRegisterFigure() {
   ]
   return (
     <Svg
-      id="5-2"
+      id="8-2"
       w={780}
       h={290}
       label="Rails の DSL の宣言は、ファイルやクラスを読み込むときに実行され、情報を登録する。resources :articles はルートの一覧に登録し、要求が届いてアクションを選ぶときに使われる。before_action :set_article は process_action のコールバックの列に登録し、アクションを実行する前に使われる。validates :body, presence: true はバリデーターを登録し、valid? や save のときに使われる。has_many :comments はメソッドと関連の情報を作り、comments を呼んだときに使われる"
@@ -106,11 +106,11 @@ function DslRegisterFigure() {
   )
 }
 
-/* ---------- 図 5-3 class_attribute の値の置き場所 ---------- */
+/* ---------- 図 8-3 class_attribute の値の置き場所 ---------- */
 function ClassAttributeFigure() {
   return (
     <Svg
-      id="5-3"
+      id="8-3"
       w={640}
       h={300}
       label="class_attribute :settings を Base に定義すると、Base の特異クラスに settings、settings=、private な __class_attr_settings（値 {timeout: 5} を返す）が定義される。Child.settings = ... を実行すると、Child の特異クラスに {timeout: 10} を返す __class_attr_settings が追加される。Other の特異クラスには定義がないので、Other.settings は superclass である Base の特異クラスの値を読む"
@@ -157,7 +157,7 @@ function ClassAttributeFigure() {
   )
 }
 
-/* ---------- 図 5-4 Concern を include したときの処理順 ---------- */
+/* ---------- 図 8-4 Concern を include したときの処理順 ---------- */
 function ConcernFigure() {
   const N = 90
   const C = 320
@@ -171,7 +171,7 @@ function ConcernFigure() {
   const self = (x: number, y: number, text: string) => <Box x={x - 105} y={y - 15} w={210} h={30} lines={text} fs={11.5} fill="box5" />
   return (
     <Svg
-      id="5-4"
+      id="8-4"
       w={680}
       h={430}
       label="Commentable（Taggable に依存する Concern）を Note に include したときの処理順。1. Note が Commentable.append_features(Note) を呼ぶ。2. Commentable は依存先の Taggable を先に Note に include する。3. Taggable は super で Note の ancestors に自分を挿入する。4. Taggable は Note.extend(ClassMethods) を行う。5. Taggable は自分の included ブロックを Note.class_eval で実行する。6. Commentable が super で Note の ancestors に自分を挿入する。7. Commentable の included ブロックを Note.class_eval で実行する"
@@ -212,12 +212,12 @@ function ConcernFigure() {
   )
 }
 
-/* ---------- 図 5-5 コールバックの定義順と実行の入れ子 ---------- */
+/* ---------- 図 8-5 コールバックの定義順と実行の入れ子 ---------- */
 function CallbackNestingFigure() {
   const defs = ['around1', 'before A', 'after A', 'around2', 'before B', 'after B']
   return (
     <Svg
-      id="5-5"
+      id="8-5"
       w={640}
       h={330}
       label="左は set_callback で定義した順序：around1、before A、after A、around2、before B、after B。右は実行時の入れ子：around1 の前半、before A、around2 の前半、before B、本体、after B、around2 の後半、after A、around1 の後半の順に実行される。around はそれより後に定義したコールバックと本体を包む"
@@ -262,7 +262,7 @@ function CallbackNestingFigure() {
   )
 }
 
-/* ---------- 図 5-6 has_many :comments が行うこと ---------- */
+/* ---------- 図 8-6 has_many :comments が行うこと ---------- */
 function HasManyFigure() {
   const steps = [
     'create_reflection：HasManyReflection を作る',
@@ -272,7 +272,7 @@ function HasManyFigure() {
   ]
   return (
     <Svg
-      id="5-6"
+      id="8-6"
       w={680}
       h={340}
       label="has_many :comments を実行すると、まず Builder::HasMany.build が呼ばれ、Reflection の作成、関連メソッドの定義、dependent オプションのコールバック登録、バリデーションなどの登録を行う。関連メソッドの comments、comments=、comment_ids、comment_ids= は、Article に include 済みの Article::GeneratedAssociationMethods モジュールに定義される。次に Reflection.add_reflection が、作った Reflection を class_attribute の _reflections に登録する"
@@ -293,7 +293,7 @@ function HasManyFigure() {
       <Box x={20} y={120} w={260} h={74} lines={['Article::GeneratedAssociationMethods', 'comments / comments=', 'comment_ids / comment_ids=']} mono fs={11.5} fill="box2" bold />
       <Arrow x1={362} y1={143} x2={282} y2={150} />
       <T x={20} y={210} fs={11.5} tone="muted">
-        Article に include 済みのモジュール（図2-6 の1番目）
+        Article に include 済みのモジュール（図4-6 の1番目）
       </T>
 
       <Box x={20} y={262} w={260} h={44} lines="② Reflection.add_reflection" mono fs={12.5} />
@@ -511,16 +511,16 @@ Article.const_get(:GeneratedAttributeMethods).instance_methods(false).grep(/\\At
           </p>
           <p>
             2つのモジュールのメソッドを数えると、関連のメソッドが37個、属性のメソッドが287個ありました。title だけでも、値を書き込む title= や、値が変更されたかを返す title_changed? など16個あります（図
-            5-1）。has_many などの関連が作るメソッドは Rails のガイドに一覧があります
+            8-1）。has_many などの関連が作るメソッドは Rails のガイドに一覧があります
             <Ref n={10} />。
           </p>
           <p>
-            図 5-1 の左は Article の宣言と articles テーブルの列、右は Rails が作ったメソッドの置き場所です。矢印は、どの宣言からどこにメソッドが作られたかを示します。右の上から3つ目の{' '}
+            図 8-1 の左は Article の宣言と articles テーブルの列、右は Rails が作ったメソッドの置き場所です。矢印は、どの宣言からどこにメソッドが作られたかを示します。右の上から3つ目の{' '}
             <code>#&lt;Class:Article&gt;</code> は Article の特異クラスで、<code>Article.recent</code> のようなクラスメソッドが定義される場所です（
             <ChapterLink n={3} section="class-methods" />
             ）。<code>enum :status</code> は、draft? などのインスタンスメソッドを名前の無いモジュールに作り、draft や published などのクラスメソッドも作っています。
           </p>
-          <Figure n="5-1" title="Article の宣言と、Rails が作ったメソッドの置き場所" caption="デモのアプリ（Rails 8.1.4.1）で owner・instance_methods・ancestors を調べた結果をまとめた図。">
+          <Figure n="8-1" title="Article の宣言と、Rails が作ったメソッドの置き場所" caption="デモのアプリ（Rails 8.1.4.1）で owner・instance_methods・ancestors を調べた結果をまとめた図。">
             <GeneratedFigure />
           </Figure>
         </>
@@ -660,7 +660,7 @@ end
 [:after, :verify_same_origin_request]
 [:before, "engine.rb:39"]
 [:before, "railtie.rb:51"]
-[:around, :turbo_tracking_request_id]
+…（一部を省略）
 [:before, "allow_browser.rb:58"]
 [:before, "articles_controller.rb:2"]
 `}
@@ -712,10 +712,10 @@ end
             を実行します。先ほどの出力の allow_browser.rb:58 は、この2行目の lambda が書かれた行を指しています。
           </p>
           <p>
-            登録された検査は valid? や save のときに、before_action の処理はアクションを実行する前に、Rails が呼び出します（図 5-2）。DSL の1行を読むときは、その宣言が何を登録し、登録したものがいつ使われるかを確かめます。書いた覚えのない処理がアクションの前に動いているときは、この節のように{' '}
+            登録された検査は valid? や save のときに、before_action の処理はアクションを実行する前に、Rails が呼び出します（図 8-2）。DSL の1行を読むときは、その宣言が何を登録し、登録したものがいつ使われるかを確かめます。書いた覚えのない処理がアクションの前に動いているときは、この節のように{' '}
             <code>_process_action_callbacks</code> を表示すると、親のコントローラーや gem が登録したものも含めて一覧できます。
           </p>
-          <Figure n="5-2" title="DSL の宣言が登録するものと、使われる時点" caption="この節と第4章の実行例をもとにまとめた表。">
+          <Figure n="8-2" title="DSL の宣言が登録するものと、使われる時点" caption="この節と第6章の実行例をもとにまとめた表。">
             <DslRegisterFigure />
           </Figure>
           <p>
@@ -839,8 +839,7 @@ Product.instance_methods(false).sort # => [:archived?, :draft?, :published?]
           </p>
           <h3>Rails が文字列の class_eval を使う理由</h3>
           <p>
-            Rails のソースでは、<code>define_method</code> よりも、Ruby のコードを文字列で組み立てて <code>class_eval</code> に渡す書き方がよく出てきます。第1章で見た{' '}
-            <code>comments</code> メソッドも、この方法で定義されています。次に引用するのは、関連を読むメソッド（comments など）を定義する <code>define_readers</code>{' '}
+            Rails のソースでは、<code>define_method</code> よりも、Ruby のコードを文字列で組み立てて <code>class_eval</code> に渡す書き方がよく出てきます。<ChapterLink n={1} section="find-source" />で調べた <code>comments</code> メソッドも、この方法で定義されています。次に引用するのは、関連を読むメソッド（comments など）を定義する <code>define_readers</code>{' '}
             です。メソッドの本体をどう組み立て、どこに定義しているかを読みます。引数の <code>mixin</code> は関連メソッドを置くモジュール（Article の場合は
             Article::GeneratedAssociationMethods）、<code>name</code> は関連の名前です。
           </p>
@@ -895,7 +894,7 @@ end
             <li>
               第2・第3引数の <code>__FILE__, __LINE__ + 1</code> は、評価する文字列を「どのファイルの何行目にあるものとして扱うか」の指定です。<code>__FILE__</code>{' '}
               はこのコードが書かれているファイルのパスを、<code>__LINE__</code> は書かれている行の番号を返します。class_eval の行は association.rb の103行目で、文字列の最初の行の def
-              はその次の行にあるので、1を足して104行目としています。第1章で <code>comments</code> の{' '}
+              はその次の行にあるので、1を足して104行目としています。第2章で <code>comments</code> の{' '}
               <code>source_location</code> が <code>builder/association.rb</code> の104行目を指していたのは、この指定によるものです。例外が起きたときのバックトレース（例外が起きるまでに通ったメソッドの場所の一覧）にも、この位置が表示されます。
             </li>
           </ul>
@@ -920,7 +919,7 @@ end
             の結果と実際の動作が食い違います。
           </p>
           <p>
-            このため Rails では、<code>method_missing</code> を使う場合でも、最初の呼び出しで通常のメソッドを定義し、2回目以降はメソッド探索で見つかるようにする実装がとられています。第2章で見た{' '}
+            このため Rails では、<code>method_missing</code> を使う場合でも、最初の呼び出しで通常のメソッドを定義し、2回目以降はメソッド探索で見つかるようにする実装がとられています。第4章で見た{' '}
             <code>find_by_title</code>（title 列の値で1件を探すメソッド）がその例でした。
             <ChapterLink n={2} section="method-missing" />
             で確かめた結果をもう一度示します。
@@ -1196,7 +1195,7 @@ Base.settings    # => {timeout: 5}
             の特異クラスに定義がなければ、superclass である <code>Base</code> の特異クラスのメソッドが見つかり、親の値が返ります。
           </p>
           <p>
-            Base に <code>class_attribute :settings</code> を定義した例で <code>Child.settings = …</code> を実行したときは、次の順に処理されます。図 5-3 は、この代入の後の状態です。
+            Base に <code>class_attribute :settings</code> を定義した例で <code>Child.settings = …</code> を実行したときは、次の順に処理されます。図 8-3 は、この代入の後の状態です。
           </p>
           <ol>
             <li>
@@ -1221,7 +1220,7 @@ Base.settings    # => {timeout: 5}
             <ChapterLink n={4} section="closure" />
             ）。そのため、次に読むと新しい値が返ります。
           </p>
-          <Figure n="5-3" title="class_attribute の値の置き場所" caption="模式図。値は特異クラスに定義されたメソッドのクロージャに保持される。子クラスで代入すると、子クラスの特異クラスにメソッドが追加される。">
+          <Figure n="8-3" title="class_attribute の値の置き場所" caption="模式図。値は特異クラスに定義されたメソッドのクロージャに保持される。子クラスで代入すると、子クラスの特異クラスにメソッドが追加される。">
             <ClassAttributeFigure />
           </Figure>
           <p>実行して確かめると、代入した子クラス（Child）にメソッドが追加されていることがわかります。</p>
@@ -1448,7 +1447,7 @@ Commentable.instance_variable_get(:@_dependencies) # => [Taggable]
               <code># :nodoc:</code> は、そのメソッドを API ドキュメントに載せないことを示すコメントです。
             </li>
           </ul>
-          <p>Taggable と Commentable の例を、この引用に当てはめます。丸数字は図 5-4 の番号です。</p>
+          <p>Taggable と Commentable の例を、この引用に当てはめます。丸数字は図 8-4 の番号です。</p>
           <ol>
             <li>
               Commentable の本体の <code>include Taggable</code> で、<code>Taggable.append_features(Commentable)</code> が呼ばれます。Commentable は{' '}
@@ -1467,7 +1466,7 @@ Commentable.instance_variable_get(:@_dependencies) # => [Taggable]
               が無いので、extend はしません。
             </li>
           </ol>
-          <Figure n="5-4" title="Concern を include したときの処理順" caption="Commentable（Taggable に依存）を Note に include した場合。紫の箱は、そのモジュールの append_features の中で行われる処理。">
+          <Figure n="8-4" title="Concern を include したときの処理順" caption="Commentable（Taggable に依存）を Note に include した場合。紫の箱は、そのモジュールの append_features の中で行われる処理。">
             <ConcernFigure />
           </Figure>
           <p>
@@ -1504,7 +1503,7 @@ Commentable.instance_variable_get(:@_dependencies) # => [Taggable]
             最後の <code>mod.module_eval(&amp;…)</code> は、mod を self にしてブロックを実行します。ブロックの中の def は mod のインスタンスメソッドになります。
           </p>
           <p>
-            つまり <code>class_methods do ... end</code> は、昔ながらの <code>module ClassMethods ... end</code> を書くのと同じ結果になります。Rails のソースには両方の書き方が混在しています。第1章で{' '}
+            つまり <code>class_methods do ... end</code> は、昔ながらの <code>module ClassMethods ... end</code> を書くのと同じ結果になります。Rails のソースには両方の書き方が混在しています。第2章で{' '}
             <code>has_many</code> の定義元が <code>ActiveRecord::Associations::ClassMethods</code> だったのは、<code>ActiveRecord::Associations</code> が Concern で、その{' '}
             <code>ClassMethods</code> が <code>ActiveRecord::Base</code> に extend されているからです。
           </p>
@@ -1610,10 +1609,10 @@ set_callback :save, :after,  -> { puts "after B" }
             <code>blk.call</code> が、メソッドで書いたときの yield に当たります。出力は、実行された順に / で区切って1行に並べました。
           </p>
           <p>
-            図 5-5 の左は定義の順、右は実行の順です。右の外側の枠が around1、内側の枠が around2 の範囲です。around1 より後に定義した5つのコールバックと本体は、around1 の枠の中で実行されます。after A
+            図 8-5 の左は定義の順、右は実行の順です。右の外側の枠が around1、内側の枠が around2 の範囲です。around1 より後に定義した5つのコールバックと本体は、around1 の枠の中で実行されます。after A
             は around2 より前に定義したので around2 の枠には入らず、around2 が終わった後に実行されます。
           </p>
-          <Figure n="5-5" title="コールバックの定義順と実行の入れ子" caption="Rails 8.1.4.1 で実行した結果を図にしたもの。around は自分より後に定義したコールバックと本体を包み、after は包んでいる範囲の終わりに実行される。">
+          <Figure n="8-5" title="コールバックの定義順と実行の入れ子" caption="Rails 8.1.4.1 で実行した結果を図にしたもの。around は自分より後に定義したコールバックと本体を包み、after は包んでいる範囲の終わりに実行される。">
             <CallbackNestingFigure />
           </Figure>
           <h3>チェーンの保存場所</h3>
@@ -1752,7 +1751,7 @@ HaltDoc.new.save
           </p>
           <p>
             <code>before_action :set_article, only: %i[show edit]</code> は、<code>_insert_callbacks</code> で <code>only:</code> を <code>if:</code>{' '}
-            の条件（アクション名を照合するオブジェクト）に変換したうえで、<code>set_callback(:process_action, :before, :set_article, if: [...])</code> を呼びます。そして第1章の図1-6 で5番目にあった{' '}
+            の条件（アクション名を照合するオブジェクト）に変換したうえで、<code>set_callback(:process_action, :before, :set_article, if: [...])</code> を呼びます。そして第2章の図2-6 で5番目にあった{' '}
             <code>AbstractController::Callbacks#process_action</code> が、このチェーンを実行します。
           </p>
           <Code
@@ -1785,7 +1784,7 @@ HaltDoc.new.save
           </Figure>
           <h3>has_many</h3>
           <p>
-            <code>has_many</code> は、第1章の最後に引用したとおり、<code>Builder::HasMany.build</code> と <code>Reflection.add_reflection</code> の2つを呼ぶだけのメソッドです。Reflection は関連の名前や相手のクラス、外部キーの列名などの情報を持つオブジェクトです。<code>build</code>{' '}
+            <code>has_many</code> は、第2章の最後に引用したとおり、<code>Builder::HasMany.build</code> と <code>Reflection.add_reflection</code> の2つを呼ぶだけのメソッドです。Reflection は関連の名前や相手のクラス、外部キーの列名などの情報を持つオブジェクトです。<code>build</code>{' '}
             の中身は次のとおりです。
           </p>
           <Code
@@ -1863,9 +1862,9 @@ HaltDoc.new.save
             で取り出したのは、private_constant が指定されているからです。
           </p>
           <p>
-            図 5-6 は、ここまでの流れをまとめたものです。①の build の中で Reflection と関連メソッドが作られ、②の add_reflection が Reflection を _reflections に登録します。
+            図 8-6 は、ここまでの流れをまとめたものです。①の build の中で Reflection と関連メソッドが作られ、②の add_reflection が Reflection を _reflections に登録します。
           </p>
-          <Figure n="5-6" title="has_many :comments が行うこと" caption="Rails 8.1.4.1 の has_many と Builder::Association.build を読んでまとめた図。">
+          <Figure n="8-6" title="has_many :comments が行うこと" caption="Rails 8.1.4.1 の has_many と Builder::Association.build を読んでまとめた図。">
             <HasManyFigure />
           </Figure>
           <p>
@@ -1882,7 +1881,7 @@ Article05.const_get(:GeneratedAssociationMethods).instance_methods(false).sort
           />
           <p>
             関連メソッドがクラス自身ではなく include されたモジュールに定義されるので、モデルで同じ名前のメソッドを定義して <code>super</code>{' '}
-            で元の処理を呼べます（第3章の include の規則）。また、作られた Reflection は <code>class_attribute</code> の <code>_reflections</code>{' '}
+            で元の処理を呼べます（<ChapterLink n={3} section="include" />）。また、作られた Reflection は <code>class_attribute</code> の <code>_reflections</code>{' '}
             に新しいハッシュとして登録されるので、親クラスや別のモデルには影響しません。Reflection がどのように使われて SQL になるかは<ChapterLink n={13} />で説明します。
           </p>
           <Code

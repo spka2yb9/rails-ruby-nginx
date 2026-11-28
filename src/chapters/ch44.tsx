@@ -1,6 +1,7 @@
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { Stepper } from '../sims/Stepper'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
@@ -19,7 +20,7 @@ function Msg({ x, y, children, tone, mono }: { x: number; y: number; children: s
   )
 }
 
-/* ---------- 図 80-1 処理の置き場所 ---------- */
+/* ---------- 図 97-1 処理の置き場所 ---------- */
 function PlacementFigure() {
   const cols = ['画面', 'API', 'CSV 取り込み']
   const rows: [string, [string, Tone?][]][] = [
@@ -32,7 +33,7 @@ function PlacementFigure() {
   const colX = [124, 218, 312]
   return (
     <Svg
-      id="80-1"
+      id="97-1"
       w={780}
       h={290}
       label="適用前と適用後の処理の置き場所。適用前は画面・API・CSV 取り込みの3つのコントローラーが、締め切り・申し込み済み・定員の確認、保存、確認メールをそれぞれ書いている。API には定員の確認がなく、CSV には締め切りの確認がなく、CSV はトランザクションの中でメールを投入する。適用後は3つの呼び出し元が RegisterForEvent を呼び、RegisterForEvent がトランザクション・lock!・結果の形を受け持ち、規則は Event、重複の防止は Registration の一意索引、メールはコミットの後に RegistrationMailer で投入する"
@@ -95,11 +96,11 @@ function PlacementFigure() {
   )
 }
 
-/* ---------- 図 80-2 ユースケースの構造 ---------- */
+/* ---------- 図 97-2 ユースケースの構造 ---------- */
 function StructureFigure() {
   return (
     <Svg
-      id="80-2"
+      id="97-2"
       w={780}
       h={372}
       label="ユースケースの構造。3つのコントローラーが RegisterForEvent の call を呼び、Result を受け取る。RegisterForEvent は、ApplicationRecord.transaction と lock! で MySQL の events の行をロックし、Event の register! に規則の確認と保存を任せる。Event は Registration を保存し、断るときは RegistrationRejected を投げる。RegisterForEvent は ActiveRecord.after_all_transactions_commit に RegistrationMailer の deliver_later を登録し、コミットの後に Sidekiq のキューにジョブが入る。RegisterForEvent は HTTP のステータスコードやフラッシュを扱わない"
@@ -152,14 +153,14 @@ function StructureFigure() {
   )
 }
 
-/* ---------- 図 80-3 申し込みのシーケンス ---------- */
+/* ---------- 図 97-3 申し込みのシーケンス ---------- */
 function SequenceFigure() {
   const xs = [70, 220, 380, 540, 690]
   const names = ['コントローラー', 'RegisterForEvent', 'MySQL（接続）', 'Event', 'Sidekiq（Redis）']
   const fills: ('box' | 'box4' | 'box5')[] = ['box', 'box5', 'box4', 'box', 'box4']
   return (
     <Svg
-      id="80-3"
+      id="97-3"
       w={780}
       h={440}
       label="申し込みのシーケンス。コントローラーが RegisterForEvent の call を呼ぶ。RegisterForEvent は BEGIN を送り、lock! で events の行を SELECT FOR UPDATE で読み直してロックする。Event の register! が、申し込み済みかを確かめる SELECT、定員を確かめる COUNT、registrations への INSERT を送り、registration を返す。RegisterForEvent が COMMIT を送るとロックが外れる。コミットの後で deliver_later によりメールのジョブを Sidekiq に投入し、Result.ok をコントローラーに返す。断るときは RegistrationRejected で ROLLBACK し、Result.failure を返す"
@@ -171,7 +172,7 @@ function SequenceFigure() {
         </g>
       ))}
       <rect x={300} y={90} width={300} height={226} rx={4} fill="var(--fig-box5)" opacity={0.45} stroke="var(--fig-line)" strokeDasharray="2 3" />
-      <T x={594} y={306} anchor="end" fs={11} tone="muted">
+      <T x={532} y={306} anchor="end" fs={11} tone="muted">
         トランザクションの中
       </T>
       <Arrow x1={xs[0]} y1={70} x2={xs[1] - 2} y2={70} />
@@ -225,11 +226,11 @@ function SequenceFigure() {
   )
 }
 
-/* ---------- 図 80-4 メールを送るタイミング ---------- */
+/* ---------- 図 97-4 メールを送るタイミング ---------- */
 function MailTimingFigure() {
   return (
     <Svg
-      id="80-4"
+      id="97-4"
       w={780}
       h={300}
       label="左は、トランザクションの中で deliver_later を呼ぶ場合。Rails 8.1 の既定ではジョブがすぐにキューに入り、その後の例外でロールバックしても、ワーカーがメールを送る。右は、after_all_transactions_commit にブロックを登録する場合。コミットされたらジョブを投入し、ロールバックされたらブロックを捨てる"
@@ -278,8 +279,9 @@ function MailTimingFigure() {
   )
 }
 
-/* ---------- 図 80-5 同時の申し込みと lock! の位置 ---------- */
-function RaceFigure() {
+/* ---------- 図 97-5（段階送り）同時の申し込みと lock! の位置 ---------- */
+function RaceFigure({ step }: { step: number }) {
+  const now = 40 + step * 30
   type Cell = [number, 0 | 1, string, Tone?]
   const left: Cell[] = [
     [70, 0, 'BEGIN・SELECT events'],
@@ -313,8 +315,8 @@ function RaceFigure() {
           </g>
         ))}
         {cells.map(([y, c, text, tone]) => (
-          <g key={`${y}-${c}`}>
-            <Box x={cx[c] - 86} y={y - 12} w={172} h={24} fill={tone === 'danger' ? 'box5' : 'bg'} dashed={tone === 'muted'} />
+          <g key={`${y}-${c}`} opacity={y > now ? 0.2 : undefined}>
+            <Box x={cx[c] - 86} y={y - 12} w={172} h={24} fill={tone === 'danger' ? 'box5' : 'bg'} dashed={tone === 'muted'} accent={y === now} />
             <T x={cx[c]} y={y} anchor="middle" fs={11} tone={tone} bold={tone === 'danger' || tone === 'acc'}>
               {text}
             </T>
@@ -325,29 +327,55 @@ function RaceFigure() {
   }
   return (
     <Svg
-      id="80-5"
+      id={`97-5-${step}`}
       w={780}
       h={346}
-      label="残り1席のイベントに、接続 A と接続 B が同時に申し込むタイムライン。左は、トランザクションの中で先に SELECT してから lock! する順序。B は A のコミットの前に最初の SELECT をしているので、ロックを取った後の COUNT も古いスナップショットを読んで 0 になり、2件目を INSERT して定員を超える。右は、最初に lock! する本章の順序。B はロックを待ち、A のコミットの後に初めて普通の SELECT をするので COUNT が 1 になり、満席として ROLLBACK する"
+      label={`時刻 ${step}（全 8）までの処理を表示した状態。` + "残り1席のイベントに、接続 A と接続 B が同時に申し込むタイムライン。左は、トランザクションの中で先に SELECT してから lock! する順序。B は A のコミットの前に最初の SELECT をしているので、ロックを取った後の COUNT も古いスナップショットを読んで 0 になり、2件目を INSERT して定員を超える。右は、最初に lock! する本章の順序。B はロックを待ち、A のコミットの後に初めて普通の SELECT をするので COUNT が 1 になり、満席として ROLLBACK する"}
     >
       {panel(0, '先に読んでから lock!（REPEATABLE READ）', left)}
       <line x1={386} y1={10} x2={386} y2={336} stroke="var(--fig-line)" />
       {panel(392, '最初に lock!（本章のコード）', right)}
-      <T x={10} y={312} fs={11} tone="muted">
-        B の COUNT は、B の最初の SELECT の時点のスナップショットを読む
-      </T>
-      <T x={10} y={332} fs={12} tone="danger" bold>
-        申し込み 2件（定員 1）
-      </T>
-      <T x={402} y={312} fs={11} tone="muted">
-        B の最初の普通の SELECT は A のコミットの後
-      </T>
-      <T x={402} y={332} fs={12} tone="acc" bold>
-        申し込み 1件（定員 1）
-      </T>
+      <g opacity={step < 8 ? 0.2 : undefined}>
+        <T x={10} y={312} fs={11} tone="muted">
+          B の COUNT は、B の最初の SELECT の時点のスナップショットを読む
+        </T>
+        <T x={10} y={332} fs={12} tone="danger" bold>
+          申し込み 2件（定員 1）
+        </T>
+      </g>
+      <g opacity={step < 6 ? 0.2 : undefined}>
+        <T x={402} y={312} fs={11} tone="muted">
+          B の最初の普通の SELECT は A のコミットの後
+        </T>
+        <T x={402} y={332} fs={12} tone="acc" bold>
+          申し込み 1件（定員 1）
+        </T>
+      </g>
     </Svg>
   )
 }
+
+const RACE_STEPS: [string, string, string][] = [
+  ['時刻 1', 'A が BEGIN し、トランザクションで最初の普通の SELECT（Event.find）を実行します。', 'A が BEGIN し、最初の読み取りとして lock!（SELECT … FOR UPDATE）でイベントの行をロックします。'],
+  ['時刻 2', 'B も BEGIN して普通の SELECT を実行します。REPEATABLE READ なので、B が以後の普通の SELECT で読むスナップショットはこの時点で決まります。', 'B の最初の読み取りも FOR UPDATE なので、A のロックが外れるまで待ちます。B のスナップショットはまだ決まっていません。'],
+  ['時刻 3', 'A が lock! でイベントの行のロックを取ります。', 'A が COUNT で申し込みが 0 件であることを確かめ、INSERT します。'],
+  ['時刻 4', 'B の lock! は、A のロックが外れるまで待ちます。', 'A が COMMIT し、ロックが外れます。'],
+  ['時刻 5', 'A が COUNT で 0 件を確かめ、INSERT します。', 'B がロックを取ります。続く COUNT が B の最初の普通の SELECT になるので、A の申し込みが見えて 1 件です。'],
+  ['時刻 6', 'A が COMMIT し、ロックが外れます。', 'B は満席（:full）と判断して ROLLBACK します。申し込みは 1 件です。'],
+  ['時刻 7', 'B がロックを取ります。ロックを取る読み取りは最新の行を読みますが、続く COUNT は普通の SELECT なので、時刻 2 のスナップショットから数えて 0 件です。', '（処理は終わっています）'],
+  ['時刻 8', 'B も INSERT して COMMIT し、定員 1 のイベントに申し込みが 2 件残ります。', '（処理は終わっています）'],
+]
+
+const raceSteps = RACE_STEPS.map(([label, left, right], i) => ({
+  label,
+  detail: (
+    <>
+      <RaceFigure step={i + 1} />
+      <p>左（先に読んでから lock!）：{left}</p>
+      <p>右（最初に lock!）：{right}</p>
+    </>
+  ),
+}))
 
 const chapter: Chapter = {
   number: 44,
@@ -681,11 +709,11 @@ APIから 高橋 → 201 {"id":32}
             MSDP のカタログの例では、ユースケースが使う保存先を <Term en="Repository">リポジトリ</Term>
             （EventRepository など）として分け、メール・トランザクション・時計も差し替えられる取り決めにしています。Rails では Active Record のモデルが読み込みと保存を受け持つので、この章ではリポジトリを作りません。その理由と、それでも分ける場合は次の節で扱います。
           </p>
-          <Figure n="80-1" title="処理の置き場所" caption="左は前の節のコードで、呼び出し元ごとに確かめていることを並べた。右はユースケースにまとめた後の分担。">
+          <Figure n="97-1" title="処理の置き場所" caption="左は前の節のコードで、呼び出し元ごとに確かめていることを並べた。右はユースケースにまとめた後の分担。">
             <PlacementFigure />
           </Figure>
           <p>
-            図 80-1 の左は、前の節の3つのコントローラーがそれぞれ何を確かめているかを並べたものです。赤い欄が食い違いです。右では、3つの呼び出し元が同じ RegisterForEvent を呼び、規則は Event、重複の最終的な防止は一意索引、メールはコミットの後の投入に分かれています。
+            図 97-1 の左は、前の節の3つのコントローラーがそれぞれ何を確かめているかを並べたものです。赤い欄が食い違いです。右では、3つの呼び出し元が同じ RegisterForEvent を呼び、規則は Event、重複の最終的な防止は一意索引、メールはコミットの後の投入に分かれています。
           </p>
           <p>ユースケースを書くときは、次の規則に従います。</p>
           <ul>
@@ -705,23 +733,23 @@ APIから 高橋 → 201 {"id":32}
             </p>
           </Callout>
           <h3>構造</h3>
-          <Figure n="80-2" title="ユースケースの構造" caption="実線の矢印は呼び出し、破線の矢印は戻り値。Sidekiq と MySQL はアプリの外のサービス。">
+          <Figure n="97-2" title="ユースケースの構造" caption="実線の矢印は呼び出し、破線の矢印は戻り値。Sidekiq と MySQL はアプリの外のサービス。">
             <StructureFigure />
           </Figure>
           <p>
-            図 80-2 は適用後のクラスの関係です。3つのコントローラーは RegisterForEvent の <code>call</code> だけを呼び、Result を受け取ります。RegisterForEvent は、トランザクションとロック、Event の <code>register!</code>、コミットの後のメールの投入の3つを順に使います。RegisterForEvent が知らないものも図の下に書きました。HTTP のステータスコード、フラッシュ、CSV の行番号は呼び出し元が扱います。
+            図 97-2 は適用後のクラスの関係です。3つのコントローラーは RegisterForEvent の <code>call</code> だけを呼び、Result を受け取ります。RegisterForEvent は、トランザクションとロック、Event の <code>register!</code>、コミットの後のメールの投入の3つを順に使います。RegisterForEvent が知らないものも図の下に書きました。HTTP のステータスコード、フラッシュ、CSV の行番号は呼び出し元が扱います。
           </p>
-          <Figure n="80-3" title="申し込みのシーケンス" caption="薄い色の範囲がトランザクションの中。①〜③はトランザクションの中、④はコミットの後。">
+          <Figure n="97-3" title="申し込みのシーケンス" caption="薄い色の範囲がトランザクションの中。①〜③はトランザクションの中、④はコミットの後。">
             <SequenceFigure />
           </Figure>
           <p>
-            図 80-3 は1件の申し込みで送られる SQL とジョブの投入の順序です。① で events の行をロックしてから、② の規則の確認と保存を行い、③ のコミットでロックを外します。④ のメールの投入はコミットの後です。断る場合は ② で例外が起きてロールバックし、④ は行いません。
+            図 97-3 は1件の申し込みで送られる SQL とジョブの投入の順序です。① で events の行をロックしてから、② の規則の確認と保存を行い、③ のコミットでロックを外します。④ のメールの投入はコミットの後です。断る場合は ② で例外が起きてロールバックし、④ は行いません。
           </p>
-          <Figure n="80-4" title="メールを送るタイミング" caption="左は前の節の CSV の取り込み、右はこの章の RegisterForEvent。">
+          <Figure n="97-4" title="メールを送るタイミング" caption="左は前の節の CSV の取り込み、右はこの章の RegisterForEvent。">
             <MailTimingFigure />
           </Figure>
           <p>
-            図 80-4 はメールのジョブをトランザクションの中で投入する場合と、コミットの後で投入する場合の違いです。左では、ジョブがすぐにキューに入るので、その後でロールバックしても、ワーカーはメールを送ります。右では、コミットされたときだけ投入し、ロールバックされたら投入しません。ただし、コミットの直後にプロセスが止まると、申し込みは残ってもジョブは投入されません。この取りこぼしを防ぐ方法は<ChapterLink n={53} section="idea" />の Transactional Outbox で扱います。
+            図 97-4 はメールのジョブをトランザクションの中で投入する場合と、コミットの後で投入する場合の違いです。左では、ジョブがすぐにキューに入るので、その後でロールバックしても、ワーカーはメールを送ります。右では、コミットされたときだけ投入し、ロールバックされたら投入しません。ただし、コミットの直後にプロセスが止まると、申し込みは残ってもジョブは投入されません。この取りこぼしを防ぐ方法は<ChapterLink n={53} section="idea" />の Transactional Outbox で扱います。
           </p>
         </>
       ),
@@ -1096,11 +1124,11 @@ RegisterForEvent（最初に lock!）: [:ok, :full] 申し込み=1件（定員 1
           <p>
             2行目は lock! を使っているのに定員を超えました。原因は MySQL の分離レベルです。MySQL 8.4 の InnoDB の既定の分離レベル REPEATABLE READ では、トランザクションの中の普通の SELECT（ロックを取らない読み取り）は、そのトランザクションで最初に行った普通の SELECT の時点のスナップショットを読みます<Ref n={10} />。<code>SELECT … FOR UPDATE</code> はロックを取る読み取りなので、最新の値を読みます。2行目の書き方では、接続 B は最初の <code>Event.find</code> で読む時点が決まり、その後でロックを待ちます。接続 A がコミットした後にロックを取っても、COUNT は A の申し込みを含まない古いスナップショットから数えるので、0 件になります。
           </p>
-          <Figure n="80-5" title="同時の申し込みと lock! の位置" caption="上の実行の2行目（左）と4行目（右）を、2つの接続の時間の流れで並べた模式図。縦が時間。">
-            <RaceFigure />
+          <Figure n="97-5" title="同時の申し込みと lock! の位置（段階送り）" caption="上の実行の2行目（左）と4行目（右）を、2つの接続の時間の流れで並べた概念モデルです。縦が時間で、時刻を進めると、その時刻までの処理を濃く表示し、その時刻の処理を枠で囲みます。左右は別々の実行で、同じ高さが同じ時刻を表すわけではありません。実際の実行では規則の確認と保存の間に 0.3 秒の待ちを入れて、この順序を毎回起こしています。">
+            <Stepper steps={raceSteps} />
           </Figure>
           <p>
-            図 80-5 の左では、B の COUNT が B の最初の SELECT（A がロックを取る前）の時点のスナップショットを読んでいます。右では、B の最初の読み取りが <code>FOR UPDATE</code> なのでスナップショットはまだ決まらず、ロックを取った後の COUNT が初めての普通の SELECT になり、A の申し込みが見えます。READ COMMITTED では普通の SELECT ごとに新しいスナップショットを読むので、3行目も定員を守りました。MSDP のカタログの Rails の例は PostgreSQL で動かしており、PostgreSQL の既定の分離レベルは READ COMMITTED です<Ref n={11} />。同じ順序のコードでも、MySQL では結果が変わります。スナップショットの仕組みは<ChapterLink n={38} section="mvcc" />で扱いました。
+            図 97-5 の左では、B の COUNT が B の最初の SELECT（A がロックを取る前）の時点のスナップショットを読んでいます。右では、B の最初の読み取りが <code>FOR UPDATE</code> なのでスナップショットはまだ決まらず、ロックを取った後の COUNT が初めての普通の SELECT になり、A の申し込みが見えます。READ COMMITTED では普通の SELECT ごとに新しいスナップショットを読むので、3行目も定員を守りました。MSDP のカタログの Rails の例は PostgreSQL で動かしており、PostgreSQL の既定の分離レベルは READ COMMITTED です<Ref n={11} />。同じ順序のコードでも、MySQL では結果が変わります。スナップショットの仕組みは<ChapterLink n={38} section="mvcc" />で扱いました。
           </p>
           <p>
             この章のコードでは <code>lock!</code> をトランザクションの最初の読み取りにしています。イベントと会員は呼び出し元がトランザクションの外で読み、ユースケースのトランザクションは <code>lock!</code> から始まります。ロックの前にトランザクションの中で読む必要があるなら、<code>Event.lock.find(id)</code> のように最初の読み取りでロックを取ります。
@@ -1133,7 +1161,7 @@ ActionMailer::MailDeliveryJob.superclass                  = ActiveJob::Base
             RegisterForEvent では、<code>ActiveRecord.after_all_transactions_commit</code> に渡したブロックの中で <code>deliver_later</code> を呼んでいます。このメソッドは、開いているトランザクションがなければブロックをすぐに実行し、開いていればすべてのトランザクションのコミットを待って実行します。どれかがロールバックされた場合は実行しません<Ref n={14} />。3 の結果のように、RegisterForEvent を外側のトランザクションの中で呼んでロールバックした場合も、ジョブは投入されません。ジョブのクラスの設定に頼らず、ユースケースのコードを読めばメールを投入する時点が分かります。
           </p>
           <p>
-            コミットの後でメールのジョブの実行が失敗しても、申し込みは保存済みで、利用者には成功の応答が返っています。ジョブは Sidekiq の再試行で送り直します（<ChapterLink n={18} section="retry" />）。投入そのものが失われる場合の対策は、図 80-4 で触れた Transactional Outbox です。
+            コミットの後でメールのジョブの実行が失敗しても、申し込みは保存済みで、利用者には成功の応答が返っています。ジョブは Sidekiq の再試行で送り直します（<ChapterLink n={18} section="retry" />）。投入そのものが失われる場合の対策は、図 97-4 で触れた Transactional Outbox です。
           </p>
           <Callout kind="v72">
             <p>

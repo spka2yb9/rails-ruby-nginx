@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 52-1 残高を書き換える5か所 ---------- */
+/* ---------- 図 69-1 残高を書き換える5か所 ---------- */
 const sceneRows: { name: string; sub: string; check: string; history: string; checkBad?: boolean; historyBad?: boolean }[] = [
   { name: '① Charge', sub: 'チャージ', check: '不要（増やす）', history: '残す' },
   { name: '② Checkout', sub: '支払い', check: '確かめる', history: '残す' },
@@ -16,7 +17,7 @@ const sceneRows: { name: string; sub: string; check: string; history: string; ch
 function SceneFigure() {
   return (
     <Svg
-      id="52-1"
+      id="69-1"
       w={780}
       h={390}
       label="ウォレットの残高を書き換える場所が5か所ある。① Charge（チャージ）と③ RefundJob（返金）は残高を増やし、履歴を残す。② Checkout（支払い）は残高が足りるかを確かめてから減らし、履歴を残す。④ ChargeCancellationJob（チャージの取り消し）は残高が足りるかを確かめずに減らすので、残高がマイナスになる。⑤ Admin::WalletsController（管理画面）は残高を直接書き換え、履歴を残さないので、履歴の合計と残高が食い違う。5か所はどれも Wallet の update!(balance: …) を呼び、Wallet は wallets テーブルの balance 列に書き込む。履歴は wallet_entries テーブルに入る"
@@ -66,11 +67,11 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 52-2 Active Record の属性は既定で公開される ---------- */
+/* ---------- 図 69-2 Active Record の属性は既定で公開される ---------- */
 function ExposureFigure() {
   return (
     <Svg
-      id="52-2"
+      id="69-2"
       w={780}
       h={360}
       label="wallets テーブルの balance 列から、Active Record は Wallet に属性のメソッドを21個作り、すべて public になる。balance、balance=、balance_was、balance_changed?、restore_balance! などである。このほかに、列を問わず使える書き込みのメソッドがある。update・update!・save・assign_attributes・[]=・write_attribute は検証を通る。update_column・update_columns・increment!・decrement!・toggle!・update_all・update_counters・insert_all・upsert_all は検証もコールバックも通らない。どのメソッドも、アプリのどのクラスからでも呼べる"
@@ -130,13 +131,13 @@ function ExposureFigure() {
   )
 }
 
-/* ---------- 図 52-3 公開する操作と隠す状態 ---------- */
+/* ---------- 図 69-3 公開する操作と隠す状態 ---------- */
 const publicOps = ['charge!(amount)', 'pay!(amount)', 'refund!(amount)', 'cancel_charge!(amount)', 'adjust!(amount, note:)', 'balance（読むだけ）']
 
 function BoundaryFigure() {
   return (
     <Svg
-      id="52-3"
+      id="69-3"
       w={780}
       h={330}
       label="Wallet の外に公開するのは charge!、pay!、refund!、cancel_charge!、adjust! の5つの操作と、残高を読む balance だけにする。残高を書き込む balance= と、残高を変える処理 change_balance! は private にし、change_balance! がロック・下限と上限の確認・履歴の追加をまとめて行う。不変条件は、残高が0円以上10万円以下であることと、履歴の合計が残高と等しいこと。呼び出し側の Charge・Checkout・RefundJob・ChargeCancellationJob・管理画面は、公開した操作だけを呼ぶ。change_balance! が wallets と wallet_entries に書き込む"
@@ -170,14 +171,14 @@ function BoundaryFigure() {
   )
 }
 
-/* ---------- 図 52-4 直す前と後の書き換えの経路 ---------- */
+/* ---------- 図 69-4 直す前と後の書き換えの経路 ---------- */
 const callerNames = ['① Charge', '② Checkout', '③ RefundJob', '④ ChargeCancellationJob', '⑤ 管理画面']
 const afterMethods = ['charge!', 'pay!', 'refund!', 'cancel_charge!', 'adjust!']
 
 function BeforeAfterFigure() {
   return (
     <Svg
-      id="52-4"
+      id="69-4"
       w={780}
       h={360}
       label="直す前は、5か所の呼び出し側がそれぞれ update!(balance: …) で wallets.balance に直接書き込み、残高の確認や履歴の追加も呼び出し側ごとに書いている。確認があるのは② Checkout だけである。直した後は、5か所がそれぞれ Wallet の charge!、pay!、refund!、cancel_charge!、adjust! を呼ぶ。Wallet の中の change_balance! がロック・確認・履歴の追加を1か所で行い、wallets と wallet_entries に書き込む。管理画面は残高を直接受け付けず、金額と理由を adjust! に渡す"
@@ -240,7 +241,7 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 52-5 同時の支払いのタイムライン ---------- */
+/* ---------- 図 69-5 同時の支払いのタイムライン ---------- */
 type Step = { y: number; lane: 0 | 1 | 2; text: string[]; tone?: 'danger' | 'acc'; fill?: 'box' | 'box5' | 'box2' }
 
 const raceBefore: Step[] = [
@@ -264,7 +265,7 @@ function RaceFigure() {
   ]
   return (
     <Svg
-      id="52-5"
+      id="69-5"
       w={780}
       h={360}
       label="5,000円の残高から、2つのスレッドが同時に3,000円を支払う。直す前は、2つのスレッドが同じ時点で残高5,000円を読み、どちらも5,000円は3,000円以上なので払えると判断し、それぞれ balance を 2000 に更新する。結果は残高2,000円で、支払いの合計は6,000円になる。直した後は、Wallet#pay! の中の with_lock が SELECT … FOR UPDATE で行をロックする。スレッド1が5,000円を読んで2,000円に更新し、履歴を追加してコミットするまで、スレッド2はロックを待つ。スレッド2は2,000円を読み、InsufficientBalance を投げてロールバックする。結果は残高2,000円で、支払いの合計は3,000円になる"
@@ -316,7 +317,7 @@ function RaceFigure() {
   )
 }
 
-/* ---------- 図 52-7 当てはめすぎの判断 ---------- */
+/* ---------- 図 69-7 当てはめすぎの判断 ---------- */
 function JudgeFigure() {
   const qx = [150, 460]
   const qy = [40, 190]
@@ -328,7 +329,7 @@ function JudgeFigure() {
   ]
   return (
     <Svg
-      id="52-7"
+      id="69-7"
       w={780}
       h={400}
       label="横軸は、値に守る規則（不変条件）があるかどうか。左は規則がない、右は規則がある（ほかの列や履歴と関係する）。縦軸は、書き換える場所の数で、下が少なく、上が多い。左上（規則がなく、書き換える場所が多い）は属性のまま公開し、ストロングパラメーターで受け付ける列を選ぶ。例は名前・メモ・表示の設定。右上（規則があり、書き換える場所が多い）は操作のメソッドだけを公開し、書き込みを private にして DB の制約を足す。例は残高・在庫数・ポイント。左下（規則がなく、書き換える場所が少ない）は属性のまま公開し、形式を validates で確かめる。右下（規則があり、書き換える場所が少ない）は validates や1つのメソッドで足りることが多く、書き込む場所が増えたら右上の扱いにする"
@@ -513,9 +514,9 @@ end
 `}
           />
           <p>
-            図 52-1 は5か所と2つの規則の関係です。残高が足りるかを確かめているのは ② の Checkout だけで、履歴を残していないのは ⑤ の管理画面です。規則がどこにも1か所にまとまっておらず、書き換える側がそれぞれ覚えていなければなりません。
+            図 69-1 は5か所と2つの規則の関係です。残高が足りるかを確かめているのは ② の Checkout だけで、履歴を残していないのは ⑤ の管理画面です。規則がどこにも1か所にまとまっておらず、書き換える側がそれぞれ覚えていなければなりません。
           </p>
-          <Figure n="52-1" title="残高を書き換える5か所" caption="網かけの箱が、規則を守っていない呼び出し側。どの呼び出し側も Wallet の update!(balance: …) を直接呼ぶ。">
+          <Figure n="69-1" title="残高を書き換える5か所" caption="網かけの箱が、規則を守っていない呼び出し側。どの呼び出し側も Wallet の update!(balance: …) を直接呼ぶ。">
             <SceneFigure />
           </Figure>
           <h3>順に実行すると</h3>
@@ -647,9 +648,9 @@ balance balance= balance? balance_before_last_save balance_before_type_cast bala
 `}
           />
           <p>
-            1つの列から21個のメソッドができ、そのうち <code>balance=</code> は値を書き込むメソッドです。このほかに、列の名前を引数で受け取って書き込むメソッドが、インスタンスとクラスの両方にあります。Rails ガイドは <code>update_column</code>・<code>update_columns</code>・<code>update_all</code>・<code>increment!</code>・<code>update_counters</code>・<code>insert_all</code> などを、検証を通らずにデータベースに保存するメソッドとして挙げています<Ref n={7} />（<ChapterLink n={14} section="skip" />）。図 52-2 はこれらをまとめたものです。
+            1つの列から21個のメソッドができ、そのうち <code>balance=</code> は値を書き込むメソッドです。このほかに、列の名前を引数で受け取って書き込むメソッドが、インスタンスとクラスの両方にあります。Rails ガイドは <code>update_column</code>・<code>update_columns</code>・<code>update_all</code>・<code>increment!</code>・<code>update_counters</code>・<code>insert_all</code> などを、検証を通らずにデータベースに保存するメソッドとして挙げています<Ref n={7} />（<ChapterLink n={14} section="skip" />）。図 69-2 はこれらをまとめたものです。
           </p>
-          <Figure n="52-2" title="Active Record の属性は既定で公開される" caption="属性のメソッドの数は、Wallet で public_instance_methods を数えた結果。検証を通らないメソッドの一覧は Rails ガイドによる。">
+          <Figure n="69-2" title="Active Record の属性は既定で公開される" caption="属性のメソッドの数は、Wallet で public_instance_methods を数えた結果。検証を通らないメソッドの一覧は Rails ガイドによる。">
             <ExposureFigure />
           </Figure>
           <h3>このコードの問題</h3>
@@ -698,9 +699,9 @@ balance balance= balance? balance_before_last_save balance_before_type_cast bala
           </p>
           <h3>公開する操作と隠す状態</h3>
           <p>
-            図 52-3 は直した後の Wallet の境界です。呼び出し側が使えるのは左の列の操作だけで、残高の書き込み <code>balance=</code> と、ロック・確認・履歴の追加を行う <code>change_balance!</code> は private にします。不変条件は Wallet の中の1か所で確かめます。
+            図 69-3 は直した後の Wallet の境界です。呼び出し側が使えるのは左の列の操作だけで、残高の書き込み <code>balance=</code> と、ロック・確認・履歴の追加を行う <code>change_balance!</code> は private にします。不変条件は Wallet の中の1か所で確かめます。
           </p>
-          <Figure n="52-3" title="公開する操作と隠す状態" caption="破線の箱は private のメソッドと、コードの中で守る取り決め（不変条件）。">
+          <Figure n="69-3" title="公開する操作と隠す状態" caption="破線の箱は private のメソッドと、コードの中で守る取り決め（不変条件）。">
             <BoundaryFigure />
           </Figure>
           <h3>Ruby と Active Record でのカプセル化</h3>
@@ -711,7 +712,7 @@ balance balance= balance? balance_before_last_save balance_before_type_cast bala
             ただし、Ruby の private で外からの呼び出しをすべて止められるわけではありません。<code>send</code> は private のメソッドも呼べます。<code>public_send</code> は public のメソッドだけを呼びます<Ref n={6} />。Rails Doctrine の「Provide sharp knives」は、Ruby が既存のクラスやメソッドを変えられる強力な機能を意図して持っていて、その使い方を禁止ではなく規約と教育で導くと述べています<Ref n={4} />。Ruby でのカプセル化は、誤って規則を破るコードを書けなくすることが目的で、意図して迂回するコードまでは止められません。迂回するコードがあっても守りたい不変条件は、データベースの制約でも守ります。この点は次の節で実行して確かめます。
           </p>
           <p>
-            Active Record のモデルでは、列から作られた書き込みのメソッドが既定で public です（図 52-2）。Fowler は Active Record パターンを、テーブルの1行を表し、データベースへのアクセスを内部で行い、そのデータに業務のロジックを加えるオブジェクトと定義しています<Ref n={3} />。行の列を属性として外に見せるのはこのパターンの設計で、Rails はそれを既定にしています。したがって Rails では、すべての列を隠すのではなく、不変条件を持つ列を選んで書き込みを絞るのが現実的です。どの列を選ぶかは「当てはめすぎたとき」の節で扱います。
+            Active Record のモデルでは、列から作られた書き込みのメソッドが既定で public です（図 69-2）。Fowler は Active Record パターンを、テーブルの1行を表し、データベースへのアクセスを内部で行い、そのデータに業務のロジックを加えるオブジェクトと定義しています<Ref n={3} />。行の列を属性として外に見せるのはこのパターンの設計で、Rails はそれを既定にしています。したがって Rails では、すべての列を隠すのではなく、不変条件を持つ列を選んで書き込みを絞るのが現実的です。どの列を選ぶかは「当てはめすぎたとき」の節で扱います。
           </p>
         </>
       ),
@@ -946,9 +947,9 @@ end
           />
           <h3>直す前と後の比較</h3>
           <p>
-            図 52-4 は書き換えの経路の比較です。直す前は5か所が wallets.balance に直接書き込み、規則は呼び出し側に散らばっていました。直した後は、5か所が Wallet の操作を呼び、規則・ロック・履歴の追加は <code>change_balance!</code> の1か所にあります。
+            図 69-4 は書き換えの経路の比較です。直す前は5か所が wallets.balance に直接書き込み、規則は呼び出し側に散らばっていました。直した後は、5か所が Wallet の操作を呼び、規則・ロック・履歴の追加は <code>change_balance!</code> の1か所にあります。
           </p>
-          <Figure n="52-4" title="直す前と後の書き換えの経路" caption="直した後の矢印に添えた名前は、呼び出し側が使う Wallet の操作。">
+          <Figure n="69-4" title="直す前と後の書き換えの経路" caption="直した後の矢印に添えた名前は、呼び出し側が使う Wallet の操作。">
             <BeforeAfterFigure />
           </Figure>
           <h3>同じ順に実行すると</h3>
@@ -989,9 +990,9 @@ end
 `}
           />
           <p>
-            図 52-5 は直す前と後のタイムラインです。直した後は、スレッド2の <code>SELECT … FOR UPDATE</code> がスレッド1のコミットまで待ち、2,000円を読んでから判断します。ロックを取るコードは <code>change_balance!</code> の1か所にしかありませんが、5か所のどの呼び出し側の操作もこのコードを通ります。状態を変える経路を1つにしたので、ロックも1か所に書けば済みます。行のロックの詳細は<ChapterLink n={15} section="pessimistic" />と<ChapterLink n={38} section="lost-update-fix" />で扱っています。
+            図 69-5 は直す前と後のタイムラインです。直した後は、スレッド2の <code>SELECT … FOR UPDATE</code> がスレッド1のコミットまで待ち、2,000円を読んでから判断します。ロックを取るコードは <code>change_balance!</code> の1か所にしかありませんが、5か所のどの呼び出し側の操作もこのコードを通ります。状態を変える経路を1つにしたので、ロックも1か所に書けば済みます。行のロックの詳細は<ChapterLink n={15} section="pessimistic" />と<ChapterLink n={38} section="lost-update-fix" />で扱っています。
           </p>
-          <Figure n="52-5" title="同時の支払いのタイムライン" caption="5,000円の残高から、2つのスレッドが3,000円ずつ支払う。破線の矢印は、ロックが外れるのを待ってから読み直すことを表す。">
+          <Figure n="69-5" title="同時の支払いのタイムライン" caption="5,000円の残高から、2つのスレッドが3,000円ずつ支払う。破線の矢印は、ロックが外れるのを待ってから読み直すことを表す。">
             <RaceFigure />
           </Figure>
           <h3>操作を通らない書き込みを試す</h3>
@@ -1034,9 +1035,9 @@ update_column(:balance, 9999)                → 戻り値 true、DB の残高 9
 `}
           />
           <p>
-            直す前のコードでは、10通りすべてで DB の残高が -1,000円（最後の行は 9,999円）になりました。直した後の結果を、止めた仕組みごとにまとめたのが図 52-6 です。
+            直す前のコードでは、10通りすべてで DB の残高が -1,000円（最後の行は 9,999円）になりました。直した後の結果を、止めた仕組みごとにまとめたのが図 69-6 です。
           </p>
-          <Figure n="52-6" title="書き込みの方法ごとの結果と、止めた仕組み" caption="残高2,000円のウォレットで、-1,000円にしようとした結果（最後の行だけ 9,999円）。直す前はどれも書き込めた。">
+          <Figure n="69-6" title="書き込みの方法ごとの結果と、止めた仕組み" caption="残高2,000円のウォレットで、-1,000円にしようとした結果（最後の行だけ 9,999円）。直す前はどれも書き込めた。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1213,7 +1214,7 @@ send(:balance=, 5000) で用意したテストのデータ → 残高 5000円、
             実行結果の最後の行はテストのデータを用意するために <code>send(:balance=, 5000)</code> を使った場合です。残高は5,000円になりましたが、履歴は0件です。このデータは「履歴の合計と残高が等しい」という不変条件を破っていて、本番では起きない状態でテストしていることになります。また、テストが private のメソッドの名前に依存するので、残高の持ち方を変えると、振る舞いが同じでもテストが失敗するようになります。
           </p>
           <p>
-            依頼文が挙げるトレードオフの1つが、このカプセル化とテストのしやすさです。テストのためだけに内部の実装を公開せず、公開された振る舞いを通じてテストします。この章のテストでは残高を <code>charge!</code> で用意しました。公開した操作でテストのデータを作るのが難しいなら、それは公開した操作が足りないか、操作が多くのことをしすぎている兆候です。このトレードオフは<ChapterLink n={93} section="encapsulation-testing" />でも扱います。
+            カプセル化によって、テストで使える操作も限られます。テストのためだけに内部の実装を公開せず、公開された振る舞いを通じてテストします。この章のテストでは残高を <code>charge!</code> で用意しました。公開した操作でテストのデータを作るのが難しいなら、それは公開した操作が足りないか、操作が多くのことをしすぎている兆候です。このトレードオフは<ChapterLink n={93} section="encapsulation-testing" />でも扱います。
           </p>
           <h3>読み取りまで隠す</h3>
           <p>
@@ -1221,9 +1222,9 @@ send(:balance=, 5000) で用意したテストのデータ → 残高 5000円、
           </p>
           <h3>判断の目安</h3>
           <p>
-            どの属性の書き込みを絞るかは、2つの問いで判断します。1つ目は「この値だけを変えると、ほかの値や履歴と矛盾するか」（守る規則があるか）、2つ目は「書き換える場所がいくつあるか」です。図 52-7 はこの2つを軸にした目安です。
+            どの属性の書き込みを絞るかは、2つの問いで判断します。1つ目は「この値だけを変えると、ほかの値や履歴と矛盾するか」（守る規則があるか）、2つ目は「書き換える場所がいくつあるか」です。図 69-7 はこの2つを軸にした目安です。
           </p>
-          <Figure n="52-7" title="書き込みを絞るかの判断の目安" caption="模式図。状態の遷移そのものが規則の列（注文の状態など）は、状態機械で遷移を絞る方法もある。">
+          <Figure n="69-7" title="書き込みを絞るかの判断の目安" caption="模式図。状態の遷移そのものが規則の列（注文の状態など）は、状態機械で遷移を絞る方法もある。">
             <JudgeFigure />
           </Figure>
           <p>次のような場合は、操作のメソッドに絞る効果が大きくなります。</p>
@@ -1331,6 +1332,29 @@ send(:balance=, 5000) で用意したテストのデータ → 残高 5000円、
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          書き込みを操作のメソッドに絞るのは、ほかの値や履歴と矛盾してはいけない値で、書き換える場所が複数ある列です。この章では残高を変える経路を Wallet の操作に限り、書き込みを private にして、DB に CHECK 制約を足しました。名前のように規則のない属性は属性のまま公開しておきます。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、取り消しのジョブが残高を確かめずに5,000円を引いて残高がマイナスの 3,000円になり、同時の支払い2つで 5,000円の残高から 6,000円を支払えた。直した後は、規則・ロック・履歴の追加が change_balance! の1か所になり、同時の支払いは1つだけが成功した。</>,
+        basis: <><ChapterLink n={71} section="scene" />、<ChapterLink n={71} section="apply" /></>,
+      },
+      cost: {
+        text: <>private は send で、validates は increment! や update_column のような検証を通らないメソッドで迂回できる。条件を満たす値を update_column で書き込むことはどの層でも止められないので、検証を通らないメソッドを RuboCop とレビューで見つける作業が残る。</>,
+        basis: <ChapterLink n={71} section="apply" />,
+      },
+      alternative: {
+        text: <>名前・メモ・表示の設定は validates とストロングパラメーターで足りる。名前の書き込みまで private にした例では、create! もフォームの更新も UnknownAttributeError になった。作るときに一度だけ入れる列は attr_readonly で守る。</>,
+        basis: <ChapterLink n={71} section="overuse" />,
+      },
+      criterion: {
+        text: <>その値だけを変えると、ほかの値や履歴と矛盾するか。書き換える場所がいくつあり、今後も増えるか。同時に書き換えられ、ロックが必要か。テストのデータも公開した操作（charge!）で作れるか。</>,
+        basis: <ChapterLink n={71} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

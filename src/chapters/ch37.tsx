@@ -44,11 +44,11 @@ const chapter: Chapter = {
             <Ref n={2} />。
           </p>
           <p>
-            サンプル DB では名前のアルファベット順に id を振ってあるので、email の順と id の順がたまたま一致します。並び方の違いがわかるように、図 13-1 では age 列のインデックスを例にします。左の表は id
+            サンプル DB では名前のアルファベット順に id を振ってあるので、email の順と id の順がたまたま一致します。並び方の違いがわかるように、図 19-1 では age 列のインデックスを例にします。左の表は id
             の順、右のインデックスは age の小さい順に並び、各項目は行の id を持っています。
           </p>
           <Figure
-            n="13-1"
+            n="19-1"
             title="表と age 列のインデックス"
             caption="サンプル DB の users（8行、一部の列）と、age 列に作ったインデックスの模式図。インデックスの内部の形（B-tree）は省略し、値の並びだけを示している。"
           >
@@ -73,7 +73,7 @@ const chapter: Chapter = {
             </li>
           </ul>
           <p>
-            次の図は、図 13-1 の age 列のインデックスを、1ページに3項目までしか入らないと仮定して B-tree の形にしたものです。<code>WHERE age = 20</code> では、根のページで 20
+            次の図は、図 19-1 の age 列のインデックスを、1ページに3項目までしか入らないと仮定して B-tree の形にしたものです。<code>WHERE age = 20</code> では、根のページで 20
             を区切りの値と比べて、中央の葉のページに進みます。そのページの中で 20 の項目を2つ読み、次の項目が 24 なので読み終えます。読んだページは根と葉の2ページで、左右の葉のページは読みません。
           </p>
           <Figure
@@ -95,9 +95,9 @@ const chapter: Chapter = {
             <Term en="secondary index">セカンダリインデックス</Term>）の各項目は、行の位置として主キーの値を持ちます。セカンダリインデックスで見つけた主キーの値で、クラスタインデックスから行を読みます
             <Ref n={7} />。email のインデックスで1行を探すときは、email のインデックスの B-tree をたどった後、見つけた主キーの値でクラスタインデックスの B-tree をもう一度たどります。
           </p>
-          <p>図 13-2 は email での検索を、インデックスが無い場合とある場合で比べたものです。この章の実行欄に出る比較図と同じ考え方で描いています。</p>
+          <p>図 19-2 は email での検索を、インデックスが無い場合とある場合で比べたものです。この章の実行欄に出る比較図と同じ考え方で描いています。</p>
           <Figure
-            n="13-2"
+            n="19-2"
             title="全件の走査とインデックスでの探索"
             caption="サンプル DB の users（8行）で email = 'alice@example.com' を探す場合。右は値を並べた配列での二分探索のモデルで、実際の B-tree の内部の動きや、SQLite が読んだ行の数を測ったものではない。"
           >
@@ -165,7 +165,7 @@ DROP INDEX IF EXISTS idx_users_email;
           <SqlLab lesson="Index" title="SQL を実行する：Index" openIndex />
           <p>
             実行計画の下の「探索をイメージする」には、総行数、email の Cardinality（列の異なる値の数）、Selectivity（条件に一致する行の割合）と2つの比較図が出ます。8行のときは「Indexなし · 全行確認モデル」が確認対象 8 行、「Indexあり · 順序付きキーの探索モデル」が
-            dave@example.com → bob@example.com → alice@example.com の3回の比較で、図 13-2 と同じです。10,008 行では確認対象が 10,008 行、比較が13回になります。
+            dave@example.com → bob@example.com → alice@example.com の3回の比較で、図 19-2 と同じです。10,008 行では確認対象が 10,008 行、比較が13回になります。
           </p>
           <p>
             行が多い状態で Before と After を比べるには、「③Index削除」、「①メール検索」（SCAN users）、「②Index作成」の順に実行します。「サンプルDB初期化」を押すと users は8行に戻り、作ったインデックスも消えます。このデータベースは同じページのほかの実行欄と共有していて、ページを再読み込みすると初期の状態に戻ります。
@@ -461,14 +461,14 @@ SELECT age, name FROM users WHERE age = 20 AND name = 'Alice';
             の項目は name の順に並びます。
           </p>
           <Figure
-            n="13-3"
+            n="19-3"
             title="複合インデックス (age, name) の並びと3つの検索"
             caption="サンプル DB の8行で作ったインデックスの模式図。右の実行計画は実行欄の SQLite（3.49.1）の EXPLAIN QUERY PLAN の結果。"
           >
             <CompositeFigure />
           </Figure>
           <p>
-            図 13-3 の左は8行から作った (age, name) の項目です。A は 20 の項目が連続しているので2項目だけを読み、B は age 20 の中が name の順に並んでいるので1項目に絞れます。C は name が age
+            図 19-3 の左は8行から作った (age, name) の項目です。A は 20 の項目が連続しているので2項目だけを読み、B は age 20 の中が name の順に並んでいるので1項目に絞れます。C は name が age
             ごとに並んでいるだけで、全体では Hana、Carol、Alice、Frank、Bob の順なので、Alice の位置を決められません。
           </p>
 
@@ -667,11 +667,11 @@ end
             <Ref n={8} />。age を <code>[20, 21]</code>（IN）にすると、age と name の組ごとに位置を決められるので、rows は 2 になりました。
           </p>
           <p>
-            次の図は図 13-3 と同じ8行の (age, name) の項目で、範囲の条件と IN の条件のそれぞれで読む項目を比べたものです。左の範囲の条件では age だけで読む範囲が決まり、その中の項目を1つずつ name で確かめます。右の IN の条件では age と name の組ごとに位置を探します。
+            次の図は図 19-3 と同じ8行の (age, name) の項目で、範囲の条件と IN の条件のそれぞれで読む項目を比べたものです。左の範囲の条件では age だけで読む範囲が決まり、その中の項目を1つずつ name で確かめます。右の IN の条件では age と name の組ごとに位置を探します。
           </p>
           <Figure
             title="範囲の条件と IN の条件で読む項目"
-            caption="図 13-3 と同じサンプル DB の8行で作った (age, name) のインデックスの模式図。色を付けた行が読む項目。左の図の縦線は age の条件だけで決まる読む範囲を表す。表の行を読む段階は省略している。"
+            caption="図 19-3 と同じサンプル DB の8行で作った (age, name) のインデックスの模式図。色を付けた行が読む項目。左の図の縦線は age の条件だけで決まる読む範囲を表す。表の行を読む段階は省略している。"
           >
             <RangeAndInFigure />
           </Figure>
@@ -1004,11 +1004,11 @@ def build_explain_clause(options = [])
 end
 `}
           />
-          <Figure n="13-4" title="Relation#explain が実行計画を返すまで" caption="Rails 8.1.4.1 の relation.rb・explain.rb・mysql/database_statements.rb をもとにした流れ。">
+          <Figure n="19-4" title="Relation#explain が実行計画を返すまで" caption="Rails 8.1.4.1 の relation.rb・explain.rb・mysql/database_statements.rb をもとにした流れ。">
             <ExplainFlowFigure />
           </Figure>
           <p>
-            図 13-4 のとおり、表示のきっかけは <code>inspect</code> です。コンソールは戻り値を inspect で表示するので、explain を呼ぶだけで結果が出ます。一方、<code>bin/rails runner</code>{' '}
+            図 19-4 のとおり、表示のきっかけは <code>inspect</code> です。コンソールは戻り値を inspect で表示するので、explain を呼ぶだけで結果が出ます。一方、<code>bin/rails runner</code>{' '}
             などのスクリプトで <code>puts User.where(age: 20).explain</code> と書くと、<code>#&lt;ActiveRecord::Relation::ExplainProxy:0x…&gt;</code> と表示されるだけでした。スクリプトでは{' '}
             <code>puts User.where(age: 20).explain.inspect</code> と書きます。
           </p>

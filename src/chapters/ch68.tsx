@@ -1,3 +1,4 @@
+import { principleSection } from './principle-judgment'
 import type { ReactNode } from 'react'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
@@ -6,7 +7,7 @@ import { Arrow, Box, Svg, T, type Fill } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const PUNDIT = 'https://github.com/varvet/pundit/blob/v2.5.2'
 
-/* 図 49-1・49-2・49-4 で関心事ごとに使う色と名前 */
+/* 図 66-1・66-2・49-4 で関心事ごとに使う色と名前 */
 type Concern = 'auth' | 'state' | 'input' | 'save' | 'view'
 const CONCERN: Record<Concern, { label: string; fill: Fill }> = {
   auth: { label: '権限', fill: 'box3' },
@@ -16,7 +17,7 @@ const CONCERN: Record<Concern, { label: string; fill: Fill }> = {
   view: { label: '表示の整形', fill: 'box' },
 }
 
-/* ---------- 図 49-1 場面の構成 ---------- */
+/* ---------- 図 66-1 場面の構成 ---------- */
 function SceneFigure() {
   const blocks: { y: number; head: string; rows: { c: Concern; text: string; bad?: boolean }[] }[] = [
     {
@@ -46,7 +47,7 @@ function SceneFigure() {
     .map((b) => `${b.head}には、${b.rows.map((r) => `${CONCERN[r.c].label}：${r.text}${r.bad ? '（マイページと食い違う）' : ''}`).join('、')}が書かれている`)
     .join('。')}。マイページのアクションは orders と address_changes に書き込み、管理画面のアクションは orders だけに書き込む。CS の担当者がマイページの URL に送ると 403 になる`
   return (
-    <Svg id="49-1" w={780} h={440} label={label}>
+    <Svg id="66-1" w={780} h={440} label={label}>
       <Box x={10} y={80} w={140} h={60} lines={['マイページ・アプリ', '会員（JSON）']} fs={12} fill="box4" subTone="muted" />
       <Box x={10} y={285} w={140} h={60} lines={['管理画面', 'CS の担当者（HTML）']} fs={12} fill="box4" subTone="muted" />
       <T x={10} y={366} fs={11} tone="danger">
@@ -91,7 +92,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 49-2 アクションの中の関心事 ---------- */
+/* ---------- 図 66-2 アクションの中の関心事 ---------- */
 function ConcernMapFigure() {
   const groups: { c: Concern; range: string; lines: string[] }[] = [
     { c: 'auth', range: '11〜15行', lines: ['order = Order.find(params[:order_id])', 'if order.user_id != current_user.id', '  return render json: {…}, status: :forbidden'] },
@@ -129,7 +130,7 @@ function ConcernMapFigure() {
   }
   return (
     <Svg
-      id="49-2"
+      id="66-2"
       w={780}
       h={y + 26}
       label={`直す前の Mypage::ShippingAddressesController#update の30行を、関心事ごとに色分けした。${groups
@@ -159,7 +160,7 @@ function ConcernMapFigure() {
   )
 }
 
-/* ---------- 図 49-3 Dijkstra の関心の分離と、この章の関心事 ---------- */
+/* ---------- 図 66-3 Dijkstra の関心の分離と、この章の関心事 ---------- */
 function DijkstraFigure() {
   const aspects: [Concern, string][] = [
     ['auth', '誰が変えてよいか'],
@@ -170,7 +171,7 @@ function DijkstraFigure() {
   ]
   return (
     <Svg
-      id="49-3"
+      id="66-3"
       w={780}
       h={330}
       label={`左は Dijkstra の EWD447 の例。1つのプログラムを、正しいか、効率はよいか、そもそも望ましいかという側面に分け、ある日は1つの側面だけを考える。ほかの側面を無視するのではなく、その側面から見てほかの側面は関係がないと認めることだと書いている。右はこの章の配送先の変更を、${aspects
@@ -213,7 +214,7 @@ function DijkstraFigure() {
   )
 }
 
-/* ---------- 図 49-4 直す前と後 ---------- */
+/* ---------- 図 66-4 直す前と後 ---------- */
 function BeforeAfterFigure() {
   const before: { y: number; head: string; rows: { c: Concern; text: string; bad?: boolean }[] }[] = [
     {
@@ -246,7 +247,7 @@ function BeforeAfterFigure() {
   ]
   return (
     <Svg
-      id="49-4"
+      id="66-4"
       w={780}
       h={410}
       label="左の直す前は、マイページと管理画面の2つのアクションが、それぞれ権限・注文の状態・入力の検証・保存・表示の整形を自分の中に書いている。管理画面のほうは注文の状態・入力の検証・保存の3か所でマイページと食い違う。右の直した後は、マイページのコントローラー（15行）、管理画面のコントローラー（20行）、コンソールから実行する script/bulk_change.rb の3つの呼び出し元が、OrderPolicy（権限）、Order（入力の検証・注文の状態の規則・保存）、AddressHelper（表示の整形）を共通に使う。コントローラーには HTTP の入力と応答だけが残る"
@@ -307,11 +308,11 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 49-6 分けるかどうかの判断 ---------- */
+/* ---------- 図 66-6 分けるかどうかの判断 ---------- */
 function JudgeFigure() {
   return (
     <Svg
-      id="49-6"
+      id="66-6"
       w={760}
       h={440}
       label="横軸は同じ処理を呼び出す場所の数（左が1つ、右が画面・API・コンソール・ジョブなど複数）、縦軸は関心事ごとの規則の量（下が少ない、上が多い）。右上は置き場所を分ける領域で、この章の配送先の変更が入り、ポリシー・モデルのメソッド・ヘルパーに分ける。左上は呼び出し元が1つでも規則をモデルとポリシーに移す領域で、関心事ごとにテストを書け、別の呼び出し元が来たらそのまま使える。右下は Rails の標準の置き場所で足りる領域で、会員の名前の変更のように、モデルの validates がどの呼び出し元からの保存でも実行される。左下は Rails の標準の形のままにする領域で、メールマガジンの設定のようにコントローラーの update とモデルで書く。左下を Form・Policy・Service・Presenter に分けるのが当てはめすぎ"
@@ -347,7 +348,7 @@ function JudgeFigure() {
   )
 }
 
-/* ---------- 図 49-7 Rails の MVC と関心事の置き場所 ---------- */
+/* ---------- 図 66-7 Rails の MVC と関心事の置き場所 ---------- */
 function RailsFigure() {
   const notes: [string, string][] = [
     ['全リクエストに共通', 'ミドルウェア'],
@@ -373,7 +374,7 @@ function RailsFigure() {
   }
   return (
     <Svg
-      id="49-7"
+      id="66-7"
       w={780}
       h={430}
       label={`ブラウザーやアプリからのリクエストは、Rack のミドルウェア、ルーティングを通ってコントローラーに届く。コントローラーは before_action、params.expect、authorize、render と redirect_to を使い、権限の判断を Pundit のポリシーに任せる。コントローラーはモデル（normalizes と validates、change_shipping_address、保存とトランザクション）を呼び、モデルは MySQL に保存する。コントローラーはビューとヘルパー（ERB・JSON、AddressHelper、I18n の訳文）で応答を作る。関心事の置き場所：${notes
@@ -580,11 +581,11 @@ end
           <p>
             書き換えるときに、次の違いが生まれました。開発者は「発送前なら変えられる」と考えて状態の確認を <code>shipped?</code> にし、都道府県を自由に入力する欄にしたので一覧の確認を外しました。全角の変換と履歴の保存は写し忘れました。郵便番号を「〒150-0001」の形にする処理は、通知の文と編集画面のビュー（edit.html.erb）の2か所に書きました。
           </p>
-          <Figure n="49-1" title="場面の構成：2つのアクションと、食い違う箇所" caption="色は関心事の種類を表す（図 49-2・49-4 も同じ）。赤い文字はマイページのアクションと食い違う箇所。">
+          <Figure n="66-1" title="場面の構成：2つのアクションと、食い違う箇所" caption="色は関心事の種類を表す（図 66-2・66-4 も同じ）。赤い文字はマイページのアクションと食い違う箇所。">
             <SceneFigure />
           </Figure>
           <p>
-            図 49-1 はこの場面の構成です。会員と CS の担当者は別々のアクションを通って、同じ orders テーブルを書き換えます。2つのアクションはどちらも同じ5種類の処理を自分の中に持っていて、そのうち3つが食い違っています。
+            図 66-1 はこの場面の構成です。会員と CS の担当者は別々のアクションを通って、同じ orders テーブルを書き換えます。2つのアクションはどちらも同じ5種類の処理を自分の中に持っていて、そのうち3つが食い違っています。
           </p>
           <h3>同じ入力を2つの画面に送る</h3>
           <p>
@@ -644,8 +645,8 @@ CS の担当者がマイページの URL に送ると：403 1000001 東京都 �
             <li>CS の担当者がマイページの URL に送ると 403 になります。マイページのアクションを管理画面から使えないことが、ここでも確かめられます。</li>
           </ul>
           <h3>アクションに混ざっている関心事</h3>
-          <p>マイページのアクションの30行を、何について判断しているかで分けると図 49-2 になります。</p>
-          <Figure n="49-2" title="マイページのアクションの中の関心事" caption="直す前のアクションを、何について判断している行かで色分けした。">
+          <p>マイページのアクションの30行を、何について判断しているかで分けると図 66-2 になります。</p>
+          <Figure n="66-2" title="マイページのアクションの中の関心事" caption="直す前のアクションを、何について判断している行かで色分けした。">
             <ConcernMapFigure />
           </Figure>
           <p>
@@ -739,7 +740,7 @@ end
             <li>コードの分離：1つの関心事を、ほかの関心事を読まずに読める・直せる・テストできる場所に置く。この章ではポリシー・モデル・ヘルパー・コントローラーに置き場所を分ける。</li>
           </ul>
           <p>
-            この章で直すのはコードの分離ですが、その前に、混ざっている処理を関心事ごとに見分けて名前を付ける作業（図 49-2）が要ります。見分けられていない関心事は、ファイルを分けても同じ所に書かれたままになるからです。
+            この章で直すのはコードの分離ですが、その前に、混ざっている処理を関心事ごとに見分けて名前を付ける作業（図 66-2）が要ります。見分けられていない関心事は、ファイルを分けても同じ所に書かれたままになるからです。
           </p>
           <h3>由来：Dijkstra の EWD447（1974年）</h3>
           <p>
@@ -762,11 +763,11 @@ end
           <p>
             「私がときどき呼んできた」という書き方からは、Dijkstra がこの文書より前からこの言葉を使っていたことが読み取れます。Robert C. Martin は SRP についての2014年のブログ記事で、Dijkstra がこの文書で関心の分離という言葉を導入したと書いています<Ref n={2} />。本書では、EWD447 より前に Dijkstra がこの言葉を書いた資料は確かめていません。
           </p>
-          <Figure n="49-3" title="Dijkstra の関心の分離と、この章の関心事" caption="左は EWD447 の例。右はこの章の配送先の変更を同じように側面に分けたもの。破線の矢印は「その側面から見る」ことを表す。">
+          <Figure n="66-3" title="Dijkstra の関心の分離と、この章の関心事" caption="左は EWD447 の例。右はこの章の配送先の変更を同じように側面に分けたもの。破線の矢印は「その側面から見る」ことを表す。">
             <DijkstraFigure />
           </Figure>
           <p>
-            図 49-3 の左は Dijkstra の例、右はこの章の配送先の変更を同じように側面に分けたものです。Dijkstra は側面ごとに別の日に考えると書きました。これをコードに当てはめると、側面ごとに別のメソッドやファイルに置き、別々に読み、直し、テストできるようにすることになります。
+            図 66-3 の左は Dijkstra の例、右はこの章の配送先の変更を同じように側面に分けたものです。Dijkstra は側面ごとに別の日に考えると書きました。これをコードに当てはめると、側面ごとに別のメソッドやファイルに置き、別々に読み、直し、テストできるようにすることになります。
           </p>
           <h3>「完全にはできない」という条件</h3>
           <p>
@@ -991,7 +992,7 @@ end
 `}
           />
           <p>
-            Pundit は権限の判断をモデルごとの普通の Ruby のクラス（ポリシー）にまとめる gem です。ポリシーは利用者（<code>user</code>）と対象（<code>record</code>）を受け取り、<code>?</code> で終わるメソッドで許可するかを返します<Ref n={7} />。ApplicationPolicy は <code>bin/rails g pundit:install</code> で作りました。コントローラーで <code>authorize</code> を呼ぶと、許可されないときに <code>Pundit::NotAuthorizedError</code> が投げられ、ApplicationController の <code>rescue_from</code> が 403 を返します。Pundit の使い方の詳細は<ChapterLink n={41} section="pundit" />で説明しました。
+            Pundit は権限の判断をモデルごとの普通の Ruby のクラス（ポリシー）にまとめる gem です。ポリシーは利用者（<code>user</code>）と対象（<code>record</code>）を受け取り、<code>?</code> で終わるメソッドで許可するかを返します<Ref n={7} />。ApplicationPolicy は <code>bin/rails g pundit:install</code> で作りました。コントローラーで <code>authorize</code> を呼ぶと、許可されないときに <code>Pundit::NotAuthorizedError</code> が投げられ、ApplicationController の <code>rescue_from</code> が 403 を返します。Pundit の使い方の詳細は<ChapterLink n={41} section="pundit" />で説明します。
           </p>
           <p>
             権限には2つの関心事が含まれていたことにも注意します。「管理画面に入れるか」は管理画面を使えるかどうかの判断で、管理画面のすべてのコントローラーに共通なので、Admin::BaseController の <code>before_action</code> に置きました。「この注文の配送先を変えてよいか」は注文についての判断で、どの画面から操作しても同じなので、OrderPolicy に置きました。
@@ -1146,13 +1147,13 @@ Finished in 0.21856 seconds (files took 0.83087 seconds to load)
 13 examples, 0 failures
 `}
           />
-          <Figure n="49-4" title="直す前と直した後" caption="色は関心事の種類。直した後の呼び出し元には、HTTP の入力と応答（コンソールでは出力）だけが残る。">
+          <Figure n="66-4" title="直す前と直した後" caption="色は関心事の種類。直した後の呼び出し元には、HTTP の入力と応答（コンソールでは出力）だけが残る。">
             <BeforeAfterFigure />
           </Figure>
           <p>
-            図 49-4 は直す前と直した後の比較です。直す前は、2つのアクションがそれぞれ5つの関心事を自分の中に持ち、そのうち3つが食い違っていました。直した後は、3つの呼び出し元が OrderPolicy・Order・AddressHelper を共通に使います。図 49-5 は関心事ごとの置き場所と、使った Rails の仕組み、変えるきっかけ、テストのファイルを並べたものです。
+            図 66-4 は直す前と直した後の比較です。直す前は、2つのアクションがそれぞれ5つの関心事を自分の中に持ち、そのうち3つが食い違っていました。直した後は、3つの呼び出し元が OrderPolicy・Order・AddressHelper を共通に使います。図 66-5 は関心事ごとの置き場所と、使った Rails の仕組み、変えるきっかけ、テストのファイルを並べたものです。
           </p>
-          <Figure n="49-5" title="分けた後の置き場所" caption="変えるきっかけは例。">
+          <Figure n="66-5" title="分けた後の置き場所" caption="変えるきっかけは例。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1487,11 +1488,11 @@ Finished in 0.13853 seconds (files took 1.02 seconds to load)
             最後の点は配送先の変更で検証をモデルに置いた理由を、反対の側から見たものです。Form Object が向いているのは、1つの画面の入力が複数のモデルにまたがるときや、画面だけで使う入力の項目（利用規約への同意など）があるときです。使い分けは<ChapterLink n={33} section="model-form-objects" />で扱いました。
           </p>
           <h3>判断の目安</h3>
-          <Figure n="49-6" title="置き場所を分けるかどうかの判断" caption="模式図。境目は目安で、同じ処理でもアプリの事情で位置が変わる。">
+          <Figure n="66-6" title="置き場所を分けるかどうかの判断" caption="模式図。境目は目安で、同じ処理でもアプリの事情で位置が変わる。">
             <JudgeFigure />
           </Figure>
           <p>
-            図 49-6 は置き場所を分けるかどうかを2つの軸で判断する目安です。横軸は同じ処理を呼び出す場所（呼び出し元）の数です。画面・API・コンソール・ジョブのように呼び出し元が増えるほど、関心事がアクションの中にあると写す回数が増えます。縦軸は関心事ごとの規則の量です。役割による権限・状態の規則・入力の正規化のように規則が多いほど、写したときに食い違う箇所が増えます。
+            図 66-6 は置き場所を分けるかどうかを2つの軸で判断する目安です。横軸は同じ処理を呼び出す場所（呼び出し元）の数です。画面・API・コンソール・ジョブのように呼び出し元が増えるほど、関心事がアクションの中にあると写す回数が増えます。縦軸は関心事ごとの規則の量です。役割による権限・状態の規則・入力の正規化のように規則が多いほど、写したときに食い違う箇所が増えます。
           </p>
           <ul>
             <li>右上（呼び出し元が複数で、規則が多い）：この章の配送先の変更です。ポリシー・モデルのメソッド・ヘルパーに置き場所を分けます。</li>
@@ -1533,7 +1534,7 @@ Finished in 0.13853 seconds (files took 1.02 seconds to load)
             </table>
           </div>
           <p>
-            Dijkstra が書いた関心の分離は、1つの側面を考えている間はほかの側面を持ち込まない、という考え方の順序でした（図 49-3）。小さな処理では、アクションの中で行を分けたり、private メソッドに関心事の名前を付けたりするだけでも、読む人は1つの側面ずつ読めます。クラスやファイルを分けるのは、側面ごとに別々に使う・変える・テストする必要が出てきたときで十分です。
+            Dijkstra が書いた関心の分離は、1つの側面を考えている間はほかの側面を持ち込まない、という考え方の順序でした（図 66-3）。小さな処理では、アクションの中で行を分けたり、private メソッドに関心事の名前を付けたりするだけでも、読む人は1つの側面ずつ読めます。クラスやファイルを分けるのは、側面ごとに別々に使う・変える・テストする必要が出てきたときで十分です。
           </p>
         </>
       ),
@@ -1555,11 +1556,11 @@ Finished in 0.13853 seconds (files took 1.02 seconds to load)
           <p>
             Action Controller のガイドは、コントローラーはモデルとビューの間にあり、モデルのデータをビューに渡し、利用者の入力を受け取ってモデルのデータを保存・更新すると説明しています<Ref n={12} />。Active Record のガイドは、モデルをデータと業務のロジックを表す層としています<Ref n={14} />。Action View のガイドは、Action View がモデルから取り出したデータを使って応答の本文を描画すると説明しています<Ref n={13} />。
           </p>
-          <Figure n="49-7" title="Rails の MVC と、この章の関心事の置き場所" caption="実線の矢印はリクエストの処理の流れ。左の一覧は関心事と Rails で置く場所の対応。">
+          <Figure n="66-7" title="Rails の MVC と、この章の関心事の置き場所" caption="実線の矢印はリクエストの処理の流れ。左の一覧は関心事と Rails で置く場所の対応。">
             <RailsFigure />
           </Figure>
           <p>
-            図 49-7 は、リクエストが Rails の中を通る順序と、この章の関心事の置き場所を重ねたものです。入力の検証・注文の状態の規則・保存はモデルに、表示の整形はビューとヘルパーに、HTTP の入力と応答はコントローラーに置きました。権限は MVC の3つの層のどれにも当たらないので、この章では Pundit のポリシーを足しました。
+            図 66-7 は、リクエストが Rails の中を通る順序と、この章の関心事の置き場所を重ねたものです。入力の検証・注文の状態の規則・保存はモデルに、表示の整形はビューとヘルパーに、HTTP の入力と応答はコントローラーに置きました。権限は MVC の3つの層のどれにも当たらないので、この章では Pundit のポリシーを足しました。
           </p>
           <p>
             直す前のアクションはファイルとしては app/controllers にありましたが、中身にはモデルの関心事（検証・規則・保存）とビューの関心事（表示の整形）が入っていました。Rails が用意するのはディレクトリと仕組みで、何をどこに書くかは開発者が決めます。MVC のディレクトリに分かれていることだけでは、関心事が分かれていることにはなりません。
@@ -1651,6 +1652,29 @@ Finished in 0.13853 seconds (files took 1.02 seconds to load)
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          置き場所を分けるかどうかは、同じ処理を呼び出す場所の数と、関心事ごとの規則の量で決めます。この章の配送先の変更はマイページ・管理画面・コンソールから呼ばれ、権限・状態・郵便番号の規則があるので、ポリシー・モデルのメソッド・ヘルパーに分けました。呼び出し元が1つで規則も少ない処理は、Rails の標準の形のままにします。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、写した管理画面のアクションが状態の規則・入力の検証・履歴の保存の3か所でマイページと食い違った（倉庫で作業中の注文を変えられる、全角の郵便番号を 422 で拒む、履歴が残らない）。直した後は、2つの画面とコンソールのスクリプトで同じ結果になった。</>,
+        basis: <><ChapterLink n={68} section="scene" />、<ChapterLink n={68} section="apply" /></>,
+      },
+      cost: {
+        text: <>配送先の変更の流れ全体を読むには、コントローラー・ポリシー・モデル・ヘルパーの4つのファイルを開く。検証をモデルに移すと Order のすべての保存で検証が実行され、都道府県が「東京」の注文は倉庫の作業を始める更新でも保存できなくなったので、移す前に保存済みの行を直す必要がある。</>,
+        basis: <ChapterLink n={68} section="apply" />,
+      },
+      alternative: {
+        text: <>呼び出し元が1つで規則も少ないメールマガジンの設定は、コントローラーの update とモデルの validates のままにする。Form・Policy・Service・Presenter に分けた形では、頻度を足す1つの要求で直したファイルが8つ、標準の形では3つだった。小さな処理はアクションの中で private メソッドに関心事の名前を付けるだけでもよい。</>,
+        basis: <ChapterLink n={68} section="overuse" />,
+      },
+      criterion: {
+        text: <>同じ処理の呼び出し元はいくつあるか。役割による権限・状態の規則・値の正規化のような規則があるか。1つの要求で1つの関心事だけが変わるか、入力・保存・表示がいつも一緒に変わるか。</>,
+        basis: <ChapterLink n={68} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

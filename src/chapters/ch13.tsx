@@ -7,7 +7,7 @@ import { AssociationFigure } from '../visuals/rails-figures'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 17-1 外部キーでつないだ2つのテーブル ---------- */
+/* ---------- 図 23-1 外部キーでつないだ2つのテーブル ---------- */
 function TablesFigure() {
   const cell = (x: number, y: number, w: number, text: string, head = false, fill: 'bg' | 'box' | 'box5' = 'box') => (
     <Box key={`${x}-${y}`} x={x} y={y} w={w} h={28} lines={text} mono={!/[ぁ-んァ-ン一-龥]/.test(text)} fs={12} rx={0} fill={head ? 'bg' : fill} bold={head} />
@@ -25,7 +25,7 @@ function TablesFigure() {
   ]
   return (
     <Svg
-      id="17-1"
+      id="23-1"
       w={760}
       h={290}
       label="articles テーブルには記事5・記事6・記事7の行がある。comments テーブルの id 1・2・3 の行は article_id が 5 で記事5を、id 727 の行は article_id が 6 で記事6を指す。記事7を指すコメントは無い。comments の article_id が外部キーで、外部キー制約があるので、articles に無い id（999999）を指すコメントは保存できない"
@@ -76,11 +76,11 @@ function TablesFigure() {
   )
 }
 
-/* ---------- 図 17-2 外部キーと関連のメソッド ---------- */
+/* ---------- 図 23-2 外部キーと関連のメソッド ---------- */
 function ForeignKeyFigure() {
   return (
     <Svg
-      id="17-2"
+      id="23-2"
       w={760}
       h={290}
       label="articles テーブルの author_id 列が、authors テーブルの id を指す。外部キーを持つ Article には belongs_to :author を、Author には has_many :articles を書く。article.author は authors から id が 23 の行を1件読み、author.articles は articles から author_id が 23 の行を読む"
@@ -161,11 +161,11 @@ function ForeignKeyFigure() {
   )
 }
 
-/* ---------- 図 17-3 関連を作るオブジェクト ---------- */
+/* ---------- 図 23-3 関連を作るオブジェクト ---------- */
 function ObjectsFigure() {
   return (
     <Svg
-      id="17-3"
+      id="23-3"
       w={760}
       h={300}
       label="Article クラスは関連ごとにリフレクションを持つ。comments は HasManyReflection、author は BelongsToReflection、tags は ThroughReflection。Article のインスタンスの association(:comments) は、初めて呼ばれたときに HasManyAssociation を作り、@association_cache に保存する。Association は owner、reflection、読み込んだ target と、読み込み済みかどうかを持つ。a.comments が返すのは CollectionProxy で、Relation のサブクラスなので where などを続けられる。a.author は BelongsToAssociation の reader で、読み込んだ Author を返す"
@@ -230,7 +230,7 @@ function ObjectsFigure() {
   )
 }
 
-/* ---------- 図 17-4 読み込み方式と SQL の回数 ---------- */
+/* ---------- 図 23-4 読み込み方式と SQL の回数 ---------- */
 function StrategiesFigure() {
   const rows = [
     { name: '何もしない（N+1）', n: '6回', sql: ['SELECT articles … LIMIT 5', 'SELECT authors WHERE id = 15 LIMIT 1', '…（記事ごとに1回、計5回）'] },
@@ -239,7 +239,7 @@ function StrategiesFigure() {
   ]
   return (
     <Svg
-      id="17-4"
+      id="23-4"
       w={760}
       h={300}
       label="公開済みの記事5件とその著者を表示する場合の比較。何もしないと、記事の SELECT が1回と、著者の SELECT が記事ごとに1回で、計6回になる。preload は、記事の SELECT と、著者を IN でまとめて取る SELECT の2回になる。eager_load は、記事と著者を LEFT OUTER JOIN でつないだ1回の SELECT になり、列には t0_r0 や t1_r0 のような別名が付く"
@@ -262,11 +262,11 @@ function StrategiesFigure() {
   )
 }
 
-/* ---------- 図 17-6 includes がどちらになるか ---------- */
+/* ---------- 図 23-6 includes がどちらになるか ---------- */
 function IncludesFigure() {
   return (
     <Svg
-      id="17-6"
+      id="23-6"
       w={760}
       h={290}
       label="includes を指定した Relation が eager_load になるかは eager_loading? で決まる。eager_load を指定していれば eager_load。includes の関連が joins にも指定されているか、references に、JOIN していないテーブルが含まれていれば eager_load。それ以外は preload になる。where(authors: ...) のようにハッシュで関連のテーブルの条件を書くと、references が自動で追加されるので eager_load になる。order に authors.name のような文字列を書いた場合も同じ"
@@ -324,11 +324,11 @@ function IncludesFigure() {
   )
 }
 
-/* ---------- 図 17-5 JOIN の結果の行とレコード ---------- */
+/* ---------- 図 23-5 JOIN の結果の行とレコード ---------- */
 function JoinRowsFigure() {
   return (
     <Svg
-      id="17-5"
+      id="23-5"
       w={760}
       h={250}
       label="eager_load で has_many の comments を読み込むと、記事1件にコメントが3件あれば、JOIN の結果は記事の列が同じ3行になる。JoinDependency は t0_r0（記事の id）が同じ行を1件の記事にまとめ、t1_ で始まる列からコメントのレコードを作って、記事の comments の target に入れる。行が増えるので、LIMIT を付けると Rails はまず DISTINCT で記事の id を LIMIT 件取り、その id で本体の SELECT を絞る"
@@ -551,7 +551,7 @@ SELECT id, article_id, body FROM comments WHERE article_id IN (5, 6, 7);
           />
           <p>
             comments の id が 1・2・3 の行は article_id が 5 なので記事5のコメントで、id が 727 の行は記事6のコメントです。記事7を指す行は無いので、記事7のコメントは0件です。article_id
-            が comments の外部キーです。1件の記事に複数のコメントが対応する1対多の関係では、外部キーを「多」の側（comments）に置きます（図 17-1）。
+            が comments の外部キーです。1件の記事に複数のコメントが対応する1対多の関係では、外部キーを「多」の側（comments）に置きます（図 23-1）。
           </p>
           <p>
             外部キーの列は整数の列なので、そのままでは存在しない記事の id も入ってしまいます。それを防ぐのが外部キー制約です。制約は、行を保存するたびに MySQL が確かめる条件です。デモの comments テーブルには「article_id は articles の id のどれかを指す」という制約があり、存在しない記事（id が 999999）を指すコメントの INSERT は拒否されました
@@ -575,7 +575,7 @@ ERROR 1452 (23000) at line 1: Cannot add or update a child row: a foreign key co
             のように外部キーで探すときに使われます（<ChapterLink n={37} section="what-is-index" />
             ）。fk_rails_3bf61a60d3 や index_comments_on_article_id は、Rails のマイグレーション（テーブルの構造を変える Ruby のファイル）で制約と索引を作ったときに付いた名前です。
           </p>
-          <Figure n="17-1" title="外部キーでつないだ2つのテーブル" caption="デモの MySQL で読んだ articles と comments の行をもとにした図。">
+          <Figure n="23-1" title="外部キーでつないだ2つのテーブル" caption="デモの MySQL で読んだ articles と comments の行をもとにした図。">
             <TablesFigure />
           </Figure>
         </>
@@ -663,7 +663,7 @@ class Article < ApplicationRecord
 end
 `}
           />
-          <Figure n="17-2" title="外部キーと関連のメソッド" caption="模式図。下段の SQL は、この節の実行結果を短く書いたもの。">
+          <Figure n="23-2" title="外部キーと関連のメソッド" caption="模式図。下段の SQL は、この節の実行結果を短く書いたもの。">
             <ForeignKeyFigure />
           </Figure>
           <h3>関連を通して読む・作る</h3>
@@ -900,11 +900,11 @@ a.comments.to_sql  # => "SELECT \`comments\`.* FROM \`comments\` WHERE \`comment
             のように条件を続けられ、この時点ではまだ SQL を実行しません。belongs_to の <code>a.author</code> は、未読み込みなら <code>reload</code> で読み込んでから相手のレコードを返します（
             <code>singular_association.rb</code> の 7〜15 行目）。
           </p>
-          <Figure n="17-3" title="関連を表すオブジェクト" caption="上の実行結果と associations.rb・association.rb を読んでまとめた模式図。">
+          <Figure n="23-3" title="関連を表すオブジェクト" caption="上の実行結果と associations.rb・association.rb を読んでまとめた模式図。">
             <ObjectsFigure />
           </Figure>
           <p>
-            図 17-3 の左上がクラスに登録されたリフレクション、左下がレコードの <code>@association_cache</code>、中央が Association、右が <code>a.comments</code> と <code>a.author</code>{' '}
+            図 23-3 の左上がクラスに登録されたリフレクション、左下がレコードの <code>@association_cache</code>、中央が Association、右が <code>a.comments</code> と <code>a.author</code>{' '}
             の返すものです。Association が持つ「読み込み済みかどうか」は、コードを書くときに次の違いとして現れます。
           </p>
           <ul>
@@ -1241,7 +1241,7 @@ Article.where(status: :published).limit(5).each { |x| x.author&.name }   # SQL 6
             一覧の1回（1）と、記事ごとの著者の読み込み（N）を合わせて N+1 回の SQL になります。これを<Term en="N+1 queries">N+1 問題</Term>と呼びます。1回あたりは速くても、件数が増えるとその分だけ往復の回数が増え、応答時間が長くなります。対策は、一覧を読み込むときに関連もまとめて読み込むことで、Rails
             には preload、eager_load、includes の3つの方法があります。
           </p>
-          <Figure n="17-4" title="読み込み方式と SQL の回数" caption="デモのアプリケーション（MySQL 8.4.13）で、公開済みの記事5件と著者を読み込んだときの SQL。">
+          <Figure n="23-4" title="読み込み方式と SQL の回数" caption="デモのアプリケーション（MySQL 8.4.13）で、公開済みの記事5件と著者を読み込んだときの SQL。">
             <StrategiesFigure />
           </Figure>
           <p>
@@ -1370,7 +1370,7 @@ Article.where(id: [1, 2, 3, 4, 5]).eager_load(:comments).limit(3).to_a
 `}
           />
           <p>まず DISTINCT（同じ値の行を1行にまとめる指定）で記事の id を3件決め、その id で本体の SELECT を絞っています。</p>
-          <Figure n="17-5" title="JOIN の結果の行とレコード" caption="模式図。下段の SQL はデモのアプリケーションでの実測（列の別名は省略）。">
+          <Figure n="23-5" title="JOIN の結果の行とレコード" caption="模式図。下段の SQL はデモのアプリケーションでの実測（列の別名は省略）。">
             <JoinRowsFigure />
           </Figure>
         </>
@@ -1410,7 +1410,7 @@ Article.includes(:author).references(:authors).eager_loading?                 # 
 Article.includes(:author).order("authors.name").eager_loading?                # => true
 `}
           />
-          <Figure n="17-6" title="includes がどちらになるか" caption="Rails 8.1.4.1 の relation.rb の eager_loading? と、デモでの実行結果をまとめた図。">
+          <Figure n="23-6" title="includes がどちらになるか" caption="Rails 8.1.4.1 の relation.rb の eager_loading? と、デモでの実行結果をまとめた図。">
             <IncludesFigure />
           </Figure>
           <p>

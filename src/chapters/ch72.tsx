@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 53-1 組み合わせごとのサブクラス ---------- */
+/* ---------- 図 70-1 組み合わせごとのサブクラス ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="53-1"
+      id="70-1"
       w={780}
       h={420}
       label="通知の親クラス Notifier の下に、EmailNotifier と SlackNotifier がある。EmailNotifier の下に EmailAndSlackNotifier と UrgentEmailNotifier、SlackNotifier の下に UrgentSlackNotifier があり、EmailAndSlackNotifier の下に UrgentEmailAndSlackNotifier がある。EmailAndSlackNotifier は Slack に送る処理を SlackNotifier から写している。UrgentEmailAndSlackNotifier は【緊急】と当番への送信を UrgentEmailNotifier から写したが、Slack を #ops-urgent に送る上書きは UrgentSlackNotifier にあり、継承の経路にないので引き継げない。そのため Slack は #ops に届く。右側では、notification_settings テーブルの設定を NotificationSetting が読み、送り方の名前からクラス名を組み立てて constantize で探す。送り方を slack、email の順に選ぶと NameError になる。6つのクラスは OpsMailer でメールを、Slack の Webhook で Slack を送る"
@@ -59,7 +60,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 53-2 クラスの数の増え方 ---------- */
+/* ---------- 図 70-2 クラスの数の増え方 ---------- */
 const growth = [
   { n: 1, label: '1つ（メール）', inh: 2, comp: 1 },
   { n: 2, label: '2つ（今）', inh: 6, comp: 2 },
@@ -72,7 +73,7 @@ function GrowthFigure() {
   const unit = 7.5
   return (
     <Svg
-      id="53-2"
+      id="70-2"
       w={780}
       h={360}
       label="送り方の数とクラスの数の関係を示す棒グラフ。継承で組み合わせごとにサブクラスを作ると、緊急かどうかの2通りを掛けて 2×(2のn乗−1) 個になり、送り方が1つなら2個、2つなら6個、3つなら14個、4つなら30個になる。送り方を部品にして組み合わせると、送り方のクラスは送り方の数と同じ1、2、3、4個で、このほかに Notifier と OpsAlert の2つがあるだけである"
@@ -102,11 +103,11 @@ function GrowthFigure() {
         return (
           <g key={g.n}>
             <rect x={cx - 52} y={base - g.inh * unit} width={46} height={g.inh * unit} fill="var(--fig-box5)" stroke="var(--fig-line)" />
-            <T x={cx - 29} y={base - g.inh * unit - 10} anchor="middle" fs={12} bold>
+            <T x={cx - 29} y={base - g.inh * unit - 15} anchor="middle" fs={12} bold>
               {g.inh}
             </T>
             <rect x={cx + 6} y={base - g.comp * unit} width={46} height={g.comp * unit} fill="var(--fig-box2)" stroke="var(--fig-line)" />
-            <T x={cx + 29} y={base - g.comp * unit - 10} anchor="middle" fs={12} bold>
+            <T x={cx + 29} y={base - g.comp * unit - 15} anchor="middle" fs={12} bold>
               {g.comp}
             </T>
             <T x={cx} y={base + 20} anchor="middle" fs={12}>
@@ -122,7 +123,7 @@ function GrowthFigure() {
   )
 }
 
-/* ---------- 図 53-3 継承・モジュールの include・コンポジション ---------- */
+/* ---------- 図 70-3 継承・モジュールの include・コンポジション ---------- */
 const compareCols = [
   {
     title: '継承',
@@ -141,7 +142,7 @@ const compareCols = [
 function CompareFigure() {
   return (
     <Svg
-      id="53-3"
+      id="70-3"
       w={780}
       h={360}
       label="Ruby で振る舞いを足す3つの方法の比較。継承では、EmailAndSlackNotifier が EmailNotifier を、EmailNotifier が Notifier を継承する。親のクラスは1つだけで、組み合わせはクラスを書くときに決まり、組み合わせごとにクラスを作る。子のクラスは親がメソッドを呼ぶ順序や状態に依存する。モジュールの include では、1つのクラスが EmailDelivery と SlackDelivery を include する。ancestors の順で先にある SlackDelivery の deliver だけが呼ばれ、EmailDelivery の deliver は呼ばれない。組み合わせごとのクラスは残る。コンポジションでは、Notifier が EmailChannel と SlackChannel を配列で持ち、それぞれの deliver(alert) を呼ぶ。組み合わせは実行時に設定から決まり、部品は deliver(alert) に応えればよく、テストでは部品を差し替えられる"
@@ -197,11 +198,11 @@ function CompareFigure() {
   )
 }
 
-/* ---------- 図 53-4 組み合わせる構造 ---------- */
+/* ---------- 図 70-4 組み合わせる構造 ---------- */
 function StructureFigure() {
   return (
     <Svg
-      id="53-4"
+      id="70-4"
       w={780}
       h={370}
       label="直した後の構造。notification_settings テーブルの行を NotificationSetting が読み、notifier メソッドが Notifier.build に送り方の名前の一覧を渡す。Notifier は EmailChannel と SlackChannel を配列で持つ。OpsNotification.notify は OpsAlert（title・body・urgent を持つ値）を作り、Notifier の deliver に渡す。Notifier はそれぞれの送り方の deliver(alert) を順に呼ぶ。EmailChannel は緊急なら当番を宛先に足して OpsMailer でメールを送り、SlackChannel は緊急なら #ops-urgent を選んで SlackClient で Slack の Webhook に投稿する"
@@ -261,7 +262,7 @@ function StructureFigure() {
   )
 }
 
-/* ---------- 図 53-5 SMS を足すときに変えるもの（直す前と後） ---------- */
+/* ---------- 図 70-5 SMS を足すときに変えるもの（直す前と後） ---------- */
 const newClasses = [
   'SmsNotifier',
   'UrgentSmsNotifier',
@@ -276,7 +277,7 @@ const newClasses = [
 function ChangeFigure() {
   return (
     <Svg
-      id="53-5"
+      id="70-5"
       w={780}
       h={400}
       label="送り方に SMS を足すときに変えるものの比較。直す前は、SmsNotifier、UrgentSmsNotifier、EmailAndSmsNotifier、UrgentEmailAndSmsNotifier、SlackAndSmsNotifier、UrgentSlackAndSmsNotifier、EmailAndSlackAndSmsNotifier、UrgentEmailAndSlackAndSmsNotifier の8つのクラスを新しく作り、クラスは合わせて14になる。Slack・緊急・SMS の処理をそれぞれのクラスに写し、設定に保存する送り方の順番もクラス名の規則に合わせる必要がある。直した後は、SmsChannel と SmsClient の2つのクラスを作り、Notifier::CHANNELS に1行足すだけで、EmailChannel・SlackChannel・OpsAlert・NotificationSetting・OpsNotification は変えない"
@@ -331,7 +332,7 @@ function ChangeFigure() {
   )
 }
 
-/* ---------- 図 53-6 入れ子の順番で結果が変わる ---------- */
+/* ---------- 図 70-6 入れ子の順番で結果が変わる ---------- */
 const wrapPanels = [
   {
     x0: 10,
@@ -354,7 +355,7 @@ const wrapPanels = [
 function OrderFigure() {
   return (
     <Svg
-      id="53-6"
+      id="70-6"
       w={780}
       h={330}
       label="同じ3つの部品を、入れ子にする順番だけ変えて組み立てた2つの例。左は DeliveryLog が UrgentMark を持ち、UrgentMark が EmailChannel を持つ。外側から順に deliver を呼ぶので、記録した時点ではまだ緊急になっておらず、記録は「決済に失敗しました」になる。メールは【緊急】の件名で送られる。右は UrgentMark が DeliveryLog を持ち、DeliveryLog が EmailChannel を持つ。緊急にしてから記録するので、記録は「【緊急】決済に失敗しました」になる。入れ子にする順番の決まりはどのクラスにも書かれていない"
@@ -404,7 +405,7 @@ const chapter: Chapter = {
     '送り方を小さなクラスにし、設定の配列から組み立てる形に直し、送り方を足すときに変える範囲を小さくできる',
     '部品に分けすぎたときの問題と、Rails の基底クラスや concern のように継承やモジュールが向いている場面を見分けられる',
   ],
-  prerequisites: [19, 41, 65],
+  prerequisites: [19, 65],
   sections: [
     {
       id: 'scene',
@@ -581,9 +582,9 @@ end
 `}
           />
           <p>
-            図 53-1 は6つのクラスの継承の関係です。送り方が2つ、緊急かどうかが2通りなので、組み合わせは6つあり、そのすべてにクラスがあります。網かけの UrgentEmailAndSlackNotifier が、この後の実行で問題が起きるクラスです。
+            図 70-1 は6つのクラスの継承の関係です。送り方が2つ、緊急かどうかが2通りなので、組み合わせは6つあり、そのすべてにクラスがあります。網かけの UrgentEmailAndSlackNotifier が、この後の実行で問題が起きるクラスです。
           </p>
-          <Figure n="53-1" title="組み合わせごとのサブクラス" caption="実線の矢印は子のクラスから親のクラスへの継承。破線は上書きを引き継げない関係。">
+          <Figure n="70-1" title="組み合わせごとのサブクラス" caption="実線の矢印は子のクラスから親のクラスへの継承。破線は上書きを引き継げない関係。">
             <SceneFigure />
           </Figure>
           <h3>6つのクラスで同じ通知を送ると</h3>
@@ -711,9 +712,9 @@ app/notifiers/urgent_slack_notifier.rb:5:    "【緊急】#{super}"
 `}
           />
           <p>
-            送り方が n 個あると、送り方の組み合わせは 2<sup>n</sup> − 1 通りで、緊急かどうかを掛けると 2 × (2<sup>n</sup> − 1) 個のサブクラスが必要です。図 53-2 は送り方の数とクラスの数の関係です。継承で組み合わせを表すと、送り方を1つ足すたびにクラスの数がおよそ2倍になります。直した後のコードでは、送り方を1つ足しても送り方のクラスが1つ増えるだけです。
+            送り方が n 個あると、送り方の組み合わせは 2<sup>n</sup> − 1 通りで、緊急かどうかを掛けると 2 × (2<sup>n</sup> − 1) 個のサブクラスが必要です。図 70-2 は送り方の数とクラスの数の関係です。継承で組み合わせを表すと、送り方を1つ足すたびにクラスの数がおよそ2倍になります。直した後のコードでは、送り方を1つ足しても送り方のクラスが1つ増えるだけです。
           </p>
-          <Figure n="53-2" title="送り方の数とクラスの数" caption="継承の数は script/count.rb と同じ式で計算した。組み合わせの数はこの章で直した後のコードのクラスの数。">
+          <Figure n="70-2" title="送り方の数とクラスの数" caption="継承の数は script/count.rb と同じ式で計算した。組み合わせの数はこの章で直した後のコードのクラスの数。">
             <GrowthFigure />
           </Figure>
           <h3>このコードの問題</h3>
@@ -769,9 +770,9 @@ app/notifiers/urgent_slack_notifier.rb:5:    "【緊急】#{super}"
             <Ref n={5} />。3つ目がコンポジションで、ほかのオブジェクトを持って呼び出します。
           </p>
           <p>
-            図 53-3 は前の節の通知を3つの方法で書いたときの構造です。モジュールの include は複数の機能を足せる点で継承と違いますが、組み合わせが決まるのはクラスを書いたときで、組み合わせごとのクラスは残ります。また、同じ名前のメソッドを持つモジュールを2つ include すると、<code>ancestors</code> で先にあるモジュールのメソッドだけが呼ばれます。この動きは「Rails の機能・規約との関係」の節で実行して確かめます。
+            図 70-3 は前の節の通知を3つの方法で書いたときの構造です。モジュールの include は複数の機能を足せる点で継承と違いますが、組み合わせが決まるのはクラスを書いたときで、組み合わせごとのクラスは残ります。また、同じ名前のメソッドを持つモジュールを2つ include すると、<code>ancestors</code> で先にあるモジュールのメソッドだけが呼ばれます。この動きは「Rails の機能・規約との関係」の節で実行して確かめます。
           </p>
-          <Figure n="53-3" title="継承・モジュールの include・コンポジション" caption="左と中央は、組み合わせ1つ分（メールと Slack の両方）を書いたときの構造。右はどの組み合わせでも同じ構造になる。">
+          <Figure n="70-3" title="継承・モジュールの include・コンポジション" caption="左と中央は、組み合わせ1つ分（メールと Slack の両方）を書いたときの構造。右はどの組み合わせでも同じ構造になる。">
             <CompareFigure />
           </Figure>
           <h3>似た原則との違い</h3>
@@ -948,9 +949,9 @@ sms_channel.rb
 `}
           />
           <p>
-            図 53-4 は直した後の構造です。設定の行から送り方の名前の一覧を読み、Notifier がその名前に対応する部品を持ちます。通知の内容は OpsAlert として、すべての部品に同じものが渡ります。
+            図 70-4 は直した後の構造です。設定の行から送り方の名前の一覧を読み、Notifier がその名前に対応する部品を持ちます。通知の内容は OpsAlert として、すべての部品に同じものが渡ります。
           </p>
-          <Figure n="53-4" title="送り方を組み合わせる構造" caption="太枠の Notifier が持つ部品は、設定の channels から実行時に決まる。">
+          <Figure n="70-4" title="送り方を組み合わせる構造" caption="太枠の Notifier が持つ部品は、設定の channels から実行時に決まる。">
             <StructureFigure />
           </Figure>
           <h3>同じ6通りを送ると</h3>
@@ -1052,9 +1053,9 @@ payment_failed（["sms", "email", "slack"]、緊急）
 `}
           />
           <p>
-            直す前は、SMS を足すと8つのクラスを作り、そのたびにほかの送り方の処理と緊急の上書きを写す必要がありました。直した後は、2つのクラスを作り、1行を足すだけです。図 53-5 は SMS を足すときに変えるものを、直す前と後で比べたものです。
+            直す前は、SMS を足すと8つのクラスを作り、そのたびにほかの送り方の処理と緊急の上書きを写す必要がありました。直した後は、2つのクラスを作り、1行を足すだけです。図 70-5 は SMS を足すときに変えるものを、直す前と後で比べたものです。
           </p>
-          <Figure n="53-5" title="SMS を足すときに変えるもの（直す前と後）" caption="網かけの箱は、新しく作るもの。直す前の8つのクラス名は script/count.rb の実行結果。">
+          <Figure n="70-5" title="SMS を足すときに変えるもの（直す前と後）" caption="網かけの箱は、新しく作るもの。直す前の8つのクラス名は script/count.rb の実行結果。">
             <ChangeFigure />
           </Figure>
           <h3>部品を差し替えてテストする</h3>
@@ -1172,9 +1173,9 @@ UrgentMark.new(DeliveryLog.new(EmailChannel.new))
 `}
           />
           <p>
-            同じ3つの部品で、入れ子にする順番だけを変えました。1つ目は記録した時点ではまだ緊急になっていないので、緊急のメールを送ったのに記録には【緊急】がありません。図 53-6 は2つの組み立て方の違いです。
+            同じ3つの部品で、入れ子にする順番だけを変えました。1つ目は記録した時点ではまだ緊急になっていないので、緊急のメールを送ったのに記録には【緊急】がありません。図 70-6 は2つの組み立て方の違いです。
           </p>
-          <Figure n="53-6" title="入れ子の順番で結果が変わる" caption="外側の部品から順に deliver(alert) を呼ぶ。破線の枠は、内側の部品を持ち、その deliver(alert) を呼ぶ部品。">
+          <Figure n="70-6" title="入れ子の順番で結果が変わる" caption="外側の部品から順に deliver(alert) を呼ぶ。破線の枠は、内側の部品を持ち、その deliver(alert) を呼ぶ部品。">
             <OrderFigure />
           </Figure>
           <p>
@@ -1192,9 +1193,9 @@ UrgentMark.new(DeliveryLog.new(EmailChannel.new))
           </p>
           <h3>判断の目安</h3>
           <p>
-            どの方法を選ぶかは「違いの軸はいくつあり、組み合わせるか」「組み合わせはいつ決まるか」「フレームワークが継承を前提にしているか」の3つで判断します。図 53-7 は、3つの方法が向いている場面をまとめたものです。
+            どの方法を選ぶかは「違いの軸はいくつあり、組み合わせるか」「組み合わせはいつ決まるか」「フレームワークが継承を前提にしているか」の3つで判断します。図 70-7 は、3つの方法が向いている場面をまとめたものです。
           </p>
-          <Figure n="53-7" title="継承・モジュールの include・コンポジションを選ぶ目安" caption="どの方法も、条件によって効果があったり逆効果になったりする。迷ったときは、違いの軸の数と、組み合わせが決まる時点を確かめる。">
+          <Figure n="70-7" title="継承・モジュールの include・コンポジションを選ぶ目安" caption="どの方法も、条件によって効果があったり逆効果になったりする。迷ったときは、違いの軸の数と、組み合わせが決まる時点を確かめる。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1221,7 +1222,7 @@ UrgentMark.new(DeliveryLog.new(EmailChannel.new))
                   <tr>
                     <th scope="row">コンポジション</th>
                     <td>2つ以上の違いを組み合わせる。設定やデータから実行時に選ぶ。テストで部品を差し替える</td>
-                    <td>部品が1つで差し替える予定がない。部品の組み立てに順番の決まりがある（図 53-6）</td>
+                    <td>部品が1つで差し替える予定がない。部品の組み立てに順番の決まりがある（図 70-6）</td>
                     <td>この章の Notifier と送り方、Action Mailer の配信方法</td>
                   </tr>
                 </tbody>
@@ -1319,6 +1320,29 @@ deliver の持ち主: SlackDelivery
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          部品に分けるのは、組み合わせて使う違いの軸が2つ以上あり、組み合わせを実行時に選ぶ場合です。この章では送り方を deliver(alert) に応える部品のクラスにし、緊急かどうかは通知の内容の値に持たせました。違いが1つの軸だけの場合や、Rails の基底クラスのようにフレームワークが継承を前提にしている場所では、継承を使います。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、送り方が n 個なら 2 × (2n − 1) 個のクラスが要り、上書きを写し忘れた UrgentEmailAndSlackNotifier では緊急の Slack が通常のチャンネルに届いた。直した後は、SMS を足す変更が2つのクラスと CHANNELS の1行で済み、直す前に必要だった8つのクラスは要らなくなった。</>,
+        basis: <><ChapterLink n={72} section="scene" />、<ChapterLink n={72} section="apply" /></>,
+      },
+      cost: {
+        text: <>「緊急の通知はどう送られるか」を知るには、送り方のクラスに加えて、組み立てるコードを読む必要がある。設定に書かれた送り方の名前は保存する前に検証しないと、通知を送るときに初めて誤りがわかる（直す前の設定では、並び順が違うだけで NameError になった）。</>,
+        basis: <><ChapterLink n={72} section="apply" />、<ChapterLink n={72} section="scene" /></>,
+      },
+      alternative: {
+        text: <>どの組み合わせでも同じ処理（緊急にする処理・記録）は部品にせず、値や1つのクラスに書く。緊急にする処理と記録を入れ子の部品にした例では、入れ子の順番によって記録に【緊急】が残らなかった。会員への通知がメールと SMS の2種類だけで同時に送らないなら、STI のような継承で足りる。</>,
+        basis: <ChapterLink n={72} section="overuse" />,
+      },
+      criterion: {
+        text: <>違いの軸はいくつあり、組み合わせるか。組み合わせはクラスを書く時点で決まるか、運用担当が管理画面で選ぶか。フレームワークが継承を前提にしているか。</>,
+        basis: <ChapterLink n={72} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

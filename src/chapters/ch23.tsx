@@ -8,7 +8,7 @@ import { PumaRestartFigure } from '../visuals/deployment-figures'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const PM = 'https://github.com/puma/puma/blob/v8.0.2'
 
-/* ---------- 図 26-3 プロセスとスレッドの構成 ---------- */
+/* ---------- 図 39-3 プロセスとスレッドの構成 ---------- */
 function ClusterFigure() {
   const worker = (x: number, i: number, pid: number) => (
     <g key={i}>
@@ -34,7 +34,7 @@ function ClusterFigure() {
   )
   return (
     <Svg
-      id="26-3"
+      id="39-3"
       w={780}
       h={340}
       label="Puma のクラスタモードでは、マスターのプロセスがソケットを開いてワーカーのプロセスを fork する。マスターは要求を処理せず、ワーカーの監視とシグナルの処理をする。各ワーカーでは、新しく受け付けた接続が todo の待ち行列に入る。スレッドがすぐに要求を読み切れなければ reactor に預け、受信が済むと再び待ち行列に入る。準備ができた要求ではスレッドが Rails を実行し、応答も書き込む。ワーカーはそれぞれ接続プールを持つ"
@@ -54,7 +54,7 @@ function ClusterFigure() {
   )
 }
 
-/* ---------- 図 26-4 GVL と I/O 待ち ---------- */
+/* ---------- 図 39-4 GVL と I/O 待ち ---------- */
 function GvlFigure() {
   const scale = 0.55 // 1ms あたりの幅
   const x0 = 120
@@ -74,7 +74,7 @@ function GvlFigure() {
     ))
   return (
     <Svg
-      id="26-4"
+      id="39-4"
       w={780}
       h={330}
       label="1つのワーカーの3つのスレッドで、DB の待ちが200ms の要求を処理すると、待っている間は GVL を手放すので3件が同時に進み、6件を約425ms で処理した。Ruby の計算が約290ms の要求では、GVL を持っている1つのスレッドしか進めないので、3件を同時に受けると各要求が約680ms かかり、6件で約2.2秒かかった。ワーカーを2つにすると、6件が約0.95秒になった"
@@ -136,11 +136,11 @@ function GvlFigure() {
   )
 }
 
-/* ---------- 図 26-5 スレッド数と接続数 ---------- */
+/* ---------- 図 39-5 スレッド数と接続数 ---------- */
 function ConnFigure() {
   return (
     <Svg
-      id="26-5"
+      id="39-5"
       w={780}
       h={260}
       label="Puma 用のサーバーは2台で、各台に4ワーカーある。各ワーカーのプール上限が3本なら Web 用の最大接続数は24本。この例の Sidekiq 用プール上限は10本。ほかの作業に使う分も含めて、MySQL の接続上限に収まるかを確かめる"
@@ -166,11 +166,11 @@ function ConnFigure() {
   )
 }
 
-/* ---------- 図 26-1 プロセスとスレッドのメモリー ---------- */
+/* ---------- 図 39-1 プロセスとスレッドのメモリー ---------- */
 function MemoryFigure() {
   return (
     <Svg
-      id="26-1"
+      id="39-1"
       w={780}
       h={290}
       label="左は fork で作った2つのプロセス。親プロセスと子プロセスはそれぞれ自分のメモリーを持ち、子プロセスが count を1にしても親プロセスの count は0のまま。右は1つのプロセスの中の3本のスレッド。3本とも同じメモリーを読み書きするので、1本が count を書き換えると、ほかのスレッドからも新しい値が見える"
@@ -226,11 +226,11 @@ function MemoryFigure() {
   )
 }
 
-/* ---------- 図 26-2 Puma と Rails の分担 ---------- */
+/* ---------- 図 39-2 Puma と Rails の分担 ---------- */
 function ServerRoleFigure() {
   return (
     <Svg
-      id="26-2"
+      id="39-2"
       w={780}
       h={210}
       label="ブラウザーが HTTP の要求を送ると、Puma が受け取り、空いているスレッドで Rails のアプリケーションを呼ぶ。Rails は応答の状態・ヘッダー・本文を作って Puma に返し、Puma がそれをブラウザーに送り返す"
@@ -261,11 +261,11 @@ function ServerRoleFigure() {
   )
 }
 
-/* ---------- 図 26-6 Puma の再起動方式 ---------- */
+/* ---------- 図 39-6 Puma の再起動方式 ---------- */
 function RestartFigure() {
   return (
     <Svg
-      id="26-6"
+      id="39-6"
       w={780}
       h={206}
       label="2ワーカー構成の模式図。hot restart では旧ワーカーの処理を終えてから、待受ソケットを引き継いでマスターを exec し、新ワーカーを起動する。phased restart では同じマスターがワーカーを1つずつ入れ替える。途中は旧版と新版のワーカーが同時に要求を処理する"
@@ -291,11 +291,11 @@ function RestartFigure() {
   )
 }
 
-/* ---------- 図 26-7 Nginx で転送先を切り替える ---------- */
+/* ---------- 図 39-7 Nginx で転送先を切り替える ---------- */
 function RuntimeSwitchFigure() {
   return (
     <Svg
-      id="26-7"
+      id="39-7"
       w={720}
       h={208}
       label="1台のサーバーで旧 Ruby の Puma をポート3000、新 Ruby の Puma をポート3001で起動する。最初は Nginx が新しい要求を3000へ送り、3001の応答は直接確認する。Nginx の設定を再読み込みすると、新しい要求は3001へ向かう。旧 Puma は処理中の接続と切り戻しのために残す"
@@ -566,7 +566,7 @@ puts "メインのスレッドで見た count = #{count}"
 `}
           />
           <p>
-            スレッドが書き換えた count は、メインスレッドからも1に見えました（図 26-1）。メモリーを共有するので、スレッドを増やしてもアプリケーションを読み込み直す必要がなく、プロセスを増やすよりメモリーの増え方は小さくなります。その代わり、複数のスレッドが同じ変数を書き換えると、ある要求の値が別の要求の処理に混ざることがあります。この問題は「Executor
+            スレッドが書き換えた count は、メインスレッドからも1に見えました（図 39-1）。メモリーを共有するので、スレッドを増やしてもアプリケーションを読み込み直す必要がなく、プロセスを増やすよりメモリーの増え方は小さくなります。その代わり、複数のスレッドが同じ変数を書き換えると、ある要求の値が別の要求の処理に混ざることがあります。この問題は「Executor
             とスレッド安全性」の節で扱います。
           </p>
           <p>
@@ -624,7 +624,7 @@ puts format("3つのスレッドで同時に: %.2f 秒", Time.now - start)
             の処理系）では、1つのプロセスの中で Ruby のコードを実行できるスレッドが同時に1本だけだからです。この仕組みを GVL と呼び、「GVL と I/O 待ち」の節で詳しく扱います。Ruby
             の計算を同時に進めるには、プロセスを増やします。
           </p>
-          <Figure n="26-1" title="プロセスとスレッドのメモリー" caption="process.rb と thread_share.rb の実行結果をもとにした模式図。PID は実行例の値。">
+          <Figure n="39-1" title="プロセスとスレッドのメモリー" caption="process.rb と thread_share.rb の実行結果をもとにした模式図。PID は実行例の値。">
             <MemoryFigure />
           </Figure>
         </>
@@ -639,7 +639,7 @@ puts format("3つのスレッドで同時に: %.2f 秒", Time.now - start)
             ブラウザーで Rails のアプリケーションのページを開くと、ブラウザーはサーバーに HTTP の要求（リクエスト）を送ります。サーバーは要求に応じた HTML などを応答（レスポンス）として返します。Rails
             のアプリケーションは要求の内容を受け取って応答の内容を作るプログラムで、ネットワークから要求を受け取る処理は別のプログラムが受け持ちます。rails new で作ったアプリケーションでは、この処理を Puma
             が受け持ち、<code>bin/rails server</code> は Puma を起動します
-            <Ref n={10} />。Puma はポート（同じコンピューターで動く複数のプログラムを区別する通信用の番号）で要求を待ち、届いた要求を Rails に渡し、Rails が作った応答を送り返します（図 26-2）。
+            <Ref n={10} />。Puma はポート（同じコンピューターで動く複数のプログラムを区別する通信用の番号）で要求を待ち、届いた要求を Rails に渡し、Rails が作った応答を送り返します（図 39-2）。
           </p>
           <p>
             デモのアプリケーションを開発環境で <code>bin/rails server</code> で起動し、ブラウザーの代わりに curl で <code>/articles</code> を要求しました。
@@ -685,7 +685,7 @@ Completed 200 OK in 110ms (Views: 31.9ms | ActiveRecord: 20.0ms (1 query, 0 cach
             Ruby の計算は同時に進まず、プロセスはメモリーを多く使いますが計算も同時に進みます。Puma の説明書は、本番環境ではプロセスを複数にするクラスタモードを勧めています
             <Ref n={3} />。次の節ではその構成を動かして確かめます。
           </p>
-          <Figure n="26-2" title="Puma と Rails の分担" caption="bin/rails server で起動したときの要求と応答の流れ。">
+          <Figure n="39-2" title="Puma と Rails の分担" caption="bin/rails server で起動したときの要求と応答の流れ。">
             <ServerRoleFigure />
           </Figure>
         </>
@@ -697,7 +697,7 @@ Completed 200 OK in 110ms (Views: 31.9ms | ActiveRecord: 20.0ms (1 query, 0 cach
       body: (
         <>
           <p>
-            Puma には1つのプロセスで動くシングルモードと、マスターのプロセスが複数のワーカーのプロセスを作るクラスタモードがあります。<code>workers</code> が1以上ならクラスタモードです。デモのアプリケーションを本番環境の設定で、ワーカー2・スレッド3
+            Puma には1つのプロセスで動くシングルモードもあり、<code>workers</code> が1以上ならクラスタモードになります。デモのアプリケーションを本番環境の設定で、ワーカー2・スレッド3
             にして起動し、プロセスとスレッドの名前を Linux の /proc から読みました。/proc は、動いているプロセスの名前や親の PID、スレッドの数などを、Linux がファイルの形で見せるディレクトリです。
           </p>
           <Code
@@ -734,7 +734,7 @@ pid=15 ppid=1 threads=11 puma: cluster worker 1: 1 [demo]
             ログの <code>ppid</code> は親プロセスの番号です。PID 12 と 15 の親はどちらも PID 1 のマスターです。マスターはワーカーを起動・監視し、各ワーカーが同じ待ち受け用のソケット（OS が接続を受け付ける窓口）で新しい接続を受け取ります。<Ref n={1} />
           </p>
           <p>
-            ワーカーは受け付けた接続を <code>todo</code> という待ち行列に入れます。<code>tp 001</code> などのスレッドが取り出し、要求を読み切れれば Rails を呼びます。このデモの既定設定では、まだデータが揃わない接続は受信待ちを担当する <code>reactor</code> に預けます。読み終わると接続は待ち行列に戻るので、その間スレッドは別の要求を処理できます（図 26-3）。<Ref n={21} />
+            ワーカーは受け付けた接続を <code>todo</code> という待ち行列に入れます。<code>tp 001</code> などのスレッドが取り出し、要求を読み切れれば Rails を呼びます。このデモの既定設定では、まだデータが揃わない接続は受信待ちを担当する <code>reactor</code> に預けます。読み終わると接続は待ち行列に戻るので、その間スレッドは別の要求を処理できます（図 39-3）。<Ref n={21} />
           </p>
           <p>
             応答を書き込むのは Rails を呼んだスレッドです。大きな本文を遅い回線に送り続ける間は、次の要求を扱えないことがあります。前段の Nginx が応答を一時保存する場合は <ChapterLink n={24} section="buffering">バッファリングと Puma のスレッド</ChapterLink>で確かめます。
@@ -752,7 +752,7 @@ pid=15 ppid=1 threads=11 puma: cluster worker 1: 1 [demo]
           <p>
             <code>backlog</code> は待ち行列にある仕事の数です。上の出力では2つのワーカーとも 0 で、各ワーカーに3本ある処理用のスレッドは空いています。待ち行列が続けて伸びるときは、<code>busy_threads</code> と Rails の SQL や処理時間を見比べると、どの仕事がスレッドを長く使っているかを絞れます。
           </p>
-          <Figure n="26-3" title="プロセスとスレッドの構成" caption="Puma 8.0.2（ワーカー2・スレッド3）の例。新しい接続は右の待ち行列に入り、すぐに読み切れないときは破線の先の reactor がデータを待つ。">
+          <Figure n="39-3" title="プロセスとスレッドの構成" caption="Puma 8.0.2（ワーカー2・スレッド3）の例。新しい接続は右の待ち行列に入り、すぐに読み切れないときは破線の先の reactor がデータを待つ。">
             <ClusterFigure />
           </Figure>
         </>
@@ -764,8 +764,7 @@ pid=15 ppid=1 threads=11 puma: cluster worker 1: 1 [demo]
       body: (
         <>
           <p>
-            CRuby には <Term en="Global VM Lock">GVL</Term> があり、1つのプロセスの中で Ruby のコードを実行できるスレッドは同時に1つだけです。DB やネットワークの応答を待つ間はスレッドが GVL
-            を手放すので、その間に別のスレッドが進めます
+            CRuby の <Term en="Global VM Lock">GVL</Term> により、1つのプロセスの中で Ruby のコードを実行できるスレッドは同時に1つだけです
             <Ref n={2} />。デモに、DB で 0.2 秒待つアクション（<code>SELECT SLEEP(0.2)</code>）と、Ruby で計算するアクションを用意し、ワーカー1・スレッド3 に同時に要求を送りました。
           </p>
           <Code
@@ -786,13 +785,13 @@ cpu pid=12 … 428ms  430ms  307ms   cpu pid=16 … 529ms  520ms  622ms   全体
 `}
           />
           <p>
-            DB の待ちは3つのスレッドで同時に進み、6件が2回分（約 0.4 秒）で終わりました。Ruby の計算は、3件を同時に受けると1件あたりの時間が 286ms から約 680ms に延び、全体の時間は1件ずつ処理するのとほとんど変わりません。スレッドを増やしても計算は速くならず、1件ごとの応答が遅くなるだけです（図 26-4）。ワーカー（プロセス）を2つにすると、別の CPU で並行して計算できるので、6件の全体の時間がほぼ半分になりました。
+            DB の待ちは3つのスレッドで同時に進み、6件が2回分（約 0.4 秒）で終わりました。Ruby の計算は、3件を同時に受けると1件あたりの時間が 286ms から約 680ms に延び、全体の時間は1件ずつ処理するのとほとんど変わりません。スレッドを増やしても計算は速くならず、1件ごとの応答が遅くなるだけです（図 39-4）。ワーカー（プロセス）を2つにすると、別の CPU で並行して計算できるので、6件の全体の時間がほぼ半分になりました。
           </p>
           <p>
             Rails のガイドは、N+1 や遅い SQL の無いアプリケーションの I/O 待ちは処理時間の50%を超えないことが多く、プロセスあたり3スレッドを超えても効果は少ないとしています
             <Ref n={2} />。外部の API を同期的に呼ぶアプリケーションのように I/O 待ちが長い場合は、スレッドを増やす効果があります。
           </p>
-          <Figure n="26-4" title="GVL と I/O 待ち" caption="ワーカー1・スレッド3（4 CPU のマシン上の Docker）での実測値をもとにした模式図。">
+          <Figure n="39-4" title="GVL と I/O 待ち" caption="ワーカー1・スレッド3（4 CPU のマシン上の Docker）での実測値をもとにした模式図。">
             <GvlFigure />
           </Figure>
         </>
@@ -838,12 +837,12 @@ pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
             この例では、同じ DB に対して各ワーカーが接続を最大3本持てます。要求が12件来ても、ワーカー2個で作った接続は合計6本でした。接続は使うときに作り、返却後もプールに残して次の要求で使います。プールの上限をスレッド数より小さく設定すると、スレッドに空きがあっても DB を使うところで接続を待つ場合があります。
           </p>
           <p>
-            図 26-5 ではサーバーを2台に増やし、各台にワーカーを4つ、各ワーカーに上限3本のプールを用意しています。Web 用には最大 2 × 4 × 3 = 24 本です。別プロセスで動く Sidekiq の分は別に足します。ActionCable を同じプロセスで動かす場合は、Puma と同じプールから借りるので、両方が同時に使う本数を見積もってプールの大きさを決めます。
+            図 39-5 ではサーバーを2台に増やし、各台にワーカーを4つ、各ワーカーに上限3本のプールを用意しています。Web 用には最大 2 × 4 × 3 = 24 本です。別プロセスで動く Sidekiq の分は別に足します。ActionCable を同じプロセスで動かす場合は、Puma と同じプールから借りるので、両方が同時に使う本数を見積もってプールの大きさを決めます。
           </p>
           <p>
             Rails 側の <code>max_connections</code> はプールごとの上限です。MySQL 側の同名の設定は DB サーバー全体で受け付ける上限です。同じサーバーを使うジョブや運用作業の接続も合計に含めます。Solid Cache や Solid Queue などで別の接続先を使うときは、接続先ごとに数えます。
           </p>
-          <Figure n="26-5" title="スレッド数と接続数" caption="ワーカーごとに接続プールを持つこと（デモでの実測）をもとにした計算の例。台数・ワーカー数などの値は例。">
+          <Figure n="39-5" title="スレッド数と接続数" caption="ワーカーごとに接続プールを持つこと（デモでの実測）をもとにした計算の例。台数・ワーカー数などの値は例。">
             <ConnFigure />
           </Figure>
         </>
@@ -856,8 +855,8 @@ pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
         <>
           <p>
             <code>preload_app!</code> を指定すると、マスターがアプリケーションを読み込んでからワーカーを fork します。fork した直後のワーカーは、マスターのメモリーをそのまま共有し、書き換えたページだけが複製されます（
-            <Term en="copy-on-write">コピーオンライト</Term>）。Puma 8 では、ワーカーが2つ以上なら既定で有効です
-            <Ref n={4} />。デモで、20回要求した後の各プロセスのメモリー（/proc の smaps_rollup）を比べました。
+            <Term en="copy-on-write">コピーオンライト</Term>）。Puma 8 では次の3つの条件をすべて満たすと、書かなくても有効になります。ワーカーが2つ以上あること、<code>prune_bundler</code> を指定していないこと、Ruby の実行環境で fork が使えること（Linux 上の CRuby なら使えます）です
+            <Ref n={4} />。Puma 8.0.2 で設定を読み込ませて確かめたところ、ワーカー2つに <code>prune_bundler</code> を加えた場合と、ワーカーが1つの場合は、既定で無効でした。デモで、20回要求した後の各プロセスのメモリー（/proc の smaps_rollup）を比べました。
           </p>
           <Code
             lang="text"
@@ -885,9 +884,30 @@ puma: cluster worker 1             Rss=114MB Pss=100MB Shared=22MB Private=92MB
           </Figure>
           <p>
             fork の前にマスターで開いた DB の接続をワーカーがそのまま使うと、複数のプロセスが1本の接続を共有し、正常に使えなくなります。ActiveRecord は fork を検知して、ワーカーの側で接続プールを捨てて作り直します
-            <Ref n={5} />。Redis などの接続を自分で開いている場合は、<code>before_worker_boot</code> で開き直します。デモの設定ファイルにも、このフックで PID を出力する行を書きました。
+            <Ref n={5} />。redis 5.x（redis-client）も、接続を使うときにプロセス ID が変わったことを検知して接続を作り直します<Ref n={24} />（<ChapterLink n={115} section="workers" />で実行して確かめています）。fork を検知しないライブラリでマスターが開いた接続やソケットだけは、<code>before_worker_boot</code> で開き直します。デモの設定ファイルにも、このフックで PID を出力する行を書きました。
           </p>
           <p>起動ログの <code>Restarts: (✖) phased</code> は、ワーカーを順に入れ替える <ChapterLink n={23} section="puma-commands">phased restart</ChapterLink> が無効であることを示します。preload_app! を有効にすると、ワーカーはマスターが読み込んだコードを受け継ぐためです。</p>
+        </>
+      ),
+    },
+    {
+      id: 'memory',
+      title: 'Puma のワーカーごとにメモリーと GC を測る',
+      body: (
+        <>
+          <p>Puma のワーカーはそれぞれ Ruby ヒープ、接続プール、プロセス内キャッシュを持ちます。<code>preload_app!</code> で共有したページは、ワーカーが書き換えると個別の物理ページを使います。起動直後と、通常の利用を再現した負荷をかけた後にメモリーを測ります。<Ref n={2} /><Ref n={3} /></p>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th scope="col">見る値</th><th scope="col">読み方</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">RSS と PSS</th><td>RSS は物理メモリー上にあるページの合計です。共有ページは複数の RSS に入ります。Linux の <code>/proc/PID/smaps_rollup</code> の PSS では、共有ページの分をプロセスごとに按分します。<Ref n={22} /></td></tr>
+                <tr><th scope="row"><code>GC.stat(:heap_live_slots)</code></th><td>Ruby のヒープでオブジェクトを置いているスロットの数です。同じ負荷をかけた後の値を、GC の直後など同じ条件で比較します。繰り返すたびに増えるなら、アプリが参照を保持している箇所を調べます。<Ref n={23} /></td></tr>
+                <tr><th scope="row">応答時間と GC の時間</th><td>ワーカーを増やす前後で、同じ要求の種類と到着数で比較します。RSS が増えても、原因が Ruby のオブジェクトの増加とは限りません。ネイティブ拡張やバッファーも確認します。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><code>bin/rails runner</code> は別のプロセスを起動します。稼働中のワーカーの GC を調べるには、そのワーカー内で値を記録します。Ruby の割り当てと回収の仕組みは <ChapterLink n={97} />、ワーカー数と接続上限の決め方は <ChapterLink n={113} /> で扱います。</p>
+          <p>実行中のサーバーでプロセスを探し、設定やログを調べる手順は <a href="#/linux">第6部のサーバ運用</a> で確認できます。</p>
         </>
       ),
     },
@@ -1024,7 +1044,7 @@ u=carol class_var=carol current=carol
           <p>
             worker_timeout について、Puma の dsl.rb のコメントは「リクエストのタイムアウトではなく、応答の無いプロセスを守るためのもの」と書いています
             <Ref n={4} />。遅い要求を打ち切るのは、前段の Nginx や ALB のタイムアウトです（<ChapterLink n={25} />
-            ）。ただし、前段が接続を切っても、Puma のスレッドは Rails の処理を最後まで続けます。persistent_timeout と前段の keep-alive の関係も第28章で扱います。
+            ）。ただし、前段が接続を切っても、Puma に渡った処理がその時点で中断されるとは限りません。接続の再利用とタイムアウトの設定は <ChapterLink n={25} section="timeouts" /> で扱います。
           </p>
         </>
       ),
@@ -1130,7 +1150,7 @@ bundle exec pumactl -S tmp/pids/puma.state phased-restart
             入れ替え中の要求をほかのワーカーで処理するには、ワーカーが2つ以上あり、残るワーカーに余力が必要です。Puma 本体やマスターが読み込んだ gem を更新するときは、マスターも起動し直します
             <Ref n={4} /><Ref n={6} />。
           </p>
-          <Figure n="26-6" title="再起動方式ごとに入れ替わるプロセス" caption="Linux 上の CRuby と2ワーカー構成の模式図。hot restart の起動待ちと、phased restart で新旧ワーカーが重なる区間を比較。">
+          <Figure n="39-6" title="再起動方式ごとに入れ替わるプロセス" caption="Linux 上の CRuby と2ワーカー構成の模式図。hot restart の起動待ちと、phased restart で新旧ワーカーが重なる区間を比較。">
             <RestartFigure />
           </Figure>
           <p>
@@ -1234,7 +1254,7 @@ bundle exec pumactl -S tmp/pids/puma.state phased-restart
             旧 Puma が <code>127.0.0.1:3000</code> で要求を受けている間に、新しい Ruby で別の Puma を <code>127.0.0.1:3001</code> に起動します。
             2つの Puma を同時に動かす間は、待受先・PID ファイル・制御ソケット・状態ファイルのパスを分け、メモリーと DB 接続数に余裕を持たせます（<ChapterLink n={23} section="sizing" />）。
           </p>
-          <Figure n="26-7" title="新旧 Puma を並べて Ruby を切り替える" caption="左は新版の起動を確認している間、右は reload 後に新しい要求を新版へ送る経路。処理中の接続は旧側に残ることがあります。">
+          <Figure n="39-7" title="新旧 Puma を並べて Ruby を切り替える" caption="左は新版の起動を確認している間、右は reload 後に新しい要求を新版へ送る経路。処理中の接続は旧側に残ることがあります。">
             <RuntimeSwitchFigure />
           </Figure>
           <Code
@@ -1303,7 +1323,7 @@ upstream app {
           <li>クラスタモードでは、マスターがワーカーを fork して監視し、各ワーカーのスレッドが Rails を呼んで応答を書き込みます。既定の設定では、すぐに読み切れない要求を reactor に預けられます。</li>
           <li>GVL のため、Ruby の計算はスレッドを増やしても速くならず、1件ごとの応答が遅くなります。I/O 待ちの間は別のスレッドが Ruby の処理を進められます。並行して計算するにはワーカーを増やします。</li>
           <li>DB の接続プールはワーカーごとにあります。同じ DB にそれぞれ最大何本つなぐかを足し合わせ、ジョブなど別プロセスの接続も含めて見積もります。</li>
-          <li>preload_app! はワーカーの間でメモリーを共有させます（ワーカーが2つ以上なら既定で有効）。phased restart とは両立しません。</li>
+          <li>preload_app! はワーカーの間でメモリーを共有させます（ワーカーが2つ以上で prune_bundler を指定していなければ既定で有効）。phased restart とは両立しません。</li>
           <li>クラスやグローバルな変数に要求ごとの値を入れると、別の要求に混ざります。要求ごとの値は CurrentAttributes に入れ、Executor が要求の終わりに消します。</li>
           <li>Puma の worker_timeout は要求のタイムアウトではありません。遅い要求は前段のタイムアウトで打ち切られますが、Rails の処理は続きます。</li>
           <li><code>pumactl restart</code> は Puma を起動し直します。<code>pumactl phased-restart</code> は同じマスターからワーカーを順に作り直します。</li>
@@ -1316,7 +1336,7 @@ upstream app {
     { title: 'Puma: docs/architecture.md', publisher: 'puma/puma（GitHub）', url: `${PM}/docs/architecture.md`, accessed: '2026-11-11', version: 'Puma 8.0.2', note: 'マスターとワーカーの役割、スレッドプールと応答の書き込み。' },
     { title: 'Tuning Performance for Deployment', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/tuning_performance_for_deployment.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'GVL と I/O 待ち、I/O 待ちが50%以下なら3スレッドを超えても効果が少ないこと、プロセスによる並列性とコピーオンライト。' },
     { title: 'Puma: docs/deployment.md', publisher: 'puma/puma（GitHub）', url: `${PM}/docs/deployment.md`, accessed: '2026-11-11', version: 'Puma 8.0.2', note: 'クラスタモードの勧め、workers :auto、スレッド数の決め方、ワーカー数とメモリー、X-Request-Start による待ち時間の計測。' },
-    { title: 'Puma: lib/puma/dsl.rb・configuration.rb', publisher: 'puma/puma（GitHub）', url: `${PM}/lib/puma/dsl.rb`, accessed: '2026-11-20', version: 'Puma 8.0.2', note: 'preload_app! とタイムアウトの既定値、WEB_CONCURRENCY、制御用ソケット・状態ファイル・再起動コマンドの設定。' },
+    { title: 'Puma: lib/puma/dsl.rb・configuration.rb', publisher: 'puma/puma（GitHub）', url: `${PM}/lib/puma/dsl.rb`, accessed: '2026-11-28', version: 'Puma 8.0.2', note: 'preload_app! の既定値を決める条件（set_conditional_default_options：prune_bundler なし・ワーカー2つ以上・fork が使えること）とタイムアウトの既定値、WEB_CONCURRENCY、制御用ソケット・状態ファイル・再起動コマンドの設定。' },
     { title: 'activerecord/lib/active_record/connection_adapters/pool_config.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/connection_adapters/pool_config.rb#L83`, accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'ForkTracker の after_fork で接続プールを捨てること。' },
     { title: 'Puma: docs/restart.md', publisher: 'puma/puma（GitHub）', url: `${PM}/docs/restart.md`, accessed: '2026-11-20', version: 'Puma 8.0.2', note: 'hot restart と phased restart の操作、待受ソケットの引き継ぎ、ワーカーの入れ替え順と設定条件、新旧のコードが同時に動くこと。' },
     { title: 'Threading and Code Execution in Rails', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/threading_and_code_execution.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: 'Executor が要求の前後で行う処理と、スレッドの間で共有される状態。' },
@@ -1334,6 +1354,9 @@ upstream app {
     { title: 'Controlling nginx', publisher: 'nginx.org', url: 'https://nginx.org/en/docs/control.html#reconfiguration', accessed: '2026-11-20', version: 'Nginx 1.30.6', note: '設定の再読み込み、新ワーカーの起動、旧ワーカーによる既存クライアントの処理。' },
     { title: 'Nginx: Command-line parameters', publisher: 'nginx.org', url: 'https://nginx.org/en/docs/switches.html', accessed: '2026-11-20', version: 'Nginx 1.30.6', note: 'nginx -t と nginx -s reload の意味。' },
     { title: 'Puma::Server（handle_servers・process_client・reactor_wakeup）', publisher: 'puma/puma（GitHub）', url: `${PM}/lib/puma/server.rb`, accessed: '2026-11-22', version: 'Puma 8.0.2', note: '接続をプールに渡し、すぐに読めないときに reactor へ預けてプールに戻す分岐。' },
+    { title: 'The /proc Filesystem', publisher: 'Linux Kernel Documentation', url: 'https://docs.kernel.org/filesystems/proc.html', accessed: '2026-11-27', note: 'smaps と smaps_rollup の RSS、PSS。' },
+    { title: 'GC.stat', publisher: 'Ruby Documentation', url: 'https://docs.ruby-lang.org/en/4.0/GC.html#method-c-stat', accessed: '2026-11-27', version: 'Ruby 4.0', note: 'heap_live_slots と各値が数える対象。' },
+    { title: 'redis-client lib/redis_client.rb（ensure_connected）', publisher: 'redis-rb', url: 'https://github.com/redis-rb/redis-client/blob/v0.31.0/lib/redis_client.rb#L769-L770', accessed: '2026-11-28', version: 'redis-client 0.31.0', note: 'プロセス ID が変わっていれば接続を閉じて作り直す。' },
   ],
 }
 

@@ -6,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 9-1 要求からアクションを選ぶ ---------- */
+/* ---------- 図 15-1 要求からアクションを選ぶ ---------- */
 function RoutingRoleFigure() {
   const rows = [
     { req: 'GET /articles/1?preview=true', rule: ['GET /articles/:id', '→ articles#show'], res: ['ArticlesController#show', 'params: id "1"、preview "true"'], fill: 'box5' as const },
@@ -15,7 +15,7 @@ function RoutingRoleFigure() {
   ]
   return (
     <Svg
-      id="9-1"
+      id="15-1"
       w={780}
       h={300}
       label="ルーティングは、要求のメソッドとパスを routes.rb から作ったルートと照らし合わせる。GET /articles/1?preview=true は GET /articles/:id のルートに合い、ArticlesController の show が呼ばれる。params にはパスの id の 1 とクエリ文字列の preview の true が入る。GET /articles は GET /articles のルートに合い、index が呼ばれる。DELETE /articles/1 はパスが同じでも DELETE のルートが無いので、どのアクションも呼ばれず 404 になる"
@@ -48,7 +48,7 @@ function RoutingRoleFigure() {
   )
 }
 
-/* ---------- 図 9-2 resources が作る7つのアクション ---------- */
+/* ---------- 図 15-2 resources が作る7つのアクション ---------- */
 function ResourcesFigure() {
   const top = [
     { x: 20, l: ['index', 'GET /articles', '一覧を表示'] },
@@ -63,7 +63,7 @@ function ResourcesFigure() {
   ]
   return (
     <Svg
-      id="9-2"
+      id="15-2"
       w={780}
       h={290}
       label="resources :articles が作る7つのアクション。上の段の index、show、new、edit は GET の要求に画面を返す。下の段の create、update、destroy は POST、PATCH または PUT、DELETE の要求でデータを変える。new のフォームを送信すると create に、edit のフォームを送信すると update に、show の画面の削除のボタンから destroy に要求が届く"
@@ -96,11 +96,11 @@ function ResourcesFigure() {
   )
 }
 
-/* ---------- 図 9-3 routes.rb の1行から Journey::Route まで ---------- */
+/* ---------- 図 15-3 routes.rb の1行から Journey::Route まで ---------- */
 function DefineFigure() {
   return (
     <Svg
-      id="9-3"
+      id="15-3"
       w={760}
       h={330}
       label="routes.rb の resources :articles, only: [:index, :show] は、Mapper を self として実行され、collection の get :index と member の get :show に展開される。それぞれ Mapper#add_route がパスを Journey::Parser で構文木にし、Mapping.build で Mapping を作り、RouteSet#add_route に渡す。RouteSet は Journey::Routes#add_route で Journey::Route を作って配列に追加し、名前が付いていれば named_routes に登録する。Journey::Route は名前、パターン、HTTP メソッドなどの条件、defaults、precedence、app を持つ"
@@ -154,7 +154,7 @@ function DefineFigure() {
   )
 }
 
-/* ---------- 図 9-4 リクエストの認識 ---------- */
+/* ---------- 図 15-4 リクエストの認識 ---------- */
 function RecognizeFigure() {
   const steps: { t: string[]; fill?: 'box' | 'box4' | 'box5' | 'bg' }[] = [
     { t: ['RouteSet#call(env)', 'Request を作り、パスを正規化'], fill: 'box' },
@@ -166,7 +166,7 @@ function RecognizeFigure() {
   ]
   return (
     <Svg
-      id="9-4"
+      id="15-4"
       w={760}
       h={430}
       label="RouteSet の call は Request を作ってパスを正規化し、Journey::Router の serve を呼ぶ。serve は、全ルートのパターンをまとめた状態遷移表でパスに合う候補を絞り込み、HTTP メソッドや constraints を確認し、登録順で並べ、パスから :id などの値を取り出して path_parameters に設定し、ルートの app の serve を呼ぶ。応答の x-cascade ヘッダーが pass なら次の候補を試し、候補が無くなれば 404 を返す"
@@ -211,11 +211,11 @@ function RecognizeFigure() {
   )
 }
 
-/* ---------- 図 9-5 名前付きルートとヘルパーメソッド ---------- */
+/* ---------- 図 15-5 名前付きルートとヘルパーメソッド ---------- */
 function HelperFigure() {
   return (
     <Svg
-      id="9-5"
+      id="15-5"
       w={740}
       h={260}
       label="名前付きルート article を登録すると、NamedRouteCollection が path 用のモジュールに article_path を、url 用のモジュールに article_url を define_method で定義する。これらのモジュールは routes.url_helpers のモジュールに含まれ、コントローラーやビューに include される。article_path(1) を呼ぶと、ルートのパターンに 1 を当てはめて /articles/1 を返す"
@@ -252,11 +252,11 @@ function HelperFigure() {
   )
 }
 
-/* ---------- 図 9-6 mount による SCRIPT_NAME と PATH_INFO の分割 ---------- */
+/* ---------- 図 15-6 mount による SCRIPT_NAME と PATH_INFO の分割 ---------- */
 function MountFigure() {
   return (
     <Svg
-      id="9-6"
+      id="15-6"
       w={720}
       h={200}
       label="mount で /status にマウントした Rack アプリに /status/db/ping のリクエストが来ると、ルーティングはパスのうちマウント位置の /status を SCRIPT_NAME に移し、残りの /db/ping を PATH_INFO にしてアプリを呼ぶ。アプリから戻ると、SCRIPT_NAME と PATH_INFO は元の値に戻される"
@@ -592,9 +592,9 @@ ActionController::RoutingError (No route matches [DELETE] "/articles/1"):
 `}
           />
           <p>
-            パスが同じでも、メソッドが違えば別の要求として扱われます。ルーティングは、メソッドとパスの両方が合うルートを探し、見つかったルートのアクションを呼びます（図 9-1）。
+            パスが同じでも、メソッドが違えば別の要求として扱われます。ルーティングは、メソッドとパスの両方が合うルートを探し、見つかったルートのアクションを呼びます（図 15-1）。
           </p>
-          <Figure n="9-1" title="要求からアクションを選ぶ" caption="デモのアプリケーション（development）で、3つの要求を送ったときのログをもとにした図。">
+          <Figure n="15-1" title="要求からアクションを選ぶ" caption="デモのアプリケーション（development）で、3つの要求を送ったときのログをもとにした図。">
             <RoutingRoleFigure />
           </Figure>
         </>
@@ -692,9 +692,9 @@ edit_article GET    /articles/:id/edit(.:format) articles#edit
             </table>
           </div>
           <p>
-            new と edit はフォームを表示するだけで、データを保存するのは create と update です。利用者がフォームを開く要求と、フォームを送信する要求は別の要求なので、アクションも別になります（図 9-2）。
+            new と edit はフォームを表示するだけで、データを保存するのは create と update です。利用者がフォームを開く要求と、フォームを送信する要求は別の要求なので、アクションも別になります（図 15-2）。
           </p>
-          <Figure n="9-2" title="resources が作る7つのアクション" caption="Rails ガイドの表と bin/rails routes の出力をもとにした図。">
+          <Figure n="15-2" title="resources が作る7つのアクション" caption="Rails ガイドの表と bin/rails routes の出力をもとにした図。">
             <ResourcesFigure />
           </Figure>
           <p>
@@ -813,7 +813,7 @@ article_url(a)              # => "http://example.com/articles/1"（ホストを 
       body: (
         <>
           <p>
-            記事やコメントのように、URL で識別して取得・変更する対象をリソースと呼びます。<code>/articles/42</code> が「42番の記事」を表し、GET なら表示、PATCH なら変更という形にすると、対象と操作を別々に読み取れます。GET は取得用にし、更新は更新用のメソッドへ寄せると、リンクの再表示や検索ロボットの巡回で状態が動く事故を防げます。<Ref n={11} />
+            記事やコメントのように、URL で識別して取得・変更する対象をリソースと呼びます。<code>/articles/42</code> が「42番の記事」を表し、GET なら表示、PATCH なら変更という形にすると、対象と操作を別々に読み取れます。GET は取得用にし、更新には PATCH などを使うと、リンクの再表示や検索ロボットの巡回で状態が変わる事故を防げます。この考え方と REST の関係は <ChapterLink n={94} /> で扱います。<Ref n={11} />
           </p>
           <h3>単数リソースと親子の URL</h3>
           <p>
@@ -935,7 +935,7 @@ end
           </div>
           <p>
             Journey の3つは名前が似ています。Routes はルートの一覧、Route は1件のルート、Router は要求に合うルートを探すクラスです。routes.rb の1行は Mapper、Mapping、RouteSet、Journey::Routes の順に渡り、Journey::Route
-            になります。図 9-3 の左の列が、この順を上から並べたものです。
+            になります。図 15-3 の左の列が、この順を上から並べたものです。
           </p>
           <p>
             次の図はこれらのオブジェクトがどの変数でほかのオブジェクトを指しているかを示したものです。左上の Mapper から矢印の順に見ます。この後の引用に出てくる <code>@set</code>・
@@ -1145,7 +1145,7 @@ rails_health_check GET  /up(.:format)           rails/health#show
             のような行を足したときに出ます。<code>resources</code> が <code>article</code> という名前のルートを先に登録しているためです。メッセージの後半には、<code>resources</code> が作るルートを <code>only:</code> や <code>except:</code>{' '}
             で減らす方法を説明した Rails ガイドの URL が書かれています。足す行の <code>as:</code> を別の名前にしても、例外は出なくなります。
           </p>
-          <Figure n="9-3" title="routes.rb の1行から Journey::Route まで" caption="Rails 8.1.4.1 の mapper.rb・route_set.rb・journey/routes.rb を読んでまとめた図。">
+          <Figure n="15-3" title="routes.rb の1行から Journey::Route まで" caption="Rails 8.1.4.1 の mapper.rb・route_set.rb・journey/routes.rb を読んでまとめた図。">
             <DefineFigure />
           </Figure>
         </>
@@ -1375,10 +1375,10 @@ end
             は RouteSet のメソッドで、同じ <code>recognize</code> を使ってパスに合うルートを探し、呼び出し先は実行せずに <code>path_parameters</code> に当たるハッシュだけを返します。
           </p>
           <p>
-            図 9-4 は、<code>RouteSet#call</code> からルートの <code>app</code> の呼び出しまでを、上から処理の順に並べたものです。右の枠は、上の <code>filter_routes</code>{' '}
+            図 15-4 は、<code>RouteSet#call</code> からルートの <code>app</code> の呼び出しまでを、上から処理の順に並べたものです。右の枠は、上の <code>filter_routes</code>{' '}
             の結果です。
           </p>
-          <Figure n="9-4" title="リクエストの認識" caption="Rails 8.1.4.1 の route_set.rb と journey/router.rb を読んでまとめた図。右の数値はデモのアプリケーション（ルート21個）での実測。">
+          <Figure n="15-4" title="リクエストの認識" caption="Rails 8.1.4.1 の route_set.rb と journey/router.rb を読んでまとめた図。右の数値はデモのアプリケーション（ルート21個）での実測。">
             <RecognizeFigure />
           </Figure>
           <p>
@@ -1639,10 +1639,10 @@ Rails.application.routes.named_routes.path_helpers_module.instance_method(:artic
           <p>
             1行目の <code>include</code> で、コントローラーやビューの外でも URL ヘルパーを呼べるようにしています。4行目は、<code>path_helpers_module</code> から{' '}
             <code>article_path</code> のメソッドを取り出し、<code>owner</code> でそのメソッドが定義されているモジュールを表示しています。結果は名前の無いモジュールで、
-            <code>add</code> が <code>@path_helpers_module</code> に定義したことを確かめられます。図 9-5 は、左上の <code>named_routes</code>{' '}
+            <code>add</code> が <code>@path_helpers_module</code> に定義したことを確かめられます。図 15-5 は、左上の <code>named_routes</code>{' '}
             への登録から、2つのモジュールへのメソッドの定義、コントローラーとビューへの include までを、矢印の順に示しています。
           </p>
-          <Figure n="9-5" title="名前付きルートとヘルパーメソッド" caption="模式図。コントローラーとビューには、routes.url_helpers を通してヘルパーのモジュールが include される。">
+          <Figure n="15-5" title="名前付きルートとヘルパーメソッド" caption="模式図。コントローラーとビューには、routes.url_helpers を通してヘルパーのモジュールが include される。">
             <HelperFigure />
           </Figure>
           <p>
@@ -1744,7 +1744,7 @@ res = Rack::MockRequest.new(t3).get("/nothing")
           <ul>
             <li>
               <code>/status/db/ping</code> への GET は 200 になり、lambda が受け取った <code>SCRIPT_NAME</code> は <code>/status</code>、<code>PATH_INFO</code> は{' '}
-              <code>/db/ping</code> でした。要求のパスが、mount の <code>at:</code> に書いた部分と残りに分かれています（図 9-6）。
+              <code>/db/ping</code> でした。要求のパスが、mount の <code>at:</code> に書いた部分と残りに分かれています（図 15-6）。
             </li>
             <li>
               <code>/nothing</code> への GET は、<code>/status</code> で始まらないので lambda は呼ばれません。<code>x-cascade: pass</code> の付いた 404 は、Journey::Router の{' '}
@@ -1755,7 +1755,7 @@ res = Rack::MockRequest.new(t3).get("/nothing")
               したルートは状態遷移表を使わず、<code>recognize</code> の中で1つずつ <code>match?</code> で試されます。
             </li>
           </ul>
-          <Figure n="9-6" title="mount による SCRIPT_NAME と PATH_INFO の分割" caption="上の実行結果を図にしたもの。Journey::Router#recognize が、パターンの先頭だけが一致するルートについてこの分割を行う。">
+          <Figure n="15-6" title="mount による SCRIPT_NAME と PATH_INFO の分割" caption="上の実行結果を図にしたもの。Journey::Router#recognize が、パターンの先頭だけが一致するルートについてこの分割を行う。">
             <MountFigure />
           </Figure>
           <p>

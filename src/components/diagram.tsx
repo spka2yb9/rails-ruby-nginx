@@ -143,6 +143,16 @@ interface TProps {
   mono?: boolean
 }
 
+/**
+ * 文字の下に敷く、図の背景色の帯。文字にかかる縦の破線や目盛りの線を隠す。
+ * 幅は文字数からの見積もり（ASCII は 0.62 字、ほかは 1 字）で、多めに取る。T より前に置く。
+ */
+export function TextBg({ x, y, text, fs = 13, anchor = 'start' }: { x: number; y: number; text: string; fs?: number; anchor?: 'start' | 'middle' | 'end' }) {
+  const w = [...text].reduce((sum, c) => sum + (c.charCodeAt(0) < 0x2000 ? 0.62 : 1) * fs, 0) + 6
+  const left = anchor === 'start' ? x - 3 : anchor === 'middle' ? x - w / 2 : x - w + 3
+  return <rect x={left} y={y - fs * 0.75} width={w} height={fs * 1.5} fill="var(--fig-bg)" />
+}
+
 /** 図中の文字。 */
 export function T({ x, y, children, fs = 13, anchor = 'start', tone, bold, mono }: TProps) {
   return (

@@ -3,6 +3,7 @@ import { Highlight, themes } from 'prism-react-renderer'
 import { useEffect, useState, type ReactNode } from 'react'
 import { hrefFor } from '../utils/route'
 import { labelFor } from '../content/label'
+import { chapterByNumber } from '../content/chapters'
 
 /* ---------- 図 ---------- */
 
@@ -117,16 +118,17 @@ export function Term({ children, en }: { children: ReactNode; en?: string }) {
   return (
     <dfn className="term">
       {children}
-      {en && <span className="term-en">（{en}）</span>}
+      {en && en !== children && <span className="term-en">（{en}）</span>}
     </dfn>
   )
 }
 
 export function ChapterLink({ n, section, children }: { n: number; section?: string; children?: ReactNode }) {
-  return <a href={hrefFor(n, section)}>{children ?? labelFor(n)}</a>
+  const title = section && (chapterByNumber.get(n)?.sections.find((item) => item.id === section)?.title ?? section)
+  return <a href={hrefFor(n, section)}>{children ?? (title ? `${labelFor(n)}「${title}」` : labelFor(n))}</a>
 }
 
 /* ---------- 出典 ---------- */
 
-/** 本文中の出典参照。章のページには参考資料を載せないので何も表示しない（出典は各章の sources と参考資料の一覧に残す）。 */
+/** 本文中の出典参照。ユーザーの指示で章のページには参考資料を載せないので何も表示しない（出典は各章の sources と参考資料の一覧に残す）。 */
 export const Ref: (props: { n: number }) => null = () => null

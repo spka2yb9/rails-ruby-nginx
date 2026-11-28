@@ -6,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 19-1 アプリケーションと MySQL の接続 ---------- */
+/* ---------- 図 25-1 アプリケーションと MySQL の接続 ---------- */
 function ConnectionFigure() {
   const pairs = [
     { left: 'スレッド0', id: '260', y: 64 },
@@ -15,7 +15,7 @@ function ConnectionFigure() {
   ]
   return (
     <Svg
-      id="19-1"
+      id="25-1"
       w={760}
       h={320}
       label="rails runner のプロセスの3つのスレッドが、それぞれ別の接続（260・259・262）で MySQL のサーバーにつながっている。開発サーバーの Puma も接続 11 でつながっている。MySQL のサーバーは接続ごとに専用のスレッドで SQL を処理する。接続を作って閉じる処理は1回あたり約 4.19 ms、作った接続で SELECT 1 を送る処理は約 0.27 ms だった"
@@ -51,11 +51,11 @@ function ConnectionFigure() {
   )
 }
 
-/* ---------- 図 19-2 トランザクションのスタック ---------- */
+/* ---------- 図 25-2 トランザクションのスタック ---------- */
 function StackFigure() {
   return (
     <Svg
-      id="19-2"
+      id="25-2"
       w={760}
       h={290}
       label="接続ごとに TransactionManager があり、開いているトランザクションをスタックで管理する。一番下の RealTransaction は BEGIN と COMMIT に対応する。requires_new: true の内側のトランザクションは SavepointTransaction になり、SAVEPOINT と ROLLBACK TO SAVEPOINT に対応する。requires_new を指定しない内側の transaction は、新しいトランザクションを作らず、今のトランザクションにそのまま参加する。どちらのトランザクションも、最初の SQL を送るときまで BEGIN や SAVEPOINT を送らない"
@@ -109,14 +109,14 @@ function StackFigure() {
   )
 }
 
-/* ---------- 図 19-3 ロックの範囲と索引 ---------- */
+/* ---------- 図 25-3 ロックの範囲と索引 ---------- */
 function LockRangeFigure() {
   const row = (x: number, y: number, label: string, locked: boolean, hit = false) => (
     <Box x={x} y={y} w={140} h={26} lines={label} mono fs={11} rx={0} fill={hit ? 'box5' : locked ? 'box2' : 'bg'} />
   )
   return (
     <Svg
-      id="19-3"
+      id="25-3"
       w={760}
       h={290}
       label="T1 が FOR UPDATE で行をロックしている間に、T2 が別の行を UPDATE した結果。title には索引が無いので、WHERE title = 記事100 の FOR UPDATE は表全体を走査し、走査したすべての行をロックする。そのため T2 の id=9000 の UPDATE は、T1 が COMMIT するまで約0.8秒待たされた。author_id には索引があるので、WHERE author_id = 13 の FOR UPDATE は索引で読んだ行だけをロックし、別の著者の行を更新する T2 は待たずに終わった"
@@ -179,11 +179,11 @@ function LockRangeFigure() {
   )
 }
 
-/* ---------- 図 19-4 スレッドと接続プール ---------- */
+/* ---------- 図 25-4 スレッドと接続プール ---------- */
 function PoolFigure() {
   return (
     <Svg
-      id="19-4"
+      id="25-4"
       w={760}
       h={250}
       label="max_connections が 2 の接続プールに対して、3つのスレッドが同時に接続を求めた結果。T1 と T2 は接続を借りて SELECT SLEEP(2) を実行した。T3 は空いた接続を checkout_timeout の1秒待ったが得られず、ConnectionTimeoutError になった。プールの状態は size 2、busy 2、waiting 1 だった。T1 と T2 は2秒後に接続を返した"
@@ -443,7 +443,7 @@ MySQL の PROCESSLIST（このコンテナからの接続）:
           />
           <p>
             PROCESSLIST の各行は左から接続の番号、接続元のアドレスとポート、データベース、状態、実行中の SQL です。2つのスレッドとメインのスレッドは、それぞれ別の接続（259・260・262）を使っていました。11 は同じコンテナで動いている開発サーバー（Puma）の接続です。COMMAND が Sleep
-            の接続は、つながったまま次の SQL を待っています（図 19-1）。<code>with_connection</code> はブロックの間だけ接続を借りるメソッドで、「接続プール」の節で詳しく扱います。
+            の接続は、つながったまま次の SQL を待っています（図 25-1）。この例では、各スレッドは <code>with_connection</code> のブロックに入るときに接続を借り、抜けるときに返します。すでに接続を持つ場合の動作は「接続プール」の節で扱います。
           </p>
           <p>
             本番で SQL の応答が返ってこないときも、この一覧の COMMAND と実行中の SQL の列を見れば、どの接続が何を実行しているかを確かめられます。
@@ -468,7 +468,7 @@ MySQL の PROCESSLIST（このコンテナからの接続）:
             ）も接続ごとにあり、ある接続で始めたトランザクションに、別の接続から送った SQL は入りません。上の例のように、Rails
             では同時に動くスレッドがそれぞれ別の接続を使うので、あるスレッドのトランザクションに、別のスレッドの SQL が入ることはありません。
           </p>
-          <Figure n="19-1" title="アプリケーションと MySQL の接続" caption="上の2つの実行結果をもとにした図。">
+          <Figure n="25-1" title="アプリケーションと MySQL の接続" caption="上の2つの実行結果をもとにした図。">
             <ConnectionFigure />
           </Figure>
         </>
@@ -547,7 +547,7 @@ MySQL の PROCESSLIST（このコンテナからの接続）:
           </p>
           <Figure
             title="transaction の分岐と例外の行き先"
-            caption="Rails 8.1.4.1 の database_statements.rb と transaction.rb を読んでまとめた模式図。青の太い矢印は、参加したブロックで投げた ActiveRecord::Rollback が、取り消しの SQL を送らずに rescue で消える経路を表す。if の側で例外が出ずにブロックが終わる経路と、BEGIN・SAVEPOINT を送る時点（図 19-2）は省略した。"
+            caption="Rails 8.1.4.1 の database_statements.rb と transaction.rb を読んでまとめた模式図。青の太い矢印は、参加したブロックで投げた ActiveRecord::Rollback が、取り消しの SQL を送らずに rescue で消える経路を表す。if の側で例外が出ずにブロックが終わる経路と、BEGIN・SAVEPOINT を送る時点（図 25-2）は省略した。"
           >
             <TransactionBranchFigure />
           </Figure>
@@ -623,9 +623,9 @@ MySQL の PROCESSLIST（このコンテナからの接続）:
             の位置ではなく、ブロックの中の最初の SQL の直前に出ることに注意します。ブロックの先頭に時間のかかる Ruby の処理があっても、その間はまだトランザクションが始まっていません。
           </p>
           <p>
-            図 19-2 は、左が接続のスタック、右上が <code>requires_new: true</code> を付けた入れ子、右下が付けない入れ子です。破線の矢印は、内側の transaction の SQL がスタックのどのトランザクションで実行されるかを指しています。
+            図 25-2 は、左が接続のスタック、右上が <code>requires_new: true</code> を付けた入れ子、右下が付けない入れ子です。破線の矢印は、内側の transaction の SQL がスタックのどのトランザクションで実行されるかを指しています。
           </p>
-          <Figure n="19-2" title="トランザクションのスタック" caption="Rails 8.1.4.1 の transaction.rb・database_statements.rb を読んでまとめた模式図。">
+          <Figure n="25-2" title="トランザクションのスタック" caption="Rails 8.1.4.1 の transaction.rb・database_statements.rb を読んでまとめた模式図。">
             <StackFigure />
           </Figure>
         </>
@@ -843,7 +843,7 @@ Article.where(id: 6..8).lock("FOR UPDATE SKIP LOCKED").pluck(:id)
  1.01s T1  COMMIT
 `}
           />
-          <Figure n="19-3" title="ロックの範囲と索引" caption="上の実行結果を図にしたもの。ロックの種類（レコードロック、ギャップロック、ネクストキーロック）の区別は省略している。">
+          <Figure n="25-3" title="ロックの範囲と索引" caption="上の実行結果を図にしたもの。ロックの種類（レコードロック、ギャップロック、ネクストキーロック）の区別は省略している。">
             <LockRangeFigure />
           </Figure>
           <p>
@@ -893,7 +893,7 @@ pool.stat => {size: 2, connections: 2, busy: 2, dead: 0, idle: 0, waiting: 1, ch
             <code>pool.stat</code> を読むと、開いた2本がどちらも使用中（<code>busy: 2</code>）で、空きは 0、待っているスレッドが1つ（<code>waiting: 1</code>）です。
             待っていた T3 は開始から 1.10 秒の時点で例外になりました。最初の返却は 2.02 秒です。T3 は接続を借りられず、自分の SELECT を MySQL に送るところまで進めませんでした。
           </p>
-          <Figure n="19-4" title="スレッドと接続プール" caption="上の実行結果を図にしたもの。">
+          <Figure n="25-4" title="スレッドと接続プール" caption="上の実行結果を図にしたもの。">
             <PoolFigure />
           </Figure>
           <p>接続の借り方には2つあります。</p>

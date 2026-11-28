@@ -28,7 +28,7 @@ export interface Section {
 export interface Chapter {
   /** URL に使う章 ID。表示には labelFor を使う */
   number: number
-  /** 部番号 1〜10（10 は付録）。第6部（Linux の実習）は章を持たない */
+  /** 部番号。第6部（Linux の実習）は章を持たない */
   part: number
   title: string
   /** 目次と検索結果に出す1〜2文の要約 */
@@ -56,9 +56,11 @@ export const PARTS: Part[] = [
   { number: 6, title: 'Railsエンジニアのためのサーバ運用', description: 'ブラウザの練習用サーバーでRailsアプリの場所、設定、ログを順に調べます。入門のあとは、LinuxやAWSで起きる障害の調査と復旧を練習できます。' },
   { number: 7, title: 'Rails の設計原則と DHH の思想', description: '責務分割とモデルの設計、Service・Form・Query・Value Object、注文処理を段階的に育てる設計、DHH の思想' },
   { number: 8, title: 'プログラミングの原則を Rails で実践する', description: 'KISS・YAGNI・DRY から SOLID、カプセル化、Fail Fast、冪等性、可観測性、後方互換性まで36の原則を、1つの原則を1つの章で扱う。原則に反した Rails のコードを動かして問題を確かめ、直したコードと、当てはめすぎたときの判断を示す。最後に原則同士のトレードオフを比べる' },
-  { number: 9, title: 'MSDP の設計パターンを Rails で実装する', description: '設計パターンのカタログ MSDP の15のパターン（依存と差し替え、業務の処理の整理、データの整合性、非同期と障害への備え）を、具体的な場面で起きる問題から始めて Rails のコードで実装し、MySQL と RSpec で動作を確かめる。最後にパターンを組み合わせて注文の確定を組み立てる' },
-  { number: 10, title: '付録', description: 'バージョン間の違いと参考資料' },
+  { number: 9, title: 'MSDP の設計パターンを Rails で実装する', description: '設計パターンのカタログ MSDP の15のパターンを、Rails のコードで確かめます。構造と依存関係、業務ロジックと状態、データと整合性、イベントと信頼性の4つに分けて扱います。' },
+  { number: 10, title: '性能とシステム全体', description: '応答時間と処理件数を測り、CPU・I/O・接続プールのどこで待ち時間が生じるかを調べます。' },
+  { number: 11, title: '実務の判断事例', description: 'SQL・同時実行・クラス設計の事例で、改善策を選ぶ条件と導入した後にかかる費用を比べます。' },
+  { number: 12, title: '付録', description: 'バージョン間の違いと参考資料' },
 ]
 
 /** 付録の部。目次と章の見出しでは「第N部」を付けずに表示する。 */
-export const APPENDIX_PART = 10
+export const APPENDIX_PART = 12

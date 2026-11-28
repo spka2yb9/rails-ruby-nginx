@@ -4,7 +4,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 78-1 2社の SDK とアプリの取り決めの対応 ---------- */
+/* ---------- 図 95-1 2社の SDK とアプリの取り決めの対応 ---------- */
 const mappingRows: { label: string; a: string[]; b: string[]; app: string[] }[] = [
   { label: '呼び出し', a: ['create_charge(…)'], b: ['authorize_and_capture(…)'], app: ['charge(…)'] },
   { label: '金額', a: ['amount: 3000', '（最小単位の整数）'], b: ['amount: "30.00"', '（小数の文字列）'], app: ['amount_cents: 3000'] },
@@ -34,7 +34,7 @@ function MappingFigure() {
   }
   return (
     <Svg
-      id="78-1"
+      id="95-1"
       w={780}
       h={y + 8}
       label={`30.00 米ドルの注文を例に、A社の SDK、B社の SDK、アプリの取り決めで同じ項目がどう表されるかを並べた表。${mappingRows.map((r) => `${r.label}：A社は ${r.a.join(' ')}、B社は ${r.b.join(' ')}、取り決めは ${r.app.join(' ')}`).join('。')}`}
@@ -54,11 +54,11 @@ function MappingFigure() {
   )
 }
 
-/* ---------- 図 78-2 Adapter の構造 ---------- */
+/* ---------- 図 95-2 Adapter の構造 ---------- */
 function StructureFigure() {
   return (
     <Svg
-      id="78-2"
+      id="95-2"
       w={780}
       h={436}
       label="アプリのコード（app）の中で、PaymentsController が Order#pay! を呼び、Order#pay! は Payments の取り決め（charge と、結果の Succeeded・Declined・Unavailable）だけを使う。Payments::PayAAdapter と Payments::PayBAdapter が取り決めを満たし、それぞれ外部の PayA::Client と PayB::GatewayClient を呼ぶ。Payments.gateway は config.x.payments.provider と credentials から、どちらかの Adapter を作る。アプリと外部の間の矢印はすべて外部に向かい、SDK はアプリの取り決めを知らない"
@@ -122,13 +122,13 @@ function StructureFigure() {
   )
 }
 
-/* ---------- 図 78-3 B社で残高不足になったときのシーケンス ---------- */
+/* ---------- 図 95-3 B社で残高不足になったときのシーケンス ---------- */
 function SequenceFigure() {
   const xs = [80, 340, 545, 705]
   const names = ['Order#pay!', 'PayBAdapter', 'PayB::GatewayClient', 'B社の API']
   return (
     <Svg
-      id="78-3"
+      id="95-3"
       w={780}
       h={430}
       label="30.00 米ドルの注文で、B社が残高不足を返したときの流れ。Order#pay! が PayBAdapter の charge を amount_cents 3000、currency USD で呼ぶ。PayBAdapter は金額を文字列 30.00、通貨を 840 に変換して、B社の SDK の authorize_and_capture を呼ぶ。SDK は B社の API に HTTPS で送り、result_code 1001 の応答を受け取ってハッシュで返す。PayBAdapter は 1001 を insufficient_funds に変換し、Declined を返す。Order#pay! は payment_failed を保存し、コントローラーは残高が不足していることを伝える"
@@ -169,18 +169,18 @@ function SequenceFigure() {
         Declined(reason: :insufficient_funds)
       </T>
       <Box x={14} y={356} w={250} h={50} lines={['payment_failed を保存', 'コントローラーは 422 を返す']} fs={12} subTone="muted" />
-      <T x={290} y={394} fs={12} tone="danger">
+      <T x={350} y={394} fs={12} tone="danger">
         「残高が不足しています」
       </T>
     </Svg>
   )
 }
 
-/* ---------- 図 78-4 Adapter と似た考え方の範囲 ---------- */
+/* ---------- 図 95-4 Adapter と似た考え方の範囲 ---------- */
 function ScopeFigure() {
   return (
     <Svg
-      id="78-4"
+      id="95-4"
       w={780}
       h={276}
       label="範囲の関係を入れ子で示した図。いちばん外側の Ports and Adapters はアプリケーション全体の構成の考え方で、内側に取り決め（ポート）を置き、利用者・テスト・DB・外部サービスごとにアダプターを用意する。その中の腐敗防止層は、外部のモデルを自分たちのモデルの言葉に変換する層で、Adapter と Facade を部品として使う。Adapter は1つの外部のインターフェースを使う側が決めた取り決めに合わせ、Facade は複数の部品をまとめて単純なインターフェースを新しく作る。この章の Payments の取り決めはポートに、PayAAdapter と PayBAdapter はアダプターに当たる"
@@ -463,11 +463,11 @@ end
           <p>
             最も重要なのは、取り決めをアプリの側に置き、アプリの言葉で書くことです。A社の SDK の形をそのまま取り決めにすると、B社を足すときに取り決めごと変えることになります。取り決めには、注文の処理が決済に求めること（注文の番号・金額・通貨・カードのトークンを渡し、成功なら決済の ID と日時、拒否なら理由を受け取る）だけを書きます。
           </p>
-          <Figure n="78-1" title="2社の SDK とアプリの取り決めの対応" caption="30.00 米ドルの注文を例にした。A社とB社は本書の架空のサービスで、名前は vendor/sdks の SDK のもの。">
+          <Figure n="95-1" title="2社の SDK とアプリの取り決めの対応" caption="30.00 米ドルの注文を例にした。A社とB社は本書の架空のサービスで、名前は vendor/sdks の SDK のもの。">
             <MappingFigure />
           </Figure>
           <p>
-            図 78-1 は、同じ意味の項目が、2社の SDK とアプリの取り決めでそれぞれどう表されるかを並べたものです。Adapter は、左の2列の形式と右端の列の形式の間で変換します。変換するものは次の4種類です。
+            図 95-1 は、同じ意味の項目が、2社の SDK とアプリの取り決めでそれぞれどう表されるかを並べたものです。Adapter は、左の2列の形式と右端の列の形式の間で変換します。変換するものは次の4種類です。
           </p>
           <ul>
             <li>
@@ -483,17 +483,17 @@ end
             GoF は Adapter の作り方として、外部のクラスを継承する方法（クラスアダプター）と、外部のオブジェクトを持って呼び出す方法（オブジェクトアダプター）の2つを挙げています<Ref n={1} />。この章では、SDK のクライアントのオブジェクトを <code>initialize</code> で受け取って呼び出すオブジェクトアダプターを使います。SDK のクラスの内部が変わっても影響を受けにくく、テストでクライアントを代役に替えられるからです（引数で受け取る設計は <ChapterLink n={40} section="idea" />）。
           </p>
           <h3>構造</h3>
-          <Figure n="78-2" title="Adapter の構造" caption="この章の Rails のアプリのクラスで描いた。破線の枠はディレクトリの区分、破線の矢印は「取り決めを満たす」関係を表す。">
+          <Figure n="95-2" title="Adapter の構造" caption="この章の Rails のアプリのクラスで描いた。破線の枠はディレクトリの区分、破線の矢印は「取り決めを満たす」関係を表す。">
             <StructureFigure />
           </Figure>
           <p>
-            図 78-2 は Adapter を入れた後のクラスの関係です。上の枠がアプリのコードで、<code>Order#pay!</code> は <code>Payments</code> の取り決めだけを使います。2つの Adapter は取り決めを満たし、それぞれ下の枠の SDK を呼びます。アプリと外部の間の矢印はすべてアプリの側から外部に向かっていて、外部から向かう矢印はありません。SDK はアプリの取り決めを知らず、取り決めを変えても SDK に影響しません。左の <code>Payments.gateway</code> は設定を読んで、どちらか一方の Adapter を作ります。
+            図 95-2 は Adapter を入れた後のクラスの関係です。上の枠がアプリのコードで、<code>Order#pay!</code> は <code>Payments</code> の取り決めだけを使います。2つの Adapter は取り決めを満たし、それぞれ下の枠の SDK を呼びます。アプリと外部の間の矢印はすべてアプリの側から外部に向かっていて、外部から向かう矢印はありません。SDK はアプリの取り決めを知らず、取り決めを変えても SDK に影響しません。左の <code>Payments.gateway</code> は設定を読んで、どちらか一方の Adapter を作ります。
           </p>
-          <Figure n="78-3" title="B社で残高不足になったときのシーケンス" caption="縦に時間、列にオブジェクトを並べた。色の付いた箱は Adapter の中で行う変換。">
+          <Figure n="95-3" title="B社で残高不足になったときのシーケンス" caption="縦に時間、列にオブジェクトを並べた。色の付いた箱は Adapter の中で行う変換。">
             <SequenceFigure />
           </Figure>
           <p>
-            図 78-3 は、30.00 ドルの注文で B社が残高不足を返したときの流れです。PayBAdapter は SDK を呼ぶ前に金額と通貨を B社の形（<code>"30.00"</code> と <code>840</code>）に変え、SDK から戻った <code>"1001"</code> を <code>:insufficient_funds</code> に変えます。<code>Order#pay!</code> は B社のコードの意味を知らずに、拒否の理由を保存できます。
+            図 95-3 は、30.00 ドルの注文で B社が残高不足を返したときの流れです。PayBAdapter は SDK を呼ぶ前に金額と通貨を B社の形（<code>"30.00"</code> と <code>840</code>）に変え、SDK から戻った <code>"1001"</code> を <code>:insufficient_funds</code> に変えます。<code>Order#pay!</code> は B社のコードの意味を知らずに、拒否の理由を保存できます。
           </p>
         </>
       ),
@@ -1377,11 +1377,11 @@ ActiveJob::QueueAdapters::TestAdapter
             </p>
           </Callout>
           <h3>似た考え方との違い</h3>
-          <Figure n="78-4" title="Adapter と似た考え方の範囲" caption="範囲の関係を単純にした模式図。外側の枠ほど扱う範囲が広い。">
+          <Figure n="95-4" title="Adapter と似た考え方の範囲" caption="範囲の関係を単純にした模式図。外側の枠ほど扱う範囲が広い。">
             <ScopeFigure />
           </Figure>
           <p>
-            図 78-4 は、Adapter と似た考え方の関係を入れ子で示したものです。外側の枠ほど扱う範囲が広く、腐敗防止層の枠の中の Adapter と Facade は、腐敗防止層を作るときの部品になることを表しています。
+            図 95-4 は、Adapter と似た考え方の関係を入れ子で示したものです。外側の枠ほど扱う範囲が広く、腐敗防止層の枠の中の Adapter と Facade は、腐敗防止層を作るときの部品になることを表しています。
           </p>
           <ul>
             <li>
@@ -1430,6 +1430,16 @@ ActiveJob::QueueAdapters::TestAdapter
               決済サービスを1社しか使わない場合でも、決済は金額・エラー・障害の扱いが複雑で、SDK の更新もあるため、Adapter を置く効果は大きくなります。<ChapterLink n={34} section="external-boundaries" /> の Payments::Gateway は、1社のための Adapter です。一方、社内でしか使わない単純な API を1か所から呼ぶだけなら、呼び出しを1つのクラスに集めるだけで足ります。
             </p>
           </Callout>
+        </>
+      ),
+    },
+    {
+      id: 'pattern-choice',
+      title: '決済の仕様差と選択条件を分ける',
+      body: (
+        <>
+          <p>A 社は円で、B 社は通貨の最小単位で受け付けるとします。金額や応答を共通の形式に変換するのが Adapter の仕事です。どの決済会社を選ぶかが注文の条件で変わる場合は、その選択に <ChapterLink n={41} section="idea">Strategy / Policy</ChapterLink> を使えます。両者は併用できます。</p>
+          <p>テストだけで決済会社を差し替えたい場合は、既存のクライアントを <ChapterLink n={40} section="idea">Dependency Injection</ChapterLink> で渡す方法があります。アプリ内の仕様に変換する必要が生じた時点で Adapter を追加できます。</p>
         </>
       ),
     },

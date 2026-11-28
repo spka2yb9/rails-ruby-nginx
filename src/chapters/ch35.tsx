@@ -31,10 +31,10 @@ const ch35: Chapter = {
             というデータベースを使います。
           </p>
           <p>
-            データベースはデータを<Term en="table">テーブル</Term>という表の形で保存し、1つのデータベースに複数のテーブルを作れます。この章のサンプル DB には、利用者の users、部署の
-            departments、注文の orders、口座の accounts の4つのテーブルがあります。users テーブルの中身を図 11-1 に示します。
+            MySQL と SQLite は、データを行と列からなる<Term en="table">テーブル</Term>として扱うリレーショナルデータベースです。利用者の行に部署の ID を保存すると、部署の名前を利用者ごとに持たなくても、別のテーブルから取得できます。この章のサンプル DB には、利用者の users、部署の
+            departments、注文の orders、口座の accounts の4つのテーブルがあります。users テーブルの中身を図 17-1 に示します。
           </p>
-          <Figure n="11-1" title="users テーブルの行・列・主キー" caption="サンプル DB の users テーブル（8行）のうち4行を描いた図。">
+          <Figure n="17-1" title="users テーブルの行・列・主キー" caption="サンプル DB の users テーブル（8行）のうち4行を描いた図。">
             <UsersTableFigure />
           </Figure>
           <p>
@@ -119,7 +119,7 @@ const ch35: Chapter = {
           </p>
           <h3>サンプル DB</h3>
           <p>
-            サンプル DB のテーブルと列は図 11-2 のとおりです。図は中央の users から見てください。破線の矢印は外部キーで、users の department_id が departments の id を、orders と accounts の
+            サンプル DB のテーブルと列は図 17-2 のとおりです。図は中央の users から見てください。破線の矢印は外部キーで、users の department_id が departments の id を、orders と accounts の
             user_id が users の id を指しています。
           </p>
           <p>
@@ -164,7 +164,7 @@ const ch35: Chapter = {
             SQLite は外部キーの検査を既定では行わないので、実行欄はデータベースを作るときに <code>PRAGMA foreign_keys = ON</code> で検査を有効にしています
             <Ref n={6} />。PRAGMA は SQLite の設定を変える文です。制約に合わない SQL を実行したときのエラーは、INSERT・UPDATE・DELETE の節で確かめます。
           </p>
-          <Figure n="11-2" title="サンプル DB の4つのテーブル" caption="実行欄のサンプル DB の構造。列の型は SQLite での型。">
+          <Figure n="17-2" title="サンプル DB の4つのテーブル" caption="実行欄のサンプル DB の構造。列の型は SQLite での型。">
             <SampleDbFigure />
           </Figure>
           <h3>SQLite と MySQL の違い</h3>
@@ -344,10 +344,10 @@ User.all.to_sql
             を組み立てるので、<code>`users`.*</code> は users テーブルのすべての列、後の節に出てくる <code>`users`.`name`</code> は users テーブルの name 列を表します。
           </p>
           <p>
-            メソッドを呼んでから結果が Ruby の値になるまでを図 11-3 に示します。図は左上の Ruby のコードから右へ読みます。Active Record が SQL を組み立てて MySQL
+            メソッドを呼んでから結果が Ruby の値になるまでを図 17-3 に示します。図は左上の Ruby のコードから右へ読みます。Active Record が SQL を組み立てて MySQL
             に送り、返ってきた行を Ruby の値にして、左下の戻り値として返します。図のコードの where・order・pluck は後の節で扱います。
           </p>
-          <Figure n="11-3" title="Active Record のメソッドと SQL" caption="この章の実測をもとにした模式図。破線は SQL を送らずに確かめる経路を表す。">
+          <Figure n="17-3" title="Active Record のメソッドと SQL" caption="この章の実測をもとにした模式図。破線は SQL を送らずに確かめる経路を表す。">
             <ArFlowFigure />
           </Figure>
         </>
@@ -543,10 +543,10 @@ ORDER BY age DESC, id;
             ORDER BY には <code>`age` DESC, `id` null</code> と表示されます。id の後の null は並べる向きを書かなかったことを表し、このとき id は ASC で並びます。
           </p>
           <p>
-            SQL は SELECT・FROM・WHERE・ORDER BY の順に書きますが、結果は FROM・WHERE・SELECT・ORDER BY の順に処理したと考えると説明できます（図 11-4）。WHERE は GROUP BY
+            SQL は SELECT・FROM・WHERE・ORDER BY の順に書きますが、結果は FROM・WHERE・SELECT・ORDER BY の順に処理したと考えると説明できます（図 17-4）。WHERE は GROUP BY
             で行をグループにまとめる前の行に対して判定します（GROUP BY は<ChapterLink n={36} />）。
           </p>
-          <Figure n="11-4" title="SQL を書く順と処理の順" caption="上の SQL を、実行欄の「論理的な処理順」の段階に対応させた模式図。">
+          <Figure n="17-4" title="SQL を書く順と処理の順" caption="上の SQL を、実行欄の「論理的な処理順」の段階に対応させた模式図。">
             <ClauseOrderFigure />
           </Figure>
           <h3>NULL との比較</h3>
@@ -1023,7 +1023,7 @@ Order.create!(user_id: 999, amount: 1000, status: "paid")
           </p>
           <h3>2つの検査の使い分け</h3>
           <p>
-            バリデーションと DB の制約は検査する場所と止める範囲が違います（図 11-5）。バリデーションは SQL を送る前に Rails のプロセス（実行中の Rails のアプリケーション）の中で値を検査し、利用者に見せるエラーメッセージを作れます。ただし、バリデーションを実行しないメソッドや、別のアプリケーション・mysql
+            バリデーションと DB の制約は検査する場所と止める範囲が違います（図 17-5）。バリデーションは SQL を送る前に Rails のプロセス（実行中の Rails のアプリケーション）の中で値を検査し、利用者に見せるエラーメッセージを作れます。ただし、バリデーションを実行しないメソッドや、別のアプリケーション・mysql
             コマンドからの書き込みは検査しません。2つの処理が同時に同じメールアドレスを保存するときの重複も見つけられません（<ChapterLink n={14} section="uniqueness" />
             ）。この重複は、同じ値を2つの行に入れられなくする一意の索引を DB に作って止めます。DB の制約はどの経路の書き込みも MySQL が検査しますが、違反は例外として届くので、そのままでは利用者に分かるメッセージになりません。
           </p>
@@ -1035,7 +1035,7 @@ Order.create!(user_id: 999, amount: 1000, status: "paid")
             Rails ガイドもモデルのバリデーションを勧めたうえで、ほかのアプリケーションが同じデータベースを使う場合はデータベースの制約も使うとよいと書いています
             <Ref n={23} />。NOT NULL・外部キー・CHECK を DB に置き、利用者に理由を示したい規則はバリデーションにも書けば、一方を通らない経路でも、もう一方で止められます。
           </p>
-          <Figure n="11-5" title="バリデーションと DB の制約" caption="この節の実行結果をまとめた模式図。破線の箱は保存できなかった場合を表す。">
+          <Figure n="17-5" title="バリデーションと DB の制約" caption="この節の実行結果をまとめた模式図。破線の箱は保存できなかった場合を表す。">
             <TwoChecksFigure />
           </Figure>
         </>
@@ -1427,8 +1427,8 @@ carol.errors.full_messages
             :restrict_with_error にすると、子の行があるときは削除せずに false を返し、errors に理由を入れます
             <Ref n={27} />。
           </p>
-          <p>更新と削除のメソッドを、行を読み込むかどうかで分けると図 11-6 のようになります。</p>
-          <Figure n="11-6" title="モデルを通すメソッドと SQL を直接送るメソッド" caption="この節と「update! と update_all」の節の実行結果をまとめた模式図。">
+          <p>更新と削除のメソッドを、行を読み込むかどうかで分けると図 17-6 のようになります。</p>
+          <Figure n="17-6" title="モデルを通すメソッドと SQL を直接送るメソッド" caption="この節と「update! と update_all」の節の実行結果をまとめた模式図。">
             <TwoPathsFigure />
           </Figure>
           <p>
@@ -1484,7 +1484,7 @@ carol.errors.full_messages
     },
   ],
   sources: [
-    { title: 'sql.js', publisher: 'sql.js', url: 'https://sql.js.org/documentation/', accessed: '2026-11-20', version: 'sql.js 1.13.0（SQLite 3.49.1）', note: '実行欄の SQL を実行するライブラリ。元の教材に同梱されたもので、SQLite をブラウザーの中で動かす。SQLite の版は実行欄の sqlite_version() で確かめた。' },
+    { title: 'sql.js', publisher: 'sql.js', url: 'https://sql.js.org/documentation/', accessed: '2026-11-20', version: 'sql.js 1.13.0（SQLite 3.49.1）', note: '実行欄で SQLite を動かすライブラリ。SQLite のバージョンは実行欄の sqlite_version() で確認した。' },
     { title: 'node-sql-parser', publisher: 'taozhi8833998（GitHub）', url: 'https://github.com/taozhi8833998/node-sql-parser', accessed: '2026-11-20', version: '5.3.8', note: '実行欄の「記述順」と「論理的な処理順」に使う、MySQL の文法での SQL の解析。' },
     { title: 'SELECT', publisher: 'SQLite Documentation', url: 'https://sqlite.org/lang_select.html', accessed: '2026-11-20', version: 'SQLite 3.49', note: 'ORDER BY の無い SELECT の行の順は未定義であること。ASC と DESC を書かなければ昇順になること。' },
     { title: 'Datatypes In SQLite', publisher: 'SQLite Documentation', url: 'https://sqlite.org/datatype3.html', accessed: '2026-11-20', version: 'SQLite 3.49', note: 'INTEGER の列に整数として読めない文字列を入れると TEXT として保存されること。既定の照合順序 BINARY が memcmp で比べること。' },
@@ -1505,7 +1505,7 @@ carol.errors.full_messages
     { title: 'Case Sensitivity in String Searches', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/case-sensitivity.html', accessed: '2026-11-20', version: 'MySQL 8.4', note: '既定の文字セットと照合順序が utf8mb4 と utf8mb4_0900_ai_ci で、文字列の比較が大文字と小文字を区別しないこと。' },
     { title: 'CHECK Constraints', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html', accessed: '2026-11-20', version: 'MySQL 8.4', note: 'CHECK 制約を INSERT と UPDATE で評価し、FALSE になるとエラーにすること。' },
     { title: 'Active Record Basics', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_basics.html', accessed: '2026-11-20', version: 'Rails 8.1', note: 'モデルのクラス名を複数形にしたテーブルを使うこと。インスタンスが1行を表すこと。' },
-    { title: 'Active Record Query Interface', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_querying.html', accessed: '2026-11-20', version: 'Rails 8.1', note: '文字列の条件と SQL インジェクション、? と名前付きのプレースホルダー、select で読まなかった属性を読むと MissingAttributeError になること、pluck、order、NULL を入れてよい列への否定の条件が nil の行を返さないこと。元の教材が参照する資料。' },
+    { title: 'Active Record Query Interface', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_querying.html', accessed: '2026-11-20', version: 'Rails 8.1', note: 'プレースホルダー、select、pluck、order、NULL を許す列に対する where.not の動作。' },
     { title: 'Active Record Validations', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_validations.html', accessed: '2026-11-20', version: 'Rails 8.1', note: 'モデルのバリデーションと、ほかのアプリケーションが使う場合のデータベースの制約。presence が blank? で判定すること。バリデーションを実行しないメソッドと save(validate: false)。' },
     { title: 'Active Record Callbacks', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_callbacks.html', accessed: '2026-11-20', version: 'Rails 8.1', note: 'delete・delete_all・update_all などがコールバックを実行しないこと。destroy のコールバックは delete では実行されないこと。' },
     { title: 'ActiveRecord::Relation', publisher: 'Rails API', url: 'https://api.rubyonrails.org/v8.1/classes/ActiveRecord/Relation.html', accessed: '2026-11-20', version: 'Rails 8.1', note: 'update_all がインスタンスを作らずコールバックとバリデーションを実行せず、updated_at を更新しないこと。delete_all が1つの DELETE で dependent を考慮しないこと。destroy_all が1件ずつ destroy すること。' },

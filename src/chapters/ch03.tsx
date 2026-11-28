@@ -6,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 3-1 継承とメソッドを探す順番 ---------- */
+/* ---------- 図 5-1 継承とメソッドを探す順番 ---------- */
 function InheritFigure() {
   const left = [
     { n: ['PostsController', 'index / greeting'], fill: 'box' as const },
@@ -18,7 +18,7 @@ function InheritFigure() {
   const right = ['ArticlesController', 'ApplicationController', 'ActionController::Base', 'ActionController::Metal', 'AbstractController::Base', 'Object → … → BasicObject']
   return (
     <Svg
-      id="3-1"
+      id="5-1"
       w={780}
       h={340}
       label="左は PostsController の ancestors。PostsController、BaseController、Object、Kernel、BasicObject の順にメソッドを探す。c.index と c.greeting は PostsController で見つかり、index の中の render は BaseController で見つかる。PostsController の greeting の中の super は BaseController の greeting を呼ぶ。右はデモのアプリの ArticlesController の superclass をたどった結果で、ApplicationController、ActionController::Base、ActionController::Metal、AbstractController::Base、Object の順。上の2つはアプリのクラス、それより下は Rails のクラス"
@@ -70,11 +70,11 @@ function InheritFigure() {
   )
 }
 
-/* ---------- 図 3-2 include したモジュールの位置 ---------- */
+/* ---------- 図 5-2 include したモジュールの位置 ---------- */
 function IncludeShareFigure() {
   const rows: { y: number; i?: number; name?: string; dots?: string; mod?: boolean }[] = [
     { y: 34, i: 0, name: 'ActionController::Base' },
-    { y: 78, dots: '1〜27番目（Turbo のモジュールなど）' },
+    { y: 78, dots: '1〜27番目（ここでは省略）' },
     { y: 92, i: 28, name: 'ActionController::Cookies', mod: true },
     { y: 136, dots: '…' },
     { y: 150, i: 33, name: 'ActionController::MimeResponds', mod: true },
@@ -85,7 +85,7 @@ function IncludeShareFigure() {
   ]
   return (
     <Svg
-      id="3-2"
+      id="5-2"
       w={780}
       h={340}
       label="左は User と Shop の ancestors。どちらのクラスでも、include した Greeting がクラスのすぐ後ろに入り、その後に Object、Kernel、BasicObject が続く。Greeting は1つのモジュールで、両方のクラスの ancestors に入る。右は ActionController::Base の ancestors の一部。0番目が ActionController::Base、28番目に Cookies、33番目に MimeResponds、47番目に Redirecting があり、60番目の ActionController::Metal までの間の59個はすべてモジュール"
@@ -132,7 +132,7 @@ function IncludeShareFigure() {
   )
 }
 
-/* ---------- 図 3-3 include と prepend の挿入位置 ---------- */
+/* ---------- 図 5-3 include と prepend の挿入位置 ---------- */
 function IncludePrependFigure() {
   const col = (x: number, title: string, code: string, items: { n: string; mod?: boolean; hl?: boolean }[]) => (
     <g>
@@ -152,7 +152,7 @@ function IncludePrependFigure() {
   )
   return (
     <Svg
-      id="3-3"
+      id="5-3"
       w={500}
       h={240}
       label="include と prepend の比較。class C に include M した場合、ancestors は C、M、Object の順になり、C のメソッドが先に見つかる。prepend M した場合は M、C、Object の順になり、M のメソッドが先に見つかる"
@@ -166,11 +166,11 @@ function IncludePrependFigure() {
   )
 }
 
-/* ---------- 図 3-4 super による呼び出しと戻り値 ---------- */
+/* ---------- 図 5-4 super による呼び出しと戻り値 ---------- */
 function SuperChainFigure() {
   return (
     <Svg
-      id="3-4"
+      id="5-4"
       w={680}
       h={290}
       label="Child.new.greet('  ruby ', polite: true) の流れ。Child 自身には greet が無いので Trim#greet が呼ばれる。Trim は名前の空白を取り除いて super に渡す。Loud#greet は引数を変えずに super を呼ぶ。Base#greet が 'こんにちは、rubyさん' を返し、Loud がそれを大文字にして返す"
@@ -211,11 +211,11 @@ function SuperChainFigure() {
   )
 }
 
-/* ---------- 図 3-5 オブジェクトの特異クラス ---------- */
+/* ---------- 図 5-5 オブジェクトの特異クラス ---------- */
 function SingletonFigure() {
   return (
     <Svg
-      id="3-5"
+      id="5-5"
       w={560}
       h={250}
       label="obj は特異クラス #<Class:obj> を持ち、そこに greet が定義されている。obj のメソッド探索は特異クラスから始まり、Object、Kernel、BasicObject と続く。特異メソッドを持たない other は、Object から探索を始める"
@@ -241,7 +241,7 @@ function SingletonFigure() {
   )
 }
 
-/* ---------- 図 3-6 クラスと特異クラスの並行する継承 ---------- */
+/* ---------- 図 5-6 クラスと特異クラスの並行する継承 ---------- */
 function ClassMethodFigure() {
   const L = 30
   const R = 330
@@ -253,7 +253,7 @@ function ClassMethodFigure() {
   ]
   return (
     <Svg
-      id="3-6"
+      id="5-6"
       w={600}
       h={330}
       label="左の列は User、Record、Object、BasicObject の superclass の連鎖。右の列はそれぞれの特異クラスで、#<Class:User> の superclass は #<Class:Record>、その superclass は #<Class:Object>、#<Class:BasicObject>、Class と続く。User.all を呼ぶと、User の特異クラス #<Class:User> から探索が始まり、#<Class:Record> に定義された all が見つかる"
@@ -522,7 +522,7 @@ BaseController
           </p>
           <p>
             <code>superclass</code> は親クラスを返します。<code>ancestors</code> はメソッドを探す順番をクラスの配列で返します（<ChapterLink n={2} section="method-lookup" />
-            ）。<code>c.index</code> を呼ぶと、Ruby は PostsController、BaseController、Object…の順に index を探し、最初に見つかった定義を実行します（図 3-1）。Object・Kernel・BasicObject
+            ）。<code>c.index</code> を呼ぶと、Ruby は PostsController、BaseController、Object…の順に index を探し、最初に見つかった定義を実行します（図 5-1）。Object・Kernel・BasicObject
             は、親を書かずに定義したクラスの ancestors にも入る、Ruby に最初からあるものです。Kernel は次の節で説明するモジュールです。
           </p>
           <p>デモのアプリのクラスでも、親クラスをたどりました。</p>
@@ -559,10 +559,10 @@ ActionController::Base.ancestors.select { |m| m.instance_of?(Class) }
 `}
           />
           <p>
-            どちらの定義元も図 3-1 の右側に並ぶクラスではありません。ActionController::Base の ancestors には69個が並び、そのうちクラス（<code>instance_of?(Class)</code>{' '}
+            どちらの定義元も図 5-1 の右側に並ぶクラスではありません。ActionController::Base の ancestors には69個が並び、そのうちクラス（<code>instance_of?(Class)</code>{' '}
             が真のもの）は5つだけで、残りの64個はモジュールです。親クラスは1つしか指定できないので、Rails は機能ごとにモジュールを作り、ActionController::Base に組み込んでいます。次の節ではモジュールの作り方と組み込み方を確かめます。
           </p>
-          <Figure n="3-1" title="継承とメソッドを探す順番" caption="左は inherit.rb の PostsController、右はデモのアプリで superclass をたどった結果（Rails 8.1.4.1）。">
+          <Figure n="5-1" title="継承とメソッドを探す順番" caption="左は inherit.rb の PostsController、右はデモのアプリで superclass をたどった結果（Rails 8.1.4.1）。">
             <InheritFigure />
           </Figure>
         </>
@@ -619,7 +619,7 @@ Greeting
           />
           <p>
             User と Shop には継承の関係がありませんが、どちらのインスタンスからも Greeting の hello を呼べました。hello の中の name は hello を呼んだインスタンスの name メソッドを呼ぶので、User
-            では「田中」、Shop では「Ruby書店」になります。ancestors を見ると、include したモジュールがクラスのすぐ後ろに入っています（図 3-2）。User のインスタンスで hello を探すと、User
+            では「田中」、Shop では「Ruby書店」になります。ancestors を見ると、include したモジュールがクラスのすぐ後ろに入っています（図 5-2）。User のインスタンスで hello を探すと、User
             には無く、次の Greeting で見つかります。include はモジュールのメソッドをクラスに写すのではなく、メソッドを探す順番にモジュールを加えます。<code>include?</code>{' '}
             はモジュールが ancestors に入っているかを返し、<code>owner</code> は hello の定義元が Greeting のままであることを示しています。
           </p>
@@ -659,7 +659,7 @@ Greeting
             Persistence・Validations・Callbacks というモジュールに分けて include しています
             <Ref n={12} />。
           </p>
-          <Figure n="3-2" title="include したモジュールの位置" caption="左は module_share.rb の実行結果、右はデモのアプリでの ActionController::Base.ancestors の一部（Rails 8.1.4.1）。">
+          <Figure n="5-2" title="include したモジュールの位置" caption="左は module_share.rb の実行結果、右はデモのアプリでの ActionController::Base.ancestors の一部（Rails 8.1.4.1）。">
             <IncludeShareFigure />
           </Figure>
         </>
@@ -755,7 +755,7 @@ Article.new.respond_to?(:has_many) # => false
         <>
           <p>
             <Term en="module">モジュール</Term>は、メソッドや定数をまとめたものです。クラスと違ってインスタンスを作れず、継承もできません。実は <code>Class</code> は <code>Module</code>{' '}
-            のサブクラスで（<ChapterLink n={2} section="class-is-object" />の図2-4）、クラスは「インスタンスを作れるモジュール」とも言えます。
+            のサブクラスで（<ChapterLink n={2} section="class-is-object" />の図4-4）、クラスは「インスタンスを作れるモジュール」とも言えます。
           </p>
           <p>モジュールには2つの用途があります。</p>
           <ol>
@@ -767,7 +767,7 @@ Article.new.respond_to?(:has_many) # => false
             </li>
           </ol>
           <p>
-            Rails では両方の用途が使われています。第2章の図2-6 で見た Article の ancestors に並ぶ65個のモジュールは、2つ目の用途で <code>ActiveRecord::Base</code>{' '}
+            Rails では両方の用途が使われています。第4章の図4-6 で見た Article の ancestors に並ぶ65個のモジュールは、2つ目の用途で <code>ActiveRecord::Base</code>{' '}
             に組み込まれたものです。保存、バリデーション、コールバックといった機能ごとにモジュールを分け、それらを <code>ActiveRecord::Base</code> に組み込む構成になっています。
           </p>
         </>
@@ -865,7 +865,7 @@ Draft.new.save
             <code>Draft.ancestors</code> の先頭は Logging で、Draft はその次です。<code>Draft.new.save</code> を呼ぶと、Ruby は先頭の Logging で save を見つけて実行します。Logging の save は「保存前」を表示し、
             <code>super</code> で次の Draft の save を呼びます。Draft の save が返した <code>:ok</code> を result に入れ、「保存後」を表示してから、同じ値を返します。コメントに書いた出力の3行は、この順に対応しています。
           </p>
-          <Figure n="3-3" title="include と prepend の挿入位置" caption="include したモジュールはクラスの後ろ、prepend したモジュールはクラスの前に入る。">
+          <Figure n="5-3" title="include と prepend の挿入位置" caption="include したモジュールはクラスの後ろ、prepend したモジュールはクラスの前に入る。">
             <IncludePrependFigure />
           </Figure>
           <p>
@@ -1021,11 +1021,11 @@ Child.ancestors.take(4)              # => [Child, Trim, Loud, Base]
 Child.new.greet("  ruby ", polite: true) # => "こんにちは、RUBYさん"
 `}
           />
-          <Figure n="3-4" title="super による呼び出しと戻り値" caption="黒の矢印が呼び出し、青の矢印が戻り値。各メソッドは super の前後に自分の処理を加えている。">
+          <Figure n="5-4" title="super による呼び出しと戻り値" caption="黒の矢印が呼び出し、青の矢印が戻り値。各メソッドは super の前後に自分の処理を加えている。">
             <SuperChainFigure />
           </Figure>
           <p>
-            図 3-4 を上から順に見ます。図の <code>Trim#greet</code> は「Trim に定義された greet」を表す書き方です。
+            図 5-4 を上から順に見ます。図の <code>Trim#greet</code> は「Trim に定義された greet」を表す書き方です。
           </p>
           <ol>
             <li>
@@ -1082,8 +1082,8 @@ Kid2.new("a").instance_variables # => [:@items, :@name]
             は受け取れる引数の数です。<code>super()</code> と書いた Kid2 では親の initialize が引数なしで実行され、@items と @name の両方が設定されています。
           </p>
           <p>
-            第1章で調べた <code>process_action</code>（コントローラーがアクションを実行するときに通るメソッド）の7つの定義が上から順に呼ばれるのも、同じ規則によるものです。<code>ApplicationController.ancestors</code> から <code>process_action</code>{' '}
-            を定義しているものだけを取り出すと、第1章の図1-6 と同じ順序になります。
+            第2章で調べた <code>process_action</code>（コントローラーがアクションを実行するときに通るメソッド）の7つの定義が上から順に呼ばれるのも、同じ規則によるものです。<code>ApplicationController.ancestors</code> から <code>process_action</code>{' '}
+            を定義しているものだけを取り出すと、第2章の図2-6 と同じ順序になります。
           </p>
           <Code
             lang="ruby"
@@ -1155,7 +1155,7 @@ obj.singleton_class.ancestors.take(3)
           </p>
           <p>
             特異クラスはそのオブジェクトのメソッド探索で最初に探される場所です。<code>obj.class</code> は <code>Object</code> のままですが、探索は特異クラスから始まり、その後に{' '}
-            <code>Object</code> へ進みます（図 3-5）。<code>#&lt;Class:...&gt;</code> は特異クラスを表す表記です。
+            <code>Object</code> へ進みます（図 5-5）。<code>#&lt;Class:...&gt;</code> は特異クラスを表す表記です。
           </p>
           <p>
             <code>#&lt;Class:...&gt;</code> のコロンの後ろには、どのオブジェクトの特異クラスかが入ります。上の実行結果と、この章のほかの節に出てくる表示を並べると、次のように読めます。
@@ -1199,7 +1199,7 @@ obj.singleton_class.ancestors.take(3)
           <p>
             <code>owner</code> の結果や TracePoint の出力にこの表示が出てきたら、コロンの後ろのオブジェクトだけに定義されたメソッドを指している、と読めます。
           </p>
-          <Figure n="3-5" title="オブジェクトの特異クラス" caption="青の矢印が obj のメソッド探索の始まり。other には特異クラスに定義されたメソッドが無いので、Object から探索する。">
+          <Figure n="5-5" title="オブジェクトの特異クラス" caption="青の矢印が obj のメソッド探索の始まり。other には特異クラスに定義されたメソッドが無いので、Object から探索する。">
             <SingletonFigure />
           </Figure>
         </>
@@ -1251,15 +1251,15 @@ User.singleton_class.ancestors.take(4)
             の順に探し、2番目で all を見つけます。
           </p>
           <p>
-            図 3-6 の左の列は、User から superclass をたどった並びです。右の列はそれぞれのクラスの特異クラスで、User のクラスメソッドはこの列を上から順に探します。横の破線は、左のクラスの特異クラスが右にあることを表します。右の列を下までたどると
+            図 5-6 の左の列は、User から superclass をたどった並びです。右の列はそれぞれのクラスの特異クラスで、User のクラスメソッドはこの列を上から順に探します。横の破線は、左のクラスの特異クラスが右にあることを表します。右の列を下までたどると
             Class と Module に着きます。<code>User.new</code> や <code>User.name</code> のように、どのクラスに対しても呼べるメソッドは、この Class と Module に定義されています。
           </p>
-          <Figure n="3-6" title="クラスと特異クラスの並行する継承" caption="User.all の探索は #<Class:User> から始まり、#<Class:Record> で見つかる（青の経路）。">
+          <Figure n="5-6" title="クラスと特異クラスの並行する継承" caption="User.all の探索は #<Class:User> から始まり、#<Class:Record> で見つかる（青の経路）。">
             <ClassMethodFigure />
           </Figure>
           <h3>Rails のモデルで確かめる</h3>
           <p>
-            第1章の TracePoint（実行されたメソッドを記録する Ruby の機能）の出力で、<code>published</code> の定義元が <code>#&lt;Class:Article(...)&gt;</code> と表示されていました。<code>scope</code> は、Article
+            第2章の TracePoint（実行されたメソッドを記録する Ruby の機能）の出力で、<code>published</code> の定義元が <code>#&lt;Class:Article(...)&gt;</code> と表示されていました。<code>scope</code> は、Article
             の特異クラスにメソッドを定義します。<code>ActiveRecord::Scoping::Named</code> の該当部分を引用します。この引用では、メソッドをどこに定義しているかと、定義したメソッドが呼ばれたときに何を実行するかを確かめます。
           </p>
           <p>
@@ -1645,7 +1645,7 @@ Model.table_name   # => nil
           </ul>
           <p>
             コメントにあるとおり、クラスを定義した時点でキャッシュを初期化しておくことで、複数のスレッド（1つのプログラムの中で並行して処理を進める流れ。<ChapterLink n={23} section="thread" />）が同時に初回アクセスしたときの競合を避けています。最後の{' '}
-            <code>@generated_association_methods</code> は、<code>comments</code> などの関連メソッドを入れるモジュール（図2-6 の添字1）を指す変数です。
+            <code>@generated_association_methods</code> は、<code>comments</code> などの関連メソッドを入れるモジュール（図4-6 の添字1）を指す変数です。
           </p>
           <Callout kind="warn">
             <p>

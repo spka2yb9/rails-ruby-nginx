@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 42-1 場面の構成 ---------- */
+/* ---------- 図 59-1 場面の構成 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="42-1"
+      id="59-1"
       w={760}
       h={400}
       label="モバイルアプリが DELETE /api/v1/users/:id で Api::V1::UsersController の destroy を呼び、destroy は User の delete を呼ぶ。月次のバッチは User の update で会員ランクを付け直す。User は delete を論理削除に、update を保存とメールの送信に上書きしていて、delete は中で update を呼ぶ。User は users と invoices のテーブルを読み書きし、UserMailer でメールを送る。管理画面のまとめて退会は User.where(...).delete_all で users の行を直接消す。問題が起きる箇所は4つで、API が失敗しても 200 を返すこと、delete が論理削除であること、update がメールも送ること、delete_all が物理削除であること"
@@ -63,7 +64,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 42-2 名前から予想される動作と実際の動作 ---------- */
+/* ---------- 図 59-2 名前から予想される動作と実際の動作 ---------- */
 function ExpectationFigure() {
   const rows: { call: string[]; expect: string[]; actual: string[] }[] = [
     { call: ['user.delete'], expect: ['行を DELETE 文で消す', 'コールバックは動かない'], actual: ['行を残して withdrawn_at を入れる', '変更のお知らせのメールも送る'] },
@@ -78,7 +79,7 @@ function ExpectationFigure() {
   const cx = [14, 250, 500]
   return (
     <Svg
-      id="42-2"
+      id="59-2"
       w={760}
       h={top + rows.length * rh + 8}
       label={`呼び出しごとに、名前から予想される動作と実際の動作を並べた表。${rows
@@ -116,7 +117,7 @@ function ExpectationFigure() {
   )
 }
 
-/* ---------- 図 42-3 Ruby と Rails の命名の規約 ---------- */
+/* ---------- 図 59-3 Ruby と Rails の命名の規約 ---------- */
 function NamingFigure() {
   const rows: { label: string[]; a: string[]; b?: string[]; note?: string[] }[] = [
     { label: ['? で終わる', '（Ruby）'], a: ['empty? / exists? / withdrawn?', '真偽値を返し、状態を変えない'], note: ['真偽値の代わりに nil 以外の値を', '返すメソッドもある（Ruby の文書）'] },
@@ -129,7 +130,7 @@ function NamingFigure() {
   const rh = 64
   return (
     <Svg
-      id="42-3"
+      id="59-3"
       w={760}
       h={top + rows.length * rh + 4}
       label={`Ruby と Rails の命名の規約。${rows
@@ -169,7 +170,7 @@ function NamingFigure() {
   )
 }
 
-/* ---------- 図 42-5 直す前と後の比較 ---------- */
+/* ---------- 図 59-5 直す前と後の比較 ---------- */
 function BeforeAfterFigure() {
   const panels = [
     {
@@ -208,7 +209,7 @@ function BeforeAfterFigure() {
   const effects = ['UPDATE users', 'メールを送る', 'DELETE FROM users']
   return (
     <Svg
-      id="42-5"
+      id="59-5"
       w={760}
       h={380}
       label="適用前は user.delete が users の UPDATE とメールの送信を行い、user.update も UPDATE とメールの送信を行い、user.update! は UPDATE だけを行い、User.where.delete_all は DELETE を行う。API は成功でも失敗でも 200 を返し、退会の後の GET も 200 を返す。適用後は user.withdraw! が UPDATE だけを行い、user.change_email! が UPDATE と変更前のアドレスへのメールを行い、update と update! は UPDATE だけを行い、delete と delete_all は Active Record のとおり DELETE を行う。API は 204・404・409 を返し、退会の後の GET は 404 を返す"
@@ -254,11 +255,11 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 42-6 当てはめすぎの判断 ---------- */
+/* ---------- 図 59-6 当てはめすぎの判断 ---------- */
 function DecisionFigure() {
   return (
     <Svg
-      id="42-6"
+      id="59-6"
       w={760}
       h={470}
       label="名前と API を決めるときの判断の流れ。まず、その名前が Ruby・Rails・HTTP の規約にある名前かを考える。規約にある名前で、規約の意味どおりに動くならそのまま使う。規約の意味と違う動作なら、規約の名前を使わず業務の言葉で別の名前を付ける。規約にない操作も業務の言葉で名前を付け、! と ? は規約の意味で使う。次に、対のメソッドや別名を足すかを考え、false を処理する画面のように呼び出し元が両方を必要とするときだけ足す。公開済みの API の慣習が標準と違うときは、同じバージョンの中では慣習に合わせ、新しいバージョンで標準に合わせる"
@@ -437,11 +438,11 @@ end
           <p>
             退会の API は、会員が見つからないときも、未払いの請求があるときも、<code>render json:</code> だけを呼んでいます。<code>render</code> に <code>status:</code> を渡さなければ、ステータスコードは 200（OK）になります。成功したかどうかは本文の <code>ok</code> の値でしか区別できません。
           </p>
-          <Figure n="42-1" title="退会の処理に関係するクラス・テーブルと、問題が起きる箇所" caption="赤の文字が問題の起きる箇所。実線の矢印は呼び出しを表す。管理画面からの delete_all は User の上書きを通らずに users テーブルへ届く。">
+          <Figure n="59-1" title="退会の処理に関係するクラス・テーブルと、問題が起きる箇所" caption="赤の文字が問題の起きる箇所。実線の矢印は呼び出しを表す。管理画面からの delete_all は User の上書きを通らずに users テーブルへ届く。">
             <SceneFigure />
           </Figure>
           <p>
-            図 42-1 は、この場面の呼び出しの関係です。モバイルアプリ・月次のバッチ・管理画面の3つが User を使いますが、それぞれを書いた人は Rails の delete と update の動作を前提にしています。User の上書きを知っているのは、User を書いた人だけです。
+            図 59-1 は、この場面の呼び出しの関係です。モバイルアプリ・月次のバッチ・管理画面の3つが User を使いますが、それぞれを書いた人は Rails の delete と update の動作を前提にしています。User の上書きを知っているのは、User を書いた人だけです。
           </p>
           <h3>動かして確かめる</h3>
           <p>
@@ -535,11 +536,11 @@ end
           <p>
             4では、未払いの請求がある場合も、存在しない ID の場合も、応答は 200 でした。<code>successful?</code> は応答のオブジェクトのメソッドで、ステータスコードが 200 番台なら true を返します。モバイルアプリがステータスコードで成功を判断していると、3つの場合のすべてで「退会しました」と表示します。さらに、退会に成功した伊藤さんを GET すると、200 で会員の情報が返りました。DELETE が成功した後も同じ URL から会員を取得できるので、アプリが画面を読み込み直すと、退会した会員がまた表示されます。
           </p>
-          <Figure n="42-2" title="名前から予想される動作と、適用前のコードの実際の動作" caption="右の列（赤）が、予想と食い違った動作。どの行も、コードそのものは書いたとおりに動いている。">
+          <Figure n="59-2" title="名前から予想される動作と、適用前のコードの実際の動作" caption="右の列（赤）が、予想と食い違った動作。どの行も、コードそのものは書いたとおりに動いている。">
             <ExpectationFigure />
           </Figure>
           <p>
-            図 42-2 は、6つの呼び出しについて、名前から予想される動作と実際の動作を並べたものです。中央の列の予想は Rails のドキュメントと HTTP の仕様に書かれている動作です。どの呼び出しも例外を出さずに終わっているので、テストやログからは食い違いに気づけません。
+            図 59-2 は、6つの呼び出しについて、名前から予想される動作と実際の動作を並べたものです。中央の列の予想は Rails のドキュメントと HTTP の仕様に書かれている動作です。どの呼び出しも例外を出さずに終わっているので、テストやログからは食い違いに気づけません。
           </p>
           <h3>このコードの問題</h3>
           <ul>
@@ -592,13 +593,13 @@ end
           </ul>
           <p>
             Ruby の公式ドキュメントは、? で終わるメソッドは慣習として真偽値を返し、! で終わるメソッドは「危険」とみなされると説明しています。Ruby のコアライブラリでは、! は「! なしのメソッドと違ってレシーバーを書き換える」ことを表しますが、ほかのライブラリでもそうなるとは限らないとも書いています。<Ref n={3} />
-            Rails は <code>save!</code> や <code>create!</code> のように「失敗したら例外を投げる」メソッドの名前に ! を付けています。図 42-3 は、この章で扱う命名の規約をまとめたものです。
+            Rails は <code>save!</code> や <code>create!</code> のように「失敗したら例外を投げる」メソッドの名前に ! を付けています。図 59-3 は、この章で扱う命名の規約をまとめたものです。
           </p>
-          <Figure n="42-3" title="Ruby と Rails の命名の規約" caption="2行目以降の左右の箱は、名前が対になるメソッド。1行目の右の点線の枠は補足。! の意味は Ruby のコアクラスと Rails で違う。">
+          <Figure n="59-3" title="Ruby と Rails の命名の規約" caption="2行目以降の左右の箱は、名前が対になるメソッド。1行目の右の点線の枠は補足。! の意味は Ruby のコアクラスと Rails で違う。">
             <NamingFigure />
           </Figure>
           <p>
-            図 42-3 の各行は、名前の一部が動作の約束になっている例です。Rails の開発者は <code>find</code> を見れば「見つからなければ例外が出て、コントローラーなら 404 になる」と予想し、<code>delete</code> を見れば「コールバックを通らずに行が消える」と予想します。適用前の User はこの予想のうち delete と update の行を書き換えていました。
+            図 59-3 の各行は、名前の一部が動作の約束になっている例です。Rails の開発者は <code>find</code> を見れば「見つからなければ例外が出て、コントローラーなら 404 になる」と予想し、<code>delete</code> を見れば「コールバックを通らずに行が消える」と予想します。適用前の User はこの予想のうち delete と update の行を書き換えていました。
           </p>
           <h3>似た原則との違い</h3>
           <p>
@@ -785,7 +786,7 @@ end
             RFC 9110 は、DELETE の対象が実際に破棄されるかどうかは、サーバーの実装によって決まるとしています。<Ref n={5} />
             論理削除で行を残すことは、HTTP の DELETE の意味に反しません。ただし DELETE は、対象のリソースと URL の結び付きを外すことを求める要求です。成功した後の GET は 404 を返すのが、予想どおりの動作です。そこで show でも <code>User.active.find</code> を使い、退会した会員を返さないようにしました。
           </p>
-          <Figure n="42-4" title="HTTP のメソッドと、予想される振る舞い" caption="RFC 9110 と RFC 5789 の定義をもとにまとめた。Rails のアクションは resources が対応させる名前。">
+          <Figure n="59-4" title="HTTP のメソッドと、予想される振る舞い" caption="RFC 9110 と RFC 5789 の定義をもとにまとめた。Rails のアクションは resources が対応させる名前。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -844,7 +845,7 @@ end
             </div>
           </Figure>
           <p>
-            図 42-4 の「安全」は、クライアントがサーバーの状態の変更を求めず、予想もしないことを表します。「冪等」は、同じ要求を何回送っても、サーバーへの意図した効果が1回送ったときと同じであることを表します。<Ref n={5} />
+            図 59-4 の「安全」は、クライアントがサーバーの状態の変更を求めず、予想もしないことを表します。「冪等」は、同じ要求を何回送っても、サーバーへの意図した効果が1回送ったときと同じであることを表します。<Ref n={5} />
             PATCH は RFC 5789 で、安全でも冪等でもないとされています。<Ref n={6} />
             DELETE は冪等なので、2回目の DELETE で 404 が返っても、会員が退会済みというサーバーの状態は1回目の後と変わりません。冪等性は <ChapterLink n={83} section="meaning" /> で詳しく扱います。
           </p>
@@ -969,11 +970,11 @@ Finished in 0.14689 seconds (files took 0.88387 seconds to load)
 9 examples, 0 failures
 `}
           />
-          <Figure n="42-5" title="直す前と後で、呼び出しが実行する処理" caption="左右とも、左の列が呼び出し、右の列が DB とメールへの処理。赤い点の付いた矢印は、名前から予想されない処理を表す。">
+          <Figure n="59-5" title="直す前と後で、呼び出しが実行する処理" caption="左右とも、左の列が呼び出し、右の列が DB とメールへの処理。赤い点の付いた矢印は、名前から予想されない処理を表す。">
             <BeforeAfterFigure />
           </Figure>
           <p>
-            図 42-5 は、呼び出しごとに実行される処理を、直す前と後で比べたものです。適用前は、delete と update の2つの名前からメールの送信が起き、delete_all だけが物理削除をしていました。適用後は、Rails の名前（update・delete）は Rails のとおりに動き、業務の操作（withdraw!・change_email!）は業務の言葉の名前を持ちます。メールを送るのは change_email! だけです。
+            図 59-5 は、呼び出しごとに実行される処理を、直す前と後で比べたものです。適用前は、delete と update の2つの名前からメールの送信が起き、delete_all だけが物理削除をしていました。適用後は、Rails の名前（update・delete）は Rails のとおりに動き、業務の操作（withdraw!・change_email!）は業務の言葉の名前を持ちます。メールを送るのは change_email! だけです。
           </p>
           <h3>ステータスコードを変えるときは、API の利用者と時期を合わせる</h3>
           <p>
@@ -1065,11 +1066,11 @@ end
           <p>
             公開済みのバージョンの中では既存の慣習に合わせるほうが利用者は驚きません。バージョンの途中で一部の API だけ形を変えると、1つのバージョンの中に2つの形が混ざります。HTTP の規約に合わせるのは、新しいバージョンを作るときにまとめて行い、古いバージョンを残す期間を決めます。社内だけで使い、すべての呼び出し元を同時に直せる API なら、すぐに規約に合わせても構いません。
           </p>
-          <Figure n="42-6" title="名前と API の応答を決めるときの判断" caption="点線の枠は判断、色の付いた箱は結論。右下の点線の枠は、公開済みの API で規約と慣習が食い違うときの扱い。">
+          <Figure n="59-6" title="名前と API の応答を決めるときの判断" caption="点線の枠は判断、色の付いた箱は結論。右下の点線の枠は、公開済みの API で規約と慣習が食い違うときの扱い。">
             <DecisionFigure />
           </Figure>
           <p>
-            図 42-6 は、この節の判断をまとめたものです。規約にある名前を使うなら、規約の意味どおりに動かします。違う動作をさせたいなら、規約の名前を上書きせずに、業務の言葉で別の名前を付けます。対のメソッドや別名は、規約をそろえる目的だけでは足さず、両方を必要とする呼び出し元があるときに足します。
+            図 59-6 は、この節の判断をまとめたものです。規約にある名前を使うなら、規約の意味どおりに動かします。違う動作をさせたいなら、規約の名前を上書きせずに、業務の言葉で別の名前を付けます。対のメソッドや別名は、規約をそろえる目的だけでは足さず、両方を必要とする呼び出し元があるときに足します。
           </p>
           <p>
             POLA の当てはめすぎは、「誰の予想か」を決めずに、思いつく規約のすべてに合わせようとすることから起きます。Matz は Perl から「同じことを複数の方法で書ける」という考え方を受け継ぎ、利用者に選ぶ自由を与えたいと述べています。<Ref n={1} />
@@ -1085,7 +1086,7 @@ end
         <>
           <h3>Active Record のメソッドの名前は規約になっている</h3>
           <p>
-            Rails のメソッドの名前は動作の約束になっています。script/conventions.rb で、図 42-3 の規約を確かめました。<code>user</code> は email を入れずに作った、保存できない会員です。
+            Rails のメソッドの名前は動作の約束になっています。script/conventions.rb で、図 59-3 の規約を確かめました。<code>user</code> は email を入れずに作った、保存できない会員です。
           </p>
           <Code
             lang="text"
@@ -1164,6 +1165,29 @@ config.action_dispatch.rescue_responses.merge!(
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          Rails や HTTP の規約にある名前を使うなら、規約の意味どおりに動かします。違う動作をさせたいときは、規約の名前を上書きせず、業務の言葉で別の名前を付けます。規約に名前をそろえる目的だけで、対のメソッドや別名は足しません。
+        </>
+      ),
+      benefit: {
+        text: <>適用前は6つの呼び出しが名前から予想される動作と違っていた（<code>user.update</code> でメールが送られる、未払いでも DELETE が 200 を返すなど）。適用後は update と delete が Rails のとおりに動き、メールを送るのは <code>change_email!</code> だけになった。API は未払いなら 409、存在しなければ 404、成功なら 204 を返す。</>,
+        basis: <><ChapterLink n={61} section="scene" />、<ChapterLink n={61} section="apply" /></>,
+      },
+      cost: {
+        text: <>応答を 200 から 409・404・204 に変えると、本文の ok を読んで判断していた古いモバイルアプリが判断を誤る。古いアプリが利用者の端末に残る間は、API のバージョンを分けるか、古い応答を残す期間を決める必要がある。</>,
+        basis: <ChapterLink n={61} section="apply" />,
+      },
+      alternative: {
+        text: <>社内の既存の API がすべて「200 と本文の ok」で返しているなら、公開済みのバージョンの中では既存の慣習に合わせ、HTTP の規約には新しいバージョンでまとめて合わせる。すべての呼び出し元を同時に直せる社内だけの API なら、すぐに規約に合わせる。</>,
+        basis: <ChapterLink n={61} section="overuse" />,
+      },
+      criterion: {
+        text: <>誰の予想に合わせるか（Ruby・Rails・HTTP・チームの規約）を先に決める。対のメソッドは両方を必要とする呼び出し元があるときに足す。規約に合わせるためだけに ! なしの withdraw を足した例では、未払いの会員でも API が 204 を返した。</>,
+        basis: <ChapterLink n={61} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

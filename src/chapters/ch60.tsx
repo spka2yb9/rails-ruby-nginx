@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 41-1 場面の構成：2つのフォームと共通の検証 ---------- */
+/* ---------- 図 58-1 場面の構成：2つのフォームと共通の検証 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="41-1"
+      id="58-1"
       w={780}
       h={440}
       label="会員登録の User とお問い合わせの Inquiry が、共通の concern の ContactFields を include し、validates_contact_fields にフラグの引数を渡す。User は phone_required・mobile_only・unique_email・allow_international をすべて true にし、Inquiry は name_max: 100 と allow_international: true を渡す。ContactFields は名前の長さ、メールアドレスの形式と一意、電話番号の必須と形式を検証し、電話番号の形式は phone_format が上から順に判定する。1番目の allow_international が真なら国内の番号と国際形式を許し、2番目の mobile_only なら携帯だけ、それ以外は国内の番号。User は1番目の分岐に入るので mobile_only が使われず、固定電話の番号が通る。User は users テーブル、Inquiry は inquiries テーブルに保存する"
@@ -65,7 +66,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 41-2 フラグの引数が増える過程 ---------- */
+/* ---------- 図 58-2 フラグの引数が増える過程 ---------- */
 const flagRows: { side: 'both' | 'user' | 'inquiry'; req: string[]; left?: string[]; change: string[]; danger?: boolean }[] = [
   { side: 'both', left: ['会員登録の検証が', 'すでにある'], req: ['お問い合わせのフォームを作る', '会員登録と同じ検証だった'], change: ['共通化する', '引数 0 個'] },
   { side: 'user', req: ['SMS で本人確認する', '電話番号を必須・携帯だけに'], change: ['+ phone_required:', '+ mobile_only:（2 個）'] },
@@ -80,7 +81,7 @@ function FlagsFigure() {
   const top = 50
   return (
     <Svg
-      id="41-2"
+      id="58-2"
       w={780}
       h={top + flagRows.length * rowH + 20}
       label={`共通の検証にフラグの引数が増えていった順序。${flagRows
@@ -118,7 +119,7 @@ function FlagsFigure() {
   )
 }
 
-/* ---------- 図 41-3 共通化する時期（Rule of Three） ---------- */
+/* ---------- 図 58-3 共通化する時期（Rule of Three） ---------- */
 function RuleOfThreeFigure() {
   const cols = [
     { x: 20, head: '1回目', act: ['そのまま書く'], boxes: ['User の検証'] },
@@ -127,7 +128,7 @@ function RuleOfThreeFigure() {
   ]
   return (
     <Svg
-      id="41-3"
+      id="58-3"
       w={780}
       h={380}
       label="共通化する時期。1回目は会員登録の検証をそのまま書く。2回目はお問い合わせで重複に気づくが、写して書き、違いをコメントに残す。3回目の資料請求で3つを並べて比べ、同じ所だけを EmailAddress にまとめる。この章の場面は、2回目で共通化したため、フラグの引数が増えていった"
@@ -174,11 +175,11 @@ function RuleOfThreeFigure() {
   )
 }
 
-/* ---------- 図 41-5 直す前と後 ---------- */
+/* ---------- 図 58-5 直す前と後 ---------- */
 function BeforeAfterFigure() {
   return (
     <Svg
-      id="41-5"
+      id="58-5"
       w={780}
       h={360}
       label="直す前は、User と Inquiry が ContactFields の validates_contact_fields にフラグの引数を渡し、5つのフラグと4つの分岐を持つ共通の処理がすべての検証をする。直した後は、User は名前の長さ50と、携帯または国際形式の電話番号を、Inquiry は名前の長さ100と、書かれたとおりの電話番号を、DocumentRequest は会社名と名前を、それぞれのモデルで検証する。メールアドレスの空白の除去と形式、受け付けないドメインの検証だけを、引数のない EmailAddress にまとめ、3つのモデルが include する"
@@ -229,7 +230,7 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 41-6 重複を残すか、まとめるか ---------- */
+/* ---------- 図 58-6 重複を残すか、まとめるか ---------- */
 function JudgeFigure() {
   const quads: { x: number; y: number; lines: string[]; fill: 'box5' | 'box' | 'bg'; accent?: boolean }[] = [
     { x: 110, y: 30, lines: ['2か所・同じ知識と確かめられた', '待たずにまとめる', '例：受け付けないドメインの一覧', '税率（DRY の章）'], fill: 'box5', accent: true },
@@ -239,7 +240,7 @@ function JudgeFigure() {
   ]
   return (
     <Svg
-      id="41-6"
+      id="58-6"
       w={780}
       h={420}
       label="横軸は重複している場所の数（2か所と3か所以上）、縦軸は同じ知識だと確かめられたかどうか。2か所で同じ知識と確かめられたものは、受け付けないドメインの一覧や税率のように、待たずにまとめる。3か所以上で同じ知識と確かめられたもの、たとえば3つのフォームのメールアドレスの扱いはまとめる。2か所で同じ知識かまだ分からないものは、会員登録とお問い合わせの検証のように、写して書き、違いを残して待つ。3か所以上でまだ分からないものは、並べて比べて同じ所だけをまとめ、名前と電話番号はフォームごとに残した"
@@ -270,7 +271,7 @@ function JudgeFigure() {
   )
 }
 
-/* ---------- 図 41-7 Rails で重複を残す所・まとめる所 ---------- */
+/* ---------- 図 58-7 Rails で重複を残す所・まとめる所 ---------- */
 const railsRows: [string, string, string][] = [
   ['scaffold の生成するコントローラー', '7つのアクションをコントローラーごとに書き出す', 'リソースごとに変えるので残す'],
   ['validates の宣言', '1つの属性の検証を1行で宣言する', '2か所までは各モデルに書く'],
@@ -290,7 +291,7 @@ function RailsFigure() {
   const rowH = 38
   return (
     <Svg
-      id="41-7"
+      id="58-7"
       w={780}
       h={50 + railsRows.length * rowH + 10}
       label={`Rails と RSpec で重複を残す所とまとめる所。${railsRows.map((r) => `${r[0]}は${r[1]}。この章では${r[2]}`).join('。')}`}
@@ -435,9 +436,9 @@ end
 `}
           />
           <p>
-            <code>class_methods</code> の中に書いたメソッドは、concern を include したクラスのクラスメソッドになります。<code>URI::MailTo::EMAIL_REGEXP</code> は Ruby の標準ライブラリにあるメールアドレスの正規表現です。電話番号の正規表現の <code>0[789]0\d{'{8}'}</code> は、070・080・090 から始まる11桁を携帯の番号として扱うという、このサイトの決まりです。図 41-1 は2つのモデルと共通の処理の関係です。
+            <code>class_methods</code> の中に書いたメソッドは、concern を include したクラスのクラスメソッドになります。<code>URI::MailTo::EMAIL_REGEXP</code> は Ruby の標準ライブラリにあるメールアドレスの正規表現です。電話番号の正規表現の <code>0[789]0\d{'{8}'}</code> は、070・080・090 から始まる11桁を携帯の番号として扱うという、このサイトの決まりです。図 58-1 は2つのモデルと共通の処理の関係です。
           </p>
-          <Figure n="41-1" title="場面の構成：2つのフォームと共通の検証" caption="実線の矢印は呼び出し（フラグの引数を渡す）、破線の矢印は保存先のテーブル。">
+          <Figure n="58-1" title="場面の構成：2つのフォームと共通の検証" caption="実線の矢印は呼び出し（フラグの引数を渡す）、破線の矢印は保存先のテーブル。">
             <SceneFigure />
           </Figure>
           <h3>フラグの引数が増えた経緯</h3>
@@ -467,9 +468,9 @@ Inquiry: valid?=true phone=0312345678
 `}
           />
           <p>
-            この時点では会員登録もお問い合わせも同じ動きで、固定電話の番号を受け付けてハイフンを取り除いていました。重複をなくした共通化として、自然な判断に見えます。その後の要望と、引数が増えた順序が図 41-2 です。
+            この時点では会員登録もお問い合わせも同じ動きで、固定電話の番号を受け付けてハイフンを取り除いていました。重複をなくした共通化として、自然な判断に見えます。その後の要望と、引数が増えた順序が図 58-2 です。
           </p>
-          <Figure n="41-2" title="フラグの引数が増える過程" caption="上から下へ時間が進む。中央の列はそれぞれの要望で共通の処理に足した引数と、その時点の引数の数。">
+          <Figure n="58-2" title="フラグの引数が増える過程" caption="上から下へ時間が進む。中央の列はそれぞれの要望で共通の処理に足した引数と、その時点の引数の数。">
             <FlagsFigure />
           </Figure>
           <p>
@@ -596,8 +597,8 @@ Failures:
           <p>
             DRY を名付けた Dave Thomas も、2003年のインタビューで、コードを生成するツールを作るときはたいていまず手で成果物を作り、もう一度同じことが必要になったときに自動化すると話しています。二度と必要にならなければツールを書かずに済み、必要になったときには手で作った成果物でツールの出力を確かめられるからです<Ref n={7} />。DRY と WET はどちらかを選ぶ原則ではありません。同じ知識だと確かめてから1か所にする、という順序で組み合わせます。
           </p>
-          <p>図 41-3 は1回目・2回目・3回目にすることと、この章の場面がどこで道を外れたかを示しています。</p>
-          <Figure n="41-3" title="共通化する時期（1回目・2回目・3回目）" caption="上の段が WET の進め方。下の段がこの章の場面で、2回目で共通化した。">
+          <p>図 58-3 は1回目・2回目・3回目にすることと、この章の場面がどこで道を外れたかを示しています。</p>
+          <Figure n="58-3" title="共通化する時期（1回目・2回目・3回目）" caption="上の段が WET の進め方。下の段がこの章の場面で、2回目で共通化した。">
             <RuleOfThreeFigure />
           </Figure>
           <p>
@@ -763,9 +764,9 @@ Finished in 0.05218 seconds (files took 0.85328 seconds to load)
             </table>
           </div>
           <p>
-            3つで同じなのは、メールアドレスの「前後の空白を除く」と「形式」です。これはどのフォームで受け取ったかに関係なく、このサイトがメールアドレスをどう扱うかという1つの決まりで、変えるときは3つとも同じに変えます。名前の長さはフォームごとに違い、電話番号は使い道が違います。一意かどうかは会員登録だけの決まりです。図 41-4 は項目ごとに共通化してよいかを判断した表です。
+            3つで同じなのは、メールアドレスの「前後の空白を除く」と「形式」です。これはどのフォームで受け取ったかに関係なく、このサイトがメールアドレスをどう扱うかという1つの決まりで、変えるときは3つとも同じに変えます。名前の長さはフォームごとに違い、電話番号は使い道が違います。一意かどうかは会員登録だけの決まりです。図 58-4 は項目ごとに共通化してよいかを判断した表です。
           </p>
-          <Figure n="41-4" title="共通化してよいかの判断の表" caption="「受け付けないドメイン」は当てはめすぎの節で扱う項目。">
+          <Figure n="58-4" title="共通化してよいかの判断の表" caption="「受け付けないドメイン」は当てはめすぎの節で扱う項目。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -937,8 +938,8 @@ Finished in 0.07178 seconds (files took 0.83008 seconds to load)
 16 examples, 0 failures
 `}
           />
-          <p>図 41-5 は直す前と、3つ目のフォームでまとめた後の構造を比べたものです。</p>
-          <Figure n="41-5" title="直す前と後：フラグのある共通の処理と、引数のない concern" caption="直した後の矢印は include。名前と電話番号の検証は、それぞれのモデルに書いている。">
+          <p>図 58-5 は直す前と、3つ目のフォームでまとめた後の構造を比べたものです。</p>
+          <Figure n="58-5" title="直す前と後：フラグのある共通の処理と、引数のない concern" caption="直した後の矢印は include。名前と電話番号の検証は、それぞれのモデルに書いている。">
             <BeforeAfterFigure />
           </Figure>
           <p>
@@ -1071,8 +1072,8 @@ Finished in 0.07653 seconds (files took 0.80052 seconds to load)
 `}
           />
           <h3>重複を残すか、まとめるかの目安</h3>
-          <p>図 41-6 は重複している場所の数と、同じ知識だと確かめられたかどうかの2つの軸で、とる行動を分けたものです。</p>
-          <Figure n="41-6" title="重複を残すか、まとめるか" caption="横軸の「3か所」は目安。縦軸を先に判断し、同じ知識と確かめられたものは数を待たない。">
+          <p>図 58-6 は重複している場所の数と、同じ知識だと確かめられたかどうかの2つの軸で、とる行動を分けたものです。</p>
+          <Figure n="58-6" title="重複を残すか、まとめるか" caption="横軸の「3か所」は目安。縦軸を先に判断し、同じ知識と確かめられたものは数を待たない。">
             <JudgeFigure />
           </Figure>
           <p>
@@ -1175,8 +1176,8 @@ false
           <p>
             <code>validates :contact_email, email: true</code> と書くと、Rails は <code>email:</code> というキーから EmailValidator というクラスを探し、属性ごとに <code>validate_each</code> を呼びます<Ref n={13} /><Ref n={15} />。app/validators に置いたクラスは自動で読み込まれます。属性名のエラーメッセージが英語なのは、このアプリのロケールが英語のままだからです。EachValidator は検証だけを受け持つので、値を整える <code>normalizes</code> はモデルの側に書いています。
           </p>
-          <p>図 41-7 は Rails と RSpec で重複を残す所とまとめる所を、この章の使い方とあわせて並べたものです。</p>
-          <Figure n="41-7" title="Rails と RSpec で重複を残す所・まとめる所" caption="EachValidator は、資料請求の列名が contact_email の場合として、別のアプリで試した。">
+          <p>図 58-7 は Rails と RSpec で重複を残す所とまとめる所を、この章の使い方とあわせて並べたものです。</p>
+          <Figure n="58-7" title="Rails と RSpec で重複を残す所・まとめる所" caption="EachValidator は、資料請求の列名が contact_email の場合として、別のアプリで試した。">
             <RailsFigure />
           </Figure>
           <Callout kind="note" title="Rails 7.0 での normalizes">
@@ -1212,6 +1213,29 @@ false
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          似た処理が2つの時点では、同じ知識かどうかを見た目から判断できないので、写して書き、違いをコメントに残します。3つ目が来たら並べて比べ、引数なしで書ける同じ所だけをまとめます。セキュリティの担当者が決めた一覧のように、同じ知識だと分かっているものは2か所の時点でまとめます。
+        </>
+      ),
+      benefit: {
+        text: <>早く共通化したコードでは、お問い合わせのために足した分岐で、会員登録が固定電話の 03-1234-5678 を受け付けた。検証をそれぞれのモデルに戻すと、片方の要望でもう片方の検証が変わらなくなった。3つ目の資料請求のフォームで並べると、同じなのはメールアドレスの「前後の空白を除く」と「形式」だけと分かり、引数のない EmailAddress にまとめた。</>,
+        basis: <><ChapterLink n={60} section="scene" />、<ChapterLink n={60} section="apply" /></>,
+      },
+      cost: {
+        text: <>2つ目までは同じ宣言を2つのモデルに写すので、片方を直したらもう片方を確かめる必要がある。受け付けないドメインの一覧を写した例では、お問い合わせは古い一覧のまま新しいドメインを受け付け、資料請求は一覧を写し忘れてどのドメインも拒否しなかった。</>,
+        basis: <ChapterLink n={60} section="overuse" />,
+      },
+      alternative: {
+        text: <>別のチームのコードに写す場合や、更新の漏れが金額やセキュリティの不具合になる場合は、2か所の時点でまとめるか、2か所の値が一致することを確かめるテストを書く。重複をすぐ取り除き、後悔したらインライン化して戻す進め方（Rainsberger）もある。</>,
+        basis: <ChapterLink n={60} section="overuse" />,
+      },
+      criterion: {
+        text: <>先に、同じ知識だと確かめられたかを見る。確かめられないものだけを、例が3つになるまで待つ。まとめるときは、呼び出し側ごとの引数が要らないかを確かめる（ContactFields は真偽値のフラグが4個になり、組み合わせは16通りあった）。</>,
+        basis: <><ChapterLink n={60} section="overuse" />、<ChapterLink n={60} section="scene" /></>,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

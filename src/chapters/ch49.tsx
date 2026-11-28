@@ -4,7 +4,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 85-1・85-2 2人の同時の編集のタイムライン ---------- */
+/* ---------- 図 102-1・102-2 2人の同時の編集のタイムライン ---------- */
 interface Step {
   who: 'sato' | 'suzuki'
   /** read：DB から画面へ読む。write：画面から DB へ書く */
@@ -91,7 +91,7 @@ const OPTIMISTIC: Step[] = [
   { who: 'suzuki', dir: 'write', user: ['5. 項目ごとに選んで保存', 'lock_version 1 を送る'], db: ['UPDATE … WHERE lock_version = 1', '1件 → 緑茶（静岡）・350 円・版 2'] },
 ]
 
-/* ---------- 図 85-3 楽観的ロック・悲観的ロック・1文の更新の比較 ---------- */
+/* ---------- 図 102-3 楽観的ロック・悲観的ロック・1文の更新の比較 ---------- */
 function LockComparisonFigure() {
   const cols = [
     { x: 150, w: 200, head: '防ぎ方' },
@@ -130,7 +130,7 @@ function LockComparisonFigure() {
   ]
   return (
     <Svg
-      id="85-3"
+      id="102-3"
       w={780}
       h={262}
       label="3つの方式の比較。楽観的ロックは保存の UPDATE の WHERE で読んだときの lock_version を確かめ、0件なら StaleObjectError にして 409 や 412 で知らせる。画面をまたぐ編集で競合がまれな場合に向き、競合の画面と版番号の受け渡しが必要。悲観的ロックは SELECT FOR UPDATE で読む時点で行をロックし、後の処理は COMMIT まで待つ。1つのトランザクションで読んで判断して書く処理に向き、画面をまたげず、待ちとデッドロックに注意する。1文の更新は SET stock = stock - ? WHERE stock >= ? のように条件付きの UPDATE で書き、0件なら在庫不足にする。今の値から新しい値を計算できる在庫の減算や件数の加算に向き、ほかの表を見る判断は書きにくい"
@@ -155,7 +155,7 @@ function LockComparisonFigure() {
   )
 }
 
-/* ---------- 図 85-4 ETag と If-Match による条件付きの更新 ---------- */
+/* ---------- 図 102-4 ETag と If-Match による条件付きの更新 ---------- */
 function EtagFigure() {
   const C = 90
   const S = 390
@@ -170,7 +170,7 @@ function EtagFigure() {
   )
   return (
     <Svg
-      id="85-4"
+      id="102-4"
       w={780}
       h={460}
       label="ETag と If-Match による条件付きの更新。クライアントが GET で商品を読むと、API サーバーは lock_version 0 を ETag v0 として返す。ほかの人の保存で lock_version が 1 になる。クライアントが If-Match v0 を付けて PATCH すると、サーバーは lock_version 0 を条件に UPDATE し、0件なので 412 と最新の内容と ETag v1 を返す。If-Match v1 で送り直すと更新でき、ETag v2 が返る。If-Match を付けない PATCH には 428 を返す"
@@ -313,15 +313,15 @@ end
 最後の行: ["緑茶（静岡）", 300, 5]
 `}
           />
-          <Figure n="85-1" title="後の保存が先の変更を消すタイムライン" caption="上の実行結果を、上から下へ時間が進む図にしたもの。実線の矢印は書き込み、破線の矢印は読み込み。">
+          <Figure n="102-1" title="後の保存が先の変更を消すタイムライン" caption="上の実行結果を、上から下へ時間が進む図にしたもの。実線の矢印は書き込み、破線の矢印は読み込み。">
             <Timeline
-              id="85-1"
+              id="102-1"
               steps={LOST_UPDATE}
               label="佐藤さんと鈴木さんが、価格 300 円の緑茶の編集画面を順に開く。佐藤さんが価格を 350 円にして保存する。その後、鈴木さんが名前を緑茶（静岡）に変えて保存すると、フォームの価格 300 円も書き込まれ、佐藤さんの 350 円が消える。エラーは出ない"
             />
           </Figure>
           <p>
-            図 85-1 のとおり、鈴木さんの保存の UPDATE には、名前と一緒に価格 300 が入りました。Rails の部分更新（変わった列だけを UPDATE する仕組み。<ChapterLink n={11} section="dirty" />）は、保存のリクエストで読み込んだ値（350）とフォームの値（300）を比べるので、300 を変更として書き込みます。どちらの応答も 302 で、佐藤さんの 350 円は誰にも知らされずに消えました。後から保存した更新が先の更新を消すこの現象を<Term en="lost update">更新の消失</Term>と呼びます（<ChapterLink n={38} section="concurrent-updates" />）。
+            図 102-1 のとおり、鈴木さんの保存の UPDATE には、名前と一緒に価格 300 が入りました。Rails の部分更新（変わった列だけを UPDATE する仕組み。<ChapterLink n={11} section="dirty" />）は、保存のリクエストで読み込んだ値（350）とフォームの値（300）を比べるので、300 を変更として書き込みます。どちらの応答も 302 で、佐藤さんの 350 円は誰にも知らされずに消えました。後から保存した更新が先の更新を消すこの現象を<Term en="lost update">更新の消失</Term>と呼びます（<ChapterLink n={38} section="concurrent-updates" />）。
           </p>
           <h3>2つの注文が同時に在庫を減らす</h3>
           <p>
@@ -404,15 +404,15 @@ UPDATE products SET name = ?, lock_version = 1  -- 版番号を1つ増やす
           <p>
             読み込んだ後にほかの人が保存していれば、版番号は増えているので、WHERE に合う行はありません。Rails は更新した行の数が 1 でなければ <code>ActiveRecord::StaleObjectError</code> を投げます<Ref n={11} />。確かめることと書き込むことが1つの UPDATE の中で行われるので、確かめた後、書き込む前にほかの人が割り込むことはありません。Rice も、確かめることと更新することは1つのシステムトランザクションの中で行う必要があるとしています<Ref n={1} />。
           </p>
-          <Figure n="85-2" title="lock_version で検出するタイムライン" caption="rails-impl の節の実行結果をもとにした図。青い破線の矢印は、409 と最新の内容を返すことを表す。">
+          <Figure n="102-2" title="lock_version で検出するタイムライン" caption="rails-impl の節の実行結果をもとにした図。青い破線の矢印は、409 と最新の内容を返すことを表す。">
             <Timeline
-              id="85-2"
+              id="102-2"
               steps={OPTIMISTIC}
               label="佐藤さんと鈴木さんが、lock_version 0 の緑茶の画面を開く。佐藤さんが lock_version 0 を条件に更新し、1件が更新されて版は 1 になる。鈴木さんも lock_version 0 を条件に更新するが、今は版 1 なので0件になり、409 と最新の内容を受け取る。鈴木さんは項目ごとに残す値を選び、lock_version 1 を条件に保存し直し、版は 2 になる"
             />
           </Figure>
           <p>
-            図 85-2 は図 85-1 と同じ流れに lock_version を加えたものです。鈴木さんの保存は0件になり、佐藤さんの 350 円は残ります。鈴木さんは最新の内容を見て、項目ごとに残す値を選んでから、最新の版番号で保存し直します。
+            図 102-2 は図 102-1 と同じ流れに lock_version を加えたものです。鈴木さんの保存は0件になり、佐藤さんの 350 円は残ります。鈴木さんは最新の内容を見て、項目ごとに残す値を選んでから、最新の版番号で保存し直します。
           </p>
           <h3>競合したときの対応</h3>
           <p>競合を見つけた後の対応は、業務に合わせて決めます。</p>
@@ -422,8 +422,8 @@ UPDATE products SET name = ?, lock_version = 1  -- 版番号を1つ増やす
             <li>項目ごとに合わせる：変更した項目が重ならなければ両方を残す方法もありますが、利用者が開いたときの値を覚えておく必要があり、作りが複雑になります。必要になるまで採用しません。</li>
           </ul>
           <h3>ほかの方式との比較</h3>
-          <p>同時の更新を防ぐ方法は、楽観的ロックだけではありません。図 85-3 は悲観的ロックと1文の更新を加えた3つの方式を比べたものです。</p>
-          <Figure n="85-3" title="楽観的ロック・悲観的ロック・1文の更新の比較" caption="この章の各節の実行結果をもとにまとめた表。">
+          <p>同時の更新を防ぐ方法は、楽観的ロックだけではありません。図 102-3 は悲観的ロックと1文の更新を加えた3つの方式を比べたものです。</p>
+          <Figure n="102-3" title="楽観的ロック・悲観的ロック・1文の更新の比較" caption="この章の各節の実行結果をもとにまとめた表。">
             <LockComparisonFigure />
           </Figure>
           <p>
@@ -789,7 +789,7 @@ end
           <p>
             強い ETag は、表現（応答の本文）が変わるたびに変わる必要があります。在庫は <code>reserve!</code> で lock_version を変えずに変わるので、この API の表現には含めず、在庫は別のリソースで返します。在庫を含めたまま lock_version を ETag にすると、在庫が変わっても同じ ETag になり、If-None-Match の GET が古い在庫で 304 を返します。
           </p>
-          <Figure n="85-4" title="ETag と If-Match による条件付きの更新" caption="下の実行結果を図にしたもの。実線の矢印は要求、破線の矢印は応答。">
+          <Figure n="102-4" title="ETag と If-Match による条件付きの更新" caption="下の実行結果を図にしたもの。実線の矢印は要求、破線の矢印は応答。">
             <EtagFigure />
           </Figure>
           <Code
@@ -806,7 +806,7 @@ GET If-None-Match: "v2" => 304 ETag: "v2"
 `}
           />
           <p>
-            図 85-4 のとおり、古い ETag の PATCH は 412 と最新の内容と新しい ETag を受け取り、クライアントは利用者に確かめてから新しい ETag で送り直します。If-Match のない PATCH は 428 です。最後の行の 304 は、自分で設定した ETag に対して <code>Rack::ConditionalGet</code> が返したもので、GET のキャッシュの確認にも同じ ETag を使えています。
+            図 102-4 のとおり、古い ETag の PATCH は 412 と最新の内容と新しい ETag を受け取り、クライアントは利用者に確かめてから新しい ETag で送り直します。If-Match のない PATCH は 428 です。最後の行の 304 は、自分で設定した ETag に対して <code>Rack::ConditionalGet</code> が返したもので、GET のキャッシュの確認にも同じ ETag を使えています。
           </p>
         </>
       ),
@@ -1366,7 +1366,7 @@ end
           <h3>ほかの方式</h3>
           <ul>
             <li>
-              悲観的ロック（<code>lock!</code>・<code>with_lock</code>）：1つのトランザクションの中で読んで判断して書く処理で、競合が多い場合に使います（図 85-3）。画面をまたぐ場合のために、Rice はアプリケーションでロックを管理する Pessimistic Offline Lock も説明しています<Ref n={2} />。
+              悲観的ロック（<code>lock!</code>・<code>with_lock</code>）：1つのトランザクションの中で読んで判断して書く処理で、競合が多い場合に使います（図 102-3）。画面をまたぐ場合のために、Rice はアプリケーションでロックを管理する Pessimistic Offline Lock も説明しています<Ref n={2} />。
             </li>
             <li>
               分離レベルを上げる：MySQL で SERIALIZABLE にすると、読んで計算して書く処理はデッドロックで片方が失敗します（isolation の節）。失敗したトランザクションをやり直す処理が必要で、やり直しの間隔の決め方は <ChapterLink n={54} section="idea" /> の Retry with Backoff で扱います。

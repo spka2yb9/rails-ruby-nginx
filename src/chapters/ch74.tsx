@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 55-1 注文の一覧がたどる関連と、問題が起きる箇所 ---------- */
+/* ---------- 図 72-1 注文の一覧がたどる関連と、問題が起きる箇所 ---------- */
 const sceneModels = [
   { x: 40, cls: 'Order', assoc: 'belongs_to :customer', table: 'orders' },
   { x: 225, cls: 'Customer', assoc: 'has_one :address', table: 'customers' },
@@ -15,7 +16,7 @@ const sceneModels = [
 function SceneFigure() {
   return (
     <Svg
-      id="55-1"
+      id="72-1"
       w={780}
       h={384}
       label="注文の一覧のビュー orders/index.html.erb は、order.customer.address.prefecture.name と書いて、Order・Customer・Address・Prefecture の4つのクラスを順にたどる。Order は belongs_to :customer、Customer は has_one :address、Address は belongs_to :prefecture で、それぞれ orders・customers・addresses・prefectures テーブルに対応する。送り状の ShippingLabel も同じようにたどる。住所を登録していない会員では address が nil になり NoMethodError になる。注文1件ごとに customers・addresses・prefectures へ SELECT を1回ずつ発行する（N+1）"
@@ -31,13 +32,13 @@ function SceneFigure() {
           <Box x={m.x + 15} y={278} w={120} h={32} lines={m.table} fs={12} fill="box4" mono />
         </g>
       ))}
-      <T x={448} y={104} fs={11} tone="acc">
+      <T x={500} y={100} fs={11} tone="acc">
         ビューが4つのクラスを順に呼ぶ
       </T>
-      <T x={316} y={232} anchor="middle" fs={12} tone="danger">
+      <T x={392} y={232} anchor="middle" fs={12} tone="danger">
         住所がないと address が nil
       </T>
-      <T x={316} y={250} anchor="middle" fs={12} tone="danger">
+      <T x={392} y={250} anchor="middle" fs={12} tone="danger">
         → NoMethodError
       </T>
       <T x={20} y={340} fs={12} tone="danger">
@@ -50,7 +51,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 55-2 注文3件の一覧で発行される SQL ---------- */
+/* ---------- 図 72-2 注文3件の一覧で発行される SQL ---------- */
 const queryTables = ['orders', 'customers', 'addresses', 'prefectures']
 
 function QueriesFigure() {
@@ -69,7 +70,7 @@ function QueriesFigure() {
   const ry = (i: number) => 56 + i * 26
   return (
     <Svg
-      id="55-2"
+      id="72-2"
       w={780}
       h={372}
       label="注文3件の一覧で発行される SQL を、上から時間の順に並べた。直す前は、orders を1回読んだ後、注文ごとに customers を id で、addresses を会員の id で、prefectures を id で1回ずつ読み、合計10回になる。includes を使った後は、orders、customers、addresses、prefectures をそれぞれ IN でまとめて1回ずつ読み、合計4回になる"
@@ -124,7 +125,7 @@ function QueriesFigure() {
   )
 }
 
-/* ---------- 図 55-3 メソッドがメッセージを送ってよい相手 ---------- */
+/* ---------- 図 72-3 メソッドがメッセージを送ってよい相手 ---------- */
 const friends = [
   { y: 44, lines: ['self', 'ShippingLabel 自身'] },
   { y: 100, lines: ['M の引数のオブジェクト', '（to_s には引数がない）'] },
@@ -141,7 +142,7 @@ const strangers = [
 function FriendsFigure() {
   return (
     <Svg
-      id="55-3"
+      id="72-3"
       w={780}
       h={360}
       label="クラス C のメソッド M（例は ShippingLabel#to_s）がメッセージを送ってよい相手は、self、M の引数のオブジェクト、C のインスタンス変数のオブジェクト（@order）、M の中で作ったオブジェクト、グローバル変数のオブジェクト。論文では、M が作ったオブジェクトと M が呼んだメソッドが作ったオブジェクト、グローバル変数のオブジェクトを引数と同じに扱う。@order.customer が返す Customer、customer.address が返す Address、address.prefecture が返す Prefecture は、M から見て知らない相手で、メッセージを送らない"
@@ -176,7 +177,7 @@ function FriendsFigure() {
   )
 }
 
-/* ---------- 図 55-4 直す前と後の呼び出し ---------- */
+/* ---------- 図 72-4 直す前と後の呼び出し ---------- */
 const beforeModels = ['Order', 'Customer', 'Address', 'Prefecture']
 const afterModels = [
   ['Order', 'delegate … prefix: true'],
@@ -189,7 +190,7 @@ function CompareFigure() {
   const my = (i: number) => 44 + i * 70
   return (
     <Svg
-      id="55-4"
+      id="72-4"
       w={780}
       h={394}
       label="直す前は、ビューが Order・Customer・Address・Prefecture の4つのクラスを直接呼び、遠方の判断もビューが持つ。住所がないと NoMethodError、注文ごとに3回の SELECT が起きる。直した後は、コントローラーが Order の with_customer_destination を呼んで関連をまとめて読み込み、ビューは Order の customer_prefecture_name と customer_prefecture_remote? だけを呼ぶ。Order は Customer に、Customer は Address に、Address は Prefecture に delegate で頼み、遠方の判断は Prefecture#remote? が持つ"
@@ -252,11 +253,11 @@ function CompareFigure() {
   )
 }
 
-/* ---------- 図 55-6 delegate を使うときと使わないとき ---------- */
+/* ---------- 図 72-6 delegate を使うときと使わないとき ---------- */
 function JudgeFigure() {
   return (
     <Svg
-      id="55-6"
+      id="72-6"
       w={780}
       h={452}
       label="呼び出し側が関連の先にあるものを使いたいときの判断。まず、同じ種類の新しいオブジェクトを返すメソッドの連鎖（Relation・String・Array）なら、デメテルの法則の対象外なのでそのまま書く。次に、関連の先の値で判断や計算をしているなら、その判断を値の持ち主に移す（Tell, Don't Ask。例は Prefecture#remote?）。次に、使う値が1つか2つなら delegate で取り出す（名前は prefix、nil がありうるなら allow_nil）。多くの値を使うなら、関連の先の部品を1つ受け取り、引数として渡す（例は住所の部分テンプレートに Address を渡す）。どの場合も、一覧で使うなら関連の読み込み（includes）を scope に置く"
@@ -422,11 +423,11 @@ class ShippingLabel
 end
 `}
           />
-          <Figure n="55-1" title="注文の一覧がたどる関連と、問題が起きる箇所" caption="赤い文字は、次の項で確かめる2つの問題。">
+          <Figure n="72-1" title="注文の一覧がたどる関連と、問題が起きる箇所" caption="赤い文字は、次の項で確かめる2つの問題。">
             <SceneFigure />
           </Figure>
           <p>
-            図 55-1 のとおり、ビューの1つの式が Order・Customer・Address・Prefecture の4つのクラスを順に呼んでいます。式の途中のどこかが nil になると例外になり、たどるたびに関連を読み込むための SELECT が発行されます。
+            図 72-1 のとおり、ビューの1つの式が Order・Customer・Address・Prefecture の4つのクラスを順に呼んでいます。式の途中のどこかが nil になると例外になり、たどるたびに関連を読み込むための SELECT が発行されます。
           </p>
           <h3>住所を登録していない会員の注文</h3>
           <p>住所を登録していない会員の注文が一覧に入る場合を、request spec で確かめました。</p>
@@ -530,9 +531,9 @@ SQL の回数：10
 `}
           />
           <p>
-            Active Record の関連は、最初にそのメソッドを呼んだときに SELECT を発行して相手を読み込みます。これを<Term en="lazy loading">遅延読み込み</Term>と呼びます。ビューは注文ごとに customer・address・prefecture を順に呼ぶので、注文を読む1回に加えて、注文1件につき3回の SELECT が発行されました。このように、一覧の件数 N に比例して SQL が増える問題を N+1 問題と呼びます（<ChapterLink n={13} section="n-plus-one" />）。図 55-2 の左はこの10回を時間の順に並べたものです。
+            Active Record の関連は、最初にそのメソッドを呼んだときに SELECT を発行して相手を読み込みます。これを<Term en="lazy loading">遅延読み込み</Term>と呼びます。ビューは注文ごとに customer・address・prefecture を順に呼ぶので、注文を読む1回に加えて、注文1件につき3回の SELECT が発行されました。このように、一覧の件数 N に比例して SQL が増える問題を N+1 問題と呼びます（<ChapterLink n={13} section="n-plus-one" />）。図 72-2 の左はこの10回を時間の順に並べたものです。
           </p>
-          <Figure n="55-2" title="注文3件の一覧で発行される SQL" caption="上から時間の順。右は、後の節で includes を使った後の結果。">
+          <Figure n="72-2" title="注文3件の一覧で発行される SQL" caption="上から時間の順。右は、後の節で includes を使った後の結果。">
             <QueriesFigure />
           </Figure>
           <p>注文を30件にすると、SQL は64回になりました。</p>
@@ -587,11 +588,11 @@ app/models/shipping_label.rb:7:    "#{address.prefecture.name}#{address.city} #{
           <p>
             論文はこの規則の目的を2つ挙げています。1つ目は、クラスの構造が変わったときにプログラムを直しやすくすること、2つ目は、メソッドを書くときに意識しなければならない型の数を減らすことです<Ref n={1} />。また、この規則を守るときは、コードの重複・メソッドの引数の数・クラスあたりのメソッドの数をできるだけ少なくすることも合わせて求めています<Ref n={1} />。この3つの条件は後の「当てはめすぎたとき」の節で使います。
           </p>
-          <Figure n="55-3" title="メソッドがメッセージを送ってよい相手" caption="左の M から実線で結んだ相手には送ってよい。右の破線の箱は、戻り値をたどった先にある知らない相手。">
+          <Figure n="72-3" title="メソッドがメッセージを送ってよい相手" caption="左の M から実線で結んだ相手には送ってよい。右の破線の箱は、戻り値をたどった先にある知らない相手。">
             <FriendsFigure />
           </Figure>
           <p>
-            図 55-3 は直す前の ShippingLabel#to_s に当てはめたものです。to_s が送ってよい相手は、self、インスタンス変数の @order、自分で組み立てる文字列などです。<code>@order.customer</code> は @order に送っているので許されますが、返ってきた Customer に <code>address</code> を送るところから、知らない相手へのメッセージになります。
+            図 72-3 は直す前の ShippingLabel#to_s に当てはめたものです。to_s が送ってよい相手は、self、インスタンス変数の @order、自分で組み立てる文字列などです。<code>@order.customer</code> は @order に送っているので許されますが、返ってきた Customer に <code>address</code> を送るところから、知らない相手へのメッセージになります。
           </p>
           <h3>Rails のコードに当てはめるときの読み方</h3>
           <ul>
@@ -887,15 +888,15 @@ SQL の回数：4
 `}
           />
           <p>
-            SQL は注文の件数によらず4回になりました。住所のない会員（id 4）は addresses に行がないので、その会員の address は nil として読み込まれ、delegate の allow_nil が nil を返します。図 55-4 は直す前と直した後の呼び出しを比べたものです。
+            SQL は注文の件数によらず4回になりました。住所のない会員（id 4）は addresses に行がないので、その会員の address は nil として読み込まれ、delegate の allow_nil が nil を返します。図 72-4 は直す前と直した後の呼び出しを比べたものです。
           </p>
-          <Figure n="55-4" title="直す前と直した後の呼び出し" caption="右の点線の箱は、Order に置いた scope。">
+          <Figure n="72-4" title="直す前と直した後の呼び出し" caption="右の点線の箱は、Order に置いた scope。">
             <CompareFigure />
           </Figure>
           <p>
-            図 55-4 の左では、ビューが4つのクラスを直接呼んでいます。右では、ビューが呼ぶのは Order だけで、Order・Customer・Address はそれぞれ隣のクラスにだけ頼みます。関連の道のりを知っているのは、各クラスの delegate と Order の scope です。各段階の SQL の回数をまとめると、図 55-5 のようになります。
+            図 72-4 の左では、ビューが4つのクラスを直接呼んでいます。右では、ビューが呼ぶのは Order だけで、Order・Customer・Address はそれぞれ隣のクラスにだけ頼みます。関連の道のりを知っているのは、各クラスの delegate と Order の scope です。各段階の SQL の回数をまとめると、図 72-5 のようになります。
           </p>
-          <Figure n="55-5" title="書き方ごとの SQL の回数" caption="script/list.rb で計測。クエリキャッシュで省かれた SQL は数えていない。">
+          <Figure n="72-5" title="書き方ごとの SQL の回数" caption="script/list.rb で計測。クエリキャッシュで省かれた SQL は数えていない。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1109,12 +1110,12 @@ customer_prefecture_remote?
             <li>JSON を読み込んだハッシュの <code>body.dig("data", "items")</code> のように、振る舞いを持たないデータの構造をたどる場合は、たどる道のりそのものが外部の API の形式です。delegate を足すより、そのデータを読む処理を1か所（<ChapterLink n={42} section="idea" />の Adapter など）にまとめます。</li>
           </ul>
           <h3>判断の目安</h3>
-          <p>図 55-6 は関連の先にあるものを使いたいときに、どの書き方を選ぶかの目安です。</p>
-          <Figure n="55-6" title="delegate を使うときと使わないとき" caption="模式図。上から順に確かめる。">
+          <p>図 72-6 は関連の先にあるものを使いたいときに、どの書き方を選ぶかの目安です。</p>
+          <Figure n="72-6" title="delegate を使うときと使わないとき" caption="模式図。上から順に確かめる。">
             <JudgeFigure />
           </Figure>
           <p>
-            図 55-6 は上から順に確かめます。新しいオブジェクトを返す連鎖は対象外です。たどった先の値で判断しているなら、delegate で値を運ぶ前に、判断そのものを値の持ち主に移します。値を1つか2つ取り出すだけなら delegate を使い、多くの値を使うなら部品を1つ渡します。どの書き方でも、一覧で使うなら関連の読み込みを scope に置く必要があります。
+            図 72-6 は上から順に確かめます。新しいオブジェクトを返す連鎖は対象外です。たどった先の値で判断しているなら、delegate で値を運ぶ前に、判断そのものを値の持ち主に移します。値を1つか2つ取り出すだけなら delegate を使い、多くの値を使うなら部品を1つ渡します。どの書き方でも、一覧で使うなら関連の読み込みを scope に置く必要があります。
           </p>
         </>
       ),
@@ -1125,8 +1126,8 @@ customer_prefecture_remote?
       body: (
         <>
           <h3>delegate のオプション</h3>
-          <p>図 55-7 は delegate と delegate_missing_to のオプションと、委譲先が nil のときの動きをまとめたものです。</p>
-          <Figure n="55-7" title="delegate のオプションと、委譲先が nil のときの動き" caption="Rails Guides の Active Support Core Extensions と、Rails 8.1.4.1 のソースによる。">
+          <p>図 72-7 は delegate と delegate_missing_to のオプションと、委譲先が nil のときの動きをまとめたものです。</p>
+          <Figure n="72-7" title="delegate のオプションと、委譲先が nil のときの動き" caption="Rails Guides の Active Support Core Extensions と、Rails 8.1.4.1 のソースによる。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1248,6 +1249,29 @@ ActiveRecord::StrictLoadingViolationError: \`Order\` is marked for strict_loadin
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          呼び出し側は1つ隣のオブジェクトにだけ頼み、関連の道のりは各クラスの delegate と、一覧で使う scope に置きます。たどった先の値で判断しているなら、delegate で値を運ぶ前に、判断を値の持ち主に移します。多くの値を使うときは、項目ごとに delegate を足さず、部品を1つ渡します。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、住所のない会員の注文で一覧の画面全体が NoMethodError の 500 になり、注文30件で SQL が64回発行された。delegate の allow_nil で nil を返し、関連の読み込みを includes の scope にまとめると、SQL は注文の件数によらず4回になった。遠方の判断は Prefecture#remote? に移した。</>,
+        basis: <><ChapterLink n={74} section="scene" />、<ChapterLink n={74} section="apply" /></>,
+      },
+      cost: {
+        text: <>delegate は中継するだけのメソッドを増やす。一覧に市区町村の列を足すと、Customer・Order・ビューの3つのファイルを直すことになり、Order には会員と住所のための公開メソッドが5つ並んだ。</>,
+        basis: <ChapterLink n={74} section="overuse" />,
+      },
+      alternative: {
+        text: <>住所の項目をいくつも表示するなら、Order に <code>delegate :address, to: :customer, prefix: true</code> を1つ置き、住所の部品を部分テンプレートに渡す。delegate_missing_to ですべてを転送すると、ドットは減っても構造への依存は残る。</>,
+        basis: <ChapterLink n={74} section="overuse" />,
+      },
+      criterion: {
+        text: <>新しい Relation を返す連鎖（where・order・limit）は対象外とし、ドットの数だけで判断しない。たどった先の値で判断しているか、値を1つか2つ取り出すだけか、多くの値を使うか。一覧で使うなら、SQL の回数が件数によらないことをテストで固定する。</>,
+        basis: <ChapterLink n={74} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

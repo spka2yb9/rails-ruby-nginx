@@ -4,11 +4,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 82-2 エンティティと値オブジェクトの比較 ---------- */
+/* ---------- 図 99-2 エンティティと値オブジェクトの比較 ---------- */
 function EntityValueFigure() {
   return (
     <Svg
-      id="82-2"
+      id="99-2"
       w={760}
       h={420}
       label="左はエンティティ。予約 id 1001 は、期間や合計を変えても id が同じなので同じ予約である。期間が同じでも id が 1001 と 1002 で違えば別の予約である。右は値オブジェクト。別々に作った Money 13200 JPY どうしは値が同じなので等しい。12000 JPY に 1200 JPY を足すと、元の値は変えずに新しい 13200 JPY が返る。下は、Reservation（エンティティ）が id のほかに、stay（DateRange）と total（Money）という値オブジェクトを属性に持ち、guest で Guest（エンティティ）を参照する関係。期間を変えるときは stay に新しい DateRange を代入する"
@@ -88,7 +88,7 @@ function EntityValueFigure() {
   )
 }
 
-/* ---------- 図 82-3 端数と丸めの例 ---------- */
+/* ---------- 図 99-3 端数と丸めの例 ---------- */
 function RoundingFigure() {
   type Line = { code: string; result: string[]; note: string; tone: 'danger' | 'muted' | 'acc'; good?: boolean }
   const rows: { title: string; lines: [Line, Line] }[] = [
@@ -124,7 +124,7 @@ function RoundingFigure() {
   const rowH = 128
   return (
     <Svg
-      id="82-3"
+      id="99-3"
       w={760}
       h={rows.length * rowH + 10}
       label="1段目：12000円に 1.1 を Float で掛けると 13200.000000000002 になり、切り上げると 13201 円で1円多い。Money の percent_of で税率を Rational(10, 100) として切り上げると、税 1200 円、合計 13200 円になる。2段目：4.35 に 100 を掛けると 434.99999999999994 になり、切り捨てると 434 セントで1セント足りない。Money.parse で文字列の 4.35 から作ると 435 セントになる。3段目：1000円を3人で分けるとき、1000 割る 3 の結果を3回使うと合計 999 円になり、1円消える。allocate で分けると 334、333、333 円で合計 1000 円になる。4段目：105円の明細3行の消費税を明細ごとに切り捨てると 10 円が3つで 30 円、合計 315 円に1回だけ掛けて切り捨てると 31 円になる。適格請求書では税率ごとに1回だけ丸める"
@@ -157,7 +157,7 @@ function RoundingFigure() {
   )
 }
 
-/* ---------- 図 82-1 検証を生成時の1か所に集める ---------- */
+/* ---------- 図 99-1 検証を生成時の1か所に集める ---------- */
 function ValidateOnceFigure() {
   const before: [string, string, boolean][] = [
     ['予約の作成', 'そのまま探す', true],
@@ -167,7 +167,7 @@ function ValidateOnceFigure() {
   const after = ['予約の作成', 'CSV の取り込み', '会員登録']
   return (
     <Svg
-      id="82-1"
+      id="99-1"
       w={760}
       h={330}
       label="適用前は、入力の文字列が予約の作成、CSV の取り込み、会員登録の3つの処理にそのまま渡る。予約の作成は入力のまま探し、CSV の取り込みは前後の空白を除くだけ、会員登録は正規表現で検証して小文字にする。規則が少しずつ違い、検証を忘れる場所も出る。適用後は、入力の文字列を EmailAddress.new で1回だけ正規化・検証する。Guest の email に代入したときは EmailAddressType の cast から呼ばれる。正しくなければここで例外か nil になる。3つの処理は EmailAddress を受け取り、検証しない"
@@ -221,11 +221,11 @@ function ValidateOnceFigure() {
   )
 }
 
-/* ---------- 図 82-4 テーブルの列と値オブジェクトの対応 ---------- */
+/* ---------- 図 99-4 テーブルの列と値オブジェクトの対応 ---------- */
 function ColumnsFigure() {
   return (
     <Svg
-      id="82-4"
+      id="99-4"
       w={760}
       h={372}
       label="rooms テーブルの nightly_price_amount（bigint）と nightly_price_currency（varchar(3)）は、composed_of で Room#nightly_price（Money）になる。reservations テーブルの check_in_on と check_out_on（date）は composed_of で Reservation#stay（DateRange）に、total_amount と total_currency は Reservation#total（Money）になる。reservations には check_in_on が check_out_on より前であることの CHECK 制約がある。guests テーブルの email（正規化した文字列）は、attribute と EmailAddressType で Guest#email（EmailAddress）になる。members テーブルの email は normalizes で正規化した文字列のまま Member#email になる"
@@ -282,7 +282,7 @@ function ColumnsFigure() {
   )
 }
 
-/* ---------- 図 82-5 Attributes API の型による変換 ---------- */
+/* ---------- 図 99-5 Attributes API の型による変換 ---------- */
 function AttributeTypeFigure() {
   const col1 = 90
   const col2 = 340
@@ -291,7 +291,7 @@ function AttributeTypeFigure() {
   const labels = ['代入', '保存', '読み込み', '検索']
   return (
     <Svg
-      id="82-5"
+      id="99-5"
       w={760}
       h={330}
       label="代入：文字列の '  Sato@Example.COM ' は cast で EmailAddress（sato@example.com）になる。保存：EmailAddress は serialize で文字列の 'sato@example.com' になって DB に入る。読み込み：DB の文字列は deserialize（既定で cast を呼ぶ）で EmailAddress になる。検索：Guest.where に渡した ' SATO@example.com' は cast を通らずに serialize に渡る。EmailAddressType の serialize は cast を呼んで正規化するので、検索の条件も 'sato@example.com' になる"
@@ -508,7 +508,7 @@ email 列を utf8mb4_0900_bin にした場合:
             <li>生成時の検証：正しくない値ではオブジェクトを作れない。</li>
           </ul>
           <p>
-            <ChapterLink n={33} section="value-objects" />では、Data.define で Money と DateRange を作る方法と、composed_of の基本を扱いました。この章ではその続きとして、前の節の4つの問題を値オブジェクトで直し、端数の処理、Attributes API の独自の型、normalizes、DB の制約まで含めて実装します。MSDP のカタログ（<ChapterLink n={39} section="catalog" />）では、Value Object は業務の処理を整理するパターンの1つです。
+            <ChapterLink n={33} section="value-objects" />では、Data.define で値のクラスを作る方法と、composed_of の基本を扱いました。宿泊予約で使うここでの Money は最小通貨単位を amount に持ち、DateRange はチェックアウト日を含まない期間を表します。この章ではその続きとして、前の節の4つの問題を値オブジェクトで直し、端数の処理、Attributes API の独自の型、normalizes、DB の制約まで含めて実装します。MSDP のカタログ（<ChapterLink n={39} section="catalog" />）では、Value Object は業務の処理を整理するパターンの1つです。
           </p>
           <h3>使う場面</h3>
           <p>
@@ -575,11 +575,11 @@ email 列を utf8mb4_0900_bin にした場合:
             期間の終わりを含めるか：Fowler は、範囲を始まりと終わりの組として1つのオブジェクトで表すパターンを Range と呼び、端を含むかどうかを決める方法を挙げています<Ref n={8} />。この章の DateRange は、始まり（チェックイン）の日を含み、終わり（チェックアウト）の日を含まない<Term en="half-open interval">半開区間</Term>にします。泊数が日付の差そのものになり（12/1〜12/4 は3泊）、チェックアウトの日に次の予約が始まっても重なりません。<ChapterLink n={33} section="value-objects" />の DateRange は両端を含む閉区間でした。どちらにするかは業務で決め、値オブジェクトの中に1つだけ書きます。
           </p>
           <h3>構造</h3>
-          <Figure n="82-1" title="検証を生成時の1か所に集める" caption="模式図。矢印はメールアドレスの値が渡る向き。破線の矢印は検証されずに渡る経路。CSV の取り込みと会員登録は説明のための処理。">
+          <Figure n="99-1" title="検証を生成時の1か所に集める" caption="模式図。矢印はメールアドレスの値が渡る向き。破線の矢印は検証されずに渡る経路。CSV の取り込みと会員登録は説明のための処理。">
             <ValidateOnceFigure />
           </Figure>
           <p>
-            図 82-1 はメールアドレスを検証する場所を比べたものです。左の適用前は、入力の文字列が3つの処理にそのまま渡り、それぞれが違う規則で検証し、検証しない処理もあります。右の適用後は、<code>EmailAddress.new</code> で1回だけ正規化と検証を行い、3つの処理は EmailAddress を受け取ります。Rails のモデルでは、属性に代入したときに型の cast からこの <code>new</code> が呼ばれるようにします（rails-impl の節で実装します）。
+            図 99-1 はメールアドレスを検証する場所を比べたものです。左の適用前は、入力の文字列が3つの処理にそのまま渡り、それぞれが違う規則で検証し、検証しない処理もあります。右の適用後は、<code>EmailAddress.new</code> で1回だけ正規化と検証を行い、3つの処理は EmailAddress を受け取ります。Rails のモデルでは、属性に代入したときに型の cast からこの <code>new</code> が呼ばれるようにします（rails-impl の節で実装します）。
           </p>
           <p>
             Ruby には実行前の型の検査がありませんが、取り違えた引数は期待されたメソッド（泊数の <code>nights</code> など）を持たないので、実行時に NoMethodError になります。3つの値オブジェクトは互いを知らず、DB にも依存しないので、単独でテストできます。DB や JSON との変換は、値オブジェクトの外（composed_of と型のクラス）に置きます。
@@ -631,11 +631,11 @@ room == twin2                              # => false（属性が同じでも id
 room.nightly_price == twin2.nightly_price  # => true（値が同じ）
 `}
           />
-          <Figure n="82-2" title="エンティティと値オブジェクトの比較" caption="模式図。実線の矢印は同じ予約の属性の変更、破線の矢印は + が返す新しい値を表す。">
+          <Figure n="99-2" title="エンティティと値オブジェクトの比較" caption="模式図。実線の矢印は同じ予約の属性の変更、破線の矢印は + が返す新しい値を表す。">
             <EntityValueFigure />
           </Figure>
           <p>
-            図 82-2 の上段の左は、id 1001 の予約が期間と合計を変えても同じ予約であること、期間が同じでも id が違えば別の予約であることを示しています。上段の右は、別々に作った Money でも値が同じなら等しく、足し算は元の値を変えずに新しい値を返すことを示しています。下段は、エンティティの Reservation が値オブジェクトの stay（DateRange）と total（Money）を属性に持ち、宿泊者の Guest（これもエンティティ）を参照する関係です。予約の期間を変えるときは、stay の中身を書き換えるのではなく、新しい DateRange を代入します。
+            図 99-2 の上段の左は、id 1001 の予約が期間と合計を変えても同じ予約であること、期間が同じでも id が違えば別の予約であることを示しています。上段の右は、別々に作った Money でも値が同じなら等しく、足し算は元の値を変えずに新しい値を返すことを示しています。下段は、エンティティの Reservation が値オブジェクトの stay（DateRange）と total（Money）を属性に持ち、宿泊者の Guest（これもエンティティ）を参照する関係です。予約の期間を変えるときは、stay の中身を書き換えるのではなく、新しい DateRange を代入します。
           </p>
           <h3>どちらにするかの判断</h3>
           <p>
@@ -789,11 +789,11 @@ lines = [Money.new(105, :JPY)] * 3
           <p>
             1,000円を3人で分けるとき、<code>1000 / 3</code> の結果の 333 を3回使うと合計が 999円になり、1円消えます。金額を比率で分けることを<Term en="allocation">按分</Term>と呼びます。Money の <code>allocate</code> は割り切れずに残った端数を先頭から1単位ずつ配り、合計を元の金額に一致させます。
           </p>
-          <Figure n="82-3" title="端数と丸めの例" caption="矢印は、左の式を計算した結果を指す。青い矢印は Money で行う計算。4段目はどちらも誤りではなく、丸める回数による違い。">
+          <Figure n="99-3" title="端数と丸めの例" caption="矢印は、左の式を計算した結果を指す。青い矢印は Money で行う計算。4段目はどちらも誤りではなく、丸める回数による違い。">
             <RoundingFigure />
           </Figure>
           <p>
-            図 82-3 の1〜3段目は、上の行が Float や整数の割り算で端数を失う計算、下の行が Money で同じ計算をした結果です。4段目は丸める段階の違いで、どちらを採るかは業務の規則で決めます。
+            図 99-3 の1〜3段目は、上の行が Float や整数の割り算で端数を失う計算、下の行が Money で同じ計算をした結果です。4段目は丸める段階の違いで、どちらを採るかは業務の規則で決めます。
           </p>
           <p>
             表示のために小数に戻すのは最後だけにします。Money の <code>to_s</code> は <code>"USD 32.84"</code> のような表示用の文字列を返しますが、計算には使いません。JSON で返すときも <code>{'{'} "amount": 3284, "currency": "USD" {'}'}</code> のように最小単位の整数と通貨を返します。画面の書式（3桁ごとのカンマや通貨記号）は、ビューのヘルパー（<ChapterLink n={16} section="helpers" />）で整えます。
@@ -872,11 +872,11 @@ end
           <p>
             金額は <code>_amount</code>（BIGINT）と <code>_currency</code>（3文字）の2列にします。<code>t.integer</code> は MySQL の INT（4バイト）を作り、上限は 2,147,483,647 です。セント単位では約2,147万ドルで上限に達するので、BIGINT にしています<Ref n={11} />。期間は <code>check_in_on</code> と <code>check_out_on</code> の2つの DATE の列で持ち、CHECK 制約で順序を守ります。MySQL は 8.0.16 から CHECK 制約を検査し、INSERT や UPDATE の結果が条件を満たさないとエラーにします<Ref n={33} />。既存のテーブルに制約を加える手順は<ChapterLink n={27} section="indexes-constraints" />で扱います。
           </p>
-          <Figure n="82-4" title="テーブルの列と値オブジェクトの対応" caption="この節のマイグレーションとモデルの対応をまとめた模式図。">
+          <Figure n="99-4" title="テーブルの列と値オブジェクトの対応" caption="この節のマイグレーションとモデルの対応をまとめた模式図。">
             <ColumnsFigure />
           </Figure>
           <p>
-            図 82-4 の左がテーブルの列、右がモデルの属性です。DB には基本型の値（整数・文字列・日付）で保存し、モデルの属性を読み書きするときに値オブジェクトと変換します。複数の列を1つの値にするときは composed_of、1つの列を1つの値にするときは Attributes API の型、文字列のまま表記だけをそろえるときは normalizes を使います。以下、値オブジェクト、モデル、コントローラーの順に実装します。
+            図 99-4 の左がテーブルの列、右がモデルの属性です。DB には基本型の値（整数・文字列・日付）で保存し、モデルの属性を読み書きするときに値オブジェクトと変換します。複数の列を1つの値にするときは composed_of、1つの列を1つの値にするときは Attributes API の型、文字列のまま表記だけをそろえるときは normalizes を使います。以下、値オブジェクト、モデル、コントローラーの順に実装します。
           </p>
           <h3>Money</h3>
           <Code
@@ -1196,11 +1196,11 @@ end
           <p>
             cast で例外を投げずに nil を返すのは、代入の時点で例外にすると、ほかの項目の検証エラーと一緒にフォームへ表示できないからです。nil になった値は presence の検証で拒否します。入力された文字列は <code>email_before_type_cast</code> に残るので、フォームに入力をそのまま再表示できます。
           </p>
-          <Figure n="82-5" title="Attributes API の型による変換" caption="実線の矢印は値を渡してメソッドを呼ぶこと、破線の矢印はメソッドの戻り値を表す。青い矢印は検索の経路。">
+          <Figure n="99-5" title="Attributes API の型による変換" caption="実線の矢印は値を渡してメソッドを呼ぶこと、破線の矢印はメソッドの戻り値を表す。青い矢印は検索の経路。">
             <AttributeTypeFigure />
           </Figure>
           <p>
-            図 82-5 は代入・保存・読み込み・検索のそれぞれで、EmailAddressType のどのメソッドが呼ばれるかを示しています。注意が必要なのは一番下の検索です。where に渡した値は型の serialize に渡されますが、cast は通りません。where の値を表す <code>ActiveRecord::Relation::QueryAttribute</code> は、cast の代わりに値をそのまま返す <code>type_cast</code> を持ち、SQL に使う値は <code>type.serialize(value)</code> で作ります<Ref n={30} />。
+            図 99-5 は代入・保存・読み込み・検索のそれぞれで、EmailAddressType のどのメソッドが呼ばれるかを示しています。注意が必要なのは一番下の検索です。where に渡した値は型の serialize に渡されますが、cast は通りません。where の値を表す <code>ActiveRecord::Relation::QueryAttribute</code> は、cast の代わりに値をそのまま返す <code>type_cast</code> を持ち、SQL に使う値は <code>type.serialize(value)</code> で作ります<Ref n={30} />。
           </p>
           <Code
             lang="ruby"

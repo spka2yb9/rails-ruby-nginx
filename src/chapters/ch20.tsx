@@ -1,18 +1,18 @@
 import type { Chapter } from '../content/types'
 import { withExplanations } from '../explanations/shared'
 import { explanation20 } from '../explanations/features'
-import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
+import { ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const RC = 'https://github.com/rspec/rspec/blob/rspec-core-v3.13.7/rspec-core/lib/rspec/core'
 const RR = 'https://github.com/rspec/rspec-rails/blob/v8.1.0/lib/rspec/rails'
 
-/* ---------- 図 23-1 期待する結果と実際の結果を比べる ---------- */
+/* ---------- 図 31-1 期待する結果と実際の結果を比べる ---------- */
 function CompareFigure() {
   return (
     <Svg
-      id="23-1"
+      id="31-1"
       w={780}
       h={300}
       label="上段は1つのテストの中身。準備で入力の文字列を用意し、実行で short_title を呼び、比較で実際の結果と期待する結果を == で比べる。下段はテストを使う流れ。コードを書き換えたらテストを実行し、すべての比較が等しければ成功、1つでも違えば失敗として、期待した値と実際の値が表示されるので、変更で動作が変わったことに気付ける"
@@ -42,7 +42,7 @@ function CompareFigure() {
   )
 }
 
-/* ---------- 図 23-2 環境ごとの設定とデータベース ---------- */
+/* ---------- 図 31-2 環境ごとの設定とデータベース ---------- */
 function EnvFigure() {
   const cols = [
     { x: 20, key: 'development', name: 'development（開発）', run: 'bin/rails server など', file: 'development.rb', db: 'demo_development', fill: 'box' as const },
@@ -51,7 +51,7 @@ function EnvFigure() {
   ]
   return (
     <Svg
-      id="23-2"
+      id="31-2"
       w={780}
       h={300}
       label="Rails には development・test・production の3つの環境があり、環境変数 RAILS_ENV でどれを使うかが決まる。bin/rails server は development、bundle exec rspec は test で動く。環境ごとに config/environments の設定ファイルと、config/database.yml に書いたデータベースが別々で、テストは demo_test を使うので、開発用の demo_development のデータは変わらない"
@@ -77,11 +77,11 @@ function EnvFigure() {
   )
 }
 
-/* ---------- 図 23-3 RSpec の DSL が作るもの ---------- */
+/* ---------- 図 31-3 RSpec の DSL が作るもの ---------- */
 function DslFigure() {
   return (
     <Svg
-      id="23-3"
+      id="31-3"
       w={780}
       h={290}
       label="RSpec.describe Article は RSpec::Core::ExampleGroup の子クラス RSpec::ExampleGroups::Article を作る。入れ子の describe はさらにその子クラス RSpec::ExampleGroups::Article::Comments になる。let は LetDefinitions モジュールにメソッドを定義し、クラスにはメモ化するメソッドを定義する。it は Example のオブジェクトを作ってブロックを保存する。実行時には例ごとにクラスの新しいインスタンスが作られ、before とブロックがそのインスタンスを self として実行される"
@@ -116,7 +116,7 @@ function DslFigure() {
   )
 }
 
-/* ---------- 図 23-4 テストの種類と通る層 ---------- */
+/* ---------- 図 31-4 テストの種類と通る層 ---------- */
 function LayersFigure() {
   const layers = ['ブラウザー（JavaScript）', 'HTTP サーバー（Puma）', 'ミドルウェア', 'ルーティング', 'コントローラー', 'ビュー', 'モデル・DB']
   const kinds = [
@@ -127,7 +127,7 @@ function LayersFigure() {
   const rowH = 34
   return (
     <Svg
-      id="23-4"
+      id="31-4"
       w={760}
       h={layers.length * rowH + 70}
       label="記事を保存して表示する例。model spec はモデルから、request spec はミドルウェアから Rails の処理を呼ぶ。Selenium を使う system spec はブラウザーを操作して Puma に HTTP で要求し、画面の JavaScript も実行する"
@@ -150,11 +150,11 @@ function LayersFigure() {
   )
 }
 
-/* ---------- 図 23-5 テストのトランザクション ---------- */
+/* ---------- 図 31-5 テストのトランザクション ---------- */
 function RollbackFigure() {
   return (
     <Svg
-      id="23-5"
+      id="31-5"
       w={780}
       h={260}
       label="実行の最初に fixtures が投入され、COMMIT される。各例の前に、接続を固定して BEGIN し、例の中の保存は SAVEPOINT と RELEASE SAVEPOINT になる。外側のトランザクションが参加不可なので、RELEASE の時点で after_commit が実行される。例が終わると ROLLBACK し、次の例は fixtures だけがある状態から始まる。同じプロセスの別のスレッドも固定された接続を使うのでデータが見えるが、Sidekiq などの別のプロセスからは見えない"
@@ -422,8 +422,8 @@ NG  長いタイトルは10文字で切る: 期待 "RSpecでテストを…"、�
 `}
           />
           <p>
-            確認をプログラムにしておくと、変更で動作が変わったことに、実行するだけで気付けます（図 23-1）。確認が数百、数千と増えると、どの確認が失敗したか、期待した値と実際の値は何か、どのファイルの何行目かを見やすく表示する仕組みが欲しくなります。これをまとめた道具がテストのフレームワークで、Ruby
-            では RSpec と Minitest がよく使われます。同じ確認を RSpec で書きました。
+            確認をプログラムにしておくと、変更で動作が変わったことに、実行するだけで気付けます（図 31-1）。確認が数百、数千と増えると、どの確認が失敗したか、期待した値と実際の値は何か、どのファイルの何行目かを見やすく表示する仕組みが欲しくなります。これをまとめた道具がテストのフレームワークで、Ruby
+            のテストフレームワークには RSpec などがあります。同じ確認を RSpec で書きました。
           </p>
           <Code
             lang="ruby"
@@ -490,7 +490,7 @@ rspec ./short_title_spec.rb:8 # short_title 10文字より長いタイトルは1
             失敗した例は <code>F</code> で表示され、その後に、失敗した expect の行、期待した値（expected）と実際の値（got）、失敗した行の番号（short_title_spec.rb の9行目）が並びます。自分で書いた{' '}
             <code>check</code> と同じ内容を、RSpec が決まった形で表示しています。表示の読み方は「RSpec で最初のテストを書く」の節でも確かめます。
           </p>
-          <Figure n="23-1" title="期待する結果と実際の結果を比べる" caption="short_title の例（Ruby 4.0.9・rspec-core 3.13.7 で実行）をもとにした模式図。">
+          <Figure n="31-1" title="期待する結果と実際の結果を比べる" caption="short_title の例（Ruby 4.0.9・rspec-core 3.13.7 で実行）をもとにした模式図。">
             <CompareFigure />
           </Figure>
         </>
@@ -619,10 +619,10 @@ Finished in 0.19226 seconds (files took 1.73 seconds to load)
           <p>
             <code>delivery_method = :test</code> はメールを実際には送らずに <code>ActionMailer::Base.deliveries</code> という配列に入れる設定です。<code>cache_store = :null_store</code>{' '}
             はキャッシュに何も保存しない設定で、<code>active_storage.service = :test</code> は添付したファイルを一時的なディレクトリに保存する設定です
-            <Ref n={13} />。テストの結果が、メールの送信先や、前のテストが残したキャッシュやファイルに左右されないようにしています（図 23-2）。
+            <Ref n={13} />。テストの結果が、メールの送信先や、前のテストが残したキャッシュやファイルに左右されないようにしています（図 31-2）。
           </p>
           <p>次の節では Rails のアプリケーションに RSpec を入れて、テスト環境で Article のモデルを確かめるテストを書きます。</p>
-          <Figure n="23-2" title="環境ごとの設定とデータベース" caption="rails new demo -d mysql（Rails 8.1.4.1）が作る database.yml・config/environments と、デモでの実測をもとにした模式図。">
+          <Figure n="31-2" title="環境ごとの設定とデータベース" caption="rails new demo -d mysql（Rails 8.1.4.1）が作る database.yml・config/environments と、デモでの実測をもとにした模式図。">
             <EnvFigure />
           </Figure>
         </>
@@ -797,9 +797,7 @@ rspec ./spec/models/article_spec.rb:13 # Article#valid? タイトルが空なら
           </p>
           <h3>フォームの送信を確かめる request spec</h3>
           <p>
-            <ChapterLink n={16} section="form">
-              第20章の「フォームから保存まで」
-            </ChapterLink>
+            <ChapterLink n={16} section="form" />
             の create アクションは、要求を送って応答を確かめる request spec でテストできます。<code>post</code> で要求を送ると、<code>response</code> に応答が入ります。
           </p>
           <Code
@@ -933,7 +931,7 @@ end
           />
           <p>
             <code>it</code> はブロックを Example のオブジェクトに保存するだけで、実行はしません。実行するときは、例ごとにクラスの新しいインスタンスを作り、そのインスタンスを self として before とブロックを実行します（上の出力の object_id
-            が例ごとに違う）。そのため、ある例で代入したインスタンス変数や let の値は、次の例には残りません（図 23-3）。
+            が例ごとに違う）。そのため、ある例で代入したインスタンス変数や let の値は、次の例には残りません（図 31-3）。
           </p>
           <Code
             lang="ruby"
@@ -954,7 +952,7 @@ end
       end
 `}
           />
-          <Figure n="23-3" title="RSpec の DSL が作るもの" caption="rspec-core 3.13.7 の example_group.rb・memoized_helpers.rb を読み、デモの出力で確かめてまとめた模式図。">
+          <Figure n="31-3" title="RSpec の DSL が作るもの" caption="rspec-core 3.13.7 の example_group.rb・memoized_helpers.rb を読み、デモの出力で確かめてまとめた模式図。">
             <DslFigure />
           </Figure>
         </>
@@ -986,7 +984,7 @@ end
       body: (
         <>
           <p>
-            rspec-rails は、spec の <code>type:</code>（model・request・system など）に応じて、Rails のテスト用のモジュールを include します。どのモジュールを include するかで、テストがアプリケーションのどの層から処理を呼び出すかが決まります（図 23-4）。
+            rspec-rails は、spec の <code>type:</code>（model・request・system など）に応じて、Rails のテスト用のモジュールを include します。どのモジュールを include するかで、テストがアプリケーションのどの層から処理を呼び出すかが決まります（図 31-4）。
           </p>
           <ul>
             <li>model spec：モデルのクラスを直接呼ぶ。コントローラーやルーティングは通らない</li>
@@ -1015,24 +1013,31 @@ end
           />
           <p>
             request spec は Rails 自身の結合テスト（ActionDispatch::IntegrationTest）と同じ仕組みです
-            <Ref n={2} />。Turbo Streams の形式で応答を返すコメント投稿を request spec で確かめました。
+            <Ref n={2} />。記事を表示する要求なら、存在する記事には 200、存在しない記事には 404 が返ることを確かめられます。
           </p>
           <Code
-            lang="text"
+            lang="ruby"
+            title="spec/requests/articles_spec.rb の例"
             code={`
-  status=200 content-type=text/vnd.turbo-stream.html
-  app=Demo::Application request.env の数=69 remote_ip=127.0.0.1
-（存在しない記事）
-  status=404
+require "rails_helper"
+
+RSpec.describe "記事の表示", type: :request do
+  it "保存された記事のページを返す" do
+    article = Article.create!(title: "Rails 入門", body: "本文")
+    get article_path(article)
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Rails 入門")
+  end
+end
 `}
           />
           <p>
-            Accept ヘッダー（受け取れる応答の形式をサーバーに伝えるヘッダー）で Turbo Stream が選ばれ、ミドルウェアからビューまでを通った応答が返っています。存在しない記事の要求が例外ではなく 404 になったのは、テスト環境の設定ファイルに{' '}
-            <code>config.action_dispatch.show_exceptions = :rescuable</code> があり、ShowExceptions のミドルウェアが RecordNotFound を 404 に変えたからです（
+            このテストはルーティングからビューまでを通った結果を確認します。存在しない記事の要求で <code>RecordNotFound</code> が発生した場合、テスト環境の設定ファイルに{' '}
+            <code>config.action_dispatch.show_exceptions = :rescuable</code> があれば、ミドルウェアの ShowExceptions が例外を 404 の応答に変えます（
             <ChapterLink n={10} section="exceptions" />
             ）。一方、HTTP サーバーを通らないので、Puma の設定や Nginx は request spec では確かめられません。
           </p>
-          <Figure n="23-4" title="テストの種類と通る層" caption="rspec-rails 8.1.0 の example グループのモジュールと、Testing Rails Applications（ガイド）をもとにまとめた図。">
+          <Figure n="31-4" title="テストの種類と通る層" caption="rspec-rails 8.1.0 の example グループのモジュールと、Testing Rails Applications（ガイド）をもとにまとめた図。">
             <LayersFigure />
           </Figure>
         </>
@@ -1115,9 +1120,9 @@ INSERT INTO \`authors\` (\`id\`, \`name\`, \`email\`, …) VALUES (663665735, 'A
           />
           <p>
             実際には COMMIT されていませんが、after_commit は実行されました。別のスレッドからも作成した行が見えたのは、固定された接続を共有しているからです。system spec でテストのスレッドと Puma
-            のスレッドが同じデータを見られるのも、この仕組みによります（図 23-5）。
+            のスレッドが同じデータを見られるのも、この仕組みによります（図 31-5）。
           </p>
-          <Figure n="23-5" title="テストのトランザクション" caption="Rails 8.1.4.1 の test_fixtures.rb・connection_pool.rb・transaction.rb を読み、デモのテストのログで確かめてまとめた模式図。">
+          <Figure n="31-5" title="テストのトランザクション" caption="Rails 8.1.4.1 の test_fixtures.rb・connection_pool.rb・transaction.rb を読み、デモのテストのログで確かめてまとめた模式図。">
             <RollbackFigure />
           </Figure>
           <p>トランザクションによる巻き戻しが適用されない、または期待どおりに動かない場合があります。</p>
@@ -1299,89 +1304,59 @@ stub_request(:get, "https://catalog.example.test/items/42")
       ),
     },
     {
-      id: 'minitest',
-      title: 'Minitest との対応',
+      id: 'test-doubles',
+      title: '外部サービスをスタブに替えてテストする',
       body: (
         <>
-          <p>Rails の既定のテストフレームワークは Minitest で、ガイドの例も Minitest で書かれています。RSpec の書き方との主な対応は次のとおりです。</p>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>RSpec（rspec-rails）</th>
-                  <th>Minitest（Rails）</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <code>RSpec.describe Article do … end</code>
-                  </td>
-                  <td>
-                    <code>class ArticleTest &lt; ActiveSupport::TestCase</code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <code>it "…" do … end</code>
-                  </td>
-                  <td>
-                    <code>test "…" do … end</code>（<code>test_…</code> というメソッドを定義する）
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <code>let</code>・<code>before</code>
-                  </td>
-                  <td>
-                    <code>setup do … end</code> でインスタンス変数に入れる
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <code>expect(x).to eq y</code>
-                  </td>
-                  <td>
-                    <code>assert_equal y, x</code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>request spec</td>
-                  <td>ActionDispatch::IntegrationTest</td>
-                </tr>
-                <tr>
-                  <td>system spec</td>
-                  <td>ApplicationSystemTestCase（ActionDispatch::SystemTestCase）</td>
-                </tr>
-                <tr>
-                  <td>
-                    <code>have_enqueued_job</code>・<code>have_enqueued_mail</code>
-                  </td>
-                  <td>
-                    <code>assert_enqueued_with</code>・<code>assert_enqueued_email_with</code>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <code>use_transactional_fixtures</code>
-                  </td>
-                  <td>
-                    <code>use_transactional_tests</code>（既定で有効）
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p>
-            rspec-rails は、内部でこれらの Rails のテスト用モジュールを include して使っているので、トランザクションや fixtures の仕組みは両者で同じです。
-          </p>
-          <Callout kind="v72">
-            <p>
-              Rails 7.2.4 の test_fixtures.rb と connection_pool.rb にも同じ <code>pin_connection!</code>（<code>joinable: false</code>、スレッドの共有）があり、テスト環境の ActiveJob
-              のアダプターの既定値も <code>:test</code> です
-              <Ref n={5} />。この章の内容は 7.2 でも同じです。
-            </p>
-          </Callout>
+          <p>送料の見積もりが外部サービスに依存していると、テストを実行するたびにネットワークやサービスの状態の影響を受けます。通常の戻り値やタイムアウト時の表示を確かめるテストでは、外部サービスを呼ぶクライアントをテスト用の代役に替えられます。</p>
+          <p><code>allow</code> は、指定したメソッドが決めた値を返すか、例外を発生させるように差し替えます。この代役をスタブと呼びます。<code>expect(...).to receive</code> は呼び出し自体を確認します。外部サービスへの依頼が一度だけ送られることが仕様なら、呼び出し回数を確認します。画面に表示する値が仕様なら、内部の呼び出し順や回数まで固定するとテストを保ちにくくなります。<Ref n={22} /></p>
+          <Code lang="ruby" title="RSpec でクライアントの代役を使う例" code={`
+require "rspec"
+
+class ShippingClient
+  def quote(postal_code:)
+    raise NotImplementedError
+  end
+end
+
+class ShippingFee
+  def initialize(client:)
+    @client = client
+  end
+
+  def call(postal_code:)
+    @client.quote(postal_code: postal_code)
+  end
+end
+
+RSpec.describe ShippingFee do
+  it "送料の見積もりを返す" do
+    client = instance_double(ShippingClient)
+    allow(client).to receive(:quote).with(postal_code: "1000001").and_return(800)
+    fee = ShippingFee.new(client: client)
+    expect(fee.call(postal_code: "1000001")).to eq(800)
+  end
+end
+`} />
+          <p><code>instance_double(ShippingClient)</code> を使うと、実際のクラスにないメソッドや合わない引数を指定したときに RSpec が検出します。HTTP の URL や JSON の変換はクライアント自体のテストで確かめます。アプリが外部 API の仕様に追従できているかは、仕様の資料や提供元のテスト環境でも確認します（<ChapterLink n={101} />）。</p>
+          <h3>ブラウザーでしか分からない挙動を system spec に残す</h3>
+          <p>入力したタイトルが保存後に表示されるかは、フォームを操作する system spec で確かめられます。注文の認可や失敗応答は request spec で分岐ごとに確認し、system spec は入力から表示までを通して確認する場面に絞れます。<Ref n={19} /></p>
+          <Code lang="ruby" title="spec/system/articles_spec.rb の例" code={`
+require "rails_helper"
+
+RSpec.describe "記事の作成", type: :system do
+  before { driven_by(:rack_test) }
+
+  it "作成した記事の題名を表示する" do
+    visit new_article_path
+    fill_in "タイトル", with: "Rails 入門"
+    fill_in "本文", with: "最初の記事です"
+    click_button "作成"
+    expect(page).to have_content("Rails 入門")
+  end
+end
+`} />
+          <p>この例は JavaScript を使わないフォームを想定し、Capybara の RackTest ドライバーを使います。入力欄とボタンの名前は、対象の画面に合わせて指定します。JavaScript の動作も確認する例では、Selenium など実ブラウザーを操作するドライバーを選びます。</p>
         </>
       ),
     },
@@ -1407,7 +1382,7 @@ stub_request(:get, "https://catalog.example.test/items/42")
   ],
   sources: [
     { title: 'rspec-core: lib/rspec/core/example_group.rb・memoized_helpers.rb', publisher: 'rspec/rspec（GitHub）', url: `${RC}/example_group.rb`, accessed: '2026-11-11', version: 'rspec-core 3.13.7', note: 'describe が ExampleGroup の子クラスを作ること、let の LetDefinitions とメモ化、例ごとのインスタンスの生成。' },
-    { title: 'Testing Rails Applications', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/testing.html', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '結合テストとシステムテスト（Capybara、ブラウザー）、テストのトランザクション、Minitest の書き方。' },
+    { title: 'Testing Rails Applications', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/testing.html', accessed: '2026-11-27', version: 'Rails 8.1', note: '結合テストとシステムテスト（Capybara、ブラウザー）、テストのトランザクション。' },
     { title: 'Testing Rails Applications（Testing Parallel Transactions）', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/testing.html#testing-parallel-transactions', accessed: '2026-11-11', version: 'Rails 8.1.4.1', note: '並行するトランザクションはテストのトランザクションの中で互いに待つので、use_transactional_tests = false にしてデータを自分で消すこと。' },
     { title: 'rspec-rails: lib/rspec/rails/example/rails_example_group.rb・request_example_group.rb', publisher: 'rspec/rspec-rails（GitHub）', url: `${RR}/example/rails_example_group.rb`, accessed: '2026-11-11', version: 'rspec-rails 8.1.0', note: 'すべての Rails 用の例に ActiveJob::TestHelper を include すること、request spec が ActionDispatch::Integration::Runner を使うこと。' },
     { title: 'activerecord/lib/active_record/test_fixtures.rb・connection_pool.rb', publisher: 'rails/rails（GitHub）', url: 'https://github.com/rails/rails/blob/v7.2.4/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb#L336-L350', accessed: '2026-11-11', version: 'Rails 7.2.4', note: '7.2 にも同じ pin_connection! があること。テスト環境の ActiveJob のアダプターの既定値（activejob/lib/active_job/railtie.rb）。' },
@@ -1427,6 +1402,7 @@ stub_request(:get, "https://catalog.example.test/items/42")
     { title: "Capybara", publisher: "teamcapybara/capybara", url: "https://github.com/teamcapybara/capybara", accessed: "2026-11-20", note: "ドライバーとブラウザーの操作・待機。" },
     { title: "ruby/setup-ruby", publisher: "ruby/setup-ruby", url: "https://github.com/ruby/setup-ruby", accessed: "2026-11-20", note: "CI の Ruby と Bundler の設定。" },
     { title: "Building and testing Ruby", publisher: "GitHub Docs", url: "https://docs.github.com/en/actions/tutorials/build-and-test-code/ruby", accessed: "2026-11-20", note: "Ruby のテストの自動実行と成果物の保存。" },
+    { title: "RSpec Mocks – Verifying doubles", publisher: "RSpec", url: "https://rspec.info/features/3-13/rspec-mocks/verifying-doubles/", accessed: "2026-11-27", version: "RSpec Mocks 3.13", note: "実際のクラスが提供するメソッドと引数を確認するテスト用の代役。" },
   ],
 }
 

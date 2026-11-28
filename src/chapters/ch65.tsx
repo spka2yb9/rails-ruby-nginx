@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 46-1 場面の構成 ---------- */
+/* ---------- 図 63-1 場面の構成 ---------- */
 const sceneRows: [string, string, string, string][] = [
   ['1', 'EmailNotification', '17字', 'sent'],
   ['2', 'SmsNotification', '13字', 'sent'],
@@ -22,7 +23,7 @@ function SceneFigure() {
   ]
   return (
     <Svg
-      id="46-1"
+      id="63-1"
       w={780}
       h={410}
       label="BulkDeliveryJob は毎晩3時に、Notification.pending で未送信の通知を id の順に読み、1件ずつ deliver! を呼ぶ。Notification は親のクラスで、EmailNotification と SmsNotification が継承している（STI）。EmailNotification は MailGateway に、SmsNotification は SmsGateway に送る。SmsNotification だけは本文が70文字を超えると BodyTooLong を発生させる。notifications テーブルの type 列でクラスが決まる。1晩目の後、id=1 と id=2 は sent、82字の SMS の id=3 と、その後ろの id=4・id=5 は pending のまま残る"
@@ -78,7 +79,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 46-2 一括送信が止まるタイムライン ---------- */
+/* ---------- 図 63-2 一括送信が止まるタイムライン ---------- */
 function TimelineFigure() {
   const xs = [95, 300, 505, 680]
   const names = ['BulkDeliveryJob', '通知（id=1〜5）', 'MailGateway', 'SmsGateway']
@@ -94,7 +95,7 @@ function TimelineFigure() {
   ]
   return (
     <Svg
-      id="46-2"
+      id="63-2"
       w={780}
       h={450}
       label="11/22 3:00、BulkDeliveryJob は id=1 の deliver! を呼び、通知は MailGateway に送って sent になる。次に id=2 の deliver! を呼び、SmsGateway に送って sent になる。id=3 の deliver! は本文が82文字なので BodyTooLong を発生させ、ジョブは例外で終わる。id=4 と id=5 の deliver! は呼ばれない。11/23 3:00、id=1 と id=2 は sent なので読まれず、ジョブは id=3 の deliver! から始めて、同じ BodyTooLong で終わる"
@@ -141,7 +142,7 @@ function TimelineFigure() {
   )
 }
 
-/* ---------- 図 46-3 サブクラスに許される変更と許されない変更 ---------- */
+/* ---------- 図 63-3 サブクラスに許される変更と許されない変更 ---------- */
 const ruleRows: { head: string; parent: string[]; ok: string[]; ng: string[] }[] = [
   {
     head: '事前条件',
@@ -179,7 +180,7 @@ function RulesFigure() {
   const rowH = 66
   return (
     <Svg
-      id="46-3"
+      id="63-3"
       w={780}
       h={314}
       label={`サブクラスがメソッドを定義し直すときの規則。${ruleRows.map((r) => `${r.head}：親の取り決めは${r.parent.join('')}。サブクラスに許されるのは${r.ok.join('')}。許されないのは${r.ng.join('')}`).join('。')}`}
@@ -202,11 +203,11 @@ function RulesFigure() {
   )
 }
 
-/* ---------- 図 46-5 直す前と後 ---------- */
+/* ---------- 図 63-5 直す前と後 ---------- */
 function BeforeAfterFigure() {
   return (
     <Svg
-      id="46-5"
+      id="63-5"
       w={780}
       h={430}
       label="直す前は、BulkDeliveryJob が SMS の長い本文を is_a? で調べて飛ばし、Notification の deliver! の中身はサブクラスがそれぞれ上書きしている。SmsNotification は送るときに長さを調べて例外を出し、update! で sent にする処理は種類ごとに書かれている。共通のテストは無く、作る処理では71文字以上の SMS も保存できる。直した後は、ジョブはどの種類にも deliver! を呼ぶだけになる。Notification の deliver! が transmit を呼んだ後に sent にし、事後条件を1か所で守る。EmailNotification と SmsNotification は transmit で送り方だけを決め、SmsNotification は本文を70文字までとする検証を持つ。共通のテスト（shared_examples）が両方のサブクラスで実行され、作る処理では71文字以上の SMS は保存できず errors に理由が入る"
@@ -249,7 +250,7 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 46-6 当てはめすぎの判断 ---------- */
+/* ---------- 図 63-6 当てはめすぎの判断 ---------- */
 function JudgeFigure() {
   const quads: { x: number; y: number; lines: string[]; fill: 'box' | 'box5' }[] = [
     { x: 92, y: 48, lines: ['継承をやめて別のモデルにする', '（delegated_type・', 'オブジェクトの組み合わせ）'], fill: 'box' },
@@ -259,7 +260,7 @@ function JudgeFigure() {
   ]
   return (
     <Svg
-      id="46-6"
+      id="63-6"
       w={760}
       h={420}
       label="横軸は親の型としてまとめて扱う呼び出し側の多さ、縦軸は種類ごとの制約や振る舞いの違いの大きさ。まとめて扱う呼び出し側が多く違いが小さいなら、継承（STI）と共通の取り決めを shared_examples ですべてのサブクラスに当てる。この章の通知はここに入る。まとめて扱う側が多く違いが大きいなら、違いを親の取り決めに含める（保存前の検証、できることの問い合わせ）か、使う側ごとの小さな取り決めに分ける。まとめて扱う側が少なく違いが小さいなら、継承のままでよく、取り決めのテストは共通の検証だけで足りる。まとめて扱う側が少なく違いが大きいなら、継承をやめて別のモデルにする（delegated_type、オブジェクトの組み合わせ）"
@@ -291,7 +292,7 @@ function JudgeFigure() {
   )
 }
 
-/* ---------- 図 46-7 STI と継承の関係 ---------- */
+/* ---------- 図 63-7 STI と継承の関係 ---------- */
 const stiRows: [string, string, string][] = [
   ['1', 'EmailNotification', 'sent'],
   ['2', 'SmsNotification', 'sent'],
@@ -308,7 +309,7 @@ function StiFigure() {
   ]
   return (
     <Svg
-      id="46-7"
+      id="63-7"
       w={780}
       h={390}
       label="notifications テーブルの5行には、type 列に EmailNotification か SmsNotification が入っている。Notification.order(:id) で読むと、type 列の値に応じて、行ごとに EmailNotification か SmsNotification のオブジェクトが返る。Notification.pending の SQL には type の条件が付かず、すべての種類を読む。SmsNotification.pending の SQL には type = 'SmsNotification' の条件が付く。サブクラスの条件は、読み込まれているサブクラス（descendants）から作られる"
@@ -379,7 +380,7 @@ const chapter: Chapter = {
     'サブクラスごとの制約を保存する前の検証で表し、既存のデータを確かめてから切り替える手順を説明できる',
     'いちばん厳しい制約を親に上げる、取り決めを弱めるといった当てはめすぎを見分け、継承をやめる判断ができる',
   ],
-  prerequisites: [14, 20, 42],
+  prerequisites: [14, 20],
   sections: [
     {
       id: 'scene',
@@ -502,11 +503,11 @@ end
           <p>
             BulkDeliveryJob は親のクラスの <code>Notification.pending</code> で未送信の通知を読み、<code>find_each</code> で1件ずつ <code>deliver!</code> を呼びます。<code>find_each</code> はレコードを主キーの順に1000件ずつ読み込み、1件ずつブロックに渡すメソッドです<Ref n={13} />。ジョブは読み出した通知がメールか SMS かを区別しません。どの通知も Notification として扱い、<code>deliver!</code> を呼べば送られて sent になる、と考えて書かれています。
           </p>
-          <Figure n="46-1" title="場面の構成" caption="右の表は、次に示す実行で1晩目が終わった時点の notifications テーブル。本文の列は文字数。">
+          <Figure n="63-1" title="場面の構成" caption="右の表は、次に示す実行で1晩目が終わった時点の notifications テーブル。本文の列は文字数。">
             <SceneFigure />
           </Figure>
           <p>
-            図 46-1 はこの場面のクラスとテーブルの関係です。ジョブが使うのは親の Notification だけで、実際に呼ばれる <code>deliver!</code> は、テーブルの <code>type</code> 列で選ばれたサブクラスのものです。問題が起きるのは、色を付けた SmsNotification です。
+            図 63-1 はこの場面のクラスとテーブルの関係です。ジョブが使うのは親の Notification だけで、実際に呼ばれる <code>deliver!</code> は、テーブルの <code>type</code> 列で選ばれたサブクラスのものです。問題が起きるのは、色を付けた SmsNotification です。
           </p>
           <h3>2晩続けて実行すると</h3>
           <p>
@@ -540,11 +541,11 @@ end
           <p>
             ジョブを Sidekiq で動かしている場合、例外で終わったジョブは再試行の対象になります（再試行の仕組みは <ChapterLink n={18} section="retry" />）。しかし再試行しても、id=3 で同じ例外になります。原因はデータの中身にあり、時間をおいても変わらないからです。
           </p>
-          <Figure n="46-2" title="一括送信が止まるタイムライン" caption="縦に時間、列に関係するオブジェクトを並べた。破線の矢印は例外が戻る方向。">
+          <Figure n="63-2" title="一括送信が止まるタイムライン" caption="縦に時間、列に関係するオブジェクトを並べた。破線の矢印は例外が戻る方向。">
             <TimelineFigure />
           </Figure>
           <p>
-            図 46-2 はこの実行を時間の順に並べたものです。1晩目も2晩目も、ジョブは id=3 の <code>deliver!</code> から戻ってきた例外で終わり、その後ろの通知には <code>deliver!</code> が呼ばれていません。
+            図 63-2 はこの実行を時間の順に並べたものです。1晩目も2晩目も、ジョブは id=3 の <code>deliver!</code> から戻ってきた例外で終わり、その後ろの通知には <code>deliver!</code> が呼ばれていません。
           </p>
           <h3>呼び出し側で SMS を飛ばす応急処置</h3>
           <p>翌朝、ジョブが止まっていることに気づいた開発者が、長い本文の SMS をジョブの中で飛ばすように直したとします。</p>
@@ -639,11 +640,11 @@ end
           <p>
             Ruby にはこのような構文がありません。メソッドを上書きすれば、事前条件を強めることも、事後条件を弱めることも、親に無い例外を足すこともできます。そのため Ruby では親の約束をコメントに書き、すべてのサブクラスで同じテストを実行して確かめます。テストの書き方は次の節で示します。
           </p>
-          <Figure n="46-3" title="サブクラスに許される変更と許されない変更" caption="この章の通知の取り決めに当てはめた。例の列は直す前の SmsNotification と、ありがちな誤りの例。">
+          <Figure n="63-3" title="サブクラスに許される変更と許されない変更" caption="この章の通知の取り決めに当てはめた。例の列は直す前の SmsNotification と、ありがちな誤りの例。">
             <RulesFigure />
           </Figure>
           <p>
-            図 46-3 は4種類の条件ごとに、サブクラスに許される変更と許されない変更を並べたものです。直す前の SmsNotification は、事前条件の行と例外の行の両方で、右の列に当てはまります。親は本文の長さを条件にしていないのに、SmsNotification は71文字以上を受け付けず、親に無い <code>BodyTooLong</code> を発生させます。事後条件の行の「送らずに戻る」は、たとえば宛先が無いときに何もせずに戻るサブクラスです。例外は出ませんが、使う側は送られたと考えて次へ進み、通知は pending のまま残ります。
+            図 63-3 は4種類の条件ごとに、サブクラスに許される変更と許されない変更を並べたものです。直す前の SmsNotification は、事前条件の行と例外の行の両方で、右の列に当てはまります。親は本文の長さを条件にしていないのに、SmsNotification は71文字以上を受け付けず、親に無い <code>BodyTooLong</code> を発生させます。事後条件の行の「送らずに戻る」は、たとえば宛先が無いときに何もせずに戻るサブクラスです。例外は出ませんが、使う側は送られたと考えて次へ進み、通知は pending のまま残ります。
           </p>
           <h3>似た原則との違い</h3>
           <ul>
@@ -659,7 +660,7 @@ end
           <p>
             LSP は継承だけの原則ではありません。Liskov と Wing の定義は型の振る舞いについてのもので、クラスの継承を前提にしていません<Ref n={2} />。Ruby の<Term en="duck typing">ダックタイピング</Term>（クラスを問わず、必要なメソッドに応答するオブジェクトなら受け付ける書き方）でも、同じメソッドに応答するオブジェクトどうしは、同じ約束を守る必要があります。たとえば <ChapterLink n={42} section="test" />の2つの決済の Adapter は継承の関係にありませんが、どちらも同じ取り決めを満たすことを、共通のテストで確かめています。
           </p>
-          <Figure n="46-4" title="LSP に反するサブクラスがあるときの兆候" caption="コードレビューで見つけやすい形を並べた。">
+          <Figure n="63-4" title="LSP に反するサブクラスがあるときの兆候" caption="コードレビューで見つけやすい形を並べた。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -706,7 +707,7 @@ end
             </div>
           </Figure>
           <p>
-            図 46-4 は LSP に反するサブクラスがあるときにコードに現れやすい兆候です。どれも、親の型を使う側がどのサブクラスを渡されたかを気にしなければならない状態を示しています。
+            図 63-4 は LSP に反するサブクラスがあるときにコードに現れやすい兆候です。どれも、親の型を使う側がどのサブクラスを渡されたかを気にしなければならない状態を示しています。
           </p>
         </>
       ),
@@ -1021,11 +1022,11 @@ true
           <p>
             SMS は保存されず（<code>persisted?</code> が false）、<code>errors</code> に理由が入りました。管理画面で通知を作る処理なら、このメッセージをその場で表示し、担当者に本文を短くしてもらえます。メールは長さの制限が無いので、同じ本文で保存できています。
           </p>
-          <Figure n="46-5" title="直す前と後の比較" caption="破線の箱は共通のテスト。破線の矢印は、共通のテストがそのサブクラスで実行されることを表す。">
+          <Figure n="63-5" title="直す前と後の比較" caption="破線の箱は共通のテスト。破線の矢印は、共通のテストがそのサブクラスで実行されることを表す。">
             <BeforeAfterFigure />
           </Figure>
           <p>
-            図 46-5 は直す前と後の構成を並べたものです。直す前は、SMS の制約が送るときの例外として現れ、それをジョブの <code>is_a?</code> が補っていました。直した後は、制約は作るときの検証に、事後条件は親の <code>deliver!</code> に置かれ、ジョブのコードにはどのサブクラスの名前も出てきません。共通のテストが、2つのサブクラスが同じ約束を守ることを確かめています。
+            図 63-5 は直す前と後の構成を並べたものです。直す前は、SMS の制約が送るときの例外として現れ、それをジョブの <code>is_a?</code> が補っていました。直した後は、制約は作るときの検証に、事後条件は親の <code>deliver!</code> に置かれ、ジョブのコードにはどのサブクラスの名前も出てきません。共通のテストが、2つのサブクラスが同じ約束を守ることを確かめています。
           </p>
           <h3>ほかの直し方：長い本文を分けて送る</h3>
           <p>
@@ -1096,11 +1097,11 @@ end
             継承していても、親の型としてまとめて扱われないクラスもあります。たとえば管理者と一般の会員を STI で分けていても、管理者のクラスを管理画面でしか使わず、会員の一覧や共通の処理に混ざらないなら、管理者が会員の約束をすべて守っているかを細かく確かめても得られるものは少なくなります。この場合は、共通の検証のテストだけで足ります。親の型として扱う箇所が無く、種類ごとの違いも大きいなら、そもそも継承をやめて別のモデルにする方が単純になることもあります。
           </p>
           <h3>判断の目安</h3>
-          <Figure n="46-6" title="継承と取り決めのテストをどこまで使うか" caption="模式図。境目の位置は呼び出し側の数と違いの大きさを見て決める。">
+          <Figure n="63-6" title="継承と取り決めのテストをどこまで使うか" caption="模式図。境目の位置は呼び出し側の数と違いの大きさを見て決める。">
             <JudgeFigure />
           </Figure>
           <p>
-            図 46-6 は親の型としてまとめて扱う呼び出し側の多さと、種類ごとの違いの大きさの2つの軸で、継承と取り決めのテストをどこまで使うかを並べたものです。この章の通知は、毎晩の一括送信という呼び出し側があり、違いは本文の長さと送り方だけなので、右下に入ります。いちばん厳しい制約を全部の種類に当てる直し方は、右上にあるものを、機能を削って右下へ動かそうとしている状態です。迷ったときは、次の点を確かめます。
+            図 63-6 は親の型としてまとめて扱う呼び出し側の多さと、種類ごとの違いの大きさの2つの軸で、継承と取り決めのテストをどこまで使うかを並べたものです。この章の通知は、毎晩の一括送信という呼び出し側があり、違いは本文の長さと送り方だけなので、右下に入ります。いちばん厳しい制約を全部の種類に当てる直し方は、右上にあるものを、機能を削って右下へ動かそうとしている状態です。迷ったときは、次の点を確かめます。
           </p>
           <ol>
             <li>親の型としてまとめて扱う呼び出し側（一括の処理・一覧・共通のメソッド）があるか。無いなら、細かい取り決めのテストは後回しにしてよい。</li>
@@ -1137,11 +1138,11 @@ SmsNotification
 [["PresenceValidator", [:recipient, :body], {}], ["LengthValidator", [:body], {maximum: 70}]]
 `}
           />
-          <Figure n="46-7" title="STI の行とクラスの対応" caption="この章のアプリの notifications テーブルで描いた。SQL は列の一覧を省略した。">
+          <Figure n="63-7" title="STI の行とクラスの対応" caption="この章のアプリの notifications テーブルで描いた。SQL は列の一覧を省略した。">
             <StiFigure />
           </Figure>
           <p>
-            図 46-7 はテーブルの行と読み出したオブジェクトの対応です。<code>Notification.pending</code> の SQL には <code>type</code> の条件が付かず、すべての種類の行を読みます。読み出されたオブジェクトは、<code>type</code> 列の値に応じて EmailNotification か SmsNotification になります。<code>Notification.new(type: "SmsNotification")</code> のように親のクラスに <code>type</code> を渡して作っても、SmsNotification のオブジェクトが返ります。STI では、親のクラスの名前だけを書いたコードが、実際にはサブクラスのオブジェクトを扱っていることが普通に起きます。LSP がそのまま問題になる仕組みです。
+            図 63-7 はテーブルの行と読み出したオブジェクトの対応です。<code>Notification.pending</code> の SQL には <code>type</code> の条件が付かず、すべての種類の行を読みます。読み出されたオブジェクトは、<code>type</code> 列の値に応じて EmailNotification か SmsNotification になります。<code>Notification.new(type: "SmsNotification")</code> のように親のクラスに <code>type</code> を渡して作っても、SmsNotification のオブジェクトが返ります。STI では、親のクラスの名前だけを書いたコードが、実際にはサブクラスのオブジェクトを扱っていることが普通に起きます。LSP がそのまま問題になる仕組みです。
           </p>
           <p>
             サブクラスで読むときの <code>type</code> の条件は、そのクラスと、読み込まれているサブクラス（<code>descendants</code>）の名前から作られます<Ref n={5} />。開発環境のように、クラスを使うときに初めて読み込む設定では、まだ読み込まれていない孫のクラスが条件から漏れることがあります。Rails Guides は、STI と遅延読み込みは相性が悪いので、STI の階層を前もって読み込むよう勧め、その方法を説明しています<Ref n={6} />。
@@ -1218,6 +1219,29 @@ nil
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          サブクラスは親の型として使われるときの約束（事前条件・事後条件・投げる例外）を守ります。この章では SMS の長さの制約を送るときの例外から保存する前の検証に移し、親の取り決めを共通のテストにしました。親の型としてまとめて扱う呼び出し側が無い継承には、そこまでの取り決めのテストは求めません。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、82文字の SMS が BodyTooLong を出して一括送信が id=3 で止まり、長さの制限が無いメール（id=4）まで毎晩送られなかった。直した後は、長すぎる SMS は作る時点で保存されずに errors に理由が入り、ジョブから is_a? の分岐が消えた。</>,
+        basis: <><ChapterLink n={65} section="scene" />、<ChapterLink n={65} section="apply" /></>,
+      },
+      cost: {
+        text: <>検証を足す前に作られた長い本文の SMS が残っていないかを確かめ、直す作業が要る。サブクラスを足すたびに、親の取り決めを書いた共通のテスト（shared_examples）を it_behaves_like で通す必要がある。</>,
+        basis: <ChapterLink n={65} section="apply" />,
+      },
+      alternative: {
+        text: <>長い本文を70文字ずつに分けて複数通で送れば、SMS も親と同じく長さを問わずに本文を受け付け、データの修正も要らない。ただし通数が増えると費用が増え、文の途中で分かれるので、業務の側で決める必要がある。いちばん厳しい70文字の制約を親に上げると、メールで長い本文を送れなくなった。</>,
+        basis: <><ChapterLink n={65} section="apply" />、<ChapterLink n={65} section="overuse" /></>,
+      },
+      criterion: {
+        text: <>親の型としてまとめて扱う呼び出し側（一括の処理・一覧・共通のメソッド）があるか。サブクラスの違いを、保存する前の検証のように親の約束の範囲で表せるか。そのために、どれかのサブクラスの機能を削ったり、何も約束しない取り決めにしたりしていないか。</>,
+        basis: <ChapterLink n={65} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

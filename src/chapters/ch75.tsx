@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 56-1 Money を使う7つのクラスと、Money が読む Campaign ---------- */
+/* ---------- 図 73-1 Money を使う7つのクラスと、Money が読む Campaign ---------- */
 const moneyUsers = [
   ['Product', '商品の価格'],
   ['Order', '注文の合計'],
@@ -18,7 +19,7 @@ const moneyUsers = [
 function SceneFigure() {
   return (
     <Svg
-      id="56-1"
+      id="73-1"
       w={780}
       h={396}
       label="上段の7つのクラス（Product・Order・OrderItem・ShippingFee・PointGrant・Refund・SalesReport）は、どれも金額の値 Money を使う。Money の sale_price は、セールの設定を持つ Campaign の discount_percent_for を呼ぶ。Campaign は商品の分類 Category を参照する。販売促進の担当者は、管理画面から Campaign を登録し、セールの種類を増やすように求める。Campaign を変えると、Money を通じて、Money を使うクラスの spec まで失敗する"
@@ -49,13 +50,13 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 56-2 安定したクラスと不安定なクラス ---------- */
+/* ---------- 図 73-2 安定したクラスと不安定なクラス ---------- */
 function StableFigure() {
   const above = [20, 135, 250]
   const below = [410, 525, 640]
   return (
     <Svg
-      id="56-2"
+      id="73-2"
       w={780}
       h={364}
       label="左は安定したクラス X。A・B・C の3つのクラスが X に依存し、X は何にも依存しない。依存されている数が多い（Responsible）ので変えると影響が大きく、何にも依存しない（Independent）ので外から変える理由が来ない。I は 0 ÷ (3 + 0) = 0。右は不安定なクラス Y。Y はどのクラスにも依存されず、D・E・F の3つのクラスに依存する。依存されていない（Irresponsible）ので変えやすく、3つに依存している（Dependent）ので D・E・F の変更が Y を変える理由になる。I は 3 ÷ (0 + 3) = 1。どちらの図も、変わりやすいクラスを上、安定したクラスを下に置く"
@@ -114,7 +115,7 @@ function StableFigure() {
   )
 }
 
-/* ---------- 図 56-3 直す前のコードの依存のグラフと不安定度 ---------- */
+/* ---------- 図 73-3 直す前のコードの依存のグラフと不安定度 ---------- */
 // I の値から縦の位置を決める（I = 1 が上、I = 0 が下）
 const gy = (i: number) => 40 + (1 - i) * 330
 
@@ -129,7 +130,7 @@ function GraphFigure() {
   const ticks = [1, 0.75, 0.5, 0.25, 0]
   return (
     <Svg
-      id="56-3"
+      id="73-3"
       w={780}
       h={420}
       label="直す前のコードの依存を、不安定度 I の値の高さに置いた図。上ほど I が大きい。Money だけを使う ShippingFee・PointGrant・Refund・SalesReport は I = 1.000、OrderItem は 0.750、Order は 0.667、Product と Campaign は 0.500、Category は 0.333、Money は 0.125。Money を使うクラスからの矢印はどれも下向きで、I が減る向き。Money から Campaign への矢印だけが上向きで、I が 0.125 から 0.500 に増えるので SDP に反する。Order と OrderItem、Product と Category は互いに依存している"
@@ -175,11 +176,11 @@ function GraphFigure() {
   )
 }
 
-/* ---------- 図 56-4 依存の向きを変える3つの方法 ---------- */
+/* ---------- 図 73-4 依存の向きを変える3つの方法 ---------- */
 function WaysFigure() {
   return (
     <Svg
-      id="56-4"
+      id="73-4"
       w={780}
       h={392}
       label="依存の向きを変える3つの方法。1つ目は、処理を変わりやすい側へ移す方法で、割引の計算を Money から Campaign に移し、Campaign が Money に依存する。この章で使う。2つ目は、取り決めを挟む方法（DIP）で、Money は値引きを表すオブジェクトが応答するメソッドの名前だけを決め、Campaign がその取り決めを満たす。Money は Campaign の名前を知らない。3つ目は、呼び出し側で組み合わせる方法で、Product が Campaign に割引率を聞き、Money で計算する。Money と Campaign は互いを知らない"
@@ -249,14 +250,14 @@ function WaysFigure() {
   )
 }
 
-/* ---------- 図 56-5 直す前と後：依存のグラフと不安定度 ---------- */
+/* ---------- 図 73-5 直す前と後：依存のグラフと不安定度 ---------- */
 const cy = (i: number) => 52 + (1 - i) * 290
 
 function CompareFigure() {
   const ox = 400
   return (
     <Svg
-      id="56-5"
+      id="73-5"
       w={780}
       h={420}
       label="直す前と後の依存を、不安定度 I の高さに置いて比べた図。直す前は、Money を使う6つのクラス（I は 0.667 から 1.000）と Product（0.500）が Money（0.125）に依存し、Money が Campaign（0.500）に依存している。Money から Campaign への依存は I が増える向きで、SDP に反する。直した後は、Money は何にも依存せず I = 0.000 になった。Campaign（0.667）が Money と Category に依存し、Product（0.600）が Campaign・Money・Category に依存する。Money への矢印はすべて I が減る向きになった"
@@ -304,11 +305,11 @@ function CompareFigure() {
   )
 }
 
-/* ---------- 図 56-6 取り決め PricingRule を足した後の依存 ---------- */
+/* ---------- 図 73-6 取り決め PricingRule を足した後の依存 ---------- */
 function PricingFigure() {
   return (
     <Svg
-      id="56-6"
+      id="73-6"
       w={780}
       h={420}
       label="取り決め PricingRule を足した後の依存。script/instability.rb が数えた依存は、Product から PricingRule、Campaign から PricingRule（extend）、PricingRule から Money、Product と Campaign から Money。I は Product が 0.600、PricingRule が 0.333、Campaign が 1.000、Money が 0.000 で、I が増える向きの依存はなくなった。一方、config/initializers/pricing_rule.rb が Product.pricing_rule に Campaign を設定するので、実行時には Product が Campaign.price_for を呼ぶ。スクリプトは app/models だけを読むので、この依存を数えない"
@@ -327,7 +328,7 @@ function PricingFigure() {
       <Box x={305} y={200} w={170} h={48} lines={['PricingRule（取り決め）', 'I = 0.333']} fs={12} fill="box2" bold subTone="muted" />
       <Arrow x1={150} y1={158} x2={330} y2={198} />
       <Arrow x1={630} y1={158} x2={450} y2={198} />
-      <T x={196} y={196} anchor="end" fs={11} tone="muted">
+      <T x={210} y={196} anchor="end" fs={11} tone="muted">
         @return [PricingRule]
       </T>
       <T x={584} y={196} fs={11} tone="muted">
@@ -349,11 +350,11 @@ function PricingFigure() {
   )
 }
 
-/* ---------- 図 56-7 SDP に反する依存を見つけたときの判断 ---------- */
+/* ---------- 図 73-7 SDP に反する依存を見つけたときの判断 ---------- */
 function JudgeFigure() {
   return (
     <Svg
-      id="56-7"
+      id="73-7"
       w={780}
       h={470}
       label="スクリプトが A から B への依存を SDP に反すると表示したときの判断。まず、B が業務の都合でよく変わるかを確かめる。変わらないなら、数値に関係なくそのままでよい（Rails・標準ライブラリ・直した後の Money）。変わるなら、A が多くのクラスに使われているか（Ca が大きいか）を確かめる。大きいなら、向きを変える（この章の Money から Campaign）。大きくないなら、A と B がいつも一緒に変わるかを確かめる。一緒に変わるなら、同じまとまりとして扱い、向きの判断から外す（関連の両側など）。一緒に変わらないなら、そのままにして変更の履歴で確かめる。数値を直すためだけに取り決めを足さない（この章の Product から Campaign）"
@@ -363,7 +364,7 @@ function JudgeFigure() {
       <Box x={20} y={178} w={340} h={54} lines={['A は、多くのクラスに使われているか', '（A の Ca が大きいか）']} fs={12} />
       <Box x={20} y={268} w={340} h={54} lines={['A と B は、いつも一緒に変わるか']} fs={12} />
       <Box x={420} y={88} w={350} h={54} lines={['数値に関係なく、そのままでよい', '例：Rails・標準ライブラリ・直した後の Money']} fs={12} fill="bg" bold subTone="muted" />
-      <Box x={420} y={178} w={350} h={54} lines={['向きを変える（図 56-4 の3つの方法）', '例：直す前の Money → Campaign']} fs={12} fill="box2" bold subTone="muted" />
+      <Box x={420} y={178} w={350} h={54} lines={['向きを変える（図 73-4 の3つの方法）', '例：直す前の Money → Campaign']} fs={12} fill="box2" bold subTone="muted" />
       <Box x={420} y={268} w={350} h={54} lines={['同じまとまりとして扱い、向きの判断から外す', '例：関連の両側（Order と OrderItem）']} fs={12} fill="box2" bold subTone="muted" />
       <Box x={20} y={358} w={340} h={54} lines={['そのままにして、変更の履歴で確かめる', '例：直した後の Product → Campaign']} fs={12} fill="bg" bold subTone="muted" />
       <Arrow x1={190} y1={58} x2={190} y2={86} />
@@ -434,7 +435,7 @@ const chapter: Chapter = {
           </p>
           <h3>そもそも何を作っているのか</h3>
           <p>
-            食品や日用品を売る EC サイトを考えます。商品の価格、注文の合計、送料、付けるポイント、返品のときの返金額、日ごとの売上は、どれも金額です。このアプリでは金額を Money という値のクラスで表しています。Money は Ruby の <code>Data.define</code> で作った変更できない値で、足し算・引き算・掛け算・比較・割合の計算・表示を持ちます。値のクラスで金額を扱う理由は<ChapterLink n={46} section="money" />で扱いました。
+            食品や日用品を売る EC サイトを考えます。商品の価格、注文の合計、送料、付けるポイント、返品のときの返金額、日ごとの売上は、どれも金額です。このアプリでは金額を Money という値のクラスで表しています。Money は Ruby の <code>Data.define</code> で作った変更できない値で、足し算・引き算・掛け算・比較・割合の計算・表示を持ちます。値のクラスで金額を扱う理由は<ChapterLink n={46} section="money" />で扱います。
           </p>
           <p>
             販売促進の担当者は管理画面からセール（キャンペーン）を登録します。登録する項目は期間・割引率・対象の商品の分類（空なら全品）です。担当者は季節ごとに新しい売り方を試すので、セールの種類はよく増えます。11月には「500円引き」のような定額の値引きを頼まれました。
@@ -580,11 +581,11 @@ end
           <p>
             Refund の <code># @return [Money]</code> は、YARD という書式で「amount は Money を返す」と書いた注記です。Refund のコードには Money という名前が出てこないので、注記で示しています。次の節で依存を数えるときに、この注記を使います。
           </p>
-          <Figure n="56-1" title="場面の構成：Money を使う7つのクラスと、Money が読む Campaign" caption="上段の7つのクラスは、どれも Money の名前を書くか、Money を受け取って使う。">
+          <Figure n="73-1" title="場面の構成：Money を使う7つのクラスと、Money が読む Campaign" caption="上段の7つのクラスは、どれも Money の名前を書くか、Money を受け取って使う。">
             <SceneFigure />
           </Figure>
           <p>
-            図 56-1 のとおり、7つのクラスが Money に依存し、Money は Campaign に依存しています。Campaign は販売促進の担当者の要望で変わるクラスです。次の項で、この依存を通じて何が起きるかを確かめます。
+            図 73-1 のとおり、7つのクラスが Money に依存し、Money は Campaign に依存しています。Campaign は販売促進の担当者の要望で変わるクラスです。次の項で、この依存を通じて何が起きるかを確かめます。
           </p>
           <h3>定額の値引きのキャンペーンを足す</h3>
           <p>
@@ -737,11 +738,11 @@ rspec ./spec/models/shipping_fee_spec.rb:8 # ShippingFee 5,000円以上は無料
           <p>
             記事はモジュールを変えにくくする2つの性質を挙げています。1つは、ほかの何にも依存していないこと（Independent）です。依存先がないので、依存先の変更が自分を変える理由になりません。もう1つは、多くのクラスに依存されていること（Responsible）です。変えると依存しているクラスすべてに影響するので、変えることが難しくなります。両方を持つクラスが最も安定しています<Ref n={1} />。
           </p>
-          <Figure n="56-2" title="安定したクラスと不安定なクラス" caption="左の X は依存されるだけで、右の Y は依存するだけ。数値は次の項の不安定度 I。">
+          <Figure n="73-2" title="安定したクラスと不安定なクラス" caption="左の X は依存されるだけで、右の Y は依存するだけ。数値は次の項の不安定度 I。">
             <StableFigure />
           </Figure>
           <p>
-            図 56-2 の左の X は3つのクラスに依存され、何にも依存していません。右の Y はどのクラスにも依存されず、3つのクラスに依存しています。X を変えると A・B・C を確かめることになりますが、X を変える理由は外から来ません。Y は自由に変えられますが、D・E・F のどれかが変わるたびに、変える理由が生まれます。
+            図 73-2 の左の X は3つのクラスに依存され、何にも依存していません。右の Y はどのクラスにも依存されず、3つのクラスに依存しています。X を変えると A・B・C を確かめることになりますが、X を変える理由は外から来ません。Y は自由に変えられますが、D・E・F のどれかが変わるたびに、変える理由が生まれます。
           </p>
           <h3>不安定度 I の数え方</h3>
           <p>記事はパッケージに出入りする依存を数えて、安定度を次の3つの値で表しました<Ref n={1} />。</p>
@@ -757,7 +758,7 @@ rspec ./spec/models/shipping_fee_spec.rb:8 # ShippingFee 5,000円以上は無料
             </li>
           </ul>
           <p>
-            記事は安定依存の原則を「パッケージの I は、依存先のパッケージの I より大きくあるべきだ」と言い換え、I は依存の向きに沿って小さくなるべきだと書いています<Ref n={1} />。図 56-2 では、Y（I = 1）から D・E・F へ、A・B・C から X（I = 0）へ、どの矢印も I が減る向きです。
+            記事は安定依存の原則を「パッケージの I は、依存先のパッケージの I より大きくあるべきだ」と言い換え、I は依存の向きに沿って小さくなるべきだと書いています<Ref n={1} />。図 73-2 では、Y（I = 1）から D・E・F へ、A・B・C から X（I = 0）へ、どの矢印も I が減る向きです。
           </p>
           <p>
             記事のパッケージは C++ のいくつかのクラスをまとめた単位です。記事は1つのファイルに1つのクラスを置いていれば I を数えやすいとも書いています<Ref n={1} />。Rails のアプリは app/models/money.rb に Money を置くように、1つのファイルに1つのクラスを置く決まりなので、この章では1つのクラスを1つの単位として数えます。Ce は「そのクラスが依存しているほかのクラスの数」、Ca は「そのクラスに依存しているほかのクラスの数」です。記事の計算の例も依存の相手になっている外のクラスの数を Ce として数えています<Ref n={1} />。
@@ -855,11 +856,11 @@ I が小さいクラスから大きいクラスへの依存（SDP に反する�
           <p>
             Category と Product、Order と OrderItem は、has_many と belongs_to で互いに依存しています。互いに依存している2つのクラスでは、どちらかの向きが必ず I の増える向きになるので、スクリプトは向きの判断から外して別に表示しています。Martin は非循環依存の原則（ADP）で、パッケージの間の依存に循環を作らないよう求めています<Ref n={1} />。関連の両側のように一緒に変わるクラスは、1つのまとまりとして扱うのが自然です。
           </p>
-          <Figure n="56-3" title="直す前のコードの依存のグラフと不安定度" caption="縦の位置は I の値。上ほど不安定。数値は script/instability.rb の結果。">
+          <Figure n="73-3" title="直す前のコードの依存のグラフと不安定度" caption="縦の位置は I の値。上ほど不安定。数値は script/instability.rb の結果。">
             <GraphFigure />
           </Figure>
           <p>
-            図 56-3 はスクリプトの結果を I の高さに並べたものです。Money を使うクラスからの矢印はどれも下向きで、I が減る向きです。Money から Campaign への矢印だけが上に向かっています。安定依存の原則はこの上向きの矢印を見つけるための基準です。
+            図 73-3 はスクリプトの結果を I の高さに並べたものです。Money を使うクラスからの矢印はどれも下向きで、I が減る向きです。Money から Campaign への矢印だけが上に向かっています。安定依存の原則はこの上向きの矢印を見つけるための基準です。
           </p>
           <h3>すべてのクラスを安定させるわけではない</h3>
           <p>
@@ -916,9 +917,9 @@ I が小さいクラスから大きいクラスへの依存（SDP に反する�
         <>
           <h3>どの向きに直すか</h3>
           <p>
-            安定依存の原則に沿うには、多くのクラスが依存する Money から、変わりやすい Campaign への依存をなくします。Campaign から Money への依存は残してかまいません。Money の足し算や比べ方は、セールの種類が増えても変わらないからです。依存の向きを変える方法には、図 56-4 の3つがあります。
+            安定依存の原則に沿うには、多くのクラスが依存する Money から、変わりやすい Campaign への依存をなくします。Campaign から Money への依存は残してかまいません。Money の足し算や比べ方は、セールの種類が増えても変わらないからです。依存の向きを変える方法には、図 73-4 の3つがあります。
           </p>
-          <Figure n="56-4" title="依存の向きを変える3つの方法" caption="どの方法でも、Money から Campaign への矢印がなくなる。この章では1つ目の方法を使う。">
+          <Figure n="73-4" title="依存の向きを変える3つの方法" caption="どの方法でも、Money から Campaign への矢印がなくなる。この章では1つ目の方法を使う。">
             <WaysFigure />
           </Figure>
           <p>
@@ -1108,11 +1109,11 @@ I が小さいクラスから大きいクラスへの依存（SDP に反する�
           <p>
             Money は何にも依存しなくなり、I = 0 / (8 + 0) = 0.000 になりました。Campaign が Money を使うようになったので、Money の Ca は 7 から 8 に増えています。Campaign は Money と Category に依存し、Product に依存されているので、I = 2 / (1 + 2) = 0.667 です。Product は Money#sale_price の代わりに Campaign.price_for を呼ぶようになり、Ce が 2 から 3 に増えました。
           </p>
-          <Figure n="56-5" title="直す前と後の依存のグラフと不安定度" caption="左が直す前、右が直した後。縦の位置は I の値で、上ほど不安定。">
+          <Figure n="73-5" title="直す前と後の依存のグラフと不安定度" caption="左が直す前、右が直した後。縦の位置は I の値で、上ほど不安定。">
             <CompareFigure />
           </Figure>
           <p>
-            図 56-5 の左の直す前は、Money から Campaign への矢印が I の増える向き（上向き）でした。右の直した後は、Money と Campaign の間の矢印が Campaign から Money への向きに変わり、I が減る向きになりました。スクリプトは Product（0.600）から Campaign（0.667）への依存を、まだ SDP に反する依存として表示しています。この依存をどう扱うかは次の節で考えます。
+            図 73-5 の左の直す前は、Money から Campaign への矢印が I の増える向き（上向き）でした。右の直した後は、Money と Campaign の間の矢印が Campaign から Money への向きに変わり、I が減る向きになりました。スクリプトは Product（0.600）から Campaign（0.667）への依存を、まだ SDP に反する依存として表示しています。この依存をどう扱うかは次の節で考えます。
           </p>
           <h3>同じ変更をもう一度行う</h3>
           <p>直したコードで、場面と同じ「500円引き」のセールを足しました。マイグレーションは場面と同じです。Campaign の変更は次のとおりです。</p>
@@ -1315,12 +1316,12 @@ config/initializers/pricing_rule.rb:2:Rails.application.config.to_prepare { Prod
 `}
           />
           <p>
-            Product.pricing_rule の値は Campaign です。実行時に Product#current_price が呼ぶのは、これまでどおり Campaign.price_for です。Product から Campaign への依存は、app/models/product.rb から config/initializers/pricing_rule.rb に移っただけで、なくなってはいません。スクリプトは app/models の下のファイルだけを読むので、initializer に書いた依存を数えません。図 56-6 はこの状態を示したものです。
+            Product.pricing_rule の値は Campaign です。実行時に Product#current_price が呼ぶのは、これまでどおり Campaign.price_for です。Product から Campaign への依存は、app/models/product.rb から config/initializers/pricing_rule.rb に移っただけで、なくなってはいません。スクリプトは app/models の下のファイルだけを読むので、initializer に書いた依存を数えません。図 73-6 はこの状態を示したものです。
           </p>
-          <Figure n="56-6" title="取り決め PricingRule を足した後の依存" caption="スクリプトが数えた依存（実線）では、I が増える向きの依存はない。実行時の呼び出し（青い破線）は数えられていない。">
+          <Figure n="73-6" title="取り決め PricingRule を足した後の依存" caption="スクリプトが数えた依存（実線）では、I が増える向きの依存はない。実行時の呼び出し（青い破線）は数えられていない。">
             <PricingFigure />
           </Figure>
-          <p>図 56-6 から、このコードには次の問題があることがわかります。</p>
+          <p>図 73-6 から、このコードには次の問題があることがわかります。</p>
           <ul>
             <li>Product#current_price を読んでも、どのクラスが価格を決めるのかがわかりません。initializer を探して初めて、Campaign だとわかります。</li>
             <li>
@@ -1331,15 +1332,15 @@ config/initializers/pricing_rule.rb:2:Rails.application.config.to_prepare { Prod
             </li>
           </ul>
           <p>
-            依頼文のトレードオフにある「YAGNI と DIP」が、この例に当たります。取り決めを挟む方法は、取り決めを満たすクラスが2つ以上あるときや、テストや設定で実装を差し替える必要があるときに効果があります。満たすクラスが1つで、差し替える予定もないなら、取り決めを足しても実行時の依存は減らず、コードを読むときに開くファイルが増えます。この判断は<ChapterLink n={93} section="yagni-dip" />で扱います。
+            この例では、今必要な処理だけを書く YAGNI と、差し替えに備えて依存の向きを変える DIP が異なる判断を示します。取り決めを挟む方法は、取り決めを満たすクラスが2つ以上あるときや、テストや設定で実装を差し替える必要があるときに効果があります。満たすクラスが1つで、差し替える予定もないなら、取り決めを足しても実行時の依存は減らず、コードを読むときに開くファイルが増えます。この判断は<ChapterLink n={93} section="yagni-dip" />で扱います。
           </p>
           <h3>Martin も数値を無条件の基準にしないよう書いている</h3>
           <p>
             Martin は記事「Stability」の結びで、これらの数値は、筆者が良いと考える依存と抽象のパターンに設計が合っているかを測るもので、任意に決めた基準に対する測定にすぎないと書いています。その基準が一部のアプリにしか合わない可能性も認めたうえで、すべての設計を無条件に数値に合わせようとする人が出ることは望まない、と述べています<Ref n={1} />。I は、変わりやすいものへの依存を見つけるための手がかりとして使い、直すかどうかは、変わる理由と影響の範囲を見て決めます。
           </p>
           <h3>判断の目安</h3>
-          <p>スクリプトが SDP に反する依存を表示したときは、図 56-7 の順に確かめます。</p>
-          <Figure n="56-7" title="SDP に反する依存を見つけたときの判断" caption="A は依存する側、B は依存される側。I の数値だけでは決めず、B の変わりやすさと A の Ca を見る。">
+          <p>スクリプトが SDP に反する依存を表示したときは、図 73-7 の順に確かめます。</p>
+          <Figure n="73-7" title="SDP に反する依存を見つけたときの判断" caption="A は依存する側、B は依存される側。I の数値だけでは決めず、B の変わりやすさと A の Ca を見る。">
             <JudgeFigure />
           </Figure>
           <p>
@@ -1440,7 +1441,7 @@ I が小さい gem から大きい gem への依存
           </Callout>
           <h3>本書のほかの章</h3>
           <ul>
-            <li>金額を値のクラスで表す理由と Money の作り方は<ChapterLink n={46} section="money" />と<ChapterLink n={33} section="value-objects" />で扱いました。</li>
+            <li>金額を値のクラスで表す理由と Money の作り方は<ChapterLink n={33} section="value-objects" />の説明と、<ChapterLink n={46} section="money" />の実装を参照できます。</li>
             <li>取り決めを挟んで依存の向きを変える方法は<ChapterLink n={67} />（DIP）、変えにくいクラスを変えずに拡張する方法は<ChapterLink n={64} />（OCP）で扱います。</li>
             <li>依存の数を減らす方法と、列への依存を数えるスクリプトは<ChapterLink n={70} />（Low Coupling）、変わりやすい判断を1つのクラスに隠す方法は<ChapterLink n={73} />（Information Hiding）で扱います。</li>
             <li>取り決めを足すかどうかの判断（YAGNI と DIP）は<ChapterLink n={93} section="yagni-dip" />で扱います。</li>
@@ -1448,6 +1449,29 @@ I が小さい gem から大きい gem への依存
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          直すのは、多くのクラスに使われる変えにくいクラスが、業務の都合でよく変わるクラスに依存している所です。この章では、7つのクラスが使う Money から、セールのたびに変わる Campaign への依存をなくし、割引の計算を Campaign に移しました。不安定度 I の数値だけを直すための取り決めは足しません。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、定額の値引きを足すと、セールと関係のない送料・ポイント・返金・売上の集計を含む7つの spec ファイルの11件が失敗した。直した後は Money の I が 0.125 から 0.000 になり、同じ変更で失敗したのは product_spec.rb の1件だけで、Money と money_spec.rb は書き換えずに済んだ。</>,
+        basis: <><ChapterLink n={75} section="scene" />、<ChapterLink n={75} section="apply" /></>,
+      },
+      cost: {
+        text: <>Campaign が Money を使うようになり、Product は Campaign.price_for を呼ぶので依存先が2つから3つに増えた。作業は新しいメソッドを足す・呼び出し側を切り替える・古いメソッドを消す、の3つの手順に分け、手順ごとに spec を通す必要があった。</>,
+        basis: <ChapterLink n={75} section="apply" />,
+      },
+      alternative: {
+        text: <>直した後に残った Product（I = 0.600）から Campaign（I = 0.667）への依存は、Product に依存するクラスが2つだけなので、そのままにして変更の履歴で確かめる。取り決め PricingRule を足した例では、数値上の違反は消えたが、依存は initializer に移っただけで、実行時に呼ぶのは同じ Campaign.price_for だった。</>,
+        basis: <ChapterLink n={75} section="overuse" />,
+      },
+      criterion: {
+        text: <>依存先が業務の都合でよく変わるか。Rails や標準ライブラリのように変わる見込みが低いなら、I の大小に関係なくそのままにする。よく変わるなら、依存する側が多くのクラスに使われているかを確かめる。</>,
+        basis: <ChapterLink n={75} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

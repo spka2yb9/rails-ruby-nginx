@@ -21,7 +21,7 @@ npm run dev
 npm run build
 ```
 
-`dist/` に静的ファイルが出力されます。ビルドは次の順で動きます。
+`dist/` に静的ファイルが出力されます。ホームから6つの学習コースとシステム全体図を開けます。ビルドは次の順で動きます。
 
 1. `npm run build:index` — 各章を描画して、全文検索の索引 `src/content/search-index.json` と、目次・前後の章・参考資料一覧に使う章の情報 `src/content/chapter-meta.json` を生成。第6部の入門・テーマ別の演習一覧 `src/content/linux-meta.json` も `public/linux/js/lessons/lessons.js` から生成
 2. `tsc -b` — 型チェック
@@ -31,9 +31,22 @@ npm run build
 
 ## 第6部（Linux の実習）
 
-第6部「Railsエンジニアのためのサーバ運用」は `#/linux` を開くと最初の未回答の演習から始まります。教科書の目次を表示したまま、本文で手順と端末を見比べて回答できます。解説は選択肢の下に表示され、そこから次の演習に進めます。`public/linux/` にある実習ページを iframe で表示します（`src/components/LinuxView.tsx`）。各演習の URL は `#/linux/case04` の形です。教科書の検索で演習名・テーマ・主なコマンドを探せます。演習の追加方法は `public/linux/README.md` にあります。
+第6部「Railsエンジニアのためのサーバ運用」は `#/linux` を開くと最初の未回答の演習から始まります。左のメニューにはサーバ運用コースとして演習の一覧を表示したまま、本文で手順と端末を見比べて回答できます。解説は選択肢の下に表示され、そこから次の演習に進めます。`public/linux/` にある実習ページを iframe で表示します（`src/components/LinuxView.tsx`）。各演習の URL は `#/linux/case04` の形です。教科書の検索で演習名・テーマ・主なコマンドを探せます。演習の追加方法は `public/linux/README.md` にあります。
 
 AWS の CASE（LEVEL 12〜）の `aws` コマンドには、aws-learning の AWS CLI のシミュレーターを組み込んだ `public/linux/vendor/aws-sim.min.js` が応答します。作り直す手順は `public/linux/README.md` の「AWS CLI のシミュレーター」にあります（ソースは `tools/aws-sim/`）。
+
+## 教材のファイルの構成
+
+| 置き場所 | 内容 |
+|---|---|
+| `src/chapters/chNN.tsx` | 章の本文・図・コード・出典（NN は URL の章 ID）。1つの章は1か所だけに書き、コースからは参照する |
+| `src/content/courses.ts` | 6つの学習コース（目的・対象者・前提・到達目標・章の順序と読む節・グループ）。サーバ運用コースは第6部の演習を順序として使う |
+| `src/content/system-map.ts` | システム全体図の構成要素と、10の処理の流れの段階 |
+| `src/content/label.ts`・`types.ts` | 章の読む順（表示番号）と部の一覧 |
+| `src/sims/` | 操作できる図。`chapter-figures.tsx` で章と節に割り当てる |
+| `src/components/CourseMenu.tsx` | 左のメニュー（コースの切り替え、表示中の章の節、サーバ運用コースの演習） |
+
+章のページには参考資料を表示しません。出典は各章の `sources` に書き、「参考資料の一覧」（`#/sources`）にまとめて表示します。
 
 ## 章の検査
 
@@ -42,9 +55,16 @@ node --experimental-strip-types scripts/check-chapter.ts      # 全章
 node --experimental-strip-types scripts/check-chapter.ts 3 4  # 指定した章
 ```
 
-節 ID の重複、出典番号と参考資料の対応、図のアクセシブル名、本文の分量などを機械的に検査します。
+節 ID の重複、章・節リンク、出典、図のアクセシブル名、図番号（本文に出てくる順の連番か）、本文の分量を検査します。全章の検査では、コースの前提順序とシステム全体図の参照先も確認します。
 
 引数の番号は URL に使う章 ID（`#/32` の 32）です。後から追加した章があるため、表示上の章番号とは一致しない場合があります。表示する章番号は `src/content/label.ts` の `CHAPTER_ORDER`（読む順）から決まります。
+
+章を追加・移動するときは、既存の章 ID を維持します。`CHAPTER_ORDER` を変更して索引を作り直す前に、旧順序の `chapter-meta.json` を引数にして図番号を更新します。
+
+```bash
+node --experimental-strip-types scripts/renumber-chapters.ts src/content/chapter-meta.json
+npm run build:index
+```
 
 ## 静的ホスティングでの公開手順
 

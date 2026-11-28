@@ -127,7 +127,7 @@ View.ancestors.first(3) # => [View, Greeting, Object]`} />
         name が <code>article[title]</code> の入力欄なら、Rails の params では <code>params[:article][:title]</code> で取り出せます（<ChapterLink n={10} section="params" />）。
       </p>
       <p>
-        応答のステータスコードは要求の結果を表す3桁の数字です（<ChapterLink n={6} section="http-message" />）。この節には次の3つが出てきます。
+        応答のステータスコードは要求の結果を表す3桁の数字です（<ChapterLink n={94} section="status" />）。この節には次の3つが出てきます。
         200 は成功です。302 は「別の URL を取得し直してください」という指示（リダイレクト）で、移動先の URL は Location ヘッダーに入ります。422 は送られた内容を処理できなかったことを表します。
       </p>
       <p>

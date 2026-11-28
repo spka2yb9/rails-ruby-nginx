@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 58-1 契約の状態を調べる3か所と、問題が起きる箇所 ---------- */
+/* ---------- 図 75-1 契約の状態を調べる3か所と、問題が起きる箇所 ---------- */
 const sceneCallers = [
   { y: 20, lines: ['VideosController#show（視聴）', 'active? && ends_on >= 今日 なら再生'], issue: '解約予約（canceled）を見落とし、期間中でも 403' },
   { y: 124, lines: ['ExpireSubscriptionsJob（毎日 0時10分）', 'canceled で ends_on <= 今日 なら expired'], issue: '最終日の 0時10分に終了にする（<= で最終日を含める）' },
@@ -14,7 +15,7 @@ const sceneCallers = [
 function SceneFigure() {
   return (
     <Svg
-      id="58-1"
+      id="75-1"
       w={780}
       h={384}
       label="契約の状態を調べて判断する場所が3か所ある。VideosController#show は active? で ends_on が今日以降なら再生し、解約予約（canceled）を見落として期間中でも 403 を返す。ExpireSubscriptionsJob は毎日0時10分に、canceled で ends_on が今日以前の契約を expired にし、最終日の0時10分に終了にしてしまう。Admin::ExtensionsController は status を active にして ends_on を7日延ばし、解約予約が active に戻って翌月も請求される。3か所とも Subscription モデルの status と ends_on を読んで自分で判断し、書き込む。Subscription は subscriptions テーブルの行を読み書きするだけで、規則を持たない"
@@ -44,13 +45,13 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 58-3 聞いてから判断する流れと、頼む流れ ---------- */
+/* ---------- 図 75-3 聞いてから判断する流れと、頼む流れ ---------- */
 function AskTellFigure() {
   const ask = { c: 100, s: 300 }
   const tell = { c: 490, s: 690 }
   return (
     <Svg
-      id="58-3"
+      id="75-3"
       w={780}
       h={368}
       label="管理画面の延長を例にした、聞いてから判断する流れと頼む流れ。左の直す前では、Admin::ExtensionsController が Subscription に status を聞いて canceled を受け取り、ends_on を聞いて 2026-12-10 を受け取り、自分で「active にして7日延ばす」と決めて update! を送る。判断は呼び出し側にある。右の直した後では、コントローラーは extend_period!(7) を送るだけで、Subscription が終了した契約なら断り、そうでなければ ends_on を7日延ばして update! し、結果を返す。判断はデータの持ち主にある"
@@ -113,7 +114,7 @@ function AskTellFigure() {
   )
 }
 
-/* ---------- 図 58-4 デメテルの法則との関係 ---------- */
+/* ---------- 図 75-4 デメテルの法則との関係 ---------- */
 const lodCells = [
   { col: 0, row: 0, title: '隣に送るが、外で判断する', code: ['subscription.active? &&', '  subscription.ends_on >= Date.current'], note: 'この章の直す前。delegate で値を運ぶだけでも同じ', tone: 'danger' as const },
   { col: 1, row: 0, title: '隣に送り、判断も頼む', code: ['subscription.usable_on?(Date.current)', 'order.customer_prefecture_remote?'], note: 'この章とデメテルの法則の章の、直した後', tone: 'acc' as const },
@@ -126,7 +127,7 @@ function DemeterFigure() {
   const cy = (r: number) => 60 + r * 150
   return (
     <Svg
-      id="58-4"
+      id="75-4"
       w={780}
       h={384}
       label="横の軸は Tell, Don't Ask（値を取り出して外で判断しているか）、縦の軸はデメテルの法則（隣の相手にだけ送っているか）。隣に送るが外で判断する例は、この章の直す前の subscription.active? && subscription.ends_on >= Date.current で、delegate で値を運んで判断する場合も同じ。隣に送り判断も頼む例は subscription.usable_on?(Date.current) と order.customer_prefecture_remote? で、両方に沿う。関連をたどり外で判断する例は、デメテルの法則の章の直す前の、都道府県の名前を取り出して遠方を判断する式で、両方に反する。判断は持ち主にあるが関連をたどる例は order.customer.address.prefecture.remote? で、途中の nil と構造への依存が残る"
@@ -175,7 +176,7 @@ function DemeterFigure() {
   )
 }
 
-/* ---------- 図 58-5 直す前と後：規則がある場所と、規則を変えるときに直す場所 ---------- */
+/* ---------- 図 75-5 直す前と後：規則がある場所と、規則を変えるときに直す場所 ---------- */
 const beforeCallers = [
   ['VideosController', 'active? && ends_on >= 今日'],
   ['ExpireSubscriptionsJob', 'canceled で ends_on <= 今日'],
@@ -191,7 +192,7 @@ function CompareFigure() {
   const cy = (i: number) => 36 + i * 58
   return (
     <Svg
-      id="58-5"
+      id="75-5"
       w={780}
       h={412}
       label="直す前は、VideosController が active? と ends_on >= 今日、ExpireSubscriptionsJob が canceled と ends_on <= 今日、Admin::ExtensionsController が active にして7日延ばす、という規則をそれぞれ持ち、Subscription は status と ends_on を持つだけ。直した後は、3か所はそれぞれ usable_on?(今日)、expire!(今日)、extend_period!(7) を呼ぶだけで、規則は Subscription の usable_on?・expire!・extend_period! にある。規則を「最終日の翌日まで見られる」に変えるとき、直す前は videos_controller.rb の >= と expire_subscriptions_job.rb の <= の2か所をそろえて直す必要があり、忘れるとまた食い違う。直した後は subscription.rb の usable_on? の1行を直せば、expire! が usable_on? を使うのでジョブもそろう"
@@ -254,7 +255,7 @@ function CompareFigure() {
   )
 }
 
-/* ---------- 図 58-6 データと振る舞いの位置 ---------- */
+/* ---------- 図 75-6 データと振る舞いの位置 ---------- */
 const dbCallers = [
   { y: 112, name: 'VideosController', to: 142 },
   { y: 160, name: 'SubscriptionsHelper（管理画面）', to: 166 },
@@ -265,7 +266,7 @@ const dbCallers = [
 function DataBehaviorFigure() {
   return (
     <Svg
-      id="58-6"
+      id="75-6"
       w={780}
       h={386}
       label="Subscription のクラスに、データ（status と ends_on）、問い合わせ（usable_on?(date) と、enum が作る active?・canceled?・expired?）、命令（expire!(date) と extend_period!(days)）をまとめた。VideosController と管理画面の SubscriptionsHelper は問い合わせを呼び、ExpireSubscriptionsJob と Admin::ExtensionsController は命令を呼ぶ。命令は update! で subscriptions テーブルに書き込む。問い合わせは状態を変えずに値を返し、呼び出し側はその値で画面の応答や表示を決める。命令は状態を変え、規則に合わないときは何もしないか例外で断る"
@@ -298,11 +299,11 @@ function DataBehaviorFigure() {
   )
 }
 
-/* ---------- 図 58-7 どこに判断を置くか ---------- */
+/* ---------- 図 75-7 どこに判断を置くか ---------- */
 function JudgeFigure() {
   return (
     <Svg
-      id="58-7"
+      id="75-7"
       w={780}
       h={452}
       label="呼び出し側が契約の状態を使って何かを決めたいときの判断。まず、契約のほかに会員・権限・キャンペーンなど別のオブジェクトの情報も使う判断なら、Policy やサービスに置く（例は Pundit の Policy や Use Case）。次に、契約のデータだけで決まる業務の規則（視聴できるか・終了させるか・延ばせるか）なら、Subscription のメソッドにする（例は usable_on?・expire!・extend_period!）。次に、画面・メール・CSV ごとの見せ方（文言・色・書式）なら、ヘルパー・ビュー・メーラーに置き、判断は Subscription の問い合わせを使う。どれでもなく値を表示・出力するだけなら、属性をそのまま読んでよい（ends_on など）"
@@ -463,11 +464,11 @@ class Admin::ExtensionsController < ApplicationController
 end
 `}
           />
-          <Figure n="58-1" title="契約の状態を調べる3か所と、問題が起きる箇所" caption="赤い文字は、次の項で確かめる問題。">
+          <Figure n="75-1" title="契約の状態を調べる3か所と、問題が起きる箇所" caption="赤い文字は、次の項で確かめる問題。">
             <SceneFigure />
           </Figure>
           <p>
-            図 58-1 のとおり、3か所はどれも Subscription から status と ends_on を読み、それぞれの書き方で判断して書き込んでいます。Subscription は列を持つだけで、「いつまで見られるか」という規則を持っていません。
+            図 75-1 のとおり、3か所はどれも Subscription から status と ends_on を読み、それぞれの書き方で判断して書き込んでいます。Subscription は列を持つだけで、「いつまで見られるか」という規則を持っていません。
           </p>
           <p>
             このようなコードは機能を足していく途中でよくできあがります。最初は継続中と終了の2つの状態しかなく、動画の画面は <code>active?</code> だけを確かめていました。後から解約予約を足したとき、ジョブと管理画面は書きましたが、動画の画面は直し忘れました。ジョブを書いた人は「最終日に終える」と考えて <code>&lt;=</code> と書き、管理画面を書いた人は「延長したら使えるようにする」と考えて status を active にしました。
@@ -532,7 +533,7 @@ C：解約予約・今日が最終日（canceled、最終日 2026-11-30）
   管理画面で7日延長した後 → active、最終日 2026-12-07
 `}
           />
-          <Figure n="58-2" title="2026年11月30日の判断と、正しい結果" caption="× は誤った結果。括弧の中は業務の規則どおりの結果。">
+          <Figure n="75-2" title="2026年11月30日の判断と、正しい結果" caption="× は誤った結果。括弧の中は業務の規則どおりの結果。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -566,7 +567,7 @@ C：解約予約・今日が最終日（canceled、最終日 2026-11-30）
               </table>
             </div>
           </Figure>
-          <p>図 58-2 は実行結果を、業務の規則どおりの結果と並べたものです。</p>
+          <p>図 75-2 は実行結果を、業務の規則どおりの結果と並べたものです。</p>
           <ul>
             <li>解約予約の B と C は料金を払った期間の中なのに、動画の画面で 403 になりました。動画の画面が <code>active?</code> だけを確かめているからです。</li>
             <li>
@@ -674,11 +675,11 @@ app/jobs/expire_subscriptions_job.rb:4:    Subscription.where(status: "canceled"
           <p>
             つまり Tell, Don't Ask は問い合わせのメソッドを禁止する原則ではありません。避けるのは、相手の状態を取り出して呼び出し側で判断し、その結果で相手の状態を変えることです。動画の画面が「見られるか」を問い合わせて、自分の仕事である HTTP の応答を決めるのは、この原則に反しません。ただし、「見られるか」を決める規則そのものは、問い合わせのメソッドの中、つまりデータの持ち主の側に置きます。
           </p>
-          <Figure n="58-3" title="聞いてから判断する流れと、頼む流れ" caption="管理画面の延長を例にした。左は前の節のコード、右は次の節で直した後のコード。">
+          <Figure n="75-3" title="聞いてから判断する流れと、頼む流れ" caption="管理画面の延長を例にした。左は前の節のコード、右は次の節で直した後のコード。">
             <AskTellFigure />
           </Figure>
           <p>
-            図 58-3 の左では、コントローラーが2回問い合わせてから判断し、その結果で Subscription の状態を書き換えています。右では、コントローラーは「7日延ばしてほしい」と頼むだけで、終了した契約かどうかの確認と、status を変えないという規則は Subscription の中にあります。
+            図 75-3 の左では、コントローラーが2回問い合わせてから判断し、その結果で Subscription の状態を書き換えています。右では、コントローラーは「7日延ばしてほしい」と頼むだけで、終了した契約かどうかの確認と、status を変えないという規則は Subscription の中にあります。
           </p>
           <h3>Fowler の説明と注意</h3>
           <p>
@@ -694,11 +695,11 @@ app/jobs/expire_subscriptions_job.rb:4:    Subscription.where(status: "canceled"
           <p>
             <ChapterLink n={74} />（Law of Demeter）は、オブジェクトの内部をたどらず、隣の相手にだけメッセージを送る原則でした。Hunt と Thomas のコラムも Tell, Don't Ask の次の節でデメテルの法則を扱っています<Ref n={1} />。2つの原則は重なりますが、確かめる点が違います。デメテルの法則は「誰にメッセージを送っているか」を、Tell, Don't Ask は「値を取り出して呼び出し側で判断していないか」を確かめます。
           </p>
-          <Figure n="58-4" title="Tell, Don't Ask とデメテルの法則の関係" caption="横の軸が Tell, Don't Ask、縦の軸がデメテルの法則。右上が両方に沿う形。">
+          <Figure n="75-4" title="Tell, Don't Ask とデメテルの法則の関係" caption="横の軸が Tell, Don't Ask、縦の軸がデメテルの法則。右上が両方に沿う形。">
             <DemeterFigure />
           </Figure>
           <p>
-            図 58-4 の左上がこの章の直す前のコードです。Subscription にだけ送っているのでデメテルの法則には沿っていますが、値を取り出して外で判断しているので Tell, Don't Ask には反しています。デメテルの法則の章では関連の先の値を delegate で取り出せるようにしました。値を運ぶだけなら判断は呼び出し側に残り、左上と同じ形になります。遠方の判断を Prefecture#remote? に移したところが Tell, Don't Ask に沿って直した部分でした。右下は、判断は持ち主の Prefecture にあるものの、関連をたどっているので、途中の nil と構造への依存が残ります。
+            図 75-4 の左上がこの章の直す前のコードです。Subscription にだけ送っているのでデメテルの法則には沿っていますが、値を取り出して外で判断しているので Tell, Don't Ask には反しています。デメテルの法則の章では関連の先の値を delegate で取り出せるようにしました。値を運ぶだけなら判断は呼び出し側に残り、左上と同じ形になります。遠方の判断を Prefecture#remote? に移したところが Tell, Don't Ask に沿って直した部分でした。右下は、判断は持ち主の Prefecture にあるものの、関連をたどっているので、途中の nil と構造への依存が残ります。
           </p>
           <h3>似た原則との違い</h3>
           <ul>
@@ -849,7 +850,7 @@ C：解約予約・今日が最終日（canceled、最終日 2026-11-30）
 `}
           />
           <p>
-            図 58-2 の × がすべてなくなりました。規則を Subscription のメソッドに移したので、規則のテストは Subscription に対して書けます。状態と最終日の組み合わせを表にして、<code>usable_on?</code> の結果を並べました。
+            図 75-2 の × がすべてなくなりました。規則を Subscription のメソッドに移したので、規則のテストは Subscription に対して書けます。状態と最終日の組み合わせを表にして、<code>usable_on?</code> の結果を並べました。
           </p>
           <Code
             lang="ruby"
@@ -931,11 +932,11 @@ Finished in 0.17275 seconds (files took 0.86591 seconds to load)
             前の節で失敗した request spec も通りました。規則の組み合わせはモデルのテストで確かめ、request spec は3か所が同じ規則を使っていることを確かめる2件だけにしています。
           </p>
           <h3>直す前と後の比較</h3>
-          <Figure n="58-5" title="直す前と後：規則がある場所と、規則を変えるときに直す場所" caption="上段は呼び出しの形、下段は規則を1つ変えるときに直す場所。">
+          <Figure n="75-5" title="直す前と後：規則がある場所と、規則を変えるときに直す場所" caption="上段は呼び出しの形、下段は規則を1つ変えるときに直す場所。">
             <CompareFigure />
           </Figure>
           <p>
-            図 58-5 の上段のとおり、直す前は規則が3つのファイルに分かれていて、直した後は Subscription の1か所にあります。下段は、たとえば「解約予約は最終日の翌日まで見られる」に規則を変えるときに直す場所です。直す前は、動画の画面の <code>&gt;=</code> とジョブの <code>&lt;=</code> を同じように直す必要があります。直した後は <code>usable_on?</code> を直せば、<code>expire!</code> がそれを使うので、ジョブの判断も同じ規則にそろいます。直した後のコードで、前の節と同じ grep を実行しました。
+            図 75-5 の上段のとおり、直す前は規則が3つのファイルに分かれていて、直した後は Subscription の1か所にあります。下段は、たとえば「解約予約は最終日の翌日まで見られる」に規則を変えるときに直す場所です。直す前は、動画の画面の <code>&gt;=</code> とジョブの <code>&lt;=</code> を同じように直す必要があります。直した後は <code>usable_on?</code> を直せば、<code>expire!</code> がそれを使うので、ジョブの判断も同じ規則にそろいます。直した後のコードで、前の節と同じ grep を実行しました。
           </p>
           <Code
             lang="text"
@@ -948,11 +949,11 @@ app/jobs/expire_subscriptions_job.rb:5:    Subscription.canceled.find_each { |su
             残ったのは、ジョブが enum の scope の <code>canceled</code> で読む対象を絞っている1行です。これは「解約予約の契約だけを読む」という読み込みの範囲で、終了にするかどうかの判断は <code>expire!</code> の中にあります。
           </p>
           <h3>データと振る舞いの位置</h3>
-          <Figure n="58-6" title="データと振る舞いの位置" caption="Subscription の中を、データ・問い合わせ・命令に分けて示した。">
+          <Figure n="75-6" title="データと振る舞いの位置" caption="Subscription の中を、データ・問い合わせ・命令に分けて示した。">
             <DataBehaviorFigure />
           </Figure>
           <p>
-            図 58-6 は直した後の Subscription の中身と、呼び出し側との関係です。データ（status と ends_on）と、それを使う問い合わせと命令が、同じクラスにあります。動画の画面と管理画面の表示（次の節で作るヘルパー）は問い合わせを呼び、その値で自分の応答や表示を決めます。ジョブと管理画面の延長は命令を呼び、状態をどう変えるかは Subscription が決めます。
+            図 75-6 は直した後の Subscription の中身と、呼び出し側との関係です。データ（status と ends_on）と、それを使う問い合わせと命令が、同じクラスにあります。動画の画面と管理画面の表示（次の節で作るヘルパー）は問い合わせを呼び、その値で自分の応答や表示を決めます。ジョブと管理画面の延長は命令を呼び、状態をどう変えるかは Subscription が決めます。
           </p>
           <h3>直す順序</h3>
           <ol>
@@ -1146,14 +1147,14 @@ p row
             年齢制限のある動画を追加し、「契約が有効で、会員が18歳以上なら見られる」という規則ができたとします。この判断には契約・会員の生年月日・動画の区分の3つが要ります。Subscription に <code>usable_for?(video, member, date)</code> を足すと、Subscription が動画と会員の構造を知ることになり、規則の置き場所として不自然です。
           </p>
           <p>
-            このような、複数のオブジェクトにまたがる判断は、判断のためのクラスに置きます。Pundit を使っているなら、動画を見られるかの Policy に書き、その中で <code>subscription.usable_on?(date)</code> を問い合わせます（Pundit の Policy は<ChapterLink n={41} section="pundit" />で扱いました）。契約の規則は Subscription に、組み合わせの規則は Policy に、と分けておけば、どちらの規則を変えるときも直す場所は1か所です。
+            このような、複数のオブジェクトにまたがる判断は、判断のためのクラスに置きます。Pundit を使っているなら、動画を見られるかの Policy に書き、その中で <code>subscription.usable_on?(date)</code> を問い合わせます（Pundit の Policy は<ChapterLink n={41} section="pundit" />で扱います）。契約の規則は Subscription に、組み合わせの規則は Policy に、と分けておけば、どちらの規則を変えるときも直す場所は1か所です。
           </p>
           <h3>判断の目安</h3>
-          <Figure n="58-7" title="どこに判断を置くか" caption="模式図。上から順に確かめる。">
+          <Figure n="75-7" title="どこに判断を置くか" caption="模式図。上から順に確かめる。">
             <JudgeFigure />
           </Figure>
           <p>
-            図 58-7 は、呼び出し側が契約の状態を使って何かを決めたいときの、判断の置き場所の目安です。ほかのオブジェクトの情報も使う判断は Policy やサービスに、契約のデータだけで決まる業務の規則は Subscription に、画面ごとの見せ方はヘルパーやビューに置きます。値を表示するだけなら、<code>subscription.ends_on</code> を読んでかまいません。この原則で確かめるのは、読んだ値で業務の規則を判断し、その結果で相手の状態を変えていないかです。
+            図 75-7 は、呼び出し側が契約の状態を使って何かを決めたいときの、判断の置き場所の目安です。ほかのオブジェクトの情報も使う判断は Policy やサービスに、契約のデータだけで決まる業務の規則は Subscription に、画面ごとの見せ方はヘルパーやビューに置きます。値を表示するだけなら、<code>subscription.ends_on</code> を読んでかまいません。この原則で確かめるのは、読んだ値で業務の規則を判断し、その結果で相手の状態を変えていないかです。
           </p>
         </>
       ),
@@ -1222,9 +1223,9 @@ private にした後の expired!：private method 'expired!' called for an insta
 `}
           />
           <p>
-            B は最終日が12月10日の解約予約ですが、<code>expired!</code> で11月30日に終了になり、見られなくなりました。<code>expire!(date)</code> の「見られなくなった解約予約だけを終了にする」という規則を通っていないからです。<code>update_all</code> は解約予約ですらない C を、どの規則も通さずに active にしました。図 58-8 は状態を変える書き方ごとに、どこを通るかをまとめたものです。
+            B は最終日が12月10日の解約予約ですが、<code>expired!</code> で11月30日に終了になり、見られなくなりました。<code>expire!(date)</code> の「見られなくなった解約予約だけを終了にする」という規則を通っていないからです。<code>update_all</code> は解約予約ですらない C を、どの規則も通さずに active にしました。図 75-8 は状態を変える書き方ごとに、どこを通るかをまとめたものです。
           </p>
-          <Figure n="58-8" title="状態を変える書き方と、通る確認" caption="バリデーションとコールバックを通るかは Rails Guides による。モデルの規則はこの章の expire! と extend_period! の中の確認。">
+          <Figure n="75-8" title="状態を変える書き方と、通る確認" caption="バリデーションとコールバックを通るかは Rails Guides による。モデルの規則はこの章の expire! と extend_period! の中の確認。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1299,7 +1300,7 @@ private にした後の expired!：private method 'expired!' called for an insta
               <ChapterLink n={47} section="aasm" />：状態の遷移が多いときは、遷移とその条件（guard）を宣言する状態機械として書けます。どの状態からどの状態に移れるかの規則が、モデルの1か所に集まります。
             </li>
             <li>
-              <ChapterLink n={41} section="pundit" />：会員・契約・動画のように、複数のオブジェクトにまたがる「できるか」の判断を Policy に置く方法を扱いました。
+              <ChapterLink n={41} section="pundit" />：会員・契約・動画のように、複数のオブジェクトにまたがる操作の可否を Policy に置く方法を扱います。
             </li>
             <li>
               <ChapterLink n={30} section="callback-design" />：状態が変わったときにメールを送るといった処理を、コールバックに置くか命令のメソッドに書くかの判断を扱いました。
@@ -1311,6 +1312,29 @@ private にした後の expired!：private method 'expired!' called for an insta
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          契約のデータだけで決まる業務の規則は、呼び出し側で状態を読んで判断せず、Subscription の問い合わせ（usable_on?）と命令（expire!・extend_period!）に移します。画面ごとの見せ方はヘルパーに置いて問い合わせを使い、会員や動画の情報も使う判断は Policy に置きます。値を表示するだけなら、ends_on を読んでかまいません。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、動画の画面・ジョブ・管理画面がそれぞれ status と ends_on を読んだため、解約予約の会員が期間中に見られず、最終日に終了になり、延長で解約が消えた。直した後は規則が Subscription の1か所にあり、expire! が usable_on? を使うので、見られなくなる日と終了にする日が必ずそろう。</>,
+        basis: <><ChapterLink n={77} section="scene" />、<ChapterLink n={77} section="apply" /></>,
+      },
+      cost: {
+        text: <>見せ方まで Subscription に頼むと、公開メソッドが3つから6つになり、TagHelper を読み込んだことで契約と関係のない14個のメソッドも公開された。バッジの色・メールの件名・CSV の書式のどれを変えるときも subscription.rb を直すことになる。</>,
+        basis: <ChapterLink n={77} section="overuse" />,
+      },
+      alternative: {
+        text: <>バッジはヘルパーに置き、Subscription に「解約予約か」「見られるか」「最終日はいつか」を問い合わせて、文言と色だけを決める。年齢制限のように契約・会員の生年月日・動画の区分の3つが要る判断は、Subscription に引数を足さず Policy に置く。</>,
+        basis: <ChapterLink n={77} section="overuse" />,
+      },
+      criterion: {
+        text: <>その判断に要るデータを、どのオブジェクトが持っているか。問い合わせた値で、相手の状態を書き換えているか。画面ごとに変わる見せ方か、どの呼び出し元でも同じであるべき業務の規則か。</>,
+        basis: <ChapterLink n={77} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

@@ -2,7 +2,7 @@ import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
-/* ---------- 図 37-1 コードレビューで原則の名前を使う場面 ---------- */
+/* ---------- 図 54-1 コードレビューで原則の名前を使う場面 ---------- */
 function ReviewFigure() {
   const code: [number, string, boolean?][] = [
     [48, '# app/models/order.rb', true],
@@ -18,7 +18,7 @@ function ReviewFigure() {
   ]
   return (
     <Svg
-      id="37-1"
+      id="54-1"
       w={780}
       h={400}
       label="注文を受け付けるコードと、3つのレビューの指摘を並べた図。指摘1は DRY で、税込みの合計を計算する規則がモデルとメーラーの2か所にあることを指す。指摘2は Fail Fast で、save の戻り値を見ずに 201 を返していることを指す。指摘3は YAGNI で、将来の多通貨に備えた計算の基底クラスを作る提案に反対している。下に実行結果として、API の合計が1435円、メールの合計が1436円とずれたこと、数量0の注文で応答が201なのに保存された注文が0件だったことを示す"
@@ -48,7 +48,7 @@ function ReviewFigure() {
   )
 }
 
-/* ---------- 図 37-2 原則同士がぶつかる5組 ---------- */
+/* ---------- 図 54-2 原則同士がぶつかる5組 ---------- */
 function TradeoffPairsFigure() {
   const rows: [string, string, string, string][] = [
     ['DRY', 'AHA', '同じ規則を1か所にまとめる', '似ているだけのものは、まだまとめない'],
@@ -59,7 +59,7 @@ function TradeoffPairsFigure() {
   ]
   return (
     <Svg
-      id="37-2"
+      id="54-2"
       w={780}
       h={360}
       label="原則同士がぶつかる5組を左右に並べた図。DRY と AHA、KISS と OCP、YAGNI と DIP、Fail Fast と Graceful Degradation、Encapsulation とテストのしやすさ。それぞれの左の原則は、同じ規則を1か所にまとめる、今の要件を単純に書く、具体的な実装を直接使う、不正を見つけたら止める、内部を隠す方向を勧める。右の原則は、似ているだけのものはまだまとめない、変更が見込まれる所を拡張できるようにする、抽象に依存させる、一部が壊れても続ける、テストのために内部を見せたくなる方向を勧める。どちらを優先するかは場面ごとに判断し、終章で比べる"
@@ -81,7 +81,7 @@ function TradeoffPairsFigure() {
   )
 }
 
-/* ---------- 図 37-3 原則を適用する3つの目的と、主に対応する原則 ---------- */
+/* ---------- 図 54-3 原則を適用する3つの目的と、主に対応する原則 ---------- */
 function PurposesFigure() {
   const cols: { x: number; head: string; sub: string; items: string[] }[] = [
     {
@@ -136,7 +136,7 @@ function PurposesFigure() {
   ]
   return (
     <Svg
-      id="37-3"
+      id="54-3"
       w={780}
       h={470}
       label="原則を適用する3つの目的と、それぞれに主に対応する原則を3列に並べた図。理解しやすいことには KISS、YAGNI、POLA、Explicit over Implicit、関心の分離、Tell, Don't Ask、デメテルの法則。変更しやすいことには DRY、WET、AHA、SOLID の5つ、高凝集、疎結合、カプセル化、コンポジション、情報隠蔽、安定依存の原則、Functional Core, Imperative Shell、ボーイスカウト・ルール、方針と仕組みの分離。正しく動き続けることには Fail Fast、契約による設計、不正な状態を表現できなくする、防御的プログラミング、冪等性、原子性、最小権限、Single Source of Truth、可観測性、最適化の前の計測、Graceful Degradation、後方互換性。多くの原則は2つ以上の目的に役立つが、図には主な1つだけを示す"
@@ -159,7 +159,7 @@ function PurposesFigure() {
   )
 }
 
-/* ---------- 図 37-6 Rails Doctrine の柱と原則 ---------- */
+/* ---------- 図 54-6 Rails Doctrine の柱と原則 ---------- */
 function DoctrineFigure() {
   const left = [
     'Optimize for programmer happiness',
@@ -195,7 +195,7 @@ function DoctrineFigure() {
   const ry = (j: number) => 44 + j * 42
   return (
     <Svg
-      id="37-6"
+      id="54-6"
       w={780}
       h={440}
       label="Rails Doctrine の6つの柱と原則の関係を線で結んだ図。実線は同じ方向を向く関係、破線はぶつかることがある関係。Optimize for programmer happiness は POLA と同じ方向。Convention over Configuration は DRY と同じ方向で、Explicit over Implicit とはぶつかることがある。Provide sharp knives は Explicit over Implicit と Encapsulation とぶつかることがある。Value integrated systems は KISS と同じ方向で、Low Coupling とはぶつかることがある。Progress over stability は Backward Compatibility とぶつかることがある。No one paradigm は Composition over Inheritance や Functional Core, Imperative Shell と同じ方向"
@@ -230,11 +230,11 @@ function DoctrineFigure() {
   )
 }
 
-/* ---------- 図 37-7 原則・設計パターン・アーキテクチャ・Rails の機能 ---------- */
+/* ---------- 図 54-7 原則・設計パターン・アーキテクチャ・Rails の機能 ---------- */
 function LayersFigure() {
   return (
     <Svg
-      id="37-7"
+      id="54-7"
       w={780}
       h={400}
       label="原則、設計パターン、アーキテクチャ、Rails の機能の関係を示した図。原則は判断の基準で、1行のコードからアプリ全体まで当てはまる。例は DRY、SRP、DIP、Fail Fast。設計パターンは繰り返し現れる問題と解決の形で、数個のクラスの組み合わせに当てはまる。例は Strategy、Adapter、Dependency Injection、Value Object。アーキテクチャはアプリ全体の分け方で、例はレイヤード、クリーン、ヘキサゴナル、モジュラーモノリス。原則はパターンを選ぶときの基準になり、パターンを組み合わせてアーキテクチャを作る。Rails の機能と規約は、いくつかのパターンをすでに実装している。下段は具体例の流れで、DIP という原則から、Adapter と Dependency Injection というパターン、ヘキサゴナル・アーキテクチャへつながる"
@@ -270,7 +270,7 @@ function LayersFigure() {
   )
 }
 
-/* ---------- 図 37-8 原則の章の節の並び ---------- */
+/* ---------- 図 54-8 原則の章の節の並び ---------- */
 function LayoutFigure() {
   const rows: [string, string, string][] = [
     ['scene', '場面と、原則に反したコード', '動かして、不具合や変更の手間を見せる'],
@@ -283,7 +283,7 @@ function LayoutFigure() {
   const figs = ['場面の構成の図', '', '直す前と後の比較の図', '当てはめすぎの判断の図', '', '']
   return (
     <Svg
-      id="37-8"
+      id="54-8"
       w={780}
       h={396}
       label="原則の章の6つの節を上から順に並べ、それぞれの内容と、どの章にも置く図を示した図。場面と原則に反したコードの節では、コードを動かして不具合や変更の手間を見せ、場面の構成の図を置く。原則の意味と由来の節では、提唱者と最初の資料、似た原則との違いを書く。原則に沿って直す節では、直したコードと実行結果を示し、直す前と後の比較の図を置く。当てはめすぎたときの節では、複雑になる例と判断の目安を示し、判断の図を置く。Rails の機能と規約との関係の節では、標準機能と Rails Doctrine とほかの章を示す。最後はまとめ"
@@ -314,7 +314,7 @@ function LayoutFigure() {
   )
 }
 
-/* ---------- 図 37-4 36の原則と5つのカテゴリ（表） ---------- */
+/* ---------- 図 54-4 36の原則と5つのカテゴリ（表） ---------- */
 const CATALOG: { cat: string; items: [number, string, string][] }[] = [
   {
     cat: '1 シンプルさ・可読性',
@@ -418,7 +418,7 @@ function CatalogTable() {
   )
 }
 
-/* ---------- 図 37-5 特に重要な10原則（表） ---------- */
+/* ---------- 図 54-5 特に重要な10原則（表） ---------- */
 const TOP10: [number, string, string, string][] = [
   [57, 'KISS', '不要な複雑さを除く', '理解しやすい'],
   [58, 'YAGNI', '必要になるまで作らない', '理解しやすい'],
@@ -555,9 +555,9 @@ end`}
 2 examples, 0 failures`}
           />
           <p>
-            1,305 円の1割増しは 1,435.5 円です。モデルは切り捨てて 1,435 円、メーラーは四捨五入して 1,436 円にしたので、同じ注文の金額が画面とメールで違いました。数量 0 の注文は検証で保存に失敗しましたが、アクションは save の戻り値を見ていないので、201（作成した）と合計 0 円を返しました。図 37-1 はこのコードと3つの指摘を並べたものです。
+            1,305 円の1割増しは 1,435.5 円です。モデルは切り捨てて 1,435 円、メーラーは四捨五入して 1,436 円にしたので、同じ注文の金額が画面とメールで違いました。数量 0 の注文は検証で保存に失敗しましたが、アクションは save の戻り値を見ていないので、201（作成した）と合計 0 円を返しました。図 54-1 はこのコードと3つの指摘を並べたものです。
           </p>
-          <Figure n="37-1" title="コードレビューで原則の名前を使う場面" caption="上のコードと実行結果をもとにした模式図。指摘3はレビューの途中で出た「将来の多通貨に備えて計算の基底クラスを作る」という提案への指摘。">
+          <Figure n="54-1" title="コードレビューで原則の名前を使う場面" caption="上のコードと実行結果をもとにした模式図。指摘3はレビューの途中で出た「将来の多通貨に備えて計算の基底クラスを作る」という提案への指摘。">
             <ReviewFigure />
           </Figure>
           <ul>
@@ -571,9 +571,9 @@ end`}
             とは、コードの可読性（読んで理解できること）・保守性（直しやすいこと）・拡張性（機能を足しやすいこと）・信頼性（正しく動き続けること）を高めるための判断の基準です。上の指摘のように、「このコードのどこに、どんな問題が起きうるか」を短い名前で示します。
           </p>
           <p>
-            原則は守らないと動かないルールではありません。上の3つの指摘のうち、指摘1と指摘2はコードを直す方向に働き、指摘3は余計なコードを足さない方向に働きました。原則は互いにぶつかることもあります。DRY は同じ規則を1か所にまとめるよう勧めますが、AHA（拙速な抽象化を避ける）は似ているだけのものを早くまとめないよう勧めます。どちらを優先するかは、重複しているのが同じ規則なのか、たまたま似ているだけなのかで決まります。図 37-2 は、この部で比べる5組のトレードオフです。
+            原則は守らないと動かないルールではありません。上の3つの指摘のうち、指摘1と指摘2はコードを直す方向に働き、指摘3は余計なコードを足さない方向に働きました。原則は互いにぶつかることもあります。DRY は同じ規則を1か所にまとめるよう勧めますが、AHA（拙速な抽象化を避ける）は似ているだけのものを早くまとめないよう勧めます。どちらを優先するかは、重複しているのが同じ規則なのか、たまたま似ているだけなのかで決まります。図 54-2 は、この部で比べる5組のトレードオフです。
           </p>
-          <Figure n="37-2" title="原則同士がぶつかる5組" caption="この部で比べる5組。どの組も、片方だけを常に優先すると問題が起きる。">
+          <Figure n="54-2" title="原則同士がぶつかる5組" caption="この部で比べる5組。どの組も、片方だけを常に優先すると問題が起きる。">
             <TradeoffPairsFigure />
           </Figure>
           <p>
@@ -644,11 +644,169 @@ end`}
             たとえば、ジョブの再試行でポイントが二重に付与される、外部 API の障害で商品ページ全体が表示されなくなる、といった問題を防ぐ原則です。Fail Fast、冪等性、原子性、最小権限、可観測性などがこの目的に当たります。
           </p>
           <p>
-            図 37-3 は36の原則を主な目的ごとに分けたものです。多くの原則は2つ以上の目的に役立ちます。たとえば DRY は変更を楽にするだけでなく、最初の節のような金額の食い違い（正しく動かないこと）も防ぎます。図には主な目的を1つだけ書いています。
+            図 54-3 は36の原則を主な目的ごとに分けたものです。多くの原則は2つ以上の目的に役立ちます。たとえば DRY は変更を楽にするだけでなく、最初の節のような金額の食い違い（正しく動かないこと）も防ぎます。図には主な目的を1つだけ書いています。
           </p>
-          <Figure n="37-3" title="原則を適用する3つの目的と、主に対応する原則" caption="この部の分類。">
+          <Figure n="54-3" title="原則を適用する3つの目的と、主に対応する原則" caption="この部の分類。">
             <PurposesFigure />
           </Figure>
+        </>
+      ),
+    },
+    {
+      id: 'oop-basics',
+      title: 'カプセル化・ポリモーフィズム・継承とコンポジション',
+      body: (
+        <>
+          <p>
+            <Term en="object-oriented programming">オブジェクト指向</Term>は、データと、そのデータを扱う処理をオブジェクトにまとめ、オブジェクトどうしがメソッドを呼び合ってプログラムを組み立てる考え方です。この部の「設計・責務分離」と「抽象化・依存関係」の原則の多くは、オブジェクト指向の3つの考え方を前提にしています。カプセル化、ポリモーフィズム、継承とコンポジションです。ここでは Ruby 4.0.9 で動かした短い例で3つを確かめ、それぞれを詳しく扱う章を示します。
+          </p>
+          <h3>カプセル化</h3>
+          <p>
+            <Term en="encapsulation">カプセル化</Term>は、データと、そのデータについての規則を守る処理を1つのクラスにまとめ、外からは公開したメソッドを通してだけ変えられるようにすることです。
+          </p>
+          <Code
+            lang="ruby"
+            code={`
+class Wallet
+  attr_reader :balance
+
+  def initialize(balance) = @balance = balance
+
+  def pay(amount)
+    raise ArgumentError, "残高が足りません" if amount > @balance
+    @balance -= amount
+  end
+end
+
+wallet = Wallet.new(1000)
+wallet.pay(300)                              # => 700
+wallet.pay(5000)                             # => ArgumentError: 残高が足りません
+wallet.balance = -1                          # => NoMethodError: undefined method 'balance=' for an instance of Wallet
+wallet.instance_variable_set(:@balance, -1)  # => -1
+`}
+          />
+          <p>
+            <code>pay</code> は「残高を超えて支払えない」という規則を確かめてから残高を減らします。残高を書き換えるメソッド（<code>balance=</code>）は定義していないので、外のコードが <code>wallet.balance = -1</code> と書くと NoMethodError になりました。ただし、最後の行のように <code>instance_variable_set</code> を使うと中のデータを直接変えられます。Ruby のカプセル化は決めたメソッド以外から状態を変えないという取り決めとして守るものです。
+          </p>
+          <p>
+            Active Record のモデルでは列ごとに書き込みのメソッドが public で作られます。残高のような列をどう守るかは <ChapterLink n={71} /> で扱います。変わるかもしれない判断をモジュールの中に隠す情報隠蔽（<ChapterLink n={73} />）、ほかのオブジェクトの内部をたどらないデメテルの法則（<ChapterLink n={74} />）、状態を聞いて外で判断せずにオブジェクトに処理を頼む Tell, Don’t Ask（<ChapterLink n={77} />）も、カプセル化と関係の深い原則です。
+          </p>
+          <h3>ポリモーフィズムとダックタイピング</h3>
+          <p>
+            <Term en="polymorphism">ポリモーフィズム</Term>（多態性）は、同じ名前のメソッドを呼んでも、受け取ったオブジェクトのクラスに応じて違う処理が動くことです。呼び出す側は相手のクラスで処理を分けません。
+          </p>
+          <Code
+            lang="ruby"
+            code={`
+class Card
+  def charge(amount) = "カードで #{amount} 円を決済"
+end
+
+class BankTransfer
+  def charge(amount) = "振込先を案内（#{amount} 円）"
+end
+
+def checkout(payment, amount) = payment.charge(amount)
+
+[Card.new, BankTransfer.new].map { |m| checkout(m, 1200) }
+# => ["カードで 1200 円を決済", "振込先を案内（1200 円）"]
+Card.superclass             # => Object
+checkout(Object.new, 1200)  # => NoMethodError: undefined method 'charge' for an instance of Object
+`}
+          />
+          <p>
+            <code>checkout</code> は <code>payment.charge</code> を呼ぶだけで、Card か BankTransfer かを調べていません。Card と BankTransfer に共通の親クラスは無く（<code>Card.superclass</code> は Object）、どのメソッドを持つべきかを宣言する仕組み（Java のインターフェースなど）も使っていません。Ruby はメソッドを呼ぶときに相手のクラスを確かめず、そのメソッドに応答するオブジェクトなら受け付けます。この書き方を<Term en="duck typing">ダックタイピング</Term>と呼びます。charge を持たないオブジェクトを渡すと、呼んだ時点で NoMethodError になりました。
+          </p>
+          <p>
+            支払い方法を足すときに checkout を書き換えずに済むのは、ポリモーフィズムを使っているからです（OCP、<ChapterLink n={64} />）。一方、「charge は金額を受け取って結果を返す」という約束はコードのどこにも書かれていないので、新しいクラスが約束を破っても、実行するまで分かりません。サブクラスが親クラスの約束を守ることは LSP（<ChapterLink n={65} />）、相手に求めるメソッドを小さく保つことは ISP（<ChapterLink n={66} section="rails" />）、具体的なクラスではなく取り決めに依存させることは DIP（<ChapterLink n={67} />）で扱います。
+          </p>
+          <h3>継承とコンポジション</h3>
+          <p>
+            <Term en="inheritance">継承</Term>は、サブクラスが親クラスのメソッドを引き継ぎ、必要なメソッドだけを上書きする仕組みです。<Term en="composition">コンポジション</Term>は、オブジェクトがほかのオブジェクトを部品として持ち、仕事の一部をその部品に任せる（委譲する）作り方です。同じ「至急の SMS 通知」を2通りで作りました。
+          </p>
+          <Code
+            lang="ruby"
+            code={`
+# 継承：親クラスの notify を引き継ぎ、format だけを上書きする
+class Notifier
+  def notify(user, text) = deliver(user, format(text))
+  def format(text) = text
+end
+
+class SmsNotifier < Notifier
+  def deliver(user, body) = "SMS → #{user}: #{body}"
+end
+
+class UrgentSmsNotifier < SmsNotifier
+  def format(text) = "【至急】#{text}"
+end
+
+UrgentSmsNotifier.new.notify("佐藤", "在庫が切れました")
+# => "SMS → 佐藤: 【至急】在庫が切れました"
+UrgentSmsNotifier.ancestors.take(3)   # => [UrgentSmsNotifier, SmsNotifier, Notifier]
+
+# コンポジション：送り方（channel）と書式（formatter）を部品として受け取る
+class SmsChannel
+  def deliver(user, body) = "SMS → #{user}: #{body}"
+end
+
+class MailChannel
+  def deliver(user, body) = "メール → #{user}: #{body}"
+end
+
+class Notification
+  def initialize(channel:, formatter: ->(text) { text })
+    @channel = channel
+    @formatter = formatter
+  end
+
+  def notify(user, text) = @channel.deliver(user, @formatter.call(text))
+end
+
+urgent = ->(text) { "【至急】#{text}" }
+Notification.new(channel: SmsChannel.new, formatter: urgent).notify("佐藤", "在庫が切れました")
+# => "SMS → 佐藤: 【至急】在庫が切れました"
+Notification.new(channel: MailChannel.new, formatter: urgent).notify("佐藤", "在庫が切れました")
+# => "メール → 佐藤: 【至急】在庫が切れました"
+`}
+          />
+          <p>
+            継承の UrgentSmsNotifier は SmsNotifier と Notifier の実装を引き継いで format だけを上書きしているので、書くコードは少なく済みます。その代わり、親の notify が format と deliver を呼ぶ順序を前提にしているので、親クラスを直すとすべてのサブクラスに影響します。至急のメールを送るには UrgentMailNotifier がもう1つ要り、送り方と書式の組み合わせの数だけクラスが増えます。
+          </p>
+          <p>
+            コンポジションの Notification は送り方と書式を部品として受け取るので、組み合わせはオブジェクトを作るときに選べます。至急のメールもクラスを足さずに MailChannel と urgent を渡して作れました。部品に求めるのは deliver や call に応答することだけで、ここでもダックタイピングを使っています。
+          </p>
+          <p>
+            継承が向くのは、サブクラスを親クラスの代わりにどこで使っても約束が保たれる場合です。Rails の STI（単一テーブル継承）でサブクラスが親の約束を破る例は LSP（<ChapterLink n={65} />）で、継承の階層が増える問題と、モジュールの include（Rails の concern）を含めた3つの方法の比べ方は Composition over Inheritance（<ChapterLink n={72} />）で扱います。
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>考え方</th>
+                  <th>守りたいこと</th>
+                  <th>詳しく扱う章</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>カプセル化</td>
+                  <td>データについての規則を、データを持つクラスの中で守る</td>
+                  <td><ChapterLink n={71} />・<ChapterLink n={73} />・<ChapterLink n={74} />・<ChapterLink n={77} /></td>
+                </tr>
+                <tr>
+                  <td>ポリモーフィズム（ダックタイピング）</td>
+                  <td>呼び出す側が相手のクラスで処理を分けない</td>
+                  <td><ChapterLink n={64} />・<ChapterLink n={65} />・<ChapterLink n={66} />・<ChapterLink n={67} /></td>
+                </tr>
+                <tr>
+                  <td>継承とコンポジション</td>
+                  <td>実装を使い回すときに、クラスどうしを強く結び付けない</td>
+                  <td><ChapterLink n={72} />・<ChapterLink n={65} /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </>
       ),
     },
@@ -666,9 +824,9 @@ end`}
             <li>変更容易性・運用：コードを変え続け、本番で動かし続けるための原則</li>
           </ol>
           <p>
-            図 37-4 はこの部の章の一覧です。章の欄のリンクから、それぞれの章へ移動できます。題材の欄はその章で動かすコードの場面です。どの章も原則に反したコードを動かして問題を確かめるところから始まるので、気になる原則の章から読んでもかまいません。
+            図 54-4 はこの部の章の一覧です。章の欄のリンクから、それぞれの章へ移動できます。題材の欄はその章で動かすコードの場面です。どの章も原則に反したコードを動かして問題を確かめるところから始まるので、気になる原則の章から読んでもかまいません。
           </p>
-          <Figure n="37-4" title="36の原則と5つのカテゴリ" caption="章の欄を選ぶと、その章へ移動する。最後の行は原則同士のトレードオフを比べる終章。">
+          <Figure n="54-4" title="36の原則と5つのカテゴリ" caption="章の欄を選ぶと、その章へ移動する。最後の行は原則同士のトレードオフを比べる終章。">
             <CatalogTable />
           </Figure>
           <p>
@@ -915,7 +1073,7 @@ end`}
           <p>
             36の原則をすべて同時に意識しながらコードを書くことはできません。この部では次の10原則を特に重要なものとして扱います。どれも、ジョブ・外部 API・DB の権限のような特定の技術に限らず、ほとんどの変更で判断に使う原則です。最初はこの10原則の章から読むと、コードレビューでよく出る指摘を一通り理解できます。
           </p>
-          <Figure n="37-5" title="特に重要な10原則" caption="番号はこの部で示す順。High Cohesion と Low Coupling は1つにまとめて数える。">
+          <Figure n="54-5" title="特に重要な10原則" caption="番号はこの部で示す順。High Cohesion と Low Coupling は1つにまとめて数える。">
             <Top10Table />
           </Figure>
           <p>
@@ -946,9 +1104,9 @@ end`}
             <li>Push up a big tent（大きなテントを張る）</li>
           </ul>
           <p>
-            図 37-6 は、原則との関係がはっきりしている6つの柱を、原則と線で結んだものです。実線は同じ方向を向く関係、破線はぶつかることがある関係です。
+            図 54-6 は、原則との関係がはっきりしている6つの柱を、原則と線で結んだものです。実線は同じ方向を向く関係、破線はぶつかることがある関係です。
           </p>
-          <Figure n="37-6" title="Rails Doctrine の柱と原則" caption="Rails Doctrine の本文をもとにした模式図。線の種類はこの部の章で扱う関係を示す。">
+          <Figure n="54-6" title="Rails Doctrine の柱と原則" caption="Rails Doctrine の本文をもとにした模式図。線の種類はこの部の章で扱う関係を示す。">
             <DoctrineFigure />
           </Figure>
           <h3>同じ方向を向く柱</h3>
@@ -980,9 +1138,9 @@ end`}
       body: (
         <>
           <p>
-            原則と似た言葉に、設計パターンとアーキテクチャがあります。<Term en="design pattern">設計パターン</Term>は、繰り返し現れる設計の問題と、その解決の形を組にして名前を付けたものです（<ChapterLink n={39} section="what-is-pattern" />）。<Term en="software architecture">アーキテクチャ</Term>は、アプリケーション全体をどの層や境界に分けるかの決定です。図 37-7 はこの3つと Rails の機能の関係を示しています。
+            原則と似た言葉に、設計パターンとアーキテクチャがあります。<Term en="design pattern">設計パターン</Term>は、繰り返し現れる設計の問題と、その解決の形を組にして名前を付けたものです（<ChapterLink n={39} section="what-is-pattern" />）。<Term en="software architecture">アーキテクチャ</Term>は、アプリケーション全体をどの層や境界に分けるかの決定です。図 54-7 はこの3つと Rails の機能の関係を示しています。
           </p>
-          <Figure n="37-7" title="原則・設計パターン・アーキテクチャ・Rails の機能" caption="模式図。下段は DIP から始まるつながりの一例。">
+          <Figure n="54-7" title="原則・設計パターン・アーキテクチャ・Rails の機能" caption="模式図。下段は DIP から始まるつながりの一例。">
             <LayersFigure />
           </Figure>
           <p>
@@ -1001,9 +1159,9 @@ end`}
         <>
           <h3>原則の章の節の並び</h3>
           <p>
-            原則の章（<ChapterLink n={57} />〜<ChapterLink n={92} />）は、どれも同じ6つの節で構成しています。最初の節で、業務の場面と原則に反した Rails のコードを示し、動かして不具合や変更の手間を実行結果で見せます。そのあとで原則の意味と由来を説明し、直したコードを動かし、原則を当てはめすぎたときに起きることと、Rails の機能・規約との関係を示します。図 37-8 は節の並びと、どの章にも置く図です。
+            原則の章（<ChapterLink n={57} />〜<ChapterLink n={92} />）は、どれも同じ6つの節で構成しています。最初の節で、業務の場面と原則に反した Rails のコードを示し、動かして不具合や変更の手間を実行結果で見せます。そのあとで原則の意味と由来を説明し、直したコードを動かし、原則を当てはめすぎたときに起きることと、Rails の機能・規約との関係を示します。図 54-8 は節の並びと、どの章にも置く図です。
           </p>
-          <Figure n="37-8" title="原則の章の節の並び" caption="節の見出しは章ごとに内容に合わせて変えている。右の3つの図のほかに、章ごとの図を足している。">
+          <Figure n="54-8" title="原則の章の節の並び" caption="節の見出しは章ごとに内容に合わせて変えている。右の3つの図のほかに、章ごとの図を足している。">
             <LayoutFigure />
           </Figure>
           <p>
@@ -1011,7 +1169,7 @@ end`}
           </p>
           <h3>図の記法</h3>
           <p>
-            図は本書の凡例（<ChapterLink n={1} section="conventions" /> の図 1-7）に従って描いています。紫の箱は注目してほしい要素、緑の箱はデータ・外部のサービス・DB、破線の箱は概念上の要素や取り決めです。赤い文字は問題や失敗を表します。同時の更新・重複・途中の失敗は、時間を上から下へ進めたタイムラインの図で描きます。
+            図は本書の凡例（<ChapterLink n={1} section="conventions" /> の図 2-7）に従って描いています。紫の箱は注目してほしい要素、緑の箱はデータ・外部のサービス・DB、破線の箱は概念上の要素や取り決めです。赤い文字は問題や失敗を表します。同時の更新・重複・途中の失敗は、時間を上から下へ進めたタイムラインの図で描きます。
           </p>
           <h3>コードを動かした環境</h3>
           <p>
@@ -1020,6 +1178,28 @@ end`}
           <Callout title="第9部（MSDP の設計パターン）との読む順">
             この部は、第9部の設計パターンの前に置いています。原則を先に読むと、パターンの章で「このパターンはどの原則を満たすためのものか」を考えながら読めます。反対に、具体的なパターンから読みたい場合は第9部から読み、気になった原則の章に戻ってもかまいません。
           </Callout>
+        </>
+      ),
+    },
+    {
+      id: 'related-frameworks',
+      title: 'Rails の設計方針、原則、MSDP をどう読むか',
+      body: (
+        <>
+          <p>
+            この部の原則は判断の基準で、クラスの形までは決めません（<ChapterLink n={56} section="layers" />）。本書にはこの基準を Rails の注文処理に当てはめるときに使う一覧が、ほかに3つあります。DHH の考え方を設計のレビューの問いにしたチェックリスト、注文処理を段階的に育てる設計から守らないと起きることと一緒に整理した20の原則、MSDP（現代の Web アプリケーションの設計上の問題に合わせて選んだ設計パターンの一覧）のパターンを採用するかを決める8つの原則です。
+          </p>
+          <p>
+            ソフトウェア設計コースでは、レビューのチェックリストはこの章の前に読みます。20の原則と採用の8つの原則は、この部の原則を読んだ後に読む章にあるので、ここでは対応する原則だけを示し、内容は後の章で扱います。
+          </p>
+          <div className="table-wrap"><table>
+            <thead><tr><th scope="col">参照先</th><th scope="col">注文処理で判断すること</th><th scope="col">この部で対応する原則</th><th scope="col">ソフトウェア設計コースで読む時期</th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><ChapterLink n={31} section="review-explanation">Rails の設計を説明する観点</ChapterLink></th><td>既存のモデルやリソースに処理を置けるか。</td><td><ChapterLink n={57} />、<ChapterLink n={63} /></td><td>この章の前</td></tr>
+              <tr><th scope="row"><ChapterLink n={34} section="best-practices">注文処理の設計原則20</ChapterLink></th><td>在庫の確定と通知の失敗を、どこから確認できるか。</td><td><ChapterLink n={84} />、<ChapterLink n={89} /></td><td>この部の原則の後（後の章で扱う）</td></tr>
+              <tr><th scope="row"><ChapterLink n={39} section="principles">MSDP が示す採用の8原則</ChapterLink></th><td>二重請求を防ぐために、処理に冪等性キーが必要か。</td><td><ChapterLink n={58} />、<ChapterLink n={83} /></td><td>この部の原則の後（後の章で扱う）</td></tr>
+            </tbody>
+          </table></div>
         </>
       ),
     },

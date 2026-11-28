@@ -4,7 +4,7 @@ import { explanation28 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
-/* ---------- 図 32-1 調査の手掛かり ---------- */
+/* ---------- 図 35-1 調査の手掛かり ---------- */
 function CluesFigure() {
   const clues = [
     ['応答', 'ステータス 500 とエラーの画面'],
@@ -14,7 +14,7 @@ function CluesFigure() {
   ]
   return (
     <Svg
-      id="32-1"
+      id="35-1"
       w={780}
       h={282}
       label="curl で GET /price?quantity=2 を送ると、Rails の PricesController#show が PriceCalculator#total を呼ぶ。調査の手掛かりは、応答（ステータス 500 とエラーの画面）、ログ（どの処理が動き、何を返したか）、例外とバックトレース（どこで、どんなエラーが起きたか）、止めた時点の変数の値（デバッガーで調べる）の4つ"
@@ -41,7 +41,7 @@ function CluesFigure() {
   )
 }
 
-/* ---------- 図 32-2 開発環境のエラー画面 ---------- */
+/* ---------- 図 35-2 開発環境のエラー画面 ---------- */
 function ErrorPageFigure() {
   const notes: [number, string][] = [
     [31, '例外のクラスと、起きたアクション'],
@@ -52,7 +52,7 @@ function ErrorPageFigure() {
   ]
   return (
     <Svg
-      id="32-2"
+      id="35-2"
       w={780}
       h={322}
       label="開発環境のエラー画面。一番上に例外のクラスと、例外が起きたアクション（TypeError in PricesController#show）、次にメッセージ（String can't be coerced into Integer）、例外が起きた行の前後のソース（3行目が強調される）、Application Trace としてアプリケーションのファイルの行だけのバックトレース、最後に要求のパラメーター（quantity は文字列の 2）が表示される"
@@ -232,7 +232,7 @@ function InvestigationFigure() {
     ['原因を絞る', '期待と実際が最初に違う位置を探す'],
     ['修正して確かめる', '再現ケースと周辺ケースをテストする'],
   ]
-  return <Svg id="32-3" w={700} h={332} label="調査の進め方。条件を固定して再現し、値や呼び出し元を観察し、期待と実際が分かれる箇所を特定して修正する。最後に同じ条件と周辺条件でテストする。">
+  return <Svg id="35-3" w={700} h={332} label="調査の進め方。条件を固定して再現し、値や呼び出し元を観察し、期待と実際が分かれる箇所を特定して修正する。最後に同じ条件と周辺条件でテストする。">
     {rows.map(([a, b], i) => <g key={a}>
       <Box x={20} y={14 + i * 80} w={180} h={58} lines={a} fs={14} bold />
       <Arrow x1={202} y1={43 + i * 80} x2={238} y2={43 + i * 80} />
@@ -243,7 +243,7 @@ function InvestigationFigure() {
 }
 
 function FramesFigure() {
-  return <Svg id="32-4" w={700} h={294} label="呼び出し履歴の模式図。コントローラーがサービスを呼び、サービスの掛け算でTypeErrorが発生する。呼び出しごとの実行状態をフレームと呼び、上のフレームへ移って入力の由来を調べる。">
+  return <Svg id="35-4" w={700} h={294} label="呼び出し履歴の模式図。コントローラーがサービスを呼び、サービスの掛け算でTypeErrorが発生する。呼び出しごとの実行状態をフレームと呼び、上のフレームへ移って入力の由来を調べる。">
     <Box x={20} y={18} w={300} h={62} lines={['#2 コントローラー', 'フォームから quantity = "2"']} fs={13} subTone="muted" />
     <Arrow x1={170} y1={80} x2={170} y2={110} />
     <Box x={20} y={112} w={300} h={62} lines={['#1 PriceCalculator#total', 'unit_price = 1200 / quantity = "2"']} fs={12} subTone="muted" />
@@ -261,7 +261,7 @@ function ToolsFigure() {
     ['応答が遅い', 'rack-mini-profiler', '時間のかかる処理を絞る'],
     ['メールの内容がおかしい', 'letter_opener_web', '保存したメールを表示する'],
   ]
-  return <Svg id="32-5" w={760} h={352} label="症状と道具の対応。値や分岐にはdebugやpry-byebug、例外画面にはbetter_errorsやweb-console、SQLの繰り返しにはBullet、性能にはrack-mini-profiler、メールの確認にはletter_opener_webを使う。">
+  return <Svg id="35-5" w={760} h={352} label="症状と道具の対応。値や分岐にはdebugやpry-byebug、例外画面にはbetter_errorsやweb-console、SQLの繰り返しにはBullet、性能にはrack-mini-profiler、メールの確認にはletter_opener_webを使う。">
     {rows.map(([a, b, c], i) => <g key={a}>
       <Box x={20} y={12 + i * 68} w={230} h={54} lines={a} fs={12.5} />
       <Arrow x1={252} y1={39 + i * 68} x2={286} y2={39 + i * 68} />
@@ -272,7 +272,7 @@ function ToolsFigure() {
 
 const ch28: Chapter = {
   number: 28,
-  part: 5,
+  part: 4,
   title: 'Rails の改修・デバッグ・コードレビュー',
   summary:
     '数量に「2」を入力すると、合計金額を表示する画面でエラーが起きます。入力した値が計算式に届くまでをログとデバッガで追い、修正後は同じ不具合を見つけられるテストを残します。',
@@ -355,9 +355,9 @@ x-request-id: f0f667f8-5e60-4452-9e2e-20e1c1979c9e
             期待した「合計: 2900 円」ではなく、ステータス 500（Internal Server Error。サーバーの中でエラーが起きたことを表す）が返りました。これが不具合です。不具合の調査は、期待した結果と実際の結果がどこで分かれたかを探し、その原因を突き止める作業です。
           </p>
           <p>
-            手掛かりは4つあります。1つ目は応答で、ステータスや画面から何が起きたかの見当を付けます。2つ目はログで、Rails がその要求をどう処理したかの記録です。3つ目は例外とバックトレースで、どこでどんなエラーが起きたかを示します。4つ目は実行を途中で止めて見る変数の値です（図 32-1）。次の3つの節で、ログ、例外とバックトレース、実行を止める方法を、この /price の不具合で順に確かめます。
+            手掛かりは4つあります。1つ目は応答で、ステータスや画面から何が起きたかの見当を付けます。2つ目はログで、Rails がその要求をどう処理したかの記録です。3つ目は例外とバックトレースで、どこでどんなエラーが起きたかを示します。4つ目は実行を途中で止めて見る変数の値です（図 35-1）。次の3つの節で、ログ、例外とバックトレース、実行を止める方法を、この /price の不具合で順に確かめます。
           </p>
-          <Figure n="32-1" title="不具合の調査の手掛かり" caption="デモのコピー（Rails 8.1.4.1）の /price を例にした図。">
+          <Figure n="35-1" title="不具合の調査の手掛かり" caption="デモのコピー（Rails 8.1.4.1）の /price を例にした図。">
             <CluesFigure />
           </Figure>
         </>
@@ -542,7 +542,7 @@ rescue したので、処理はここまで進む
 `}
           />
           <p>
-            Rails のアプリケーションで例外が起きたときも、同じ情報が出ます。開発環境で /price?quantity=2 をブラウザーで開くと、Rails は例外の情報を並べたエラーの画面を返します（図 32-2）。Extracted source
+            Rails のアプリケーションで例外が起きたときも、同じ情報が出ます。開発環境で /price?quantity=2 をブラウザーで開くと、Rails は例外の情報を並べたエラーの画面を返します（図 35-2）。Extracted source
             は例外が起きた行の前後のソースで、3行目が強調されます。Application Trace はバックトレースのうちアプリケーションのファイル（app や lib）の行だけ、Framework Trace は Rails などの gem
             の行だけ、Full Trace はすべての行です。前の節のログに出た3行も、Application Trace と同じ行です。Request の Parameters を見れば、quantity が文字列の "2" で届いたことも分かります。
           </p>
@@ -550,7 +550,7 @@ rescue したので、処理はここまで進む
             この画面は、設定の <code>config.consider_all_requests_local</code> が true のとき（開発環境とテスト環境の既定）に表示されます。本番環境では false なので、利用者にはソースやパラメーターを含まない汎用のエラーの画面が返り、調査にはログを使います
             <Ref n={14} />。
           </p>
-          <Figure n="32-2" title="開発環境のエラー画面" caption="デモのコピーで /price?quantity=2 を開いた画面をもとにした図。パスの先頭の /work/demo/ を省き、Request の下の欄を省略した。">
+          <Figure n="35-2" title="開発環境のエラー画面" caption="デモのコピーで /price?quantity=2 を開いた画面をもとにした図。パスの先頭の /work/demo/ を省き、Request の下の欄を省略した。">
             <ErrorPageFigure />
           </Figure>
         </>
@@ -653,9 +653,9 @@ break.rb:6:in 'Integer#*': String can't be coerced into Integer (TypeError)
       ),
     },
     { id: 'workflow', title: '再現条件を固定して期待と実際を比べる', body: <>
-      <p>デバッグでは、期待した結果と実際の結果が分かれた位置を探し、なぜそうなったかを確かめます。第1章では調査用のコマンドを紹介しました。本章では、どの場面で何を調べ、修正の確認までどう進めるかを扱います。</p>
+      <p>デバッグでは、期待した結果と実際の結果が分かれた位置を探し、なぜそうなったかを確かめます。第2章では調査用のコマンドを紹介しました。本章では、どの場面で何を調べ、修正の確認までどう進めるかを扱います。</p>
       <p>最初に、操作順、入力、期待する結果、実際の結果を揃えます。同じ画面でも、利用者の権限、データの状態、環境変数、実行しているコードのバージョンによって動きが変わります。ローカルで作った架空のデータで再現できれば、調べる範囲を狭められます。失敗したリクエストやジョブを識別するIDは、複数のログを結び付ける手掛かりになります。</p>
-      <Figure n="32-3" title="再現から修正確認まで" caption="模式図。観察で仮説が外れたら、条件を整理して調べ直します。"><InvestigationFigure /></Figure>
+      <Figure n="35-3" title="再現から修正確認まで" caption="模式図。観察で仮説が外れたら、条件を整理して調べ直します。"><InvestigationFigure /></Figure>
       <p>値がおかしいのか、例外が発生したのか、応答が遅いのかで道具を選びます。停止するデバッガは値の調査に向きますが、止めた時間が混ざるので応答時間の測定には向きません。ログを増やす場合も、調べたい値と期間を絞ります。<Ref n={1} /></p>
     </> },
     { id: 'environments', title: '教材の環境と参照した業務アプリの構成', body: <>
@@ -722,8 +722,8 @@ binding.break
 (rdbg) continue
 `} />
       <p>catch TypeError は、TypeErrorが発生した時点を調べます。後でrescueされる例外でも止まるため、「レスポンスは返るが内部で失敗を握りつぶしている」ケースの調査にも使えます。実測では Integer#* の中で停止し、btでPriceCalculatorへ戻る経路を確認できました。</p>
-      <p>呼び出し1回ごとの変数や実行位置を持つ状態を<Term en="stack frame">フレーム</Term>と呼びます。図32-4は、Rubyだけの実測例をRailsのコントローラーから呼ぶ構成へ広げた模式図です。例外が出た最深部だけでなく、入力を渡した側も調べます。</p>
-      <Figure n="32-4" title="例外から入力の由来をたどる" caption="模式図。実際のフレーム番号はライブラリや停止位置によって変わります。"><FramesFigure /></Figure>
+      <p>呼び出し1回ごとの変数や実行位置を持つ状態を<Term en="stack frame">フレーム</Term>と呼びます。図35-4は、Rubyだけの実測例をRailsのコントローラーから呼ぶ構成へ広げた模式図です。例外が出た最深部だけでなく、入力を渡した側も調べます。</p>
+      <Figure n="35-4" title="例外から入力の由来をたどる" caption="模式図。実際のフレーム番号はライブラリや停止位置によって変わります。"><FramesFigure /></Figure>
       <p>Rails内部へ進みたいときは、<ChapterLink n={1} />の owner・source_location と、停止中の呼び出し履歴を組み合わせます。全メソッドを順に追うより、期待と実際が分かれる処理の開始位置で止める方が、調べる範囲を限定できます。条件式も実行されるコードなので、DBへの更新など副作用のある式は使いません。</p>
     </> },
     { id: 'pry', title: 'pry-byebugとpry-rails：既存アプリの道具を使う', body: <>
@@ -769,7 +769,7 @@ docker compose run --rm app bundle exec rspec spec/services/price_calculator_spe
     </> },
     { id: 'browser-tools', title: 'better_errors・binding_of_caller・web-console', body: <>
       <p>better_errorsは、例外のソース位置、呼び出し履歴、変数を調べやすいエラー画面を提供します。binding_of_callerは、呼び出し履歴にある実行状態へアクセスするための補助gemです。この2つを組み合わせると、各フレームで変数を確認したりRubyの式を評価したりできます。<Ref n={6} /></p>
-      <p>web-consoleは、ブラウザー内にRubyの対話コンソールを表示するgemです。エラー時だけでなく、ビューに一時的にconsoleを置いて、そのビューで参照できる値を調べる使い方もあります。第20章のテンプレートの変数が想定どおりか調べる場面に向きます。<Ref n={7} /></p>
+      <p>web-consoleは、ブラウザー内にRubyの対話コンソールを表示するgemです。エラー時だけでなく、ビューに一時的にconsoleを置いて、そのビューで参照できる値を調べる使い方もあります。第27章のテンプレートの変数が想定どおりか調べる場面に向きます。<Ref n={7} /></p>
       <Code lang="erb" title="web-consoleを有効にした開発環境での、一時的な調査例" code={`
 <% console %>
 `} />
@@ -818,7 +818,7 @@ end
       <p>遅い画面を開き、まずSQLに時間がかかるのか、それ以外の処理に時間がかかるのかを分けます。同じSQLが多数あればN+1を疑い、1回のSQLが遅ければ実行計画や索引を調べます。Ruby側の処理に時間がかかるなら、呼び出しごとの内訳を見る段階へ進みます。具体的な計測の考え方は<ChapterLink n={22} />と共通です。</p>
       <p>呼び出しの積み重なりと時間の割合を帯で表した図を<Term en="flame graph">フレームグラフ</Term>と呼びます。rack-mini-profilerでこの表示を使うにはstackprofなどの追加gemが必要です。メモリーの内訳にはmemory_profilerを追加できます。参照アプリのGemfileでは両者の直接指定は確認していないため、本章では追加候補として紹介します。<Ref n={9} /></p>
       <p>初回の読み込み、キャッシュ、データ量で時間は変わります。同じ条件で複数回測り、計測用ツール自体の負荷も考慮します。処理時間が短くなっても、必要な関連を落として表示が欠けていれば改善にはなりません。修正後は機能の確認と性能の確認を両方行います。</p>
-      <Figure n="32-5" title="症状に合わせた調査用gemの選択" caption="用途の対応図。すべてを同時に使う必要はありません。"><ToolsFigure /></Figure>
+      <Figure n="35-5" title="症状に合わせた調査用gemの選択" caption="用途の対応図。すべてを同時に使う必要はありません。"><ToolsFigure /></Figure>
     </> },
     { id: 'mail', title: 'letter_opener_webでメールを確認する', body: <>
       <p>メールの宛先や本文を調べるときは、実際に外へ送る前に、開発環境で生成結果を確認します。letter_opener_webは保存されたメールをブラウザーで読むための画面を提供します。delivery_methodを :letter_opener_web にすると、メールをこの仕組みに渡します。<Ref n={10} /></p>

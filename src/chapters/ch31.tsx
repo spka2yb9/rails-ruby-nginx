@@ -5,11 +5,11 @@ import { PublicationFigure } from '../visuals/rails-figures'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 36-1 原典の主張を3つの問いで読む ---------- */
+/* ---------- 図 53-1 原典の主張を3つの問いで読む ---------- */
 function ReadingFigure() {
   return (
     <Svg
-      id="36-1"
+      id="53-1"
       w={760}
       h={300}
       label="左に原典の主張として、Concern でモデルの関心事をまとめるという2012年の記事を置く。そこから3本の矢印が、何を得たいのか（仕様を探す場所が名前で分かる）、何を引き受けるのか（同じクラスに組み込まれ状態を共有する）、どの条件なら見直すのか（独自の状態や関連を持ち始めた）の3つの問いに分かれる。3つの問いの答えと、下から入る自分のアプリの事実（チーム、要件、運用）を合わせて、右端で自分のアプリの判断（公開は Concern に、検索用のデータは別のオブジェクトに）を決める"
@@ -31,11 +31,11 @@ function ReadingFigure() {
   )
 }
 
-/* ---------- 図 36-2 Majestic Monolith と Citadel ---------- */
+/* ---------- 図 53-2 Majestic Monolith と Citadel ---------- */
 function CitadelFigure() {
   return (
     <Svg
-      id="36-2"
+      id="53-2"
       w={760}
       h={300}
       label="左は Majestic Monolith。1つの Rails アプリの中に Web のプロセス（Puma）とジョブのプロセス（Sidekiq）があり、同じコードの同じリリースを動かし、同じモデルを呼んで MySQL を使う。右は Citadel。中心のモノリスはそのまま残り、負荷の性質が違う一部だけを Outpost として外に出す。モノリスと Outpost の間は通信でつながり、認証、API の互換性、通信の失敗、配備の順序を扱う仕事が増える"
@@ -64,11 +64,11 @@ function CitadelFigure() {
   )
 }
 
-/* ---------- 図 36-3 Concern と別のオブジェクト ---------- */
+/* ---------- 図 53-3 Concern と別のオブジェクト ---------- */
 function ConcernFigure() {
   return (
     <Svg
-      id="36-3"
+      id="53-3"
       w={760}
       h={260}
       label="左は Concern に分けた場合。Publishable と Searchable の2つのモジュールは同じ1つの Article のオブジェクトに組み込まれ、Publishable の prepare_search が @search_payload というインスタンス変数に書き、Searchable の push_to_index がそれを読む。右は別のオブジェクトに分けた場合。Article を引数として Search::Document に渡し、Search::Document は attributes の Hash を戻り値として返し、ジョブがその Hash を検索サービスへ送る"
@@ -99,12 +99,12 @@ function ConcernFigure() {
   )
 }
 
-/* ---------- 図 36-4 公開の要求の流れ ---------- */
+/* ---------- 図 53-4 公開の要求の流れ ---------- */
 function PublishSequenceFigure() {
   const lanes = [80, 280, 490, 680]
   return (
     <Svg
-      id="36-4"
+      id="53-4"
       w={760}
       h={430}
       label="ブラウザー、Articles::PublicationsController、Article（Publishable）、DB の4つを左から並べ、上から時間の順に書いた図。ブラウザーが POST /articles/42/publication を送る。コントローラーが Current.user.articles から記事を取得し、DB が自分の記事を返す。コントローラーが publish! を呼ぶ。Article が SELECT FOR UPDATE で記事を読み直し、DB が現在の状態を返す。Article が公開済みか下書きかを判断し、UPDATE と COMMIT を送る。Article が self を返し、コントローラーが 303 See Other で記事のページへ移動させる"
@@ -119,9 +119,9 @@ function PublishSequenceFigure() {
       <Arrow x1={80} y1={90} x2={278} y2={90} />
       <T x={180} y={82} anchor="middle" fs={11} mono>POST /articles/42/publication</T>
       <Arrow x1={280} y1={130} x2={678} y2={130} />
-      <T x={480} y={122} anchor="middle" fs={11}>Current.user.articles から記事を取得</T>
+      <T x={385} y={122} anchor="middle" fs={11}>Current.user.articles から記事を取得</T>
       <Arrow x1={680} y1={165} x2={282} y2={165} dashed />
-      <T x={480} y={157} anchor="middle" fs={11} tone="muted">自分の記事</T>
+      <T x={385} y={157} anchor="middle" fs={11} tone="muted">自分の記事</T>
       <Arrow x1={280} y1={205} x2={488} y2={205} />
       <T x={385} y={197} anchor="middle" fs={11} mono>publish!</T>
       <Arrow x1={490} y1={245} x2={678} y2={245} />
@@ -178,10 +178,10 @@ const chapter: Chapter = {
             <li>どの条件なら見直すのか：独立した業務の概念が見つかった、副作用を追えなくなった、性能の限界を計測で確かめた、など。</li>
           </ol>
           <p>
-            例として、2012 年の記事で DHH が勧めた Concern（モデルのメソッドや関連をモジュールに分けて include する書き方。仕組みは<ChapterLink n={5} section="concern" />）を読みます（図 36-1）。<Ref n={4} />
+            例として、2012 年の記事で DHH が勧めた Concern（モデルのメソッドや関連をモジュールに分けて include する書き方。仕組みは<ChapterLink n={5} section="concern" />）を読みます（図 53-1）。<Ref n={4} />
             得たいものは <code>current_account.posts.visible_to(current_user)</code> のように呼び出し側から自然に読める API と、仕様を探す場所が名前で分かることです。引き受けるものは、Concern がすべて同じクラスに組み込まれ、インスタンス変数とメソッドを共有することです。見直す条件は、まとめた関心事が独自の状態や関連を持ち始めたときです。結論だけを真似て関係のないメソッドを詰めると、得たいものは得られず、引き受けるものだけが残ります。
           </p>
-          <Figure n="36-1" title="原典の主張を3つの問いで読む" caption="Concern の記事を例にした模式図。右端の判断は本書の記事アプリでの例。">
+          <Figure n="53-1" title="原典の主張を3つの問いで読む" caption="Concern の記事を例にした模式図。右端の判断は本書の記事アプリでの例。">
             <ReadingFigure />
           </Figure>
           <p>
@@ -424,7 +424,7 @@ article.process!
           <p>
             実例は 2005 年のチャット Campfire です。各クライアントが3秒ごとに新しいメッセージを問い合わせ、応答の大半は空でも、要求のたびに認証とデータベースへの問い合わせが必要でした。この処理は全要求の約 99% を占める一方、Ruby で 20 行ほどの単純な処理だったので、Outpost として切り出されました。<Ref n={7} />
           </p>
-          <Figure n="36-2" title="Majestic Monolith と Citadel" caption="DHH の2つの記事をもとにした模式図。プロセスの名前とデータベースは本書の構成に合わせた。">
+          <Figure n="53-2" title="Majestic Monolith と Citadel" caption="DHH の2つの記事をもとにした模式図。プロセスの名前とデータベースは本書の構成に合わせた。">
             <CitadelFigure />
           </Figure>
           <p>
@@ -693,7 +693,7 @@ end
           </p>
           <h3>分けた効果を判断する</h3>
           <p>
-            公開の仕様を知りたい人は、<code>Article::Publishable</code> を開けば読めます。<code>ArticleMethods1</code> と <code>ArticleMethods2</code> のように機械的に分けても、変更する場所を判断する手がかりは増えません。また、Concern に移しても、実行時にはメソッドとコールバックが同じクラスに組み込まれます（図 36-3）。次の兆候があれば、別のクラスに任せることを検討します。
+            公開の仕様を知りたい人は、<code>Article::Publishable</code> を開けば読めます。<code>ArticleMethods1</code> と <code>ArticleMethods2</code> のように機械的に分けても、変更する場所を判断する手がかりは増えません。また、Concern に移しても、実行時にはメソッドとコールバックが同じクラスに組み込まれます（図 53-3）。次の兆候があれば、別のクラスに任せることを検討します。
           </p>
           <ul>
             <li>複数の Concern が互いのインスタンス変数や private メソッドを前提にしている。</li>
@@ -701,7 +701,7 @@ end
             <li>その関心事が独自の状態・関連・ライフサイクルを持ち始めている。</li>
             <li>一つの仕様変更を追うだけで、関係の薄いファイルを何度も行き来する。</li>
           </ul>
-          <Figure n="36-3" title="Concern と別のオブジェクトの違い" caption="次のコード例の2つの構成を比べた模式図。">
+          <Figure n="53-3" title="Concern と別のオブジェクトの違い" caption="次のコード例の2つの構成を比べた模式図。">
             <ConcernFigure />
           </Figure>
           <p>
@@ -1115,7 +1115,7 @@ end
       body: (
         <>
           <p>ここまでの例をつなぐと、HTTP の要求からデータベースまでの役割が見えます。</p>
-          <Figure n="36-4" title="記事を公開する要求の流れ" caption="REST の節のコントローラーと、Concern の節の publish! をつないだ図。ログインした利用者が自分の下書きを公開し、保存が成功する場合。">
+          <Figure n="53-4" title="記事を公開する要求の流れ" caption="REST の節のコントローラーと、Concern の節の publish! をつないだ図。ログインした利用者が自分の下書きを公開し、保存が成功する場合。">
             <PublishSequenceFigure />
           </Figure>
           <p>

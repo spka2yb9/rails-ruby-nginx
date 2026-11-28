@@ -8,7 +8,20 @@
     shared: { title: 'Shared Lock · 共存と競合', steps: [['A','BEGIN'], ['B','BEGIN'], ['A',read.replace(';',' FOR SHARE;')], ['B',read.replace(';',' FOR SHARE;')], ['A',update], ['B','COMMIT'], ['A','COMMIT']] },
     isolation: { title: 'Isolation / MVCC · 読み直し比較', steps: [['A','BEGIN'], ['A',read], ['B','BEGIN'], ['B',update], ['B','COMMIT'], ['A',read]], serial: [['A','BEGIN'], ['A',read], ['B','BEGIN'], ['B',update], ['A',read], ['A','COMMIT'], ['B','COMMIT'], ['A','BEGIN'], ['A',read]] },
     dirty: { title: 'Dirty Read · 未確定値とROLLBACK', steps: [['A','BEGIN'], ['B','BEGIN'], ['B',update], ['A',read], ['B','ROLLBACK'], ['A',read]] },
-    deadlock: { title: 'Deadlock · 待機の循環', steps: [['A','BEGIN'], ['B','BEGIN'], ['A','UPDATE accounts SET balance = 9000 WHERE id = 1;'], ['B','UPDATE accounts SET balance = 8000 WHERE id = 2;'], ['A','UPDATE accounts SET balance = 9000 WHERE id = 2;'], ['B','UPDATE accounts SET balance = 8000 WHERE id = 1;']] }
+    deadlock: { title: 'Deadlock · 待機の循環', steps: [['A','BEGIN'], ['B','BEGIN'], ['A','UPDATE accounts SET balance = 9000 WHERE id = 1;'], ['B','UPDATE accounts SET balance = 8000 WHERE id = 2;'], ['A','UPDATE accounts SET balance = 9000 WHERE id = 2;'], ['B','UPDATE accounts SET balance = 8000 WHERE id = 1;']] },
+    orderedLocks: {
+      title: '同じ順番でロックを取る',
+      steps: [
+        ['A', 'BEGIN'],
+        ['B', 'BEGIN'],
+        ['A', 'UPDATE accounts SET balance = 9000 WHERE id = 1;'],
+        ['B', 'UPDATE accounts SET balance = 8000 WHERE id = 1;'],
+        ['A', 'UPDATE accounts SET balance = 9000 WHERE id = 2;'],
+        ['A', 'COMMIT'],
+        ['B', 'UPDATE accounts SET balance = 8000 WHERE id = 2;'],
+        ['B', 'COMMIT'],
+      ],
+    },
   };
   L.mountScenarios = function (root, sim, render) {
     const u = L.uid = (L.uid || 0) + 1;

@@ -50,7 +50,7 @@ function Grid({ x, y, widths, head, rows, rh = 24, fs = 11.5, fill, dashed }: Gr
   )
 }
 
-/* ---------- 図 12-1 サンプル DB の3つのテーブルと外部キー ---------- */
+/* ---------- 図 18-1 サンプル DB の3つのテーブルと外部キー ---------- */
 function TablesFigure() {
   const users = [
     ['1', 'Alice', '20', '1'],
@@ -73,7 +73,7 @@ function TablesFigure() {
   const rowY = (i: number) => 80 + 24 * i
   return (
     <Svg
-      id="12-1"
+      id="18-1"
       w={780}
       h={356}
       label="departments（Engineering・Sales・Design の3行）、users（8行）、orders（6行）。users の department_id は departments の id を指し、Hana だけ NULL。orders の user_id は users の id を指し、Alice と Eve には注文が2件ずつ、Bob と Carol には1件ずつあり、Dave・Frank・Grace・Hana を指す注文は無い"
@@ -141,7 +141,7 @@ function TablesFigure() {
   )
 }
 
-/* ---------- 図 12-2 INNER JOIN・LEFT JOIN・CROSS JOIN の結果の行 ---------- */
+/* ---------- 図 18-2 INNER JOIN・LEFT JOIN・CROSS JOIN の結果の行 ---------- */
 function JoinKindsFigure() {
   const rows = [
     ['Alice', '1', '15000'],
@@ -159,7 +159,7 @@ function JoinKindsFigure() {
   const names = ['Alice', 'Bob', 'Carol', 'Dave', 'Eve', 'Frank', 'Grace', 'Hana']
   return (
     <Svg
-      id="12-2"
+      id="18-2"
       w={780}
       h={310}
       label="左：users u LEFT JOIN orders o の結果10行。ON に一致した6行が INNER JOIN の結果で、Alice と Eve は2行ずつ。注文の無い Dave・Frank・Grace・Hana の4行は右側の列が NULL で、LEFT JOIN だけに出る。右：users CROSS JOIN departments は、8人と3部署のすべての組み合わせで24行になる"
@@ -228,7 +228,7 @@ function JoinKindsFigure() {
   )
 }
 
-/* ---------- 図 12-3 右側の表の条件を WHERE に置くか ON に置くか ---------- */
+/* ---------- 図 18-3 右側の表の条件を WHERE に置くか ON に置くか ---------- */
 function OnWhereFigure() {
   const whereRows = [
     ['Alice', '1', 'paid', 'TRUE'],
@@ -254,7 +254,7 @@ function OnWhereFigure() {
   ]
   return (
     <Svg
-      id="12-3"
+      id="18-3"
       w={780}
       h={370}
       label="左の (1) は、LEFT JOIN の結果10行に WHERE o.status = 'paid' を判定する。paid の4行は TRUE、pending の2行は FALSE、注文の無い4人の行は NULL との比較なので UNKNOWN になり、TRUE の4行だけが残る。右の (2) は、status = 'paid' を ON に入れる。pending の注文は組にならず、8人全員が残り、paid の注文が無い人は NULL になる"
@@ -310,7 +310,7 @@ function OnWhereFigure() {
   )
 }
 
-/* ---------- 図 12-4 GROUP BY でグループに分けて集計する ---------- */
+/* ---------- 図 18-4 GROUP BY でグループに分けて集計する ---------- */
 function GroupFigure() {
   const groups = [
     { key: '1', members: ['Alice（20）', 'Bob（24）', 'Frank（20）'], agg: ['3', '3', '21.33…'] },
@@ -320,7 +320,7 @@ function GroupFigure() {
   ]
   return (
     <Svg
-      id="12-4"
+      id="18-4"
       w={780}
       h={392}
       label="users の8行を department_id の値で4つのグループに分ける。1 は Alice・Bob・Frank、2 は Carol・Dave・Eve、3 は Grace、NULL は Hana。グループごとに COUNT(*)、COUNT(department_id)、AVG(age) を計算し、グループ1つが結果の1行になる。NULL のグループの COUNT(department_id) は 0"
@@ -368,7 +368,7 @@ function GroupFigure() {
   )
 }
 
-/* ---------- 図 12-5 論理的な処理順と、各段階で残る行・グループ ---------- */
+/* ---------- 図 18-5 論理的な処理順と、各段階で残る行・グループ ---------- */
 function OrderFigure() {
   const steps = [
     { name: 'FROM', arg: 'users', count: '8行', note: ['users の全行'] },
@@ -381,7 +381,7 @@ function OrderFigure() {
   const ar = [['User'], ['where("age >= ?",', '20)'], ['group(', ':department_id)'], ['having("COUNT(*)', ' >= ?", 2)'], ['select(…)', 'または count'], ['order(', 'user_count: :desc)']]
   return (
     <Svg
-      id="12-5"
+      id="18-5"
       w={790}
       h={300}
       label="論理的な処理順。FROM users で8行、WHERE age >= 20 で6行（Carol と Hana を除く）、GROUP BY department_id で3グループ、HAVING COUNT(*) >= 2 で2グループ（部署3を除く）、SELECT で部署と人数の列を決め、ORDER BY で人数の多い順に並べる。下段は対応する Active Record のメソッドで、where、group、having、select または count、order"
@@ -413,7 +413,7 @@ function OrderFigure() {
   )
 }
 
-/* ---------- 図 12-6 IN のサブクエリと相関 EXISTS ---------- */
+/* ---------- 図 18-6 IN のサブクエリと相関 EXISTS ---------- */
 function SubqueryFigure() {
   const rows = [
     ['Alice', '1', 'id 1（15000）', 'TRUE'],
@@ -427,7 +427,7 @@ function SubqueryFigure() {
   ]
   return (
     <Svg
-      id="12-6"
+      id="18-6"
       w={760}
       h={330}
       label="左：IN のサブクエリ。内側の SELECT user_id FROM orders WHERE amount >= 10000 を1回評価して集合 1・3・5 を作り、外側の users の id がその集合に含まれる行を選ぶ。結果は Alice・Carol・Eve。右：相関 EXISTS。外側の users の行ごとに u.id を当てはめた内側の SELECT を考え、1万円以上の注文が1件以上あれば TRUE。Alice・Carol・Eve が TRUE、ほかの5人は FALSE"
@@ -475,7 +475,7 @@ function SubqueryFigure() {
   )
 }
 
-/* ---------- 図 12-7 NOT IN と NULL ---------- */
+/* ---------- 図 18-7 NOT IN と NULL ---------- */
 function NotInFigure() {
   const rows = [
     ['Engineering', '1', 'TRUE', 'UNKNOWN', 'UNKNOWN → 除外', 'TRUE → 残る'],
@@ -484,7 +484,7 @@ function NotInFigure() {
   ]
   return (
     <Svg
-      id="12-7"
+      id="18-7"
       w={760}
       h={226}
       label="20歳未満のユーザーの department_id は 2（Carol）と NULL（Hana）。id NOT IN (2, NULL) は id <> 2 AND id <> NULL と同じで、id <> NULL が常に UNKNOWN なので、Engineering と Design は UNKNOWN、Sales は FALSE になり、どの部署も残らない。NOT EXISTS では Engineering と Design が TRUE で残り、Sales は Carol がいるので FALSE"
@@ -684,11 +684,11 @@ CREATE TABLE orders (
           <p>
             REFERENCES は外部キー制約で、存在しない部署の id を department_id に入れようとすると DB が拒否します（SQLite では <code>PRAGMA foreign_keys = ON</code> で検査が有効になります）。users の department_id には NOT NULL が無いので、部署に属さないユーザーも保存でき、サンプルデータでは Hana の department_id が NULL です。orders の user_id は NOT NULL なので注文は必ずどれかのユーザーに属しますが、注文が1件も無いユーザー（Dave・Frank・Grace・Hana）はいます。
           </p>
-          <Figure n="12-1" title="サンプル DB の3つのテーブルと外部キー" caption="実行欄のサンプル DB（public/sql/database/seed.js）の行をもとにした図。accounts は省略。">
+          <Figure n="18-1" title="サンプル DB の3つのテーブルと外部キー" caption="実行欄のサンプル DB（public/sql/database/seed.js）の行をもとにした図。accounts は省略。">
             <TablesFigure />
           </Figure>
           <p>
-            図 12-1 は3つのテーブルの行と、外部キーが指す行を示しています。この章の結果はどれもこの8人と6件の注文から計算されるので、最初に全体を載せました。点線の矢印1本が外部キーの値1つに当たり、矢印が多く集まる行ほど JOIN したときに結果の行が増えます。たとえば Alice（id 1）と Eve（id 5）には注文が2件ずつあるので、users と orders を JOIN すると2行ずつになります。
+            図 18-1 は3つのテーブルの行と、外部キーが指す行を示しています。この章の結果はどれもこの8人と6件の注文から計算されるので、最初に全体を載せました。点線の矢印1本が外部キーの値1つに当たり、矢印が多く集まる行ほど JOIN したときに結果の行が増えます。たとえば Alice（id 1）と Eve（id 5）には注文が2件ずつあるので、users と orders を JOIN すると2行ずつになります。
           </p>
           <p>
             Rails では外部キーを持つ側のモデルに belongs_to を、指される側に has_many を書きます（関連の宣言と内部の仕組みは
@@ -724,12 +724,32 @@ end
       ),
     },
     {
+      id: 'normalization',
+      title: '正規化で更新する場所を一つにする',
+      body: (
+        <>
+          <p>利用者の行に部署 ID と部署名を両方保存すると、部署名を変えるたびに所属者全員の行を変更します。一部だけ古い値が残ると、同じ部署 ID に複数の名前が表示されます。また、所属する利用者がいない部署は利用者の表に登録できません。そこで、部署名を <code>departments</code> に保存し、<code>users</code> には参照先の <code>department_id</code> を置きます。<Ref n={22} /></p>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th scope="col">正規形</th><th scope="col">注文を例に確認すること</th><th scope="col">分け方の例</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">第1正規形</th><td>商品 ID のリストを、検索や制約に使う明細として管理したい</td><td>1件の注文に複数の明細行を持たせる</td></tr>
+                <tr><th scope="row">第2正規形</th><td>明細のキーが注文 ID と明細番号の組でも、注文日時は注文 ID だけで決まる</td><td>注文日時を注文の行に置く</td></tr>
+                <tr><th scope="row">第3正規形</th><td>注文者名の現在値は、注文 ID から注文者 ID を経由して決まる</td><td>注文者名の現在値を利用者の行に置く</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>分けた表は、主キーと外部キーで対応付けて JOIN できます。<code>User</code> の <code>belongs_to :department</code> はこの対応を Ruby の関連として表します。利用者の名前や商品名を「注文時に控えた値」として保存する場合は、現在値と役割が異なります。列名や更新の条件にその違いを表します。</p>
+        </>
+      ),
+    },
+    {
       id: 'lab-views',
       title: '実行欄の可視化で確かめること',
       body: (
         <>
           <p>
-            この章の実行欄では、SQL の実行結果の下に「SQLの構造と内部処理」が表示されます。実行欄は jinzai-draft-histery の教材「RailsエンジニアのためのSQL/データベース」の画面で、入力・実行・サンプルDB初期化の操作は<ChapterLink n={35} section="lab" />で説明しました。次の節からは SQL を実行するたびに、この表示で行がどの段階で増え、どの段階で減ったかを確かめます。この章で使う表示は次のとおりです。
+            SQL を実行すると、結果の下に「SQLの構造と内部処理」が表示されます。どの段階で行が増えたり減ったりしたかを追えます。入力欄の使い方は<ChapterLink n={35} section="lab" />を参照してください。
           </p>
           <ul>
             <li>
@@ -791,7 +811,7 @@ FROM users u INNER JOIN orders o ON u.id = o.user_id;
           </ul>
           <p>どの JOIN でも、結果の行は組み合わせの数だけできます。1人に注文が2件あれば、その人は結果に2行現れます。</p>
           <p>
-            図 12-1 のデータで、users の行ごとに ON の条件 <code>u.id = o.user_id</code> に合う orders の行を探すと、次の表になります。右の2列は、その users の行から作られる結果の行の数です。
+            図 18-1 のデータで、users の行ごとに ON の条件 <code>u.id = o.user_id</code> に合う orders の行を探すと、次の表になります。右の2列は、その users の行から作られる結果の行の数です。
           </p>
           <div className="table-wrap">
             <table>
@@ -863,7 +883,7 @@ FROM users u INNER JOIN orders o ON u.id = o.user_id;
             <li>Example で「INNER JOIN」を選び、「サンプルSQL挿入」を押してから実行すると6行になります。「CROSS JOIN」では users と departments のすべての組み合わせの24行になります。</li>
           </ol>
           <p>
-            元の教材の課題は INNER・LEFT・CROSS を切り替えて対応図と行数を比べ、LEFT では注文の無いユーザーに注目することです。続けて、LEFT JOIN の右側の表（orders）に条件を付けた次の2つの SQL を、1つずつ入力して実行します。
+            INNER・LEFT・CROSS を切り替えると、行の組み合わせと件数を比べられます。LEFT JOIN では注文がない利用者も残ります。注文に条件を付ける場合は、次の2つの SQL のどちらでその利用者が残るかを比べます。
           </p>
           <Code
             lang="sql"
@@ -886,20 +906,20 @@ ORDER BY u.id, o.id;
 
           <h3>なぜそうなるか</h3>
           <p>
-            JOIN は左の表の各行について ON の条件が真になる右の表の行を探し、見つかった組ごとに1行を作ります。図 12-2 の左は LEFT JOIN の結果の10行で、実線の6行が ON に一致した組、つまり INNER JOIN の結果です。点線の4行は相手が無かった左側の行で、LEFT JOIN だけが右側の列を NULL にして残します
+            JOIN は左の表の各行について ON の条件が真になる右の表の行を探し、見つかった組ごとに1行を作ります。図 18-2 の左は LEFT JOIN の結果の10行で、実線の6行が ON に一致した組、つまり INNER JOIN の結果です。点線の4行は相手が無かった左側の行で、LEFT JOIN だけが右側の列を NULL にして残します
             <Ref n={4} />
             <Ref n={1} />。右の CROSS JOIN は ON が無いので、users の8行と departments の3行のすべての組（24行）ができます。
           </p>
-          <Figure n="12-2" title="INNER JOIN・LEFT JOIN・CROSS JOIN の結果の行" caption="実行欄のサンプル（LEFT JOIN・CROSS JOIN）の結果をもとにした図。MySQL 8.4.13 でも同じ行が返った。">
+          <Figure n="18-2" title="INNER JOIN・LEFT JOIN・CROSS JOIN の結果の行" caption="実行欄のサンプル（LEFT JOIN・CROSS JOIN）の結果をもとにした図。MySQL 8.4.13 でも同じ行が返った。">
             <JoinKindsFigure />
           </Figure>
           <p>
             図のとおり、結果の行の数は左の表の行の数ではなく、組み合わせの数で決まります。users は8行ですが、INNER JOIN の結果は6行、LEFT JOIN の結果は10行です。
           </p>
           <p>
-            ON と WHERE の違いは条件を判定する時点にあります。ON の条件は組を作るときに使われ、一致しなかった左側の行は LEFT JOIN が NULL の行として残します。WHERE は組み合わせが終わった後の行を判定します。NULL の行では <code>o.status = &apos;paid&apos;</code> が NULL と &apos;paid&apos; の比較になり、結果は真でも偽でもない UNKNOWN（不明）です。WHERE は真の行だけを残すので、NULL の行は消えます。図 12-3 は (1) の10行の判定と (2) の結果を並べたものです。MySQL のマニュアルも、ON は表をつなぐ条件に、WHERE は結果に含める行を選ぶ条件に使うのが一般的だと説明しています<Ref n={4} />。
+            ON と WHERE の違いは条件を判定する時点にあります。ON の条件は組を作るときに使われ、一致しなかった左側の行は LEFT JOIN が NULL の行として残します。WHERE は組み合わせが終わった後の行を判定します。NULL の行では <code>o.status = &apos;paid&apos;</code> が NULL と &apos;paid&apos; の比較になり、結果は真でも偽でもない UNKNOWN（不明）です。WHERE は真の行だけを残すので、NULL の行は消えます。図 18-3 は (1) の10行の判定と (2) の結果を並べたものです。MySQL のマニュアルも、ON は表をつなぐ条件に、WHERE は結果に含める行を選ぶ条件に使うのが一般的だと説明しています<Ref n={4} />。
           </p>
-          <Figure n="12-3" title="右側の表の条件を WHERE に置く場合と ON に置く場合" caption="実行欄で (1)・(2) を実行した結果をもとにした図。判定の列は説明のために加えた。">
+          <Figure n="18-3" title="右側の表の条件を WHERE に置く場合と ON に置く場合" caption="実行欄で (1)・(2) を実行した結果をもとにした図。判定の列は説明のために加えた。">
             <OnWhereFigure />
           </Figure>
 
@@ -1014,7 +1034,7 @@ User.joins(:orders).distinct.count   # => 4
       body: (
         <>
           <p>
-            元の教材は、N+1 対策の includes は関連の読み込み方を変える機能で、単純な JOIN と同じものではないと注意しています。N+1 は、一覧の各行で関連を読むたびに SQL が実行され、回数が件数に比例して増える問題です（
+            <code>joins</code> はテーブルを結合して検索するための指定です。<code>includes</code> は、取得したレコードの関連を先読みします。N+1 は、一覧の各行で関連を読むたびに SQL が実行され、発行回数が件数に比例して増える問題です（
             <ChapterLink n={13} section="n-plus-one" />
             ）。joins は SQL に JOIN を足すメソッドで、includes と eager_load は後で使う関連のレコードを先にまとめて読み込むメソッドです。ここでは3つのメソッドが実行する SQL と作られるレコードを、各ユーザーの注文の件数（<code>u.orders.size</code>）で比べます。
           </p>
@@ -1083,7 +1103,7 @@ User.where(id: Order.where(status: "paid").select(:user_id)).includes(:orders).o
             1つ目では、Alice の注文は2件あるのに <code>u.orders</code> には paid の1件（id 1）しか入っていません。WHERE が JOIN の結果の行を絞った後で、残った行からレコードを組み立てるからです。paid の注文があるユーザーの注文をすべて表示したいなら、2つ目のように絞り込みをサブクエリにして読み込みと分けます。Rails ガイドも、読み込む関連に条件を付けることはできるが、この種の問い合わせには joins を使う方法を勧めると書いています<Ref n={14} />。
           </p>
           <p>次の図は、上の2つの書き方で u.orders に入る注文が決まるまでを、上から順に並べたものです。左が1つ目、右が2つ目で、下段の表を見比べると Alice と Eve の注文の数が違います。</p>
-          <Figure title="includes と where で読み込まれる注文" caption="上のコードの実行結果をもとにした模式図。左の4行は図 12-3 の (1) と同じ行。色を付けた行は2つの書き方で u.orders の中身が違うユーザー。">
+          <Figure title="includes と where で読み込まれる注文" caption="上のコードの実行結果をもとにした模式図。左の4行は図 18-3 の (1) と同じ行。色を付けた行は2つの書き方で u.orders の中身が違うユーザー。">
             <IncludesWhereFigure />
           </Figure>
         </>
@@ -1128,16 +1148,16 @@ GROUP BY department_id;
             <li>論理的な処理順の GROUP BY を押すと、8行がグループごとの4行になり、この時点の集約値も表示されます。</li>
             <li>Example で「平均とNULL」を選んで実行すると、部署ごとの平均年齢（AVG(age)）と、NULL のグループだけ 0 になる non_null（COUNT(department_id)）が表示されます。</li>
           </ol>
-          <p>元の教材の課題に沿って、1つ目のサンプルの <code>COUNT(*)</code> を <code>AVG(age)</code> に書き換えて実行すると、グループの図は変わらず、各グループから計算する値だけが変わります。</p>
+          <p>1つ目の例の <code>COUNT(*)</code> を <code>AVG(age)</code> に変えると、同じグループごとに、件数に代わって平均年齢が返ります。</p>
           <p>
             グループの図の「表示対象内 COUNT」は図に入れた行の数で、SQL が COUNT(department_id) を計算していても行数を表示します。そのため「平均とNULL」の NULL のグループでは、図の COUNT は 1、実行結果の non_null は 0 です。図は先頭200行から作るので、行が多いと全件の集計値とも一致しません。集計値は実行結果か GROUP BY の段階の表で確かめます。
           </p>
 
           <h3>なぜそうなるか</h3>
           <p>
-            図 12-4 は users の8行を department_id でグループに分け、各グループから集約値を計算する流れです。上段の箱がグループ、下段の表が SELECT の結果で、箱1つが結果の1行になることと、NULL の行もひとつのグループになることを示しています。
+            図 18-4 は users の8行を department_id でグループに分け、各グループから集約値を計算する流れです。上段の箱がグループ、下段の表が SELECT の結果で、箱1つが結果の1行になることと、NULL の行もひとつのグループになることを示しています。
           </p>
-          <Figure n="12-4" title="GROUP BY でグループに分けて集計する" caption="実行欄の「平均とNULL」に COUNT(*) を加えた SQL の結果をもとにした図。AVG(age) の値は、SQLite では 21.333333333333332、MySQL 8.4.13 では 21.3333 だった。">
+          <Figure n="18-4" title="GROUP BY でグループに分けて集計する" caption="実行欄の「平均とNULL」に COUNT(*) を加えた SQL の結果をもとにした図。AVG(age) の値は、SQLite では 21.333333333333332、MySQL 8.4.13 では 21.3333 だった。">
             <GroupFigure />
           </Figure>
           <p>
@@ -1146,7 +1166,7 @@ GROUP BY department_id;
           </p>
           <p>
             COUNT(列) が NULL を数えないのは、COUNT(X) が X が NULL でない値の数を返すと定められているからで、AVG と SUM も NULL を除いて計算します<Ref n={2} />
-            <Ref n={6} />。元の教材の確認問題は「COUNT(age) が数えるのは何か」で、答えは「age が NULL でない行」です。全行を数えるのは COUNT(*)、異なる値の数は COUNT(DISTINCT age) です。サンプル DB の age は NOT NULL なので COUNT(age) は COUNT(*) と同じ 8 になり、違いを見るには department_id を使います。
+            <Ref n={6} />。<code>COUNT(age)</code> は age が NULL でない行を数えます。全行を数えるのは <code>COUNT(*)</code>、異なる年齢の数は <code>COUNT(DISTINCT age)</code> です。サンプル DB の age は NOT NULL なので、<code>COUNT(age)</code> と <code>COUNT(*)</code> はどちらも 8 になります。NULL を許す department_id を使うと違いが分かります。
           </p>
 
           <h3>Active Record ではこう書く</h3>
@@ -1181,7 +1201,7 @@ Order.group(:user_id).sum(:amount)
           />
           <ul>
             <li>
-              ハッシュのキーはグループの値で、NULL のグループは nil です。SQL の <code>count_all</code> や <code>users_department_id</code> は、Rails が結果を読み取るために付けた列の別名です。元の教材の例 <code>User.group(:department_id).count</code> は、部署 ID をキーにしたこのハッシュを返します。
+              <code>User.group(:department_id).count</code> は、部署 ID をキーにしたハッシュを返します。NULL のグループのキーは nil です。SQL の <code>count_all</code> や <code>users_department_id</code> は、Rails が結果を読み取るために付けた列の別名です。
             </li>
             <li>
               average の値は BigDecimal で、<code>0.213333e2</code> は 21.3333 です。MySQL は整数の列の AVG を DECIMAL で返します<Ref n={6} />。実行欄の SQLite の AVG は 21.333333333333332 のような浮動小数点数です<Ref n={2} />。
@@ -1243,7 +1263,7 @@ MySQL 8.4.13：
 `}
           />
           <p>
-            SQLite はこのような列（bare column）の値をグループの中の1行から取ります。SQLite のマニュアルは、どの行かは決まっておらず、これは SQLite 独自の拡張で多くの DB はエラーにすると書いています<Ref n={1} />。MySQL 8.4 は ONLY_FULL_GROUP_BY（MySQL が受け付ける SQL の範囲を切り替える設定 sql_mode の値の1つ）が既定で有効で、SELECT・HAVING・ORDER BY に、GROUP BY に無く GROUP BY の列から値が1つに決まる（関数従属する）とも言えない列があると拒否します<Ref n={5} />。上の Department の例が通ったのは、GROUP BY の departments.id が主キーで、主キーが決まれば同じ行の name も1つに決まるからです。元の教材も、SQLite で許される SQL が MySQL の ONLY_FULL_GROUP_BY では拒否されることがあると注意しています。
+            SQLite はこのような列（bare column）の値をグループ内の任意の行から取ります<Ref n={1} />。既定の <code>ONLY_FULL_GROUP_BY</code> が有効な MySQL 8.4 は、集約せずに参照する列について、<code>GROUP BY</code> の列から値が一つに決まるかなどを確かめます<Ref n={5} />。上の Department の例が通ったのは、グループのキーである <code>departments.id</code> が主キーで、部署名も一つに決まるからです。
           </p>
           <p>ERROR 1055 が出たら、エラーに書かれた列（上の例では name）でグループから何を取り出したいかを決めて、SQL を直します。</p>
           <ul>
@@ -1335,19 +1355,19 @@ ORDER BY user_count DESC;
             <li>「GROUP BY: 行をグループへ」には部署3の箱も表示されます。この図は WHERE を通過した行を分けたもので、HAVING を適用する前の状態です。</li>
           </ol>
           <p>
-            元の教材の課題は WHERE の年齢と HAVING の人数を変え、どの段階で行やグループが消えるかをボタンで追うことです。たとえば WHERE を <code>age &gt;= 25</code> にすると、WHERE の段階で Dave・Eve・Grace の3行になり、HAVING の後には部署2だけが残ります。
+            WHERE を <code>age &gt;= 25</code> に変えると、集約前に Dave・Eve・Grace の3行になります。次に HAVING が、人数の条件を満たす部署2だけを残します。
           </p>
 
           <h3>なぜそうなるか</h3>
-          <p>図 12-5 はこのサンプルの各段階で残る行とグループの数を、対応する Active Record のメソッドと並べたものです。行を減らす WHERE とグループを減らす HAVING が別の段階にあることを、数の変化で示しています。</p>
-          <Figure n="12-5" title="論理的な処理順と、各段階で残る行・グループ" caption="実行欄の HAVING のサンプルで、論理的な処理順のボタンを順に押した結果をもとにした図。">
+          <p>図 18-5 はこのサンプルの各段階で残る行とグループの数を、対応する Active Record のメソッドと並べたものです。行を減らす WHERE とグループを減らす HAVING が別の段階にあることを、数の変化で示しています。</p>
+          <Figure n="18-5" title="論理的な処理順と、各段階で残る行・グループ" caption="実行欄の HAVING のサンプルで、論理的な処理順のボタンを順に押した結果をもとにした図。">
             <OrderFigure />
           </Figure>
           <p>
             この順番は SQL の意味を説明するための論理的な順番で、DB が実際に処理する順番ではありません。SQLite のマニュアルは、段階に分けた説明は説明のためのもので、どの DB もその手順どおりに処理する必要はないと書いています<Ref n={1} />。
           </p>
           <p>
-            元の教材の確認問題は「部署の人数で絞るのはどれか」で、選択肢は <code>WHERE COUNT(*) &gt;= 2</code>・<code>HAVING COUNT(*) &gt;= 2</code>・<code>ORDER BY COUNT(*) &gt;= 2</code> です。人数は集約した後に決まるので、答えは HAVING です。WHERE に集約関数を書くと、実行欄の SQLite は「misuse of aggregate: COUNT()」、MySQL 8.4.13 は「ERROR 1111 (HY000): Invalid use of group function」で拒否しました。ORDER BY に書いた比較は並べ替えのキーになるだけで、グループは減りません。
+            部署の人数は集約した後に決まるので、<code>HAVING COUNT(*) &gt;= 2</code> と書きます。WHERE に集約関数を書くと、SQLite は「misuse of aggregate: COUNT()」、MySQL 8.4.13 は「ERROR 1111 (HY000): Invalid use of group function」を返しました。ORDER BY に比較式を書くと、比較の結果で並べ替えます。行数は変わりません。
           </p>
 
           <h3>Active Record ではこう書く</h3>
@@ -1361,7 +1381,7 @@ User.where("age >= ?", 20).group(:department_id).having("COUNT(*) >= ?", 2).coun
 `}
           />
           <p>
-            元の教材の Rails の例をそのまま実行した結果です。where・group・having を呼ぶ順番は自由で、Rails が SQL の句の順に並べます。
+            Active Record では、<code>where</code>・<code>group</code>・<code>having</code> を呼んだ順序によらず、Rails が SQL の各句を構文どおりに並べます。
           </p>
           <p>
             値が <code>&apos;20&apos;</code>・<code>&apos;2&apos;</code> と引用符付きなのは、MySQL のアダプター（Active Record の中で MySQL 向けの SQL の書き方を受け持つ部分）が <code>?</code> に渡した数値を文字列として埋め込むからで、Rails のドキュメントは問い合わせを操作する攻撃を防ぐためと説明しています<Ref n={18} />。比べる列 age は数値の列なので、MySQL は &apos;20&apos; を数値に変換して比べ、結果は変わりません。範囲のハッシュ <code>where(age: 20..)</code> なら <code>`users`.`age` &gt;= 20</code> と引用符なしで書かれました。
@@ -1446,28 +1466,28 @@ WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id AND o.amount >= 1000
             <li>「相関EXISTS」を実行すると、サブクエリの欄に「相関Subquery: 外側の行を参照するため単独では実行できません」と表示されます。内側は外側の u.id が決まらないと実行できないからです。結果は WHERE IN と同じ3人です。</li>
           </ol>
           <p>
-            元の教材の課題も IN の内側の結果を確かめてから FROM 内のサブクエリと相関 EXISTS を試す順番です。FROM の中のサブクエリから <code>AS totals</code> を消しても実行欄の SQLite は同じ結果を返しますが、MySQL 8.4.13 では「ERROR 1248 (42000): Every derived table must have its own alias」で拒否されました。
+            FROM の中のサブクエリから <code>AS totals</code> を消しても、実行欄の SQLite は同じ結果を返します。MySQL 8.4.13 は別名を必須とし、「ERROR 1248 (42000): Every derived table must have its own alias」を返しました。
           </p>
 
           <h3>なぜそうなるか</h3>
           <p>
-            図 12-6 は同じ3人を求める IN（左）と相関 EXISTS（右）を並べたものです。左の内側の結果は1つの集合（1・3・5）で、外側のどの行にも同じ集合を使います。右は外側の行ごとに u.id を当てはめた内側の SELECT を考え、1行以上あれば TRUE、0行なら FALSE です。
+            図 18-6 は同じ3人を求める IN（左）と相関 EXISTS（右）を並べたものです。左の内側の結果は1つの集合（1・3・5）で、外側のどの行にも同じ集合を使います。右は外側の行ごとに u.id を当てはめた内側の SELECT を考え、1行以上あれば TRUE、0行なら FALSE です。
           </p>
-          <Figure n="12-6" title="IN のサブクエリと相関 EXISTS" caption="実行欄の「WHERE IN」と「相関EXISTS」の結果をもとにした図。右の表は外側の行ごとの判定を説明のために書き出したもの。">
+          <Figure n="18-6" title="IN のサブクエリと相関 EXISTS" caption="実行欄の「WHERE IN」と「相関EXISTS」の結果をもとにした図。右の表は外側の行ごとの判定を説明のために書き出したもの。">
             <SubqueryFigure />
           </Figure>
           <p>
             EXISTS は内側の SELECT が返す行があるかどうかだけを見て、SELECT の後に書いた列や値は結果に影響しません<Ref n={10} />
-            <Ref n={3} />。元の教材の確認問題「EXISTS が判定するのは何か」の答えは「内側の結果が1行以上あるか」で、<code>SELECT 1</code> の 1 を比べるわけでも、内側の列の合計や先頭の値を使うわけでもありません。
+            <Ref n={3} />。<code>EXISTS</code> は内側の問い合わせの結果が1行以上あるかを判定します。<code>SELECT 1</code> の列の値は判定に使いません。
           </p>
           <p>
-            この図も理解のための分解です。SQLite のマニュアルは、相関サブクエリは結果が必要になるたびに評価し直し、相関の無いサブクエリは1回だけ評価して使い回すと説明しています<Ref n={3} />。MySQL のオプティマイザーは、IN や EXISTS のサブクエリを準結合（semijoin）に変換して JOIN に近い方法で処理することがあります<Ref n={13} />。元の教材も、内側を先に実行する図は学習用の分解で、実際には結合への書き換えなどが行われる場合があると書いています。実際の処理は実行計画で確かめます（
+            図は問い合わせの意味を順に示したものです。SQLite のマニュアルでは、相関サブクエリは結果が必要になるたびに再評価し、相関のないサブクエリは1回だけ評価して結果を再利用すると説明しています<Ref n={3} />。MySQL のオプティマイザーは、IN や EXISTS のサブクエリを準結合（semijoin）に変換して処理することがあります<Ref n={13} />。選ばれた処理は実行計画で確かめます（
             <ChapterLink n={37} />
             ）。
           </p>
 
           <h3>Active Record ではこう書く</h3>
-          <p>where のハッシュの値に Relation（まだ実行していない問い合わせ）を渡すと、Rails は IN のサブクエリにします。元の教材の例を実行した結果です。</p>
+          <p>where のハッシュの値に Relation（まだ実行していない問い合わせ）を渡すと、Rails は IN のサブクエリを組み立てます。</p>
           <Code
             lang="ruby"
             code={`
@@ -1611,7 +1631,7 @@ User.find(4).orders.exists?
         <>
           <h3>SQL の構文と考え方</h3>
           <p>
-            NULL は値が無いことを表すので、<code>department_id &lt;&gt; 1</code> のような比較は NULL の行で UNKNOWN になります（図 12-3 の WHERE の判定と同じ）。WHERE は真の行だけを残すので、否定の条件を書くと NULL の行は条件に合う側にも合わない側にも入りません。NULL かどうかは IS NULL・IS NOT NULL で調べます（
+            NULL は値が無いことを表すので、<code>department_id &lt;&gt; 1</code> のような比較は NULL の行で UNKNOWN になります（図 18-3 の WHERE の判定と同じ）。WHERE は真の行だけを残すので、否定の条件を書くと NULL の行は条件に合う側にも合わない側にも入りません。NULL かどうかは IS NULL・IS NOT NULL で調べます（
             <ChapterLink n={35} section="where" />
             ）。
           </p>
@@ -1652,11 +1672,11 @@ WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.department_id = d.id AND u.age <
             <code>id NOT IN (2, NULL)</code> は <code>id &lt;&gt; 2 AND id &lt;&gt; NULL</code> と同じ意味です（MySQL のマニュアルは NOT IN を <code>&lt;&gt; ALL</code> の別名と説明しています<Ref n={9} />
             ）。AND は両方が TRUE のときだけ TRUE になり、どちらかが FALSE なら FALSE、残りの組み合わせでは UNKNOWN です。<code>id &lt;&gt; NULL</code> は常に UNKNOWN なので、AND の結果は FALSE か UNKNOWN で、TRUE にはなりません。SQLite のマニュアルの表でも、右側に NULL を含み左側の値が見つからないとき、NOT IN の結果は NULL です<Ref n={3} />。
           </p>
-          <Figure n="12-7" title="NOT IN と NOT EXISTS の判定" caption="実行欄で NOT IN と NOT EXISTS の SQL を実行した結果をもとに、部署ごとの判定を書き出した図。">
+          <Figure n="18-7" title="NOT IN と NOT EXISTS の判定" caption="実行欄で NOT IN と NOT EXISTS の SQL を実行した結果をもとに、部署ごとの判定を書き出した図。">
             <NotInFigure />
           </Figure>
           <p>
-            図 12-7 は部署ごとの判定で、内側に NULL が1つ入るだけで NOT IN と NOT EXISTS の結果が分かれることを示しています。NOT EXISTS はその部署に該当するユーザーが1人もいないかを見るので、Hana の NULL はどの部署とも一致しない行として扱われるだけです。元の教材も、NOT IN は内側に NULL がある場合の UNKNOWN に注意するよう書いています。
+            図 18-7 は、内側に NULL が1つ入ると NOT IN と NOT EXISTS の結果が分かれる例です。NOT EXISTS は、その部署と一致する利用者がいないかを判定します。Hana の部署 ID は NULL なので、どの部署にも一致しません。NOT IN では、NULL と比較する結果が UNKNOWN になるため、WHERE に残る行が変わります。
           </p>
 
           <h3>Active Record ではこう書く</h3>
@@ -1900,6 +1920,7 @@ Department.where("NOT EXISTS (?)",
     { title: 'activerecord/lib/arel/select_manager.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/arel/select_manager.rb`, accessed: '2026-11-20', version: 'Rails 8.1.4.1', note: 'SelectManager#exists が EXISTS の節点を作ること。Arel の SelectManager が :nodoc: であること。' },
     { title: 'sql.js documentation', publisher: 'sql.js', url: 'https://sql.js.org/documentation/', accessed: '2026-11-20', version: 'sql.js 1.13.0', note: '実行欄の SQL を実行する SQLite のライブラリ。同梱の SQLite のバージョン（3.49.1）は実行欄で sqlite_version() を実行して確認。' },
     { title: 'node-sql-parser', publisher: 'GitHub', url: 'https://github.com/taozhi8833998/node-sql-parser', accessed: '2026-11-20', version: 'node-sql-parser 5.3.8', note: '実行欄で SQL を MySQL の文法で解析し、記述順と段階表示を作るライブラリ。' },
+    { title: 'Further Normalization of the Data Base Relational Model', publisher: 'E. F. Codd / IBM Research', url: 'https://forum.thethirdmanifesto.com/wp-content/uploads/asgarosforum/987737/00-efc-further-normalization.pdf', accessed: '2026-11-27', version: 'RJ909（1971年）', note: '第1〜第3正規形と、属性が別の属性によって決まる関係。' },
   ],
 }
 

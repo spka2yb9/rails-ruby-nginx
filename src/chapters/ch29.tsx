@@ -2,7 +2,7 @@ import type { Chapter } from '../content/types'
 import { withExplanations } from '../explanations/shared'
 import { explanation29 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
-import { Arrow, Box, Svg, T } from '../components/diagram'
+import { Arrow, Box, Svg, T, TextBg } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
@@ -108,6 +108,7 @@ function SupportFigure() {
             </T>
             <rect x={a} y={y} width={b - a} height={20} fill="var(--fig-box4)" stroke="var(--fig-line)" />
             <rect x={b} y={y} width={c - b} height={20} fill="var(--fig-box2)" stroke="var(--fig-line)" strokeDasharray={i === 0 ? '4 3' : undefined} />
+            <TextBg x={x0} y={y + 32} text={`${fmt(r.rel)} 〜 ${fmt(r.sec)}（${r.note}）`} fs={9.5} />
             <T x={x0} y={y + 32} fs={9.5} tone="muted">
               {`${fmt(r.rel)} 〜 ${fmt(r.sec)}（${r.note}）`}
             </T>
@@ -174,7 +175,7 @@ function UpgradeFigure() {
 
 const ch29: Chapter = {
   number: 29,
-  part: 10,
+  part: 12,
   title: 'Rails 7.2→8.x の主な違いとサポート状況',
   summary:
     'バージョン番号（メジャー・マイナー・パッチ）の読み方、セキュリティ修正とサポート期間、load_defaults が選ぶ既定値を確かめてから、Rails 7.2・8.0・8.1 のサポート期間と、2026年11月11日時点の状況を公式の情報から整理します。load_defaults 8.0・8.1 で変わる設定、rails new の既定の変化（Propshaft、Solid Queue・Cache・Cable、Kamal、Thruster、認証のジェネレーター）、本書の各章で見た 7.2 との違い、アップグレードの手順をまとめます。',

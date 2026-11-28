@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 62-1 注文の状態を書き込む処理と読む処理 ---------- */
+/* ---------- 図 79-1 注文の状態を書き込む処理と読む処理 ---------- */
 const sceneWriters = [
   { y: 34, lines: ['管理画面「発送を取り消す」', 'cancel_shipment!', 'update!(status: :paid)'], note: 'shipped_at と追跡番号が残る' },
   { y: 144, lines: ['会員の画面「キャンセル」', '古い画面から cancel!', 'update!(status: :cancelled, …)'], note: '発送済みの注文がキャンセルになる' },
@@ -19,7 +20,7 @@ const sceneReaders = [
 function SceneFigure() {
   return (
     <Svg
-      id="62-1"
+      id="79-1"
       w={780}
       h={400}
       label="左に orders テーブルへ書き込む3つの処理、中央に orders テーブル、右に読む3つの処理を並べた。管理画面の発送の取り消しは status だけを paid に戻し、shipped_at と追跡番号が残る。会員が古い画面から押したキャンセルは、発送済みの注文を cancelled にする。配達完了の CSV の取り込みは update_all で status だけを delivered にし、delivered_at が空のまま残る。読む側は、倉庫の発送待ちの一覧が status を、月次の発送件数が shipped_at を、会員の注文の詳細が両方を見るので、結果が食い違う"
@@ -62,7 +63,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 62-2 状態と4つの日時の列の組み合わせ ---------- */
+/* ---------- 図 79-2 状態と4つの日時の列の組み合わせ ---------- */
 const comboStatuses = ['pending', 'paid', 'shipped', 'delivered', 'cancelled']
 const comboColumns = ['paid_at', 'shipped_at', 'delivered_at', 'cancelled_at']
 const legalCombos: Record<string, number[]> = { pending: [0], paid: [8], shipped: [12], delivered: [14], cancelled: [1, 9] }
@@ -80,7 +81,7 @@ function CombosFigure() {
   const patterns = Array.from({ length: 16 }, (_, i) => [(i >> 3) & 1, (i >> 2) & 1, (i >> 1) & 1, i & 1])
   return (
     <Svg
-      id="62-2"
+      id="79-2"
       w={780}
       h={360}
       label="縦に5つの状態、横に4つの日時の列（paid_at・shipped_at・delivered_at・cancelled_at）のある・ないの16通りを並べた、80マスの表。正しい組み合わせは、pending で日時がすべて空、paid で paid_at だけ、shipped で paid_at と shipped_at、delivered で paid_at・shipped_at・delivered_at、cancelled で cancelled_at だけ、cancelled で paid_at と cancelled_at の6マスだけで、残りの74マスは不正な組み合わせ。場面の A-001 は paid で paid_at と shipped_at があるマス、A-002 は cancelled で paid_at・shipped_at・cancelled_at があるマス、A-003 は delivered で paid_at と shipped_at があり delivered_at がないマスに入る"
@@ -136,11 +137,11 @@ function CombosFigure() {
   )
 }
 
-/* ---------- 図 62-3 Minsky の例と、Rails のテーブルでの対応 ---------- */
+/* ---------- 図 79-3 Minsky の例と、Rails のテーブルでの対応 ---------- */
 function MinskyFigure() {
   return (
     <Svg
-      id="62-3"
+      id="79-3"
       w={780}
       h={340}
       label="左は直す前の OCaml の型で、connection_info という1つのレコードが状態と、last_ping_time・last_ping_id・session_id・when_initiated・when_disconnected の5つの option の項目を持つ。右は直した後で、Connecting は when_initiated、Connected は last_ping と session_id、Disconnected は when_disconnected だけを持ち、connection_info は状態とサーバーだけを持つ。下の段は Rails での対応で、左が1つのテーブルに NULL を許す日時の列を並べた形、右が状態ごとに必要な列を CHECK 制約で決めるか、別のテーブルに分ける形"
@@ -158,19 +159,19 @@ function MinskyFigure() {
         mono
         align="start"
       />
-      <T x={410} y={16} bold>
+      <T x={400} y={16} bold>
         直した後：状態ごとに持つ項目を決める
       </T>
-      <Box x={410} y={30} w={350} h={36} lines="Connecting of { when_initiated: Time.t }" fs={12} mono align="start" fill="box5" />
-      <Box x={410} y={74} w={350} h={52} lines={['Connected of { last_ping: (Time.t * int) option;', '               session_id: string }']} fs={12} mono align="start" fill="box5" />
-      <Box x={410} y={134} w={350} h={36} lines="Disconnected of { when_disconnected: Time.t }" fs={12} mono align="start" fill="box5" />
-      <T x={410} y={190} fs={12} mono>
+      <Box x={400} y={30} w={370} h={36} lines="Connecting of { when_initiated: Time.t }" fs={12} mono align="start" fill="box5" />
+      <Box x={400} y={74} w={370} h={52} lines={['Connected of { last_ping: (Time.t * int) option;', '               session_id: string }']} fs={12} mono align="start" fill="box5" />
+      <Box x={400} y={134} w={370} h={36} lines="Disconnected of { when_disconnected: Time.t }" fs={12} mono align="start" fill="box5" />
+      <T x={400} y={190} fs={12} mono>
         type connection_info = {'{'} state; server {'}'}
       </T>
-      <Arrow x1={372} y1={115} x2={406} y2={115} accent />
+      <Arrow x1={372} y1={115} x2={396} y2={115} accent />
       <Box x={20} y={236} w={350} h={56} lines={['Rails：orders の1行に、', 'NULL を許す日時の列を並べる']} fs={12} subTone="muted" />
-      <Box x={410} y={236} w={350} h={56} lines={['Rails：状態ごとに必要な列を CHECK 制約で決める', 'または、その状態だけの列を別のテーブルに分ける']} fs={12} subTone="muted" />
-      <Arrow x1={372} y1={264} x2={406} y2={264} accent />
+      <Box x={400} y={236} w={370} h={56} lines={['Rails：状態ごとに必要な列を CHECK 制約で決める', 'または、その状態だけの列を別のテーブルに分ける']} fs={12} subTone="muted" />
+      <Arrow x1={372} y1={264} x2={396} y2={264} accent />
       <T x={20} y={322} fs={11} tone="muted">
         上の段の OCaml のコードは Minsky の記事（2011年）から。option は「値がないこともある」ことを表す型
       </T>
@@ -178,7 +179,7 @@ function MinskyFigure() {
   )
 }
 
-/* ---------- 図 62-4 不正な組み合わせを防ぐ3つのテーブルの設計 ---------- */
+/* ---------- 図 79-4 不正な組み合わせを防ぐ3つのテーブルの設計 ---------- */
 const designs = [
   {
     x: 20,
@@ -209,7 +210,7 @@ const designs = [
 function DesignsFigure() {
   return (
     <Svg
-      id="62-4"
+      id="79-4"
       w={780}
       h={420}
       label="不正な組み合わせを防ぐ3つのテーブルの設計を横に並べた。左の NOT NULL は、number・total・status のようにどの状態でも必要な列に付け、状態が空の注文などを防ぐが、状態ごとに違う列の有無は決められない。中央の CHECK 制約は、status と日時の列の組み合わせを条件に書き、発送日があるのに未発送の注文や配達日が空の配達済みの注文を防ぐが、元の状態による規則とほかのテーブルとの組み合わせは検査できない。右の別テーブルは、発送したときだけ shipments の行を作り、追跡番号と発送日時を NOT NULL にする。発送日があるのに未発送という組み合わせは書く列がないので作れないが、キャンセル済みの注文に発送の行を作るような、テーブルをまたぐ組み合わせは防げない"
@@ -244,7 +245,7 @@ function DesignsFigure() {
   )
 }
 
-/* ---------- 図 62-5 直す前と後：書き込む経路と検査する場所 ---------- */
+/* ---------- 図 79-5 直す前と後：書き込む経路と検査する場所 ---------- */
 const writePaths = [
   { lines: 'モデルのメソッド（update!）', gate: true },
   { lines: 'update_columns・update_all', gate: false },
@@ -256,7 +257,7 @@ function PathsFigure() {
   const row = (top: number, i: number) => top + 30 + i * 42
   return (
     <Svg
-      id="62-5"
+      id="79-5"
       w={780}
       h={450}
       label="上は直す前で、モデルのメソッド、update_columns と update_all、コンソールの SQL や別のアプリ、古い画面からの操作の4つの経路が、どれも検査を通らずに orders テーブルに書き込み、ずれた組み合わせを書ける。下は直した後で、モデルのメソッドと古い画面からの操作は、まず transition! が行をロックして読み直し、元の状態を確かめる。そのうえで4つの経路すべてが MySQL の NOT NULL と CHECK 制約を通ってから orders に書き込まれる"
@@ -303,7 +304,7 @@ function PathsFigure() {
   )
 }
 
-/* ---------- 図 62-7 注文の状態の遷移と、経費申請との対応 ---------- */
+/* ---------- 図 79-7 注文の状態の遷移と、経費申請との対応 ---------- */
 const orderStates = [
   { x: 20, lines: ['pending', '入金待ち', '列：なし'] },
   { x: 205, lines: ['paid', '発送の準備中', '+ paid_at'] },
@@ -320,7 +321,7 @@ const expenseStates = [
 function TransitionsFigure() {
   return (
     <Svg
-      id="62-7"
+      id="79-7"
       w={780}
       h={470}
       label="上はこの章の注文の状態の遷移。pending から pay! で paid、ship! で shipped、deliver! で delivered に進み、shipped から cancel_shipment! で paid に戻る。pending と paid からは cancel! で cancelled になる。各状態には、paid_at、shipped_at と追跡番号、delivered_at、cancelled_at のうち、その状態で値がある列を書いた。下は Explicit State Machine の章の経費申請で、draft から submitted、approved、paid に進み、submitted から rejected に差し戻され、rejected から draft に戻る。どちらも、状態ごとに必要な列は CHECK 制約で決め、元の状態による規則は遷移の処理で守る"
@@ -386,7 +387,7 @@ const chapter: Chapter = {
     'update_columns や update_all のようにモデルの検証を通らない書き換えも、NOT NULL と CHECK 制約が拒否することを確かめられる',
     'CHECK 制約で守れない規則（元の状態・ほかのテーブル・変わりやすい規則）を見分け、遷移の処理やモデルの検証に置ける',
   ],
-  prerequisites: [27, 46, 47],
+  prerequisites: [27],
   sections: [
     {
       id: 'scene',
@@ -550,13 +551,13 @@ A-005  pending   -           -           -          -            -
             <li>A-003 は「配達済み」ですが、配達日時が空です。取り込みの処理は delivered_at の列ができる前の書き方のままでした。</li>
           </ul>
           <p>
-            読む側の結果も食い違っています。月次の発送件数は日時の列で数えると3件、状態の列で数えると1件です。どちらの数え方のコードも、それだけを見れば正しく書かれています。図 62-1 は書き込む3つの処理と読む3つの処理を、orders テーブルを挟んで並べたものです。
+            読む側の結果も食い違っています。月次の発送件数は日時の列で数えると3件、状態の列で数えると1件です。どちらの数え方のコードも、それだけを見れば正しく書かれています。図 79-1 は書き込む3つの処理と読む3つの処理を、orders テーブルを挟んで並べたものです。
           </p>
-          <Figure n="62-1" title="注文の状態を書き込む処理と読む処理" caption="赤の文字は書き込む処理が残したずれ。読む処理はそれぞれ別の列を見ている。">
+          <Figure n="79-1" title="注文の状態を書き込む処理と読む処理" caption="赤の文字は書き込む処理が残したずれ。読む処理はそれぞれ別の列を見ている。">
             <SceneFigure />
           </Figure>
           <p>
-            図 62-1 の左の3つの処理はどれも「状態を変えたら、関係する日時の列も書き換える」という取り決めを守っていません。右の3つの処理は取り決めが守られている前提で、status か日時の列のどちらか一方を読んでいます。どちらの側にも組み合わせが正しいかを確かめる箇所がありません。
+            図 79-1 の左の3つの処理はどれも「状態を変えたら、関係する日時の列も書き換える」という取り決めを守っていません。右の3つの処理は取り決めが守られている前提で、status か日時の列のどちらか一方を読んでいます。どちらの側にも組み合わせが正しいかを確かめる箇所がありません。
           </p>
           <h3>状態と日時の列の組み合わせを数える</h3>
           <p>本番のテーブルでどの組み合わせが何件あるかは、次の SQL で数えられます。</p>
@@ -588,13 +589,13 @@ pending   0         0         0         0         1
 `}
           />
           <p>
-            orders テーブルには状態が5つ、日時の列が4つあります。日時の列のある・ないは 2 × 2 × 2 × 2 = 16 通りなので、テーブルが受け付ける組み合わせは 5 × 16 = 80 通りです。業務の上で正しいのはそのうち6通りだけです（キャンセルは入金の前と後の両方がありうるので2通り）。図 62-2 は80通りを並べ、正しい6通りと、場面の3件が入ったマスを示したものです。
+            orders テーブルには状態が5つ、日時の列が4つあります。日時の列のある・ないは 2 × 2 × 2 × 2 = 16 通りなので、テーブルが受け付ける組み合わせは 5 × 16 = 80 通りです。業務の上で正しいのはそのうち6通りだけです（キャンセルは入金の前と後の両方がありうるので2通り）。図 79-2 は80通りを並べ、正しい6通りと、場面の3件が入ったマスを示したものです。
           </p>
-          <Figure n="62-2" title="状態と4つの日時の列の組み合わせ" caption="80マスのうち、業務の上で正しいのは「正」の6マス。赤い枠は場面で作られた3件。">
+          <Figure n="79-2" title="状態と4つの日時の列の組み合わせ" caption="80マスのうち、業務の上で正しいのは「正」の6マス。赤い枠は場面で作られた3件。">
             <CombosFigure />
           </Figure>
           <p>
-            図 62-2 の白いマスの74通りはどれもテーブルに保存できてしまいます。今は3件ですが、書き込む処理が増えるたびに、白いマスに入る経路が増えます。モデルに検証（バリデーション）を足しても、Rails のガイドが挙げるとおり <code>update_all</code>・<code>update_columns</code>・<code>insert_all</code> などは検証を通らずに保存します<Ref n={7} />。場面の3つ目の処理も <code>update_all</code> でした。
+            図 79-2 の白いマスの74通りはどれもテーブルに保存できてしまいます。今は3件ですが、書き込む処理が増えるたびに、白いマスに入る経路が増えます。モデルに検証（バリデーション）を足しても、Rails のガイドが挙げるとおり <code>update_all</code>・<code>update_columns</code>・<code>insert_all</code> などは検証を通らずに保存します<Ref n={7} />。場面の3つ目の処理も <code>update_all</code> でした。
           </p>
         </>
       ),
@@ -615,11 +616,11 @@ pending   0         0         0         0         1
           <p>
             記事の例はサーバーへの接続の情報を表す型です。直す前は、1つのレコードに接続の状態（接続中・接続済み・切断済み）と、5つの <code>option</code> の項目を並べています。OCaml の <code>option</code> は「値がないこともある」ことを表す型で、Rails のテーブルでいえば NULL を許す列にあたります。直した後は、状態ごとに別の型を作り、その状態で意味のある項目だけを持たせています<Ref n={1} />。
           </p>
-          <Figure n="62-3" title="Minsky の例と、Rails のテーブルでの対応" caption="上の段は記事のコードを、型の宣言の部分だけ並べたもの。下の段はこの章での対応。">
+          <Figure n="79-3" title="Minsky の例と、Rails のテーブルでの対応" caption="上の段は記事のコードを、型の宣言の部分だけ並べたもの。下の段はこの章での対応。">
             <MinskyFigure />
           </Figure>
           <p>
-            図 62-3 の左の型では、状態が「接続中」なのに切断の日時が入っている値も作れます。右の型では、切断の日時（when_disconnected）は Disconnected の中にしかないので、接続中の値に切断の日時を入れる書き方がありません。OCaml では、存在しない項目を読もうとするコードはコンパイルの時点でエラーになります。この章の orders テーブルは左の型と同じ形をしています。
+            図 79-3 の左の型では、状態が「接続中」なのに切断の日時が入っている値も作れます。右の型では、切断の日時（when_disconnected）は Disconnected の中にしかないので、接続中の値に切断の日時を入れる書き方がありません。OCaml では、存在しない項目を読もうとするコードはコンパイルの時点でエラーになります。この章の orders テーブルは左の型と同じ形をしています。
           </p>
           <h3>その後の広まり</h3>
           <p>
@@ -709,13 +710,13 @@ pending   0         0         0         0         1
         <>
           <h3>3つのテーブルの設計から選ぶ</h3>
           <p>
-            前の節で挙げた「書く場所をなくす」と「DB が拒否する」には、テーブルの設計として3つの方法があります。図 62-4 は、それぞれが防げる組み合わせと防げない組み合わせを並べたものです。
+            前の節で挙げた「書く場所をなくす」と「DB が拒否する」には、テーブルの設計として3つの方法があります。図 79-4 は、それぞれが防げる組み合わせと防げない組み合わせを並べたものです。
           </p>
-          <Figure n="62-4" title="不正な組み合わせを防ぐ3つのテーブルの設計" caption="下の破線の箱は不正な組み合わせを防ぐ仕組み。">
+          <Figure n="79-4" title="不正な組み合わせを防ぐ3つのテーブルの設計" caption="下の破線の箱は不正な組み合わせを防ぐ仕組み。">
             <DesignsFigure />
           </Figure>
           <p>
-            図 62-4 の左の NOT NULL はどの状態でも必要な列に付けます。中央の CHECK 制約は1つの行の中で、状態と日時の列の組み合わせに条件を付けます。右の別テーブルはその状態でしか使わない列を別のテーブルに移し、行があるときだけ値を持たせます。左と中央は1つのテーブルのまま加えられるので、今の orders に対しては変更が小さく済みます。この節では左と中央で直し、右の設計は節の最後で動かして比べます。
+            図 79-4 の左の NOT NULL はどの状態でも必要な列に付けます。中央の CHECK 制約は1つの行の中で、状態と日時の列の組み合わせに条件を付けます。右の別テーブルはその状態でしか使わない列を別のテーブルに移し、行があるときだけ値を持たせます。左と中央は1つのテーブルのまま加えられるので、今の orders に対しては変更が小さく済みます。この節では左と中央で直し、右の設計は節の最後で動かして比べます。
           </p>
           <h3>直す順序</h3>
           <p>この節では、orders テーブルが正しい6通りの組み合わせだけを受け付けるように直します。次の順に進めます。</p>
@@ -1059,13 +1060,13 @@ end
 `}
           />
           <p>
-            正しい6通りだけが通り、残りの74通りは拒否されました。図 62-2 の「正」のマスと同じです。図 62-5 は直す前と直した後で、書き込む経路ごとにどこで組み合わせを確かめているかを比べたものです。
+            正しい6通りだけが通り、残りの74通りは拒否されました。図 79-2 の「正」のマスと同じです。図 79-5 は直す前と直した後で、書き込む経路ごとにどこで組み合わせを確かめているかを比べたものです。
           </p>
-          <Figure n="62-5" title="直す前と後：書き込む経路と、組み合わせを確かめる場所" caption="紫の箱はモデルの遷移の処理、黄色の箱は MySQL の制約。">
+          <Figure n="79-5" title="直す前と後：書き込む経路と、組み合わせを確かめる場所" caption="紫の箱はモデルの遷移の処理、黄色の箱は MySQL の制約。">
             <PathsFigure />
           </Figure>
           <p>
-            図 62-5 の下の段で、<code>transition!</code> を通るのは、モデルのメソッドと古い画面からの操作だけです。<code>transition!</code> は元の状態を確かめ、ロックで同時の操作を順番にします。MySQL の NOT NULL と CHECK 制約は、4つの経路のすべてで、書き込む行の組み合わせを確かめます。2か所は役割が違い、<code>transition!</code> は「どの状態からどの状態に移れるか」を、DB の制約は「その状態の行がどの列を持つか」を確かめます。
+            図 79-5 の下の段で、<code>transition!</code> を通るのは、モデルのメソッドと古い画面からの操作だけです。<code>transition!</code> は元の状態を確かめ、ロックで同時の操作を順番にします。MySQL の NOT NULL と CHECK 制約は、4つの経路のすべてで、書き込む行の組み合わせを確かめます。2か所は役割が違い、<code>transition!</code> は「どの状態からどの状態に移れるか」を、DB の制約は「その状態の行がどの列を持つか」を確かめます。
           </p>
           <h3>テストでテーブルが受け付ける組み合わせを固定する</h3>
           <p>
@@ -1108,7 +1109,7 @@ Finished in 0.1989 seconds (files took 1.29 seconds to load)
           </p>
           <h3>発送の記録を別のテーブルに分ける設計</h3>
           <p>
-            図 62-4 の右の設計も別の DB で動かして確かめました。発送したときにだけ shipments の行を作り、追跡番号と発送日時をその行の必須の列にします。orders には状態の列を置かず、状態は日時の列と発送の行から決めます。
+            図 79-4 の右の設計も別の DB で動かして確かめました。発送したときにだけ shipments の行を作り、追跡番号と発送日時をその行の必須の列にします。orders には状態の列を置かず、状態は日時の列と発送の行から決めます。
           </p>
           <Code
             lang="ruby"
@@ -1264,8 +1265,8 @@ end
             OCaml では、状態ごとの型を作る費用は型の宣言の数行で、使う側の書き漏らしはコンパイラーが見つけます。Rails のテーブルでは、分けるたびにマイグレーション、関連、結合する SQL が増えます。同じ考え方でも、言語や DB によって費用が違うことを踏まえて選びます。
           </p>
           <h3>判断の目安</h3>
-          <p>図 62-6 は規則の種類ごとに、置く場所の目安をまとめたものです。</p>
-          <Figure n="62-6" title="規則の種類と、置く場所の目安" caption="上の4行はデータの形（テーブル）で防ぐ規則。下の3行はアプリの処理に置く規則。">
+          <p>図 79-6 は規則の種類ごとに、置く場所の目安をまとめたものです。</p>
+          <Figure n="79-6" title="規則の種類と、置く場所の目安" caption="上の4行はデータの形（テーブル）で防ぐ規則。下の3行はアプリの処理に置く規則。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1375,13 +1376,13 @@ end
           </p>
           <h3>状態の遷移との分担</h3>
           <p>
-            CHECK 制約で守れるのは「その状態の行がどの列を持つか」までで、「どの状態からどの状態に移れるか」は守れません。図 62-7 はこの章の注文の状態の遷移と、Explicit State Machine の章の経費申請を並べたものです。
+            CHECK 制約で守れるのは「その状態の行がどの列を持つか」までで、「どの状態からどの状態に移れるか」は守れません。図 79-7 はこの章の注文の状態の遷移と、Explicit State Machine の章の経費申請を並べたものです。
           </p>
-          <Figure n="62-7" title="注文の状態の遷移と、経費申請との対応" caption="箱の3行目（経費申請は2行目）は、その状態で値がある列。矢印は遷移で、ラベルは遷移を起こすメソッド。">
+          <Figure n="79-7" title="注文の状態の遷移と、経費申請との対応" caption="箱の3行目（経費申請は2行目）は、その状態で値がある列。矢印は遷移で、ラベルは遷移を起こすメソッド。">
             <TransitionsFigure />
           </Figure>
           <p>
-            図 62-7 の2つの例は同じ分担をしています。状態ごとに必要な列は CHECK 制約で決め、矢印の規則（発送の後はキャンセルできない、精算済みから承認済みには戻れない）は遷移の処理で守ります。経費申請の章では、状態とイベントの遷移表、条件付きの UPDATE による同時の遷移の防止、AASM を使う場合の注意を扱っています。状態が増えて矢印が複雑になったら、この章の <code>from:</code> の引数を遷移表に置き換えます（<ChapterLink n={47} section="rails-impl" />、<ChapterLink n={47} section="aasm">同じ章の「AASM を使う場合」の節</ChapterLink>）。
+            図 79-7 の2つの例は同じ分担をしています。状態ごとに必要な列は CHECK 制約で決め、矢印の規則（発送の後はキャンセルできない、精算済みから承認済みには戻れない）は遷移の処理で守ります。経費申請の章では、状態とイベントの遷移表、条件付きの UPDATE による同時の遷移の防止、AASM を使う場合の注意を扱っています。状態が増えて矢印が複雑になったら、この章の <code>from:</code> の引数を遷移表に置き換えます（<ChapterLink n={47} section="rails-impl" />、<ChapterLink n={47} section="aasm">同じ章の「AASM を使う場合」の節</ChapterLink>）。
           </p>
           <h3>本書のほかの章</h3>
           <ul>
@@ -1410,6 +1411,29 @@ end
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          DB の制約にするのは、状態や列の意味から決まり、1つの行の今の値だけで判断できる規則です。この章では、状態ごとにどの日時の列が値を持つかを NOT NULL と CHECK 制約で決め、テーブルが受け付ける組み合わせを業務で正しいものだけにしました。業務の方針で変わる規則や、時期で対象が変わる規則は、モデルの検証と設定の値に置きます。
+        </>
+      ),
+      benefit: {
+        text: <>直す前の orders は状態の列と4つの日時の列で80通りの組み合わせを受け付け、正しいのは6通りだけだった。制約を加えた後は、場面と同じ3つの操作で発送件数がどちらの列で数えても2件になり、update_all や update_columns のようなモデルを通らない書き換えでも、ずれた組み合わせは拒否された。</>,
+        basis: <><ChapterLink n={81} section="scene" />、<ChapterLink n={81} section="apply" /></>,
+      },
+      cost: {
+        text: <>制約を加える前に既存の行を数え、業務の担当者と直す必要がある。行が残ったまま制約を加えると失敗し、MySQL では途中までの変更が残る。列や状態を足すたびに制約を書き換えるので、通る組み合わせが6通りだけであることを RSpec で固定した。</>,
+        basis: <ChapterLink n={81} section="apply" />,
+      },
+      alternative: {
+        text: <>その状態でしか使わない列が多いときや1対多になるときは、発送の記録を別のテーブルに分ける。ただし「キャンセル済みの注文には発送の行がない」のようにテーブルをまたぐ規則は CHECK 制約で書けず、遷移の処理で守る。注文の上限金額のように変わる規則は、on: :create のモデルの検証と設定の値に置く。</>,
+        basis: <><ChapterLink n={81} section="apply" />、<ChapterLink n={81} section="overuse" /></>,
+      },
+      criterion: {
+        text: <>規則が破られた行ができたら、業務の担当者の手作業はどれくらいになるか。規則は状態や列の意味から決まるか、業務の方針で変わるか。1つの行の今の値だけで判断できるか。モデルのメソッドのほかに書き込む経路がいくつあるか。上限金額を CHECK 制約にした例では、42,000円の過去の注文があるため 30,000円の制約を加えられなかった。</>,
+        basis: <ChapterLink n={81} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

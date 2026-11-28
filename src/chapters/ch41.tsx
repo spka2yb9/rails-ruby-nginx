@@ -5,7 +5,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.0.0'
 const PUNDIT = 'https://github.com/varvet/pundit/blob/v2.5.2'
 
-/* ---------- 図 77-1 条件分岐の木と戦略の一覧 ---------- */
+/* ---------- 図 94-1 条件分岐の木と戦略の一覧 ---------- */
 function TreeVsTableFigure() {
   const node = (x: number, y: number, w: number, text: string, fs = 12) => <Box x={x} y={y} w={w} h={28} lines={text} fs={fs} />
   const rows: [string, string[], string[]][] = [
@@ -21,7 +21,7 @@ function TreeVsTableFigure() {
   ]
   return (
     <Svg
-      id="77-1"
+      id="94-1"
       w={780}
       h={430}
       label="適用前の Order#shipping_fee は、配送方法で分岐した後、通常便ではキャンペーン中か、ゴールド会員か、5,000円以上か、沖縄・離島かを順にたどり、お急ぎ便では沖縄・離島か、2kg超かをたどり、クール便では離島か、10kg超かをたどる。クール便の送料は通常便の計算を書き写していて、選べる条件は CheckoutsHelper にも別に書いている。適用後は、standard・express・store_pickup・cool の4行が、id・選べる条件・送料の計算を持つ一覧になる。キャンペーン中は standard を CampaignStandard に替える。配送方法を足すときは一覧に1行足し、画面の選択肢も同じ一覧から作る"
@@ -87,12 +87,12 @@ function TreeVsTableFigure() {
   )
 }
 
-/* ---------- 図 77-2 Strategy の構造 ---------- */
+/* ---------- 図 94-2 Strategy の構造 ---------- */
 function StructureFigure() {
   const strategies = ['Standard', 'Express', 'StorePickup', 'Cool', 'CampaignStandard']
   return (
     <Svg
-      id="77-2"
+      id="94-2"
       w={780}
       h={320}
       label="CheckoutsHelper と Order#shipping_fee が Shipping を呼ぶ。Shipping は methods_at で一覧を選び、options と fee で戦略を呼ぶ。一覧は id から戦略を引く Hash の METHODS。戦略が守る取り決めは id・label・available?(order)・fee(order) で、Standard・Express・StorePickup・Cool・CampaignStandard の5つのクラスがそれを満たす。クール便やキャンペーン中の通常便は、一覧に足すだけで使える"
@@ -128,11 +128,11 @@ function StructureFigure() {
   )
 }
 
-/* ---------- 図 77-3 戦略を選ぶ処理と実行する処理 ---------- */
+/* ---------- 図 94-3 戦略を選ぶ処理と実行する処理 ---------- */
 function SelectAndRunFigure() {
   return (
     <Svg
-      id="77-3"
+      id="94-3"
       w={780}
       h={210}
       label="Shipping.fee は order・method_id・at を受け取り、① methods_at(at) でその時点の一覧を選び、② 一覧から method_id で戦略を選び、③ 戦略の available?(order) で選べるかを確かめ、④ 戦略の fee(order) で計算する。①と②は使う側だけで行う選ぶ処理、③は戦略への問い合わせ、④は戦略が行う実行する処理。②で見つからないか③で選べなければ Shipping::Unavailable を投げる"
@@ -168,11 +168,11 @@ function SelectAndRunFigure() {
   )
 }
 
-/* ---------- 図 77-4 編集を許可するルールの組み合わせ ---------- */
+/* ---------- 図 94-4 編集を許可するルールの組み合わせ ---------- */
 function RuleTreeFigure() {
   return (
     <Svg
-      id="77-4"
+      id="94-4"
       w={760}
       h={320}
       label="update?（編集）は、active? かつ、admin? または（editor? かつ same_department?）という組み合わせ。publish?（公開）は update? かつ価格があること。destroy?（削除）は active? かつ admin? かつ下書きであること"
@@ -203,7 +203,7 @@ function RuleTreeFigure() {
   )
 }
 
-/* ---------- 図 77-5 利用者と操作の判断表 ---------- */
+/* ---------- 図 94-5 利用者と操作の判断表 ---------- */
 const decisionRows: [string, string[]][] = [
   ['管理者', ['○', '○', '○（価格が必要）', '○（下書きのみ）']],
   ['編集者（同じ部署）', ['○', '○', '○（価格が必要）', '×']],
@@ -224,7 +224,7 @@ function DecisionTableFigure() {
   const colW = 135
   return (
     <Svg
-      id="77-5"
+      id="94-5"
       w={760}
       h={262}
       label={`利用者と操作の判断表。○は許可、×は拒否。${decisionRows.map(([u, c]) => `${u}：閲覧${c[0]}、編集${c[1]}、公開${c[2]}、削除${c[3]}`).join('。')}`}
@@ -275,7 +275,7 @@ const chapter: Chapter = {
       body: (
         <>
           <p>
-            この章では EC サイトの送料の計算と、商品を管理する画面の認可を例に、Strategy と Policy を扱います。<ChapterLink n={33} section="design-patterns" />の「Strategy・Null Object・Factory・Command の小さな実装」では、送料の計算方針を2つのクラスに分ける小さな例を示しました。<ChapterLink n={21} section="object-authorization" />の「所有者・ロールとレコードの認可」では、Pundit の <code>authorize</code> と <code>policy_scope</code> を紹介しました。この章では、条件分岐が実際に増えていくコードから始めて、戦略を選ぶ処理と実行する処理の分け方、認可のルールの組み合わせ方とテストの書き方を、動かしたコードで確かめます。
+            この章では EC サイトの送料の計算と、商品を管理する画面の認可を例に、Strategy と Policy を扱います。<ChapterLink n={33} section="design-patterns" />の「Strategy・Null Object・Factory・Command の小さな実装」では、送料の計算方針を2つのクラスに分ける小さな例を示しました。<ChapterLink n={21} section="object-authorization" />では、Pundit の <code>authorize</code> と <code>policy_scope</code> を紹介しました。この章では、条件分岐が実際に増えていくコードから始めて、戦略を選ぶ処理と実行する処理の分け方、認可のルールの組み合わせ方とテストの書き方を、動かしたコードで確かめます。
           </p>
           <h3>そもそも送料はどう決まるのか</h3>
           <p>
@@ -609,21 +609,21 @@ PaymentFee.for(Order.new(subtotal: 3000), "Kernel")            # => KeyError: ke
           </p>
           <h3>構造</h3>
           <p>
-            図 77-1 は、適用前と適用後で送料のルールがどう表されるかを比べたものです。適用前のルールは、分岐の中にさらに分岐がある入れ子の条件分岐で、図では枝分かれする木の形で描いています。配送方法を足すには、この木のどこかに枝を足し、ヘルパーの選択肢も別に直します。適用後は、配送方法ごとの行が並んだ一覧になり、配送方法を足すには行を1つ足します。
+            図 94-1 は、適用前と適用後で送料のルールがどう表されるかを比べたものです。適用前のルールは、分岐の中にさらに分岐がある入れ子の条件分岐で、図では枝分かれする木の形で描いています。配送方法を足すには、この木のどこかに枝を足し、ヘルパーの選択肢も別に直します。適用後は、配送方法ごとの行が並んだ一覧になり、配送方法を足すには行を1つ足します。
           </p>
-          <Figure n="77-1" title="条件分岐の木と戦略の一覧" caption="模式図。適用後の表の1行が、1つの戦略（取り決めを満たすオブジェクト）に当たる。">
+          <Figure n="94-1" title="条件分岐の木と戦略の一覧" caption="模式図。適用後の表の1行が、1つの戦略（取り決めを満たすオブジェクト）に当たる。">
             <TreeVsTableFigure />
           </Figure>
           <p>
-            図 77-2 は適用後の構造です。Shipping.options と Shipping.fee は、METHODS の Hash から戦略を取り出し、各戦略の available? と fee を呼ぶだけです。個々の配送方法がどう送料を計算するかは知りません。後から足したクール便も、キャンペーン中の通常便も、既存の戦略と Shipping のメソッドを変えずに、一覧に足すだけで使えます。
+            図 94-2 は適用後の構造です。Shipping.options と Shipping.fee は、METHODS の Hash から戦略を取り出し、各戦略の available? と fee を呼ぶだけです。個々の配送方法がどう送料を計算するかは知りません。後から足したクール便も、キャンペーン中の通常便も、既存の戦略と Shipping のメソッドを変えずに、一覧に足すだけで使えます。
           </p>
-          <Figure n="77-2" title="Strategy の構造" caption="破線の箱は Ruby では宣言しない取り決め。破線の矢印は、戦略が取り決めを満たすことと、Shipping が一覧を参照することを表す。">
+          <Figure n="94-2" title="Strategy の構造" caption="破線の箱は Ruby では宣言しない取り決め。破線の矢印は、戦略が取り決めを満たすことと、Shipping が一覧を参照することを表す。">
             <StructureFigure />
           </Figure>
           <p>
-            図 77-3 は、送料を求めるときの処理の順序です。①でその時点の一覧を選び、②で id から戦略を選び、③でその注文に使えるかを確かめ、④で計算します。①と②は Shipping だけで行う選ぶ処理です。③と④は Shipping が戦略のメソッドを呼びますが、条件と計算の中身は戦略の側にだけ書かれています。②で見つからないか、③で選べなければ、Shipping::Unavailable を投げます。
+            図 94-3 は、送料を求めるときの処理の順序です。①でその時点の一覧を選び、②で id から戦略を選び、③でその注文に使えるかを確かめ、④で計算します。①と②は Shipping だけで行う選ぶ処理です。③と④は Shipping が戦略のメソッドを呼びますが、条件と計算の中身は戦略の側にだけ書かれています。②で見つからないか、③で選べなければ、Shipping::Unavailable を投げます。
           </p>
-          <Figure n="77-3" title="戦略を選ぶ処理と実行する処理" caption="Shipping.fee の処理の順序。">
+          <Figure n="94-3" title="戦略を選ぶ処理と実行する処理" caption="Shipping.fee の処理の順序。">
             <SelectAndRunFigure />
           </Figure>
         </>
@@ -891,15 +891,15 @@ end
 `}
           />
           <p>
-            小さなルール（active?・admin?・editor?・same_department?）を private メソッドにし、操作ごとのメソッドでそれを組み合わせています。publish? は update? の結果に「価格がある」という条件を加え、destroy? は「管理者で、下書きの商品」に限ります。図 77-4 は update? の組み合わせを木の形で描いたものです。
+            小さなルール（active?・admin?・editor?・same_department?）を private メソッドにし、操作ごとのメソッドでそれを組み合わせています。publish? は update? の結果に「価格がある」という条件を加え、destroy? は「管理者で、下書きの商品」に限ります。図 94-4 は update? の組み合わせを木の形で描いたものです。
           </p>
-          <Figure n="77-4" title="編集を許可するルールの組み合わせ" caption="葉が小さなルール（ProductPolicy の private メソッド）、枝分かれの箱が組み合わせ方。">
+          <Figure n="94-4" title="編集を許可するルールの組み合わせ" caption="葉が小さなルール（ProductPolicy の private メソッド）、枝分かれの箱が組み合わせ方。">
             <RuleTreeFigure />
           </Figure>
           <p>
-            このルールを利用者の種類と操作の組み合わせごとに展開すると、図 77-5 の判断表になります。Policy のテストはこの表のマス（利用者と操作の組み合わせ）に対応させて書きます（「テストと動作の確認」の節）。仕様を決める人と表で合意しておくと、ルールを変えるときに、どのマスが変わるかを先に確かめられます。
+            このルールを利用者の種類と操作の組み合わせごとに展開すると、図 94-5 の判断表になります。Policy のテストはこの表のマス（利用者と操作の組み合わせ）に対応させて書きます（「テストと動作の確認」の節）。仕様を決める人と表で合意しておくと、ルールを変えるときに、どのマスが変わるかを先に確かめられます。
           </p>
-          <Figure n="77-5" title="利用者と操作の判断表" caption="○は許可、×は拒否。停止中の利用者は役割にかかわらずすべて拒否する。">
+          <Figure n="94-5" title="利用者と操作の判断表" caption="○は許可、×は拒否。停止中の利用者は役割にかかわらずすべて拒否する。">
             <DecisionTableFigure />
           </Figure>
           <h3>コントローラーで authorize を呼ぶ</h3>
@@ -1038,7 +1038,7 @@ end
           </p>
           <h3>認可を直していく順序</h3>
           <ol>
-            <li>判断表を作ってテストにする：図 77-5 の表を、画面と API の両方に同じリクエストを送る request spec にします。適用前のコードでは、食い違うマスが失敗します。</li>
+            <li>判断表を作ってテストにする：図 94-5 の表を、画面と API の両方に同じリクエストを送る request spec にします。適用前のコードでは、食い違うマスが失敗します。</li>
             <li>ポリシーを作る：<code>bin/rails g pundit:install</code> の後で ProductPolicy を書き、小さなルールを private メソッドに取り出して、操作ごとのメソッドで組み合わせます。判断表の各マスを policy spec で確かめます。</li>
             <li>コントローラーを1つずつ置き換える：独自の if を <code>authorize</code> に替え、拒否の応答を rescue_from にまとめます。after_action :verify_authorized を加えて、置き換え忘れのアクションを見つけます。</li>
             <li>ビューの条件を置き換える：ボタンを出す条件を <code>policy(product).update?</code> に替えます。</li>
@@ -1131,7 +1131,7 @@ RSpec.describe ProductPolicy do
 
   def user(**attrs) = User.new(role: "editor", department: "food", active: true, **attrs)
 
-  # 判断表（図 77-5）の行：利用者 => [属性, show?, update?, publish?, destroy?]
+  # 判断表（図 94-5）の行：利用者 => [属性, show?, update?, publish?, destroy?]
   {
     "管理者" => [{ role: "admin", department: "books" }, true, true, true, true],
     "同じ部署の編集者" => [{}, true, true, true, false],

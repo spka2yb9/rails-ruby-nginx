@@ -2,7 +2,7 @@ import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
-/* ---------- 図 91-1 3つの段階の構成 ---------- */
+/* ---------- 図 108-1 3つの段階の構成 ---------- */
 function StagesFigure() {
   const col = (i: number) => 10 + i * 260
   const W = 244
@@ -16,7 +16,7 @@ function StagesFigure() {
   )
   return (
     <Svg
-      id="91-1"
+      id="108-1"
       w={780}
       h={424}
       label="段階1は、PlaceOrder が1つのトランザクションで在庫の引き当て、決済、注文の保存を行い、コミットの後でメールのジョブを入れる。段階2は、トランザクションを2つに分け、1つ目で在庫の引き当てと決済待ちの注文の作成、その外で決済（注文ごとの payment_key を冪等性キーにし、一時的な失敗は再試行）、2つ目で支払い済みへの変更と outbox_events への書き込みを行う。中継の処理が確認メールを送る。段階3は、さらに注文の二重送信を request_key で見分け、決済待ちのまま止まった注文を再開するジョブを加える"
@@ -56,13 +56,16 @@ function StagesFigure() {
       <Arrow x1={col(1) + W / 2} y1={176} x2={col(1) + W / 2} y2={188} />
       <Box x={col(1)} y={274} w={W} h={40} lines={['outbox の中継の処理', '確認メールを送る（少なくとも1回）']} fs={11} subTone="muted" />
       <Arrow x1={col(1) + W / 2} y1={260} x2={col(1) + W / 2} y2={272} dashed />
-      <T x={col(1)} y={334} fs={11} tone="acc">
-        状態：pending_payment → paid／payment_failed
+      <T x={col(1)} y={328} fs={11} tone="acc">
+        状態：pending_payment
       </T>
-      <T x={col(1)} y={362} fs={11} tone="danger">
+      <T x={col(1) + 33} y={344} fs={11} tone="acc">
+        → paid／payment_failed
+      </T>
+      <T x={col(1)} y={368} fs={11} tone="danger">
         二重送信はまだ防げない
       </T>
-      <T x={col(1)} y={380} fs={11} tone="danger">
+      <T x={col(1)} y={386} fs={11} tone="danger">
         決済待ちのまま止まった注文が残る
       </T>
 
@@ -85,7 +88,7 @@ function StagesFigure() {
   )
 }
 
-/* ---------- 図 91-2 全体の流れと、各パターンが働く位置 ---------- */
+/* ---------- 図 108-2 全体の流れと、各パターンが働く位置 ---------- */
 function SequenceFigure() {
   const lanes: [number, string, 'box' | 'box4' | 'box5'][] = [
     [175, 'ブラウザー', 'box4'],
@@ -95,12 +98,12 @@ function SequenceFigure() {
     [725, '中継の処理', 'box'],
   ]
   const [B, U, D, P, R] = lanes.map((l) => l[0])
-  // at：ラベルを矢印の中央ではなく、始点の側（from）か終点の側（to）に寄せる。途中の縦線と重ねないため
-  const msg = (y: number, from: number, to: number, text: string, opts: { dashed?: boolean; accent?: boolean; tone?: 'danger'; at?: 'from' | 'to' } = {}) => {
+  // at：ラベルを矢印の中央ではなく、始点の側（from）か終点の側（to）に寄せる。数値ならその x を中央にする。途中の縦線と重ねないため
+  const msg = (y: number, from: number, to: number, text: string, opts: { dashed?: boolean; accent?: boolean; tone?: 'danger'; at?: 'from' | 'to' | number } = {}) => {
     const { at, tone, ...arrow } = opts
     const dir = to > from ? 1 : -1
-    const lx = at === 'from' ? from + dir * 10 : at === 'to' ? to - dir * 14 : (from + to) / 2
-    const anchor = at === undefined ? 'middle' : (at === 'from') === (dir > 0) ? 'start' : 'end'
+    const lx = typeof at === 'number' ? at : at === 'from' ? from + dir * 10 : at === 'to' ? to - dir * 14 : (from + to) / 2
+    const anchor = at === undefined || typeof at === 'number' ? 'middle' : (at === 'from') === (dir > 0) ? 'start' : 'end'
     return (
       <g key={`${y}-${text}`}>
         <Arrow x1={from} y1={y} x2={to + (to > from ? -2 : 2)} y2={y} {...arrow} />
@@ -128,7 +131,7 @@ function SequenceFigure() {
   )
   return (
     <Svg
-      id="91-2"
+      id="108-2"
       w={780}
       h={592}
       label="ブラウザーが request_key を付けて注文を送る。PlaceOrder は、同じキーの注文がないかを MySQL で調べる。トランザクション1で、在庫を条件付きの UPDATE で引き当て、決済待ちの注文を作る。トランザクションの外で、注文の payment_key を冪等性キーにして決済サービスに決済を頼み、一時的な失敗なら待ち時間を延ばして再試行する。トランザクション2で、今の状態が決済待ちであることを条件に支払い済みにし、確認メールのメッセージを outbox_events に書く。結果をブラウザーに返す。後で、中継の処理が outbox_events からメッセージを取り出して確認メールを送り、再開のジョブが決済待ちのまま止まった注文を決済し直す"
@@ -153,7 +156,7 @@ function SequenceFigure() {
       {msg(266, P, U, '503・タイムアウト', { dashed: true, tone: 'danger', at: 'from' })}
       {msg(298, U, P, '待ち時間を延ばして再試行', { accent: true, at: 'from' })}
       {tag(298, 'Retry with Backoff')}
-      {msg(328, P, U, 'Succeeded（payment_id）', { dashed: true, at: 'from' })}
+      {msg(328, P, U, 'Succeeded（payment_id）', { dashed: true, at: (U + D) / 2 })}
       {tx(342, 94, 'トランザクション2')}
       {msg(382, U, D, '決済待ちなら paid にする')}
       {tag(382, 'State Machine')}
@@ -175,7 +178,7 @@ function SequenceFigure() {
   )
 }
 
-/* ---------- 図 91-3 障害が起きる箇所ごとの振る舞い ---------- */
+/* ---------- 図 108-3 障害が起きる箇所ごとの振る舞い ---------- */
 const failureRows: { what: string[]; how: string[]; pattern: string[]; result: string[]; open?: boolean }[] = [
   { what: ['同じ注文が2回送られる', '（二度押し・再送）'], how: ['同じ request_key の注文を返す。同時なら', '一意索引で片方が RecordNotUnique になり、', '先の注文を返す'], pattern: ['Idempotency Key'], result: ['注文は1つ、決済も1回'] },
   { what: ['トランザクション1の途中で', '失敗（在庫不足など）'], how: ['ROLLBACK される。決済はまだしていない'], pattern: ['Use Case', '条件付き UPDATE'], result: ['何も残らない'] },
@@ -204,7 +207,7 @@ function FailuresFigure() {
   }
   return (
     <Svg
-      id="91-3"
+      id="108-3"
       w={780}
       h={y + 6}
       label={`障害が起きる箇所ごとの振る舞い。${failureRows.map((r) => `${r.what.join('')}：${r.how.join('')}。働くパターンは${r.pattern.join('')}。結果は${r.result.join('')}`).join('。')}`}
@@ -237,7 +240,7 @@ function FailuresFigure() {
   )
 }
 
-/* ---------- 図 91-4 パターンを入れすぎたコードとの比較 ---------- */
+/* ---------- 図 108-4 パターンを入れすぎたコードとの比較 ---------- */
 const tooMuchRows: [string, string[], string[]][] = [
   ['依存の組み立て', ['DI コンテナの gem を入れ、すべてのクラスを', '登録して取り出す'], ['コンストラクターの引数で受け取る。既定値は', 'Payments.gateway（Dependency Injection）']],
   ['決済サービス', ['決済会社ごとの Strategy と、それを選ぶ', 'Factory を作る'], ['決済会社は1社なので、取り決め1つと Adapter 1つ。', '2社目が決まったら Adapter を足す']],
@@ -253,7 +256,7 @@ function TooMuchFigure() {
   const top = 36
   return (
     <Svg
-      id="91-4"
+      id="108-4"
       w={780}
       h={top + tooMuchRows.length * (H + 6) + 4}
       label={`パターンを入れすぎたコードと、この章のコードの比較。${tooMuchRows.map(([k, a, b]) => `${k}：入れすぎたコードは${a.join('')}。この章のコードは${b.join('')}`).join('。')}`}
@@ -347,13 +350,13 @@ const chapter: Chapter = {
             <li>確認メールを送る：支払いが済んだことを利用者に知らせる。</li>
           </ol>
           <p>
-            進め方で大切なのは、パターンを最初から全部入れないことです。第9部の序章（<ChapterLink n={39} section="principles" />）のとおり、まず問題を確かめ、その問題を解決するパターンだけを足します。図 91-1 はこの章でたどる3つの段階です。
+            進め方で大切なのは、パターンを最初から全部入れないことです。第9部の序章（<ChapterLink n={39} section="principles" />）のとおり、まず問題を確かめ、その問題を解決するパターンだけを足します。図 108-1 はこの章でたどる3つの段階です。
           </p>
-          <Figure n="91-1" title="3つの段階の構成" caption="各段階の構成と、その段階で残る問題をまとめた模式図。">
+          <Figure n="108-1" title="3つの段階の構成" caption="各段階の構成と、その段階で残る問題をまとめた模式図。">
             <StagesFigure />
           </Figure>
           <p>
-            図 91-1 の左から順に、段階1は Use Case と Value Object だけの構成で、決済が1つのトランザクションの中にあります。段階2はトランザクションを2つに分けて、決済をその間に置きます。段階3は<Term en="double submission">二重送信</Term>（ボタンの二度押しや通信の再送で、同じ注文が2回届くこと）と、途中で止まった注文の再開に備えます。各列の下の赤い文字が、その段階で残る問題で、次の段階はその問題だけを解決します。
+            図 108-1 の左から順に、段階1は Use Case と Value Object だけの構成で、決済が1つのトランザクションの中にあります。段階2はトランザクションを2つに分けて、決済をその間に置きます。段階3は<Term en="double submission">二重送信</Term>（ボタンの二度押しや通信の再送で、同じ注文が2回届くこと）と、途中で止まった注文の再開に備えます。各列の下の赤い文字が、その段階で残る問題で、次の段階はその問題だけを解決します。
           </p>
           <h3>使う表と、決済サービスの取り決め</h3>
           <p>
@@ -1046,12 +1049,12 @@ Finished in 0.41788 seconds (files took 0.88833 seconds to load)
       title: '全体の流れと、各パターンが働く位置',
       body: (
         <>
-          <p>図 91-2 は段階3の注文の確定の全体の流れです。左端の印はその箇所で働いているパターンです。</p>
-          <Figure n="91-2" title="注文の確定の全体の流れと、各パターンが働く位置" caption="段階3のコードの流れをまとめた模式図。決済は2つのトランザクションの間にある。">
+          <p>図 108-2 は段階3の注文の確定の全体の流れです。左端の印はその箇所で働いているパターンです。</p>
+          <Figure n="108-2" title="注文の確定の全体の流れと、各パターンが働く位置" caption="段階3のコードの流れをまとめた模式図。決済は2つのトランザクションの間にある。">
             <SequenceFigure />
           </Figure>
           <p>
-            図 91-2 の上から、二重送信の確認、トランザクション1、決済と再試行、トランザクション2、ブラウザーへの応答と進み、点線より下は別のプロセスで後から動く処理です。決済サービスとのやり取りはどのトランザクションの枠にも入っていません。同じ流れを SQL で見ると次のとおりです。
+            図 108-2 の上から、二重送信の確認、トランザクション1、決済と再試行、トランザクション2、ブラウザーへの応答と進み、点線より下は別のプロセスで後から動く処理です。決済サービスとのやり取りはどのトランザクションの枠にも入っていません。同じ流れを SQL で見ると次のとおりです。
           </p>
           <Code lang="text" title="実行結果（bin/rails runner script/flow.rb の前半。ID は 1 に整えた）" code={`
 == 1: 注文を確定する（request_key: k-1）
@@ -1140,13 +1143,13 @@ Finished in 0.41788 seconds (files took 0.88833 seconds to load)
       body: (
         <>
           <p>
-            第9部の序章の原則の1つは、障害と再実行を設計に含めることでした（<ChapterLink n={39} section="principles" />）。図 91-3 は、障害が起きる箇所ごとに、この章のコードの振る舞いと結果をまとめたものです。
+            第9部の序章の原則の1つは、障害と再実行を設計に含めることでした（<ChapterLink n={39} section="principles" />）。図 108-3 は、障害が起きる箇所ごとに、この章のコードの振る舞いと結果をまとめたものです。
           </p>
-          <Figure n="91-3" title="障害が起きる箇所ごとの振る舞い" caption="段階3のコードについてまとめた表。破線の行（500 の応答）は、この章のコードでは扱っていない。">
+          <Figure n="108-3" title="障害が起きる箇所ごとの振る舞い" caption="段階3のコードについてまとめた表。破線の行（500 の応答）は、この章のコードでは扱っていない。">
             <FailuresFigure />
           </Figure>
           <p>
-            図 91-3 の上の8行の箇所では、どこで止まっても、やり直せば正しい状態にたどり着き、二重の決済も、決済だけが残る状態も起きません。1〜7行目は、前の節のテストと実行結果で確かめた振る舞いです。8行目の中継の処理は、この章のコードに含めていません（<ChapterLink n={53} />）。この結果は、次の3つの性質の組み合わせで成り立っています。
+            図 108-3 の上の8行の箇所では、どこで止まっても、やり直せば正しい状態にたどり着き、二重の決済も、決済だけが残る状態も起きません。1〜7行目は、前の節のテストと実行結果で確かめた振る舞いです。8行目の中継の処理は、この章のコードに含めていません（<ChapterLink n={53} />）。この結果は、次の3つの性質の組み合わせで成り立っています。
           </p>
           <ul>
             <li>取り消せない処理（決済、メール）を、DB のトランザクションの中で行わない。</li>
@@ -1170,8 +1173,8 @@ Finished in 0.41788 seconds (files took 0.88833 seconds to load)
       title: 'パターンを入れすぎたコードとの比較',
       body: (
         <>
-          <p>この章では、使わなかったパターンもあります。図 91-4 は、同じ注文の確定に、第9部のパターンをできるだけ多く入れたコードと比べたものです。</p>
-          <Figure n="91-4" title="パターンを入れすぎたコードとの比較" caption="左は、まだ起きていない変更に備えて部品を入れたコード。右は、この章の段階3のコード。">
+          <p>この章では、使わなかったパターンもあります。図 108-4 は、同じ注文の確定に、第9部のパターンをできるだけ多く入れたコードと比べたものです。</p>
+          <Figure n="108-4" title="パターンを入れすぎたコードとの比較" caption="左は、まだ起きていない変更に備えて部品を入れたコード。右は、この章の段階3のコード。">
             <TooMuchFigure />
           </Figure>
           <p>入れすぎたコードのファイルの構成は、たとえば次のようになります。</p>

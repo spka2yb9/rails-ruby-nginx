@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 44-1 場面の構成 ---------- */
+/* ---------- 図 61-1 場面の構成 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="44-1"
+      id="61-1"
       w={780}
       h={440}
       label="Order モデル（app/models/order.rb）の中に、経理の CSV（accounting_csv と CSV_HEADERS）、発送の通知（ship! と shipped_message）、保存の規則（has_many、enum、validates）が書かれている。経理の CSV と発送の通知は、どちらも total（商品の合計 + 送料 − ポイント）を呼ぶ。経理の CSV は会計ソフトに取り込まれ、発送の通知は OrderMailer を通じてお客様にメールで届き、保存の規則は MySQL の orders と order_items に関係する。経理の依頼で total を変えると、発送のメールの金額も変わる"
@@ -47,7 +48,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 44-2 変更を求める人と変更の理由 ---------- */
+/* ---------- 図 61-2 変更を求める人と変更の理由 ---------- */
 function ActorsFigure() {
   const rows = [
     { y: 40, who: ['経理部', '売上の計上'], why: ['会計ソフトの取り込み形式', '売上・値引きの計上のしかた'] },
@@ -56,7 +57,7 @@ function ActorsFigure() {
   ]
   return (
     <Svg
-      id="44-2"
+      id="61-2"
       w={780}
       h={420}
       label="経理部は会計ソフトの取り込み形式や売上の計上のしかたを理由に、accounting_csv と CSV_HEADERS、そして total の変更を求める。カスタマーサポートはメールの文面やお客様からの問い合わせを理由に、shipped_message と total の変更を求める。開発チームは必須の項目や状態、テーブルの設計を理由に、validates・enum・has_many の変更を求める。total には経理部とカスタマーサポートの2つの担当の変更が届く"
@@ -93,7 +94,7 @@ function ActorsFigure() {
   )
 }
 
-/* ---------- 図 44-3 SRP の背景にある考え方の流れ ---------- */
+/* ---------- 図 61-3 SRP の背景にある考え方の流れ ---------- */
 function HistoryFigure() {
   const items: { x: number; year: string; lines: string[]; up: boolean; acc?: boolean }[] = [
     { x: 90, year: '1972', lines: ['Parnas', '変わりやすい設計判断', 'ごとにモジュールを分ける'], up: true },
@@ -105,7 +106,7 @@ function HistoryFigure() {
   ]
   return (
     <Svg
-      id="44-3"
+      id="61-3"
       w={780}
       h={360}
       label="1972年に Parnas が、変わりやすい設計判断ごとにモジュールを分けることを提案した。1974年に Dijkstra が EWD447 で関心の分離という言葉を使った。1970〜80年代に Constantine らが結合と凝集の考え方を広めた。Martin はこれらを1990年代後半に1つの原則にまとめ、2002年の『Agile Software Development』の第8章で SRP として示した。2014年のブログでは、変更の理由は人であり、同じ理由で変わる物を集め、違う理由で変わる物を分けると説明した。2017年の『Clean Architecture』第7章では、偶然の重複とマージの2つの症状を節に分けている"
@@ -131,11 +132,11 @@ function HistoryFigure() {
   )
 }
 
-/* ---------- 図 44-4 分ける前と分けた後のクラス ---------- */
+/* ---------- 図 61-4 分ける前と分けた後のクラス ---------- */
 function BeforeAfterFigure() {
   return (
     <Svg
-      id="44-4"
+      id="61-4"
       w={780}
       h={420}
       label="分ける前は、Order の中に経理の CSV、発送の通知、保存の規則、両方が使う total があり、spec/models/order_spec.rb に経理・CS・開発の3つの担当のテストが入っている。分けた後は、経理の CSV を AccountingCsv（経理）に、発送の通知の文面を OrderMailer と shipped.text.erb（CS）に移し、Order（開発）には items_total・payment_amount・ship!・validates が残る。AccountingCsv は Order の items_total などを読み、メールのテンプレートは payment_amount を読む。Order の ship! は OrderMailer を呼ぶ。テストは accounting_csv_spec.rb・order_spec.rb・order_mailer_spec.rb の3つに分かれる"
@@ -192,11 +193,11 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 44-5 経理の依頼が及ぶ範囲 ---------- */
+/* ---------- 図 61-5 経理の依頼が及ぶ範囲 ---------- */
 function ImpactFigure() {
   return (
     <Svg
-      id="44-5"
+      id="61-5"
       w={780}
       h={320}
       label="分ける前は、経理の依頼で Order#total を変えると、経理の CSV の金額が依頼どおり 3,300 から 3,800 に変わるのと同時に、発送のメールのお支払い金額も 3,300円から 3,800円に変わる。メールの変更は誰も依頼していない。order_spec.rb の4件のうち1件が失敗する。分けた後は、AccountingCsv だけを変え、経理の CSV の金額が 3,800 に変わる。発送のメールは 3,300円のままで、Order と OrderMailer は変えない。変えたファイルは2つで、5件のテストがすべて成功する"
@@ -239,7 +240,7 @@ function ImpactFigure() {
   )
 }
 
-/* ---------- 図 44-6 分けるかどうかの判断 ---------- */
+/* ---------- 図 61-6 分けるかどうかの判断 ---------- */
 function JudgeFigure() {
   const cells = [
     { x: 130, y: 50, head: '同じクラスの中で分ける', lines: ['private メソッドに名前を付ける', '例：CSV の日付の形式と金額の計算'] },
@@ -249,7 +250,7 @@ function JudgeFigure() {
   ]
   return (
     <Svg
-      id="44-6"
+      id="61-6"
       w={780}
       h={450}
       label="横軸は変更を求める人が同じか違うか、縦軸は変わる時期が別々か一緒か。変更を求める人が違い、変わる時期も別々なら、別のクラスに分ける。この章の経理の CSV と発送の通知がこれに当たる。変更を求める人が同じで変わる時期が別々なら、同じクラスの中で private メソッドに分ける。変更を求める人が同じで一緒に変わるなら、1つにまとめておく。CSV の見出しと行の並びがこれに当たり、6つのクラスに分けた例は分けすぎになる。変更を求める人は違うが一緒に変わるもの、たとえば法律で決まる消費税率は、今は共有し、食い違いが出た時点で分ける"
@@ -442,9 +443,9 @@ end
             <code>Order.accounting_csv</code> は、Ruby の csv ライブラリの <code>CSV.generate</code> で、見出しの行と注文ごとの行を作ります。<code>ship!</code> は注文を発送済みにして、<code>deliver_later</code> で発送のメールの送信をジョブのキューに入れます。メールの本文は <code>shipped_message</code> が作ります。<code>to_fs(:delimited)</code> は、数値を3桁ごとにカンマで区切る Active Support のメソッドです。
           </p>
           <p>
-            経理の CSV の金額の列と、メールのお支払い金額は、どちらも <code>total</code> を呼んでいます。今は「商品の合計 + 送料 − ポイント」という同じ金額を表示すればよいので、同じ計算を2回書かずに1つのメソッドにまとめた形です。図 44-1 はこのコードの構成です。経理の CSV と発送の通知の2つの処理が、真ん中の total を共有しています。
+            経理の CSV の金額の列と、メールのお支払い金額は、どちらも <code>total</code> を呼んでいます。今は「商品の合計 + 送料 − ポイント」という同じ金額を表示すればよいので、同じ計算を2回書かずに1つのメソッドにまとめた形です。図 61-1 はこのコードの構成です。経理の CSV と発送の通知の2つの処理が、真ん中の total を共有しています。
           </p>
-          <Figure n="44-1" title="場面の構成" caption="模式図。Order の枠の中の箱はクラスの中の処理のまとまり、枠の外の箱は DB と外部のもの。強調した total に、2つの処理からの矢印が集まっている。">
+          <Figure n="61-1" title="場面の構成" caption="模式図。Order の枠の中の箱はクラスの中の処理のまとまり、枠の外の箱は DB と外部のもの。強調した total に、2つの処理からの矢印が集まっている。">
             <SceneFigure />
           </Figure>
           <p>開発用の DB に注文を1件作り、経理の CSV と発送のメールの本文を表示しました。</p>
@@ -606,9 +607,9 @@ A-1001,2026-11-02,山田花子,3800,500,発送待ち
             <li>Order を読む人は注文の保存の規則を確かめたいだけでも、CSV の列やメールの文面のコードを読み飛ばす必要があります。</li>
           </ul>
           <p>
-            図 44-2 は Order のどこに、誰から、どんな理由で変更が届くかを並べたものです。経理部・CS・開発チームの3つの担当から変更が届き、total には経理部と CS の両方から届いています。これらの問題は、変更を求める人が違うコードを1つのクラスに書き、さらに1つのメソッドを共有したことから起きています。
+            図 61-2 は Order のどこに、誰から、どんな理由で変更が届くかを並べたものです。経理部・CS・開発チームの3つの担当から変更が届き、total には経理部と CS の両方から届いています。これらの問題は、変更を求める人が違うコードを1つのクラスに書き、さらに1つのメソッドを共有したことから起きています。
           </p>
-          <Figure n="44-2" title="変更を求める人と変更の理由" caption="変更の理由は例。強調した total には、2つの担当からの変更が届く。">
+          <Figure n="61-2" title="変更を求める人と変更の理由" caption="変更の理由は例。強調した total には、2つの担当からの変更が届く。">
             <ActorsFigure />
           </Figure>
         </>
@@ -679,7 +680,7 @@ A-1001,2026-11-02,山田花子,3800,500,発送待ち
           </p>
           <h3>背景にある考え方</h3>
           <p>
-            Martin は2014年の記事で、SRP のもとになった考え方として次の3つを挙げています<Ref n={1} />。図 44-3 はそれらと SRP の資料を年の順に並べたものです。
+            Martin は2014年の記事で、SRP のもとになった考え方として次の3つを挙げています<Ref n={1} />。図 61-3 はそれらと SRP の資料を年の順に並べたものです。
           </p>
           <ul>
             <li>
@@ -690,7 +691,7 @@ A-1001,2026-11-02,山田花子,3800,500,発送待ち
             </li>
             <li>Larry Constantine らの結合と凝集：モジュールの中のまとまりの強さと、モジュールどうしのつながりの強さで設計を評価する考え方です。<ChapterLink n={69} />（High Cohesion）と<ChapterLink n={70} />（Low Coupling）で扱います。</li>
           </ul>
-          <Figure n="44-3" title="SRP の背景にある考え方の流れ" caption="Martin の2014年のブログ記事が挙げる考え方と、SRP を示した Martin の資料。強調した箱が SRP の名前で示された最初の書籍。">
+          <Figure n="61-3" title="SRP の背景にある考え方の流れ" caption="Martin の2014年のブログ記事が挙げる考え方と、SRP を示した Martin の資料。強調した箱が SRP の名前で示された最初の書籍。">
             <HistoryFigure />
           </Figure>
           <h3>「1つのことだけをする」との違い</h3>
@@ -1020,9 +1021,9 @@ Finished in 0.11623 seconds (files took 1.04 seconds to load)
 `}
           />
           <p>
-            CSV の文字列も、メールのお支払い金額も、直す前と同じ値で成功しました。図 44-4 は分ける前と分けた後のクラスの比較です。分けた後は、クラスにもテストのファイルにも、変更を求める担当が1つずつ対応しています。AccountingCsv とメールのテンプレートは Order の値を読みますが、Order は AccountingCsv を知りません。
+            CSV の文字列も、メールのお支払い金額も、直す前と同じ値で成功しました。図 61-4 は分ける前と分けた後のクラスの比較です。分けた後は、クラスにもテストのファイルにも、変更を求める担当が1つずつ対応しています。AccountingCsv とメールのテンプレートは Order の値を読みますが、Order は AccountingCsv を知りません。
           </p>
-          <Figure n="44-4" title="分ける前と分けた後のクラス" caption="括弧の中は変更を求める担当。破線の矢印は値を読むこと、実線の矢印は呼び出しを表す。">
+          <Figure n="61-4" title="分ける前と分けた後のクラス" caption="括弧の中は変更を求める担当。破線の矢印は値を読むこと、実線の矢印は呼び出しを表す。">
             <BeforeAfterFigure />
           </Figure>
           <h3>経理部の依頼をもう一度当てはめる</h3>
@@ -1081,9 +1082,9 @@ A-1003,2026-11-09,鈴木一郎,2100,1000,発送待ち
 `}
           />
           <p>
-            変えたのは AccountingCsv とそのテストの2つのファイルだけで、5件のテストがすべて成功しました。メーラーのテストは今回も 3,300円で成功しているので、お客様へのメールは変わっていません。図 44-5 は、同じ依頼が直す前と直した後でどこまで及んだかを比べたものです。
+            変えたのは AccountingCsv とそのテストの2つのファイルだけで、5件のテストがすべて成功しました。メーラーのテストは今回も 3,300円で成功しているので、お客様へのメールは変わっていません。図 61-5 は、同じ依頼が直す前と直した後でどこまで及んだかを比べたものです。
           </p>
-          <Figure n="44-5" title="経理部の依頼が及ぶ範囲" caption="破線の箱は依頼の影響を受けなかった機能。">
+          <Figure n="61-5" title="経理部の依頼が及ぶ範囲" caption="破線の箱は依頼の影響を受けなかった機能。">
             <ImpactFigure />
           </Figure>
           <p>
@@ -1196,13 +1197,13 @@ $ git diff --no-index --stat overuse overuse_change
           </p>
           <h3>もう1つの当てはめすぎ：保存と業務の規則を別のクラスにする</h3>
           <p>
-            Martin の Employee の例では、保存の save も1つの担当（CTO）の責任として、給与の計算と分けています。これをそのまま Rails に当てはめると、Order を「データを持つだけのクラス」と「保存を受け持つクラス（リポジトリ）」に分けたくなります。しかし Active Record は、DB とのやり取りと業務の規則を1つのクラスにまとめる設計で、バリデーション・関連・スコープ・コールバックはその前提で動きます。分けるとこれらを使えなくなるか、同じ規則を2か所に書くことになります。Rails の設計思想がこの組み合わせをどう扱っているかは、次の節で原文を引いて説明します。リポジトリを使う場面は<ChapterLink n={44} section="repository" />で、Active Record がまとめて保存する仕組みは<ChapterLink n={48} section="active-record" />で扱いました。
+            Martin の Employee の例では、保存の save も1つの担当（CTO）の責任として、給与の計算と分けています。これをそのまま Rails に当てはめると、Order を「データを持つだけのクラス」と「保存を受け持つクラス（リポジトリ）」に分けたくなります。しかし Active Record は、DB とのやり取りと業務の規則を1つのクラスにまとめる設計で、バリデーション・関連・スコープ・コールバックはその前提で動きます。分けるとこれらを使えなくなるか、同じ規則を2か所に書くことになります。Rails の設計思想がこの組み合わせをどう扱っているかは、次の節で原文を引いて説明します。リポジトリを使う場面は<ChapterLink n={44} section="repository" />で、Active Record がまとめて保存する仕組みは<ChapterLink n={48} section="active-record" />で扱います。
           </p>
           <h3>分けるかどうかの目安</h3>
           <p>
-            図 44-6 は、分けるかどうかを2つの軸で判断する目安です。横軸は変更を求める人が同じか違うか、縦軸はそれらが一緒に変わるか別々に変わるかです。
+            図 61-6 は、分けるかどうかを2つの軸で判断する目安です。横軸は変更を求める人が同じか違うか、縦軸はそれらが一緒に変わるか別々に変わるかです。
           </p>
-          <Figure n="44-6" title="分けるかどうかの判断" caption="模式図。強調した箱は、この章のコードが当てはまる位置。">
+          <Figure n="61-6" title="分けるかどうかの判断" caption="模式図。強調した箱は、この章のコードが当てはまる位置。">
             <JudgeFigure />
           </Figure>
           <ul>
@@ -1253,9 +1254,9 @@ $ git diff --no-index --stat overuse overuse_change
         <>
           <h3>Rails の置き場所と変わるきっかけ</h3>
           <p>
-            Rails の新しいアプリには、app/controllers・app/models・app/views・app/mailers・app/jobs のようにディレクトリが最初から用意されています。図 44-7 は、それぞれの置き場所に何を書き、どんなきっかけで変わるかを並べたものです。置き場所ごとに、変更を求める人もおおむね分かれています。この章で文面をメーラーのテンプレートに移したのは、Rails がすでに用意している「メールの文面の置き場所」を使ったということです。
+            Rails の新しいアプリには、app/controllers・app/models・app/views・app/mailers・app/jobs のようにディレクトリが最初から用意されています。図 61-7 は、それぞれの置き場所に何を書き、どんなきっかけで変わるかを並べたものです。置き場所ごとに、変更を求める人もおおむね分かれています。この章で文面をメーラーのテンプレートに移したのは、Rails がすでに用意している「メールの文面の置き場所」を使ったということです。
           </p>
-          <Figure n="44-7" title="Rails の置き場所と変わるきっかけ" caption="変更を求める人は例。組織によって担当の分け方は違う。">
+          <Figure n="61-7" title="Rails の置き場所と変わるきっかけ" caption="変更を求める人は例。組織によって担当の分け方は違う。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1347,6 +1348,29 @@ $ git diff --no-index --stat overuse overuse_change
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          クラスを分ける単位は処理の種類ではなく、変更を求める人（担当）です。この章では、経理部が決める CSV と、CS が説明に使う発送の通知を Order から分けました。同じ経理部の依頼でしか変わらない CSV の見出し・行・金額は、1つのクラスにまとめておきます。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、経理部の依頼で total を変えると、山田さんへのメールの金額が実際の支払額 3,300円ではなく 3,800円になった。分けた後に同じ依頼を当てはめると、変えたのは AccountingCsv とそのテストの2つのファイルだけで、メールは 3,300円のままだった。</>,
+        basis: <><ChapterLink n={63} section="scene" />、<ChapterLink n={63} section="apply" /></>,
+      },
+      cost: {
+        text: <>変えたファイルの数は直す前も後も2つで、変更の手間そのものは減らない。分けたクラスごとにテストのファイルと、注文を作る共通のメソッド（spec/support）が要る。</>,
+        basis: <ChapterLink n={63} section="apply" />,
+      },
+      alternative: {
+        text: <>同じ担当の中で別々の依頼で変わる部分（CSV の日付の形式と売上額の計算）は、クラスを分けずに private メソッドに名前を付けて分ける。「1つのことだけをする」6つのクラスに分けた例では、同じ依頼で7つのファイルを変えることになった。</>,
+        basis: <ChapterLink n={63} section="overuse" />,
+      },
+      criterion: {
+        text: <>このコードを変えるように依頼するのは誰か。ある担当の依頼で、ほかの担当の機能のテストが落ちたことがあるか。1つの依頼でいくつのファイルを直すか。担当が1つのうちは、将来の担当を想像して先に分けない。</>,
+        basis: <ChapterLink n={63} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

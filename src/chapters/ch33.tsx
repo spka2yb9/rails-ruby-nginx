@@ -1,14 +1,17 @@
+import { useState } from 'react'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { Stepper } from '../sims/Stepper'
+import { FigureChoices } from '../visuals/study-figure'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 34-1 注文の確定と一覧の検索で呼ばれるクラス ---------- */
+/* ---------- 図 48-1 注文の確定と一覧の検索で呼ばれるクラス ---------- */
 function ClassMapFigure() {
   return (
     <Svg
-      id="34-1"
+      id="48-1"
       w={780}
       h={330}
       label="注文の確定では、OrdersController が CheckoutForm（Form Object）で入力を検証し、Orders::Place（Service Object）を呼ぶ。Orders::Place は Order・Product・Coupon のモデル、割引を計算する DiscountCalculator（Domain Service）、決済の Payments::Gateway（Adapter）を呼ぶ。モデルは MySQL に保存し、Adapter は外部の決済サービスを呼ぶ。金額はモデルと DiscountCalculator の両方が Money（Value Object）で表す。一覧の検索では、コントローラーが RepeatCustomersQuery（Query Object）を使って MySQL を検索する"
@@ -47,7 +50,7 @@ function ClassMapFigure() {
   )
 }
 
-/* ---------- 図 34-2 トランザクションの中で return した場合と、例外を外で変換した場合 ---------- */
+/* ---------- 図 48-2 トランザクションの中で return した場合と、例外を外で変換した場合 ---------- */
 function TxResultFigure() {
   type Step = { t: string; fill: 'box' | 'box5' | 'bg'; dashed?: boolean }
   const col = (x: number, title: string, steps: Step[], result: string[], tone: 'danger' | 'acc') => (
@@ -66,7 +69,7 @@ function TxResultFigure() {
   )
   return (
     <Svg
-      id="34-2"
+      id="48-2"
       w={760}
       h={384}
       label="左：トランザクションの中で在庫不足を見つけて return すると、BEGIN、注文の UPDATE、商品 A の在庫の UPDATE の後に COMMIT され、注文は placed、A の在庫は 3 で確定した。戻り値は失敗の結果だった。右：在庫不足で例外 OutOfStock を投げると ROLLBACK され、トランザクションの外の rescue で失敗の結果に変えた。注文は draft、A の在庫は 5 のままだった"
@@ -103,12 +106,92 @@ function TxResultFigure() {
   )
 }
 
-/* ---------- 図 34-3 フォームの入力の単位と保存の単位 ---------- */
+/* ---------- 図 48-3 return と例外で、確定する値を段階ごとに比べる（操作できる図） ---------- */
+type TxCell = { c: string; p?: string }
+type TxSnap = { label: string; order: TxCell; a: TxCell; b: TxCell; kind: 'SQL' | 'Ruby' | '戻り値'; code: string; warn?: boolean; text: string }
+
+const TX_EXITS = ['return で失敗の結果を返す（PlaceReturningInside）', '例外を発生させる（Place）'] as const
+const TX_STOCKS = ['0 個（足りない）', '1 個（足りる）'] as const
+
+function txSteps(raise: boolean, short: boolean): TxSnap[] {
+  const b0 = short ? '0' : '1'
+  const draft = { c: 'draft' }
+  const placed = { c: 'draft', p: 'placed' }
+  const a3 = { c: '5', p: '3' }
+  const steps: TxSnap[] = [
+    { label: 'BEGIN', order: draft, a: { c: '5' }, b: { c: b0 }, kind: 'SQL', code: 'BEGIN', text: 'ApplicationRecord.transaction がトランザクションを始めます。' },
+    { label: '注文を placed にする', order: placed, a: { c: '5' }, b: { c: b0 }, kind: 'SQL', code: "UPDATE orders SET status = 'placed'", text: 'order.update! が注文の行を更新します。コミットするまで、ほかの接続からは draft のままに見えます。' },
+    { label: 'A の在庫を減らす', order: placed, a: a3, b: { c: b0 }, kind: 'SQL', code: 'UPDATE products SET stock = 3', text: '商品 A は在庫 5 に対して2個なので足ります。在庫を 3 にします。' },
+  ]
+  if (!short) {
+    steps.push(
+      { label: 'B の在庫を減らす', order: placed, a: a3, b: { c: '1', p: '0' }, kind: 'SQL', code: 'UPDATE products SET stock = 0', text: '商品 B は在庫 1 に対して1個なので足ります。在庫を 0 にします。' },
+      { label: 'COMMIT', order: { c: 'placed' }, a: { c: '3' }, b: { c: '0' }, kind: 'SQL', code: 'COMMIT', text: 'ブロックの最後まで進んだので COMMIT を送り、3つの変更が確定します。' },
+      { label: '呼び出し元に返る', order: { c: 'placed' }, a: { c: '3' }, b: { c: '0' }, kind: '戻り値', code: 'OrderResult（success? = true、code = :ok）', text: raise ? 'transaction の後の OrderResult.ok(order) を返します。在庫が足りる場合は、2つの書き方の結果は同じです。' : 'ブロックの最後の OrderResult.ok(order) が transaction の戻り値になり、そのまま call の戻り値になります。在庫が足りる場合は、2つの書き方の結果は同じです。' },
+    )
+    return steps
+  }
+  steps.push(
+    raise
+      ? { label: 'B の在庫不足を見つける', order: placed, a: a3, b: { c: '0' }, kind: 'Ruby', code: 'raise OutOfStock', text: '商品 B は在庫 0 に対して1個なので足りません。例外 OutOfStock を発生させます。' }
+      : { label: 'B の在庫不足を見つける', order: placed, a: a3, b: { c: '0' }, kind: 'Ruby', code: 'return OrderResult.failure(order, :out_of_stock, …)', text: '商品 B は在庫 0 に対して1個なので足りません。ブロックの中から return で失敗の結果を返します。' },
+    raise
+      ? { label: 'ROLLBACK', order: draft, a: { c: '5' }, b: { c: '0' }, kind: 'SQL', code: 'ROLLBACK', text: '例外がブロックから出たので、Rails は ROLLBACK を送ります。注文と A の在庫の変更は取り消されます。' }
+      : { label: 'COMMIT', order: { c: 'placed' }, a: { c: '3' }, b: { c: '0' }, kind: 'SQL', code: 'COMMIT', text: 'Rails 8.1.4.1 のトランザクションは、例外以外の抜け方ではコミットします。return で抜けたので COMMIT を送り、注文の placed と A の在庫 3 が確定します。' },
+    raise
+      ? { label: '呼び出し元に返る', order: draft, a: { c: '5' }, b: { c: '0' }, kind: '戻り値', code: 'OrderResult（success? = false、code = :out_of_stock）', text: 'トランザクションの外の rescue OutOfStock が order.reload で注文を読み直し、失敗の結果を作ります。DB の値は実行前と同じです。' }
+      : { label: '呼び出し元に返る', order: { c: 'placed' }, a: { c: '3' }, b: { c: '0' }, kind: '戻り値', code: 'OrderResult（success? = false、code = :out_of_stock）', warn: true, text: '戻り値は失敗の結果ですが、DB には注文の placed と A の在庫 3 が残りました。戻り値だけを見るテストではこの食い違いに気付けません。' },
+  )
+  return steps
+}
+
+function TxSnapshot({ i, snap }: { i: number; snap: TxSnap }) {
+  const cell = (x: number, title: string, v: TxCell) => (
+    <Box x={x} y={10} w={230} h={64} lines={[title, `確定した値 ${v.c}`, v.p ? `未確定の変更 ${v.p}` : '未確定の変更なし']} fs={12} bold fill={v.p ? 'box5' : 'box4'} subTone="muted" />
+  )
+  return (
+    <Svg id={`48-3-${i}`} w={760} h={112} label={`注文の status は確定 ${snap.order.c}${snap.order.p ? `（未確定 ${snap.order.p}）` : ''}、商品 A の在庫は確定 ${snap.a.c}${snap.a.p ? `（未確定 ${snap.a.p}）` : ''}、商品 B の在庫は確定 ${snap.b.c}${snap.b.p ? `（未確定 ${snap.b.p}）` : ''}。${snap.kind}：${snap.code}`}>
+      {cell(10, '注文の status', snap.order)}
+      {cell(265, '商品 A の在庫', snap.a)}
+      {cell(520, '商品 B の在庫', snap.b)}
+      <T x={10} y={96} fs={12} tone="muted">{snap.kind}</T>
+      <T x={70} y={96} fs={12} mono>{snap.code}</T>
+      {snap.warn && <T x={750} y={96} fs={12} tone="danger" anchor="end">DB の値と食い違う</T>}
+    </Svg>
+  )
+}
+
+function TxExitFigure() {
+  const [exit, setExit] = useState(0)
+  const [stock, setStock] = useState(0)
+  const steps = txSteps(exit === 1, stock === 0).map((snap, i) => ({
+    label: snap.label,
+    detail: (
+      <>
+        <TxSnapshot i={i + 1} snap={snap} />
+        <p>{snap.text}</p>
+      </>
+    ),
+  }))
+  return (
+    <Figure
+      n="48-3"
+      title="ブロックの抜け方と在庫を選び、確定する値を段階ごとに比べる"
+      caption="上の2つの Service を、商品 B の在庫を 0 と 1 にして Rails 8.1.4.1・MySQL 8.4.13 で実行したときの SQL の順と、DB に残った値をもとにした概念モデルです。在庫を確かめる SELECT は省いています。未確定の変更はトランザクションの中でだけ見える値を表しています。"
+    >
+      <FigureChoices label="ブロックの抜け方" options={TX_EXITS} selected={exit} onSelect={setExit} />
+      <FigureChoices label="商品 B の在庫（注文は1個）" options={TX_STOCKS} selected={stock} onSelect={setStock} />
+      <Stepper key={`${exit}-${stock}`} steps={steps} />
+    </Figure>
+  )
+}
+
+/* ---------- 図 48-4 フォームの入力の単位と保存の単位 ---------- */
 function FormMapFigure() {
   const fields = ['company_name', 'email', 'display_name', 'terms_accepted']
   return (
     <Svg
-      id="34-3"
+      id="48-4"
       w={760}
       h={300}
       label="RegistrationForm は company_name、email、display_name、terms_accepted の4つの入力を持つ。company_name は companies テーブルの name に、email は users テーブルの email に、display_name は profiles テーブルの display_name に保存する。terms_accepted は検証だけに使い、保存しない。3つのテーブルへの保存は1つのトランザクションで行い、保存の失敗はフォームの入力欄のエラーに戻す"
@@ -140,11 +223,11 @@ function FormMapFigure() {
   )
 }
 
-/* ---------- 図 34-4 Relation を返す場合と配列を返す場合 ---------- */
+/* ---------- 図 48-5 Relation を返す場合と配列を返す場合 ---------- */
 function RelationArrayFigure() {
   return (
     <Svg
-      id="34-4"
+      id="48-5"
       w={760}
       h={250}
       label="上：Query Object が Relation を返すと、呼び出し元が order と limit を足してから、ORDER BY と LIMIT を含む SQL が1回実行される。下：Query Object の中で to_a を呼ぶと、その時点で SQL が実行され、配列が返る。呼び出し元の並び替えや先頭の取り出しは Ruby のメモリー上で行われ、配列に order を呼ぶと NoMethodError になる"
@@ -175,7 +258,7 @@ function RelationArrayFigure() {
   )
 }
 
-/* ---------- 図 34-5 Adapter の先を本番とテストで替える ---------- */
+/* ---------- 図 48-6 Adapter の先を本番とテストで替える ---------- */
 function AdapterFigure() {
   const row = (y: number, label: string, provider: string[], dashed: boolean, ext: string[], extFill: 'box4' | 'bg') => (
     <g>
@@ -196,7 +279,7 @@ function AdapterFigure() {
   )
   return (
     <Svg
-      id="34-5"
+      id="48-6"
       w={780}
       h={260}
       label="本番では、Checkout が Payments::Gateway を呼び、Gateway は ProviderClient を通して外部の決済サービスに依頼する。テストでは、同じ Checkout と Payments::Gateway に、決まった応答（succeeded、declined、requires_action、タイムアウト）を返す FakeProvider を渡す。どちらの場合も Gateway は ChargeResult か Unavailable を返す"
@@ -327,11 +410,11 @@ end
           <p>
             どれも Rails の機能の名前ではなく、<code>ActiveRecord::Base</code> を継承しない普通の Ruby のクラス（PORO）として書きます。置き場所の候補ごとに任せるものと、<code>app/services</code> などのディレクトリがオートロードされる仕組みは、<ChapterLink n={30} section="architecture-boundaries">処理を置く場所の候補と選び方</ChapterLink>で扱いました。オートロードの対象になるのは起動時に存在するディレクトリなので、起動中に新しく作った <code>app/services</code> は、サーバーを再起動するまで読み込まれません。<Ref n={2} />
           </p>
-          <Figure n="34-1" title="注文の確定と一覧の検索で呼ばれるクラス" caption="この章の例をつないだ模式図。実線の矢印は呼び出しの向き、破線は値として使うことを表す。">
+          <Figure n="48-1" title="注文の確定と一覧の検索で呼ばれるクラス" caption="この章の例をつないだ模式図。実線の矢印は呼び出しの向き、破線は値として使うことを表す。">
             <ClassMapFigure />
           </Figure>
           <p>
-            図 34-1 は、この章で扱うクラスが注文の確定と一覧の検索でどう呼ばれるかを一枚にしたものです。上の段を左から読むと、コントローラーがフォームで入力を検証し、Service Object が手順を進めます。Service Object はモデルに状態の変更を依頼し、割引の計算は Domain Service に、外部の決済は Adapter に任せます。左の Query Object は、一覧画面でコントローラーが直接使います。どのクラスも下の段だけを呼び、下の段のクラスはコントローラーやフォームを知りません。
+            図 48-1 は、この章で扱うクラスが注文の確定と一覧の検索でどう呼ばれるかを一枚にしたものです。上の段を左から読むと、コントローラーがフォームで入力を検証し、Service Object が手順を進めます。Service Object はモデルに状態の変更を依頼し、割引の計算は Domain Service に、外部の決済は Adapter に任せます。左の Query Object は、一覧画面でコントローラーが直接使います。どのクラスも下の段だけを呼び、下の段のクラスはコントローラーやフォームを知りません。
           </p>
           <p>
             なお、37signals は Service という層を設けず、モデルが業務の操作をメソッドとして公開し、コントローラーがそれを呼ぶ書き方を基本にしています。複雑な処理は <code>app/models</code> の中の PORO に分けています。<Ref n={1} /> ディレクトリを分けるかはチームの方針ですが、どちらでも、クラスを作る理由と呼び出し元との約束を決める点は同じです。DHH の考え方は <ChapterLink n={31} section="doctrine" /> で扱います。
@@ -531,12 +614,16 @@ Place:                success?=false code=out_of_stock  注文の status(DB)=dra
             どちらも同じ失敗の結果を返しましたが、前者では注文が <code>placed</code> になり、商品 A の在庫も3に減ったまま確定しました。Rails 8.1.4.1 のトランザクションは、ブロックから例外が出たときだけロールバックし、それ以外の抜け方ではコミットします。<code>return</code>・<code>break</code>・<code>throw</code> で抜けたときにロールバックしていた古い動作は、Rails 7.2 で削除されました。<Ref n={5} />
             <Ref n={6} /> 途中まで保存した後の業務の失敗は、専用の例外でロールバックさせ、外側で Result に変えます。
           </p>
-          <Figure n="34-2" title="トランザクションの中で return した場合と、例外を外で結果に変えた場合" caption="上の実行で DB に送られた操作の順を並べた模式図。">
+          <Figure n="48-2" title="トランザクションの中で return した場合と、例外を外で結果に変えた場合" caption="上の実行で DB に送られた操作の順を並べた模式図。">
             <TxResultFigure />
           </Figure>
           <p>
-            図 34-2 は2つの実行で DB に送られた操作を順に並べたものです。左は失敗を見つけた後にブロックを抜けたためコミットされ、右は例外でロールバックしてから結果を作っています。戻り値は同じなので、テストでは戻り値だけでなく DB に残った行も確かめます。
+            図 48-2 は2つの実行で DB に送られた操作を順に並べたものです。左は失敗を見つけた後にブロックを抜けたためコミットされ、右は例外でロールバックしてから結果を作っています。戻り値は同じなので、テストでは戻り値だけでなく DB に残った行も確かめます。
           </p>
+          <p>
+            図 48-3 ではブロックの抜け方と商品 B の在庫を選び、SQL を1つ送るごとに確定した値と未確定の変更がどう変わるかを確かめられます。在庫が足りる場合はどちらの書き方も同じ順で COMMIT し、違いが出るのは途中で失敗を見つけたときだけです。
+          </p>
+          <TxExitFigure />
           <p>
             反対に、<code>rescue StandardError</code> ですべてを失敗の結果に変えると、DB の接続障害やプログラムの誤りまで「入力の誤り」として画面に返します。捕まえるのは、Service が意味を知っている例外（ここでは <code>OutOfStock</code>）だけにします。
           </p>
@@ -548,7 +635,7 @@ Place:                success?=false code=out_of_stock  注文の status(DB)=dra
             Service から別の Service を呼ぶのも禁止ではなく、決済のように複数の操作で使う下位の処理なら有効です。ただし <code>Orders::Create</code> → <code>Users::Update</code> → <code>Orders::Recalculate</code> → <code>Orders::Create</code> のような循環や、深い呼び出しの連なりは避けます。下位のクラスがいつコミットし、いつジョブを投入するかも契約に含めます（<ChapterLink n={15} section="nested" />、<ChapterLink n={18} section="transaction" />）。別の Service を丸ごと再利用するより、両方が使うモデルの小さな操作を共有したほうがよい場合もあります。
           </p>
           <p>
-            業務の操作の手順を1つのクラスにまとめる方法（Use Case / Application Service）は、イベントの参加申し込みを題材にして <ChapterLink n={44} /> で詳しく扱います。
+            業務の操作を呼び出し元から独立させる MSDP の Use Case は、Rails では Service Object を使って実装できます。例えば、<code>Orders::Place</code> が注文を確定する1つの Use Case を表します。計算だけを担当する <code>DiscountCalculator</code> も独立したクラスですが、取引全体を進める責務はありません。操作の順序や入出力をどう決めるかは、参加申し込みを題材にした <ChapterLink n={44} /> で扱います。
           </p>
         </>
       ),
@@ -653,11 +740,11 @@ Duplicate entry 'a@example.com' for key 'users.index_users_on_email'
               表示名が長すぎる場合は、会社と利用者を INSERT した後にプロフィールで失敗し、3件ともロールバックされました。Rails は保存したレコードの状態も戻すので、<code>user.persisted?</code> は <code>false</code>、<code>user.id</code> は <code>nil</code> です。ただし <code>@user</code> のオブジェクトは残るので、成功かどうかは <code>save</code> の戻り値で判断します。
             </li>
           </ul>
-          <Figure n="34-3" title="フォームの入力の単位と保存の単位" caption="RegistrationForm の各入力をどのテーブルに保存するかを示した模式図。">
+          <Figure n="48-4" title="フォームの入力の単位と保存の単位" caption="RegistrationForm の各入力をどのテーブルに保存するかを示した模式図。">
             <FormMapFigure />
           </Figure>
           <p>
-            図 34-3 は4つの入力がどのテーブルの列に保存されるかを示したものです。左の入力の単位は画面で、右の保存の単位はテーブルの設計で決まります。規約への同意のように、検証にだけ使う入力もあります。下の破線は保存の失敗を入力欄のエラーに戻す流れで、<code>FIELDS</code> の対応表がこれを受け持ちます。
+            図 48-4 は4つの入力がどのテーブルの列に保存されるかを示したものです。左の入力の単位は画面で、右の保存の単位はテーブルの設計で決まります。規約への同意のように、検証にだけ使う入力もあります。下の破線は保存の失敗を入力欄のエラーに戻す流れで、<code>FIELDS</code> の対応表がこれを受け持ちます。
           </p>
           <h3>フォームの表示と送信先</h3>
           <p>
@@ -882,11 +969,11 @@ rel.to_a.order(:id)                  # => NoMethodError（Array に order は無
               </tbody>
             </table>
           </div>
-          <Figure n="34-4" title="Relation を返す場合と配列を返す場合" caption="上の実行結果をもとにした模式図。">
+          <Figure n="48-5" title="Relation を返す場合と配列を返す場合" caption="上の実行結果をもとにした模式図。">
             <RelationArrayFigure />
           </Figure>
           <p>
-            図 34-4 は Relation を返す場合と、中で <code>to_a</code> を呼んで配列を返す場合を、SQL が実行される時点で比べたものです。上の段では、呼び出し元が足した並び順と件数の制限まで含めて SQL が1回実行されます。下の段では Query Object の中で条件に合う行がすべて読み込まれ、その後の並び替えは Ruby で行われるので索引を使えません。呼び出し元がページングするなら、最後まで Relation を返します。集計表を返す場合は、0件の期間を含めるか、集計の単位と並び順を結果の仕様として決めます。
+            図 48-5 は Relation を返す場合と、中で <code>to_a</code> を呼んで配列を返す場合を、SQL が実行される時点で比べたものです。上の段では、呼び出し元が足した並び順と件数の制限まで含めて SQL が1回実行されます。下の段では Query Object の中で条件に合う行がすべて読み込まれ、その後の並び替えは Ruby で行われるので索引を使えません。呼び出し元がページングするなら、最後まで Relation を返します。集計表を返す場合は、0件の期間を含めるか、集計の単位と並び順を結果の仕様として決めます。
           </p>
           <p>
             Query Object に分けても、N+1 問題や遅い SQL は自動では直りません。SQL とその回数、実行計画、索引を確かめます（<ChapterLink n={13} section="n-plus-one" />、<ChapterLink n={12} section="explain" />）。また、中で <code>User.unscoped</code> から始め直すと、呼び出し元が付けた組織の条件は失われます。
@@ -1364,9 +1451,22 @@ CancelOrder.new(order_id: order.id, actor_id: u.id).call      # => Order::Invali
           <p>
             <code>CancelOrder</code> は <Term>Command</Term> の例で、ID だけを持ち、<code>call</code> のときに実行者の注文の範囲から注文を取り直します。別の利用者の ID では <code>RecordNotFound</code>、2回目の取り消しは <code>Order::InvalidTransition</code> になりました。Command にしただけでは冪等性も取り消しの機能も付きません。ジョブで後から実行するなら、その間に実行者が権限を失う、注文の状態が変わる、再試行で2回実行される、といった場合を考えます（<ChapterLink n={18} section="idempotency" />）。返金は課金の逆の計算ではなく、記録を残す別の業務の操作です。
           </p>
-          <h3>Event：計測のための通知と、業務のための配信を分ける</h3>
           <p>
-            処理時間の計測やログのための通知と、外部への連携のように必ず届ける業務の配信とでは、使う仕組みが違います。DDD Reference も、業務の専門家が関心を持つドメインイベントを、ソフトウェアの中の動きを表すシステムのイベントと区別しています。<Ref n={12} />
+            Observer・Event に当たる Rails の通知の仕組み（<code>ActiveSupport::Notifications</code> と <code>Rails.event</code>）は、次の「イベントの通知：計測と業務の配信を分ける」の節で扱います。
+          </p>
+          <p>
+            この節の Strategy・Adapter・Domain Events などは、第9部で1つのパターンを1つの章で扱います。パターンの一覧と、コードの症状から章を引く表は <ChapterLink n={39} section="symptoms" /> にあります。
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'event-notifications',
+      title: 'イベントの通知：計測と業務の配信を分ける',
+      body: (
+        <>
+          <p>
+            「Rails で使う設計パターン」の節の表の Observer・Event（起きた事実を購読する処理を分ける）に当たる Rails の仕組みが、<code>ActiveSupport::Notifications</code> と、Rails 8.1 で加わった <code>Rails.event</code> です。処理時間の計測やログのための通知と、外部への連携のように必ず届ける業務の配信とでは、使う仕組みが違います。DDD Reference も、業務の専門家が関心を持つドメインイベントを、ソフトウェアの中の動きを表すシステムのイベントと区別しています。<Ref n={12} />
           </p>
           <Code
             lang="ruby"
@@ -1394,9 +1494,6 @@ placed # => [1]（ブロックは実行済み）
           </Callout>
           <p>
             障害の後にも必ず実行したい連携は、イベントの行を DB に保存し、配信の状態と再試行を記録します。注文と同じトランザクションで送る予定を保存し、ジョブが送る方法は <ChapterLink n={34} section="external-boundaries" /> で扱います。購読者が増えて、どの処理がどの順で動くかが読めなくなるなら、Service から明示的に呼ぶほうが読みやすくなります。
-          </p>
-          <p>
-            この節の Strategy・Adapter・Domain Events などは、第9部で1つのパターンを1つの章で扱います。パターンの一覧と、コードの症状から章を引く表は <ChapterLink n={39} section="symptoms" /> にあります。
           </p>
         </>
       ),
@@ -1524,6 +1621,7 @@ end
           <p>
             外部の決済サービスの SDK（たとえば Stripe の <code>Stripe::PaymentIntent.create</code>）をコントローラー・モデル・ジョブから直接呼ぶと、金額の単位、SDK の例外、外部の状態の文字列、冪等性キーの作り方が呼び出す箇所ごとに書かれ、API が変わるとすべてを直すことになります。<Term>Adapter</Term> は、外部サービスの呼び出し方と結果を、アプリが決めた少数のメソッドと結果の形に変換するクラスです。
           </p>
+          <p><code>Gateway</code> は決済に関するクラスが集まる <code>app/services/payments</code> に置きます。複数の外部 API を使うアプリでは、<code>app/clients</code> に通信の実装を、<code>app/adapters</code> に結果をアプリの型へ変換する処理をまとめる構成もあります。どちらの構成でも、業務の処理からはアプリが定めた型を使います（<ChapterLink n={101} />）。</p>
           <Code
             lang="ruby"
             title="app/services/payments/gateway.rb"
@@ -1577,11 +1675,11 @@ Payments::Gateway::Unavailable: boom
           <p>
             実際に接続するときは、決済の手段、追加の認証、与信と売上の確定の違い、タイムアウトの設定、署名付きの Webhook の検証を、ProviderClient の側で扱います。カードの情報はこのクラスで保存せず、決済サービスの方式に従ってトークンなどを使います。
           </p>
-          <Figure n="34-5" title="Adapter の先を本番とテストで替える" caption="前の節の Checkout と、この節の Payments::Gateway をつないだ模式図。破線はテストで差し替える部分。">
+          <Figure n="48-6" title="Adapter の先を本番とテストで替える" caption="前の節の Checkout と、この節の Payments::Gateway をつないだ模式図。破線はテストで差し替える部分。">
             <AdapterFigure />
           </Figure>
           <p>
-            図 34-5 は前の節の <code>Checkout</code> とこの節の Gateway を、本番とテストで並べたものです。2つのクラスのコードは同じで、Gateway に渡す provider だけが替わります。Gateway が返すのはどちらも <code>ChargeResult</code> か <code>Unavailable</code> なので、外部サービスにつながずに、成功・拒否・保留・結果不明での動きを試せます。
+            図 48-6 は前の節の <code>Checkout</code> とこの節の Gateway を、本番とテストで並べたものです。2つのクラスのコードは同じで、Gateway に渡す provider だけが替わります。Gateway が返すのはどちらも <code>ChargeResult</code> か <code>Unavailable</code> なので、外部サービスにつながずに、成功・拒否・保留・結果不明での動きを試せます。
           </p>
           <h3>Adapter が決めないこと</h3>
           <p>
@@ -1597,6 +1695,23 @@ Payments::Gateway::Unavailable: boom
           <p>
             2社の決済サービスの違いを Adapter で吸収し、2つの Adapter に同じテストを当てる例は <ChapterLink n={42} /> で詳しく扱います。
           </p>
+        </>
+      ),
+    },
+    {
+      id: 'msdp-connections',
+      title: 'Rails のクラスと MSDP の対応',
+      body: (
+        <>
+          <p>Service Object は、Rails アプリで複数の呼び出しをまとめるクラスなどに使われる呼び名です。このうち、一つの業務操作で保存や外部処理の順番を決めるクラスが Use Case / Application Service に当たります。</p>
+          <Figure title="注文を確定するときに呼ぶ相手" caption="支払いを受付済みにする例です。矢印は呼び出す先を表します。">
+            <ol className="study-flow">
+              <li className="study-card">Controller<br />入力を受け取り、注文確定の操作を呼ぶ。</li>
+              <li className="study-card"><ChapterLink n={44} section="idea">Use Case / Application Service</ChapterLink><br />注文の状態と処理の順番を決める。</li>
+              <li className="study-card"><ChapterLink n={42} section="idea">Adapter</ChapterLink><br />決済 API の入力と結果をアプリ内の値に変換する。</li>
+            </ol>
+          </Figure>
+          <p>Form Object は複数の入力を扱うときに、Query Object は検索条件を組み立てるときに使えます。単一モデルの操作ならモデルの公開メソッドで始め、別の画面やジョブも同じ手順を呼ぶようになった段階で、その手順を専用のクラスへ移せます。</p>
         </>
       ),
     },

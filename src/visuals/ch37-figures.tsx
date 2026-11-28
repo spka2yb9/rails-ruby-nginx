@@ -1,8 +1,8 @@
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
-/* 第13章（ID 37）インデックスと実行計画 の図 */
+/* 第19章（ID 37）インデックスと実行計画 の図 */
 
-/* ---------- 図 13-1 表とインデックス ---------- */
+/* ---------- 図 19-1 表とインデックス ---------- */
 const TABLE_ROWS = [
   ['1', 'Alice', '20'],
   ['2', 'Bob', '24'],
@@ -28,7 +28,7 @@ export function TableAndIndexFigure() {
   const y = (i: number) => 60 + i * 26
   return (
     <Svg
-      id="13-1"
+      id="19-1"
       w={760}
       h={340}
       label="左は users テーブルで、行は id の順に 1 から 8 まで並ぶ。右は age 列のインデックスで、age の値と行の id の組を age の小さい順に並べている（17 と 8、19 と 3、20 と 1、20 と 6、24 と 2、28 と 5、32 と 4、35 と 7）。WHERE age = 20 では、インデックスで 20 の位置を探し、項目が持つ id の 1 と 6 で表の行を読む"
@@ -134,7 +134,7 @@ export function BTreeFigure() {
   )
 }
 
-/* ---------- 図 13-2 全件の走査とインデックスでの探索 ---------- */
+/* ---------- 図 19-2 全件の走査とインデックスでの探索 ---------- */
 const EMAILS = ['alice', 'bob', 'carol', 'dave', 'eve', 'frank', 'grace', 'hana']
 
 export function ScanAndSearchFigure() {
@@ -142,7 +142,7 @@ export function ScanAndSearchFigure() {
   const steps: Record<number, string> = { 3: '① dave と比べる → 前半へ', 1: '② bob と比べる → 前半へ', 0: '③ 一致 → id 1 の行を読む' }
   return (
     <Svg
-      id="13-2"
+      id="19-2"
       w={800}
       h={330}
       label="左はインデックスが無い場合で、users の8行を先頭から順に読み、email が alice@example.com かを8回確かめる。一致した後も最後の行まで確かめる。右は email のインデックスがある場合で、email の順に並んだ8個の値の真ん中の dave と比べて前半に絞り、次に bob と比べて前半に絞り、3回目の比較で alice に一致し、id 1 の行を読む。10,008 行では全件の走査が 10,008 行の確認、二分探索のモデルが 13 回の比較になる"
@@ -185,7 +185,7 @@ export function ScanAndSearchFigure() {
   )
 }
 
-/* ---------- 図 13-3 複合インデックス (age, name) ---------- */
+/* ---------- 図 19-3 複合インデックス (age, name) ---------- */
 const AGE_NAME = [
   ['17', 'Hana', '8'],
   ['19', 'Carol', '3'],
@@ -201,7 +201,7 @@ export function CompositeFigure() {
   const y = (i: number) => 60 + i * 26
   return (
     <Svg
-      id="13-3"
+      id="19-3"
       w={780}
       h={330}
       label="複合インデックス (age, name) の項目は age の順に並び、同じ age の中では name の順に並ぶ。A の WHERE age = 20 は連続した2項目を読み、B の WHERE age = 20 AND name = 'Alice' は1項目を読む。どちらも SEARCH になる。C の WHERE name = 'Alice' は、name が age ごとに並んでいるだけで全体では Hana、Carol、Alice、Frank、Bob の順なので位置を決められず、SCAN users になる"
@@ -359,7 +359,7 @@ export function RangeAndInFigure() {
   )
 }
 
-/* ---------- 図 13-4 Relation#explain の流れ ---------- */
+/* ---------- 図 19-4 Relation#explain の流れ ---------- */
 export function ExplainFlowFigure() {
   const boxes = [
     { x: 20, lines: ['User.where(…)', '.explain'], fill: 'box' as const, mono: true },
@@ -370,7 +370,7 @@ export function ExplainFlowFigure() {
   ]
   return (
     <Svg
-      id="13-4"
+      id="19-4"
       w={780}
       h={190}
       label="User.where(…).explain は ExplainProxy を返し、この時点では SQL を送らない。inspect が呼ばれると exec_queries で SELECT を実行し、その間に送った SQL を集める。集めた SQL ごとに EXPLAIN を付けて MySQL で実行し、結果を表の形に整えた文字列にする。コンソールは戻り値を inspect で表示するので、explain を呼ぶだけで実行計画が表示される"

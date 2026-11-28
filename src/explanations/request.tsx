@@ -33,7 +33,7 @@ export const explanation06: Explanations = {
       <p>
         「要求と応答の間に処理を挟む」の節で、A が B を、B がアプリを呼ぶと、要求は外側から、応答は内側から順に処理されることを見ました。
         Rails はこの形でミドルウェアを20個以上重ねています。重ねたミドルウェアの並びをミドルウェアスタックと呼びます。
-        入るミドルウェアは環境によって変わります。Rails には開発中に使う development、テストを実行するときの test、本番で動かす production の3つの環境があり、環境ごとに設定が違います（第7章）。
+        入るミドルウェアは環境によって変わります。Rails には開発中に使う development、テストを実行するときの test、本番で動かす production の3つの環境があり、環境ごとに設定が違います（第13章）。
       </p>
       <p>
         例外を HTTP のエラー応答に変えるミドルウェアは、内側の処理の呼び出しを begin と rescue の間に書きます。
@@ -72,7 +72,7 @@ export const explanation07: Explanations = {
       <p>
         本番環境では、Puma を <code>bin/rails server</code> からではなく、<code>bundle exec puma -C config/puma.rb</code> のように直接起動することがあります。
         <code>bundle exec</code> は「gem と Bundler と require」の節で見たとおり、Gemfile.lock の gem だけを使える状態でコマンドを実行します。<code>-C</code> は Puma の設定ファイルを指定するオプションです。
-        <code>config.ru</code> は、Web サーバーが起動時に読み込み、どの Rack アプリケーションを動かすかを決める Ruby のファイルです（第6章）。{cite}
+        <code>config.ru</code> は、Web サーバーが起動時に読み込み、どの Rack アプリケーションを動かすかを決める Ruby のファイルです（第11章）。{cite}
       </p>
     </>,
     railtie: cite => <>
@@ -113,11 +113,7 @@ export const explanation07: Explanations = {
       <p>
         起動の早い時点では、すべてのクラスが読み込み済みとは限りません。
         あるクラスを変更したいだけなのに、その場で定数を参照して強制的に読み込むと、本来の読み込み時点より前に処理を始めることがあります。
-        そこで「その機能の準備ができたら実行する」という形で、処理を先に登録できます。
-      </p>
-      <p>
-        <code>ActiveSupport.on_load(:active_record)</code>のブロックはActiveRecord::Baseの読み込み完了に結び付きます。
-        まだなら後で実行し、すでに完了していれば登録時に実行されます。読み込むタイミングを呼び出し元で固定せず、対象の機能が利用できる時点に合わせられます。{cite}
+        そこで「その機能の準備ができたら実行する」という形で、処理を先に登録できます。{cite}
       </p>
     </>,
   },

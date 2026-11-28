@@ -160,7 +160,7 @@ export const explanation24: Explanations = {
     websocket: cite => <>
       <p>
         HTTP では、ブラウザーが要求を送ったときにだけ、サーバーが応答を返します。記事に新しいコメントが付いたことをサーバーからすぐに知らせるには、接続を開いたままにして、サーバーの側からもメッセージを送れる WebSocket を使います。
-        ActionCable と、Turbo Streams によるページの更新は WebSocket で届きます。
+        Action Cable は WebSocket を使い、購読しているブラウザーに新しいコメントなどの通知を届けます。
       </p>
       <p>
         WebSocket の接続は HTTP の要求から始まります。ブラウザーは GET /cable の要求に Upgrade: websocket と Connection: Upgrade のヘッダーを付けて、この接続を WebSocket に切り替えたいと伝えます。
@@ -263,7 +263,7 @@ export const explanation26: Explanations = {
       </p>
       <p>
         パーシャルはビューの一部を別のファイルに分けたテンプレートで、記事のページではコメント1件分の HTML を comments/_comment.html.erb で作ります（<ChapterLink n={16} />）。
-        turbo_stream_from は、ページを開いたまま新しいコメントなどを受け取るために、ブラウザーに WebSocket の接続を作らせる指定です。{cite}
+        新しいコメントをページを開いたまま受け取る場合は、ブラウザーから Action Cable に WebSocket で接続します。{cite}
       </p>
     </>,
     front: () => <>

@@ -1,8 +1,8 @@
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
-import { Arrow, Box, Svg, T } from '../components/diagram'
+import { Arrow, Box, Svg, T, TextBg } from '../components/diagram'
 
-/* ---------- 図 89-1 DB の更新とジョブの投入の、片方だけが成功する ---------- */
+/* ---------- 図 106-1 DB の更新とジョブの投入の、片方だけが成功する ---------- */
 type Step =
   | { kind: 'msg'; from: number; to: number; text: string; lost?: string }
   | { kind: 'note'; at: number; lines: string[]; tone?: 'danger' | 'acc' }
@@ -40,7 +40,9 @@ function PanelTimeline({ x0, title, lanes, steps, result }: { x0: number; title:
           const end = x1 + (x2 - x1) * 0.6
           return (
             <g key={i}>
-              <line x1={x1} y1={cy} x2={end} y2={cy} stroke="var(--fig-danger)" strokeWidth={1.5} strokeDasharray="5 4" />
+              <TextBg x={(x1 + x2) / 2} y={cy - 12} text={s.text} fs={11} anchor="middle" />
+              <TextBg x={(x1 + x2) / 2} y={cy + 16} text={s.lost} fs={11} anchor="middle" />
+              <line x1={x1} y1={cy} x2={end - Math.sign(x2 - x1) * 10} y2={cy} stroke="var(--fig-danger)" strokeWidth={1.5} strokeDasharray="5 4" />
               <T x={end} y={cy} anchor="middle" fs={18} tone="danger" bold>
                 ×
               </T>
@@ -55,6 +57,7 @@ function PanelTimeline({ x0, title, lanes, steps, result }: { x0: number; title:
         }
         return (
           <g key={i}>
+            <TextBg x={(x1 + x2) / 2} y={cy - 10} text={s.text} fs={11} anchor="middle" />
             <Arrow x1={x1} y1={cy} x2={x2 - 2} y2={cy} />
             <T x={(x1 + x2) / 2} y={cy - 10} anchor="middle" fs={11} mono>
               {s.text}
@@ -71,7 +74,7 @@ function PartialFailureFigure() {
   const lanes = ['Rails', 'MySQL', 'Redis']
   return (
     <Svg
-      id="89-1"
+      id="106-1"
       w={780}
       h={350}
       label="左の A は after_save でジョブを積む場合。Rails は BEGIN の後に members を UPDATE し、その時点で CrmSyncJob を Redis に積む。続く profile の検証で失敗して ROLLBACK するので、DB のメールアドレスは古いままだが、Redis には新しいメールアドレスのジョブが残る。右の B は after_save_commit で積む場合。Rails は members を UPDATE して COMMIT した後にジョブを積もうとするが、Redis に接続できないかプロセスが止まると、ジョブは積まれない。DB は新しいメールアドレスに変わったのに、CRM に知らせるジョブがない"
@@ -106,11 +109,11 @@ function PartialFailureFigure() {
   )
 }
 
-/* ---------- 図 89-2 Transactional Outbox の構成 ---------- */
+/* ---------- 図 106-2 Transactional Outbox の構成 ---------- */
 function OutboxFigure() {
   return (
     <Svg
-      id="89-2"
+      id="106-2"
       w={780}
       h={300}
       label="MembersController と ChangeMemberEmail は、1つのトランザクションで members を UPDATE し、outbox_messages に送るメッセージを INSERT する。中継のジョブ RelayOutboxJob は定期実行され、outbox_messages から未送信の行を FOR UPDATE SKIP LOCKED で書いた順に取り出し、CRM に送り、送れたら sent_at を記録する。CRM は event_id で重複を捨てる"
@@ -145,12 +148,12 @@ function OutboxFigure() {
   )
 }
 
-/* ---------- 図 89-3 重複した配信と、受け取る側での重複排除 ---------- */
+/* ---------- 図 106-3 重複した配信と、受け取る側での重複排除 ---------- */
 const DUP_ROWS: ({ kind: 'msg'; from: 0 | 1; text: string; lost?: boolean; acc?: boolean } | { kind: 'note'; at: 0 | 1; lines: string[]; acc?: boolean })[] = [
   { kind: 'msg', from: 0, text: 'ev-1 を送る' },
   { kind: 'note', at: 1, lines: ['ev-1 を処理し、', '処理済みの ID に記録する'] },
   { kind: 'msg', from: 1, text: '応答が届かない（タイムアウト）', lost: true },
-  { kind: 'note', at: 0, lines: ['失敗とみなし、sent_at は記録しない', '（attempts = 1、次の回に回す）'] },
+  { kind: 'note', at: 0, lines: ['一時エラーとして次の実行を待つ', 'sent_at は記録しない'] },
   { kind: 'msg', from: 0, text: '次の回に ev-1 をもう一度送る', acc: true },
   { kind: 'note', at: 1, lines: ['処理済みの ID なので、', '何もせずに成功を返す'], acc: true },
   { kind: 'msg', from: 1, text: '200' },
@@ -168,7 +171,7 @@ function DuplicateFigure() {
   const h = y + 10
   return (
     <Svg
-      id="89-3"
+      id="106-3"
       w={780}
       h={h}
       label="中継のジョブがイベント ev-1 を CRM に送る。CRM は ev-1 を処理して処理済みの ID に記録するが、応答が中継に届かずタイムアウトする。中継は失敗とみなして sent_at を記録しない。次の回に ev-1 をもう一度送ると、CRM は処理済みの ID だと分かるので何もせずに成功を返す。中継は sent_at を記録する"
@@ -191,7 +194,7 @@ function DuplicateFigure() {
           const end = x1 + (x2 - x1) * 0.6
           return (
             <g key={i}>
-              <line x1={x1} y1={cy} x2={end} y2={cy} stroke="var(--fig-danger)" strokeWidth={1.5} strokeDasharray="5 4" />
+              <line x1={x1} y1={cy} x2={end - dir * 10} y2={cy} stroke="var(--fig-danger)" strokeWidth={1.5} strokeDasharray="5 4" />
               <T x={end} y={cy} anchor="middle" fs={18} tone="danger" bold>
                 ×
               </T>
@@ -214,7 +217,7 @@ function DuplicateFigure() {
   )
 }
 
-/* ---------- 図 89-4 中継の方式の比較 ---------- */
+/* ---------- 図 106-4 中継の方式の比較 ---------- */
 function RelayMethodsFigure() {
   const rows: { y: number; title: string; boxes: { lines: string[]; fill: 'box' | 'box4' | 'box5'; w: number }[]; pros: string; cons: string }[] = [
     {
@@ -255,7 +258,7 @@ function RelayMethodsFigure() {
   ]
   return (
     <Svg
-      id="89-4"
+      id="106-4"
       w={780}
       h={400}
       label="中継の3つの方式。ポーリングは、RelayOutboxJob が outbox_messages を数秒ごとに SELECT して CRM に送る。SQL と Active Job だけで作れるが、間隔だけ遅れ、問い合わせが増え、複数の中継では順序が崩れうる。トランザクションログを読む方式（CDC）は、Debezium が MySQL の binlog から outbox_messages への INSERT を読み、Kafka を経て受け取る側に届ける。遅れが小さく表を問い合わせないが、Debezium と Kafka の運用が要り、重複は防げない。同じ DB のジョブキューは、業務と同じ DB にある Solid Queue のジョブの表にジョブを積み、ワーカーが CRM に送る。ジョブを積むことが同じトランザクションに入るが、同じ DB に置く場合だけ成り立つ"
@@ -392,11 +395,11 @@ Redis の crm_sync キュー: 1件 CrmSyncJob[1, "new@example.com"]
 `}
           />
           <p>
-            <code>after_save</code> はトランザクションの中で動くので、UPDATE の直後、COMMIT の前にジョブが Redis に入りました。続くニックネームの検証で失敗して ROLLBACK し、DB のメールアドレスは old@example.com に戻りましたが、Redis には new@example.com を知らせるジョブが残っています。Sidekiq がこのジョブを実行すると、CRM だけが保存されなかったメールアドレスになります。Redis は MySQL のトランザクションとは関係がないので、ROLLBACK してもジョブは消えません。トランザクションの中で <code>perform_later</code> を呼ぶとすぐに Redis に入ることは、<ChapterLink n={18} section="transaction" />の「トランザクションと投入の時刻」でも確かめました。
+            <code>after_save</code> はトランザクションの中で動くので、UPDATE の直後、COMMIT の前にジョブが Redis に入りました。続くニックネームの検証で失敗して ROLLBACK し、DB のメールアドレスは old@example.com に戻りましたが、Redis には new@example.com を知らせるジョブが残っています。Sidekiq がこのジョブを実行すると、CRM だけが保存されなかったメールアドレスになります。Redis は MySQL のトランザクションとは関係がないので、ROLLBACK してもジョブは消えません。トランザクションの中で <code>perform_later</code> を呼ぶとすぐに Redis に入ることは、<ChapterLink n={18} section="transaction" />でも確かめました。
           </p>
           <h3>B：コミットしたのに、ジョブが積まれない</h3>
           <p>
-            A を直すために、コールバックを COMMIT の後に動く <code>after_save_commit</code> に変えました（<ChapterLink n={14} section="after-commit" />の「after_save と after_commit」）。今度は、ジョブを積む時点で Redis に接続できない状態を作り、メールアドレスだけを変えました。
+            A を直すために、コールバックを COMMIT の後に動く <code>after_save_commit</code> に変えました（<ChapterLink n={14} section="after-commit" />）。今度は、ジョブを積む時点で Redis に接続できない状態を作り、メールアドレスだけを変えました。
           </p>
           <Code
             lang="ruby"
@@ -429,11 +432,11 @@ Redis の crm_sync キュー: 0件
           <p>
             COMMIT の後に積もうとしたジョブは、Redis に接続できずに失敗しました。リクエストには 500 が返りますが、DB のメールアドレスはすでに new@example.com に変わっています。CRM に知らせるジョブはどこにもなく、知らせるべきだったという記録も残っていません。COMMIT の直後にプロセスが止まった場合（配備での再起動、メモリー不足で強制終了されるなど）も、同じ状態になります。
           </p>
-          <Figure n="89-1" title="DB の更新とジョブの投入の、片方だけが成功する" caption="上の2つの実行結果を、関係者ごとの列に並べた図。上から下へ時間が進む。× は失敗した投入。">
+          <Figure n="106-1" title="DB の更新とジョブの投入の、片方だけが成功する" caption="上の2つの実行結果を、関係者ごとの列に並べた図。上から下へ時間が進む。× は失敗した投入。">
             <PartialFailureFigure />
           </Figure>
           <p>
-            図 89-1 の左（A）はトランザクションの中でジョブを積む場合で、DB の変更は取り消されたのにジョブが残ります。右（B）は COMMIT の後に積む場合で、DB の変更は確定したのにジョブがありません。ジョブを積む時点をどちらにしても、DB と Redis の片方だけが変わる場合が残ります。Sidekiq のジョブの代わりにリクエストの中で CRM の API を直接呼んでも同じで、トランザクションの中で呼べば A と同じく CRM だけが変わることがあり、COMMIT の後に呼べば B と同じく CRM に届かないことがあります。
+            図 106-1 の左（A）はトランザクションの中でジョブを積む場合で、DB の変更は取り消されたのにジョブが残ります。右（B）は COMMIT の後に積む場合で、DB の変更は確定したのにジョブがありません。ジョブを積む時点をどちらにしても、DB と Redis の片方だけが変わる場合が残ります。Sidekiq のジョブの代わりにリクエストの中で CRM の API を直接呼んでも同じで、トランザクションの中で呼べば A と同じく CRM だけが変わることがあり、COMMIT の後に呼べば B と同じく CRM に届かないことがあります。
           </p>
           <h3>このコードの問題</h3>
           <ul>
@@ -460,10 +463,10 @@ Redis の crm_sync キュー: 0件
             <Term>Transactional Outbox</Term> は、DB の更新と、それを外部に知らせるメッセージの送信の、片方だけが起きることがないようにするパターンです。送るメッセージを、業務のデータを更新するのと同じトランザクションで、DB の <Term>outbox</Term>（送信を待つメッセージを入れる表）に INSERT します。実際にメッセージを送るのは、outbox の表を読んで送る別の処理で、この章ではこの処理を<Term en="message relay">中継</Term>と呼びます。
           </p>
           <p>
-            Chris Richardson の microservices.io は、このパターンを次の状況への解決として説明しています。DB の更新とメッセージの送信は、両方起きるか、どちらも起きないかにする必要があります。しかし、DB とメッセージの送り先にまたがる2相コミット（後で説明します）は使えません<Ref n={1} />。図 89-1 の A と B は、どちらもこの条件を満たしていませんでした。
+            Chris Richardson の microservices.io は、このパターンを次の状況への解決として説明しています。DB の更新とメッセージの送信は、両方起きるか、どちらも起きないかにする必要があります。しかし、DB とメッセージの送り先にまたがる2相コミット（後で説明します）は使えません<Ref n={1} />。図 106-1 の A と B は、どちらもこの条件を満たしていませんでした。
           </p>
           <p>
-            <ChapterLink n={34} section="external-boundaries" />の「Stage 3：外部決済・部分失敗・再実行を設計する」では、注文の受付で課金の依頼を OutboxEvent として保存し、配送役のジョブがリースを取ってから課金のジョブを積む実装を示しました。この章では、その仕組みを1つのパターンとして取り出し、表の設計、中継の作り方、重複・順序・失敗し続ける行・掃除と監視までを扱います。
+            <ChapterLink n={34} section="external-boundaries" />では、注文の受付で課金の依頼を OutboxEvent として保存し、配送役のジョブがリースを取ってから課金のジョブを積む実装を示しました。この章では、その仕組みを1つのパターンとして取り出し、表の設計、中継の作り方、重複・順序・失敗し続ける行・掃除と監視までを扱います。
           </p>
           <h3>使う場面</h3>
           <ul>
@@ -480,13 +483,13 @@ Redis の crm_sync キュー: 0件
           </ul>
           <h3>解決方法：outbox の表に同じトランザクションで書き、中継が送る</h3>
           <p>
-            メールアドレスを変える処理は、CRM に送らず、ジョブも積みません。代わりに、送るメッセージを outbox_messages の表に INSERT します。members の UPDATE と outbox_messages の INSERT は同じ MySQL のトランザクションなので、両方が確定するか、両方が取り消されます。図 89-1 の A のように取り消されたのにメッセージが残ることはなく、B のように確定したのに記録がないこともありません。送れなかった場合も、送る必要があるという記録が業務のデータと一緒に outbox に残っているので、後で送り直せます。
+            メールアドレスを変える処理は、CRM に送らず、ジョブも積みません。代わりに、送るメッセージを outbox_messages の表に INSERT します。members の UPDATE と outbox_messages の INSERT は同じ MySQL のトランザクションなので、両方が確定するか、両方が取り消されます。図 106-1 の A のように取り消されたのにメッセージが残ることはなく、B のように確定したのに記録がないこともありません。送れなかった場合も、送る必要があるという記録が業務のデータと一緒に outbox に残っているので、後で送り直せます。
           </p>
-          <Figure n="89-2" title="Transactional Outbox の構成" caption="この章の Rails のクラスとテーブルの関係。破線の枠は1つの DB トランザクション。①〜③は中継のジョブが行う順番。">
+          <Figure n="106-2" title="Transactional Outbox の構成" caption="この章の Rails のクラスとテーブルの関係。破線の枠は1つの DB トランザクション。①〜③は中継のジョブが行う順番。">
             <OutboxFigure />
           </Figure>
           <p>
-            図 89-2 の左の枠が業務の処理のトランザクションで、members の更新と outbox_messages への INSERT を一緒に確定します。右の中継のジョブ（RelayOutboxJob）は定期的に動き、未送信の行を書いた順に取り出して CRM に送り（①②）、送れたら送信した日時（<code>sent_at</code>）を記録します（③）。送信に失敗したら記録せずに残し、次の回に送り直します。
+            図 106-2 の左の枠が業務の処理のトランザクションで、members の更新と outbox_messages への INSERT を一緒に確定します。右の中継のジョブ（RelayOutboxJob）は定期的に動き、未送信の行を書いた順に取り出して CRM に送り（①②）、送れたら送信した日時（<code>sent_at</code>）を記録します（③）。送信に失敗したら記録せずに残し、次の回に送り直します。
           </p>
           <p>
             中継を作る方法として、microservices.io は、outbox の表を定期的に問い合わせる方法（Polling publisher）と、DB のトランザクションログを読む方法（Transaction log tailing）の2つを挙げています<Ref n={1} />。この章のコードは前者で、後者は alternatives の節で比べます。
@@ -495,11 +498,11 @@ Redis の crm_sync キュー: 0件
           <p>
             中継は送った後、<code>sent_at</code> を記録する前に止まることがあります。CRM が受け取って処理したのに、応答が届かずタイムアウトすることもあります。どちらの場合も行は未送信のまま残るので、次の回に同じメッセージがもう一度送られます。
           </p>
-          <Figure n="89-3" title="重複した配信と、受け取る側での重複排除" caption="上から下へ時間が進む。破線の矢印は応答、× は届かなかった応答。青い枠と矢印は、2回目の配信を受け取る側が捨てる流れ。">
+          <Figure n="106-3" title="重複した配信と、受け取る側での重複排除" caption="上から下へ時間が進む。破線の矢印は応答、× は届かなかった応答。青い枠と矢印は、2回目の配信を受け取る側が捨てる流れ。">
             <DuplicateFigure />
           </Figure>
           <p>
-            図 89-3 では、ev-1 が CRM に2回届いています。outbox のメッセージは失われませんが、2回以上届くことがあります。この性質を少なくとも1回の配信と呼び、配信の保証の3種類は<ChapterLink n={52} section="delivery-guarantees" />で扱いました。microservices.io も、中継が送った後、送ったことを記録する前に止まると、再起動後に同じメッセージをもう一度送ると書いており、受け取る側は処理済みのメッセージの ID を記録するなどして、同じメッセージを2回処理しても結果が変わらないようにする必要があるとしています<Ref n={1} />。AWS の説明も同じ注意をしています<Ref n={4} />。この章のメッセージは、受け取る側が重複を見分けられるように、メッセージの ID（<code>event_id</code>）を持ちます。受け取る側の作り方は、<ChapterLink n={52} section="webhook" />の Webhook の受け手と同じです。
+            図 106-3 では、ev-1 が CRM に2回届いています。outbox のメッセージは失われませんが、2回以上届くことがあります。この性質を少なくとも1回の配信と呼び、配信の保証の3種類は<ChapterLink n={52} section="delivery-guarantees" />で扱いました。microservices.io も、中継が送った後、送ったことを記録する前に止まると、再起動後に同じメッセージをもう一度送ると書いており、受け取る側は処理済みのメッセージの ID を記録するなどして、同じメッセージを2回処理しても結果が変わらないようにする必要があるとしています<Ref n={1} />。AWS の説明も同じ注意をしています<Ref n={4} />。この章のメッセージは、受け取る側が重複を見分けられるように、メッセージの ID（<code>event_id</code>）を持ちます。受け取る側の作り方は、<ChapterLink n={52} section="webhook" />の Webhook の受け手と同じです。
           </p>
           <h3>構造</h3>
           <div className="table-wrap">
@@ -579,7 +582,7 @@ class CreateOutboxMessages < ActiveRecord::Migration[8.1]
     create_table :outbox_messages do |t|
       t.string :event_id, null: false, index: { unique: true } # 受け取る側が重複を見分けるための ID
       t.string :event_type, null: false
-      t.string :aggregate_id, null: false # 順序を守る単位（ここでは会員の ID）
+      t.string :aggregate_id, null: false # メッセージの対象（ここでは会員の ID）
       t.json :payload, null: false # 外部に公開する形のメッセージ
       t.datetime :sent_at # 送った日時。NULL なら未送信
       t.datetime :failed_at # 送信を諦めた日時。人が調べる
@@ -593,7 +596,7 @@ end
 `}
           />
           <p>
-            <code>id</code>（AUTO_INCREMENT）は書いた順の番号で、送る順に使います。<code>event_id</code> は受け取る側が重複を見分けるための ID で、一意索引を付けます。<code>aggregate_id</code> は順序を守る単位（ここでは会員）を表します。どの範囲の変更を一緒に扱うかの考え方は<ChapterLink n={48} section="aggregate" />で扱いました。
+            <code>id</code>（AUTO_INCREMENT）は書いた順の番号で、送る順に使います。<code>event_id</code> は受け取る側が重複を見分けるための ID で、一意索引を付けます。<code>aggregate_id</code> は対象の会員を識別します。ID が同じでも、中継だけでは配信順を保証できません。どの範囲の変更を一緒に扱うかの考え方は<ChapterLink n={48} section="aggregate" />で扱いました。
           </p>
           <p>
             MSDP の元の例は PostgreSQL の部分インデックス（<code>WHERE sent_at IS NULL</code> の行だけの索引）で未送信の行を探していました。MySQL には部分インデックスがないので、<code>(sent_at, failed_at)</code> の索引を付けました。InnoDB の索引の各項目には主キーも入っているので、<code>sent_at IS NULL AND failed_at IS NULL</code> の項目は id の順に並びます。後の EXPLAIN のとおり、MySQL は並べ替え（filesort）をせずにこの索引で未送信の行を id の順に読みます。送信済みの行は掃除で消すので、索引も大きくなり続けません。
@@ -618,6 +621,8 @@ class OutboxMessage < ApplicationRecord
   end
 
   def mark_sent! = update!(sent_at: Time.current, attempts: attempts + 1)
+
+  def mark_deferred!(error) = update!(last_error: error.message)
 
   def mark_failed!(error)
     update!(attempts: attempts + 1, last_error: error.message,
@@ -677,7 +682,7 @@ end
             lang="ruby"
             title="app/jobs/relay_outbox_job.rb"
             code={`
-# 中継のジョブ。未送信のメッセージを書いた順に CRM へ送る。数秒〜数十秒ごとに定期実行する
+# 中継のジョブ。ロックを取得できた未送信行を id 順に送る。数秒〜数十秒ごとに定期実行する
 class RelayOutboxJob < ApplicationJob
   # 送った件数を返す
   def perform(batch_size: 10, crm: CrmClient.new)
@@ -689,9 +694,12 @@ class RelayOutboxJob < ApplicationJob
         crm.deliver(event_id: message.event_id, event_type: message.event_type, payload: message.payload)
         message.mark_sent!
         sent += 1
+      rescue CrmClient::TransientError => e
+        message.mark_deferred!(e)
+        break # 送り先が一時的に使えない間は、この回の処理を止める
       rescue CrmClient::Error => e
         message.mark_failed!(e)
-        break # 順序を守るため、後の行は次の回に回す
+        break
       end
     end
     sent
@@ -700,10 +708,10 @@ end
 `}
           />
           <p>
-            中継のジョブは未送信の行を <code>FOR UPDATE SKIP LOCKED</code> で id の順に最大10件取り出し、1件ずつ CRM に送ります。送れたら <code>mark_sent!</code> で <code>sent_at</code> を記録し、CrmClient::Error が起きたら <code>mark_failed!</code> で回数とエラーを記録して、後の行は次の回に回します。<code>do … end</code> のブロックの中に直接 <code>rescue</code> を書くと、その回の繰り返しで起きた例外だけを rescue します。
+            中継のジョブは未送信の行を <code>FOR UPDATE SKIP LOCKED</code> で id の順に最大10件取り出し、1件ずつ CRM に送ります。送れたら <code>mark_sent!</code> で <code>sent_at</code> を記録し、一時的な障害では <code>mark_deferred!</code> で最後のエラーを記録し、失敗の上限を消費せずに次回を待ちます。その他の送信エラーは <code>mark_failed!</code> で回数とエラーを記録します。どちらもその回の残りの送信は止めます。<code>do … end</code> のブロックの中に直接 <code>rescue</code> を書くと、その回の繰り返しで起きた例外だけを rescue します。
           </p>
           <p>
-            <code>lock("FOR UPDATE SKIP LOCKED")</code> は、SELECT の末尾に <code>FOR UPDATE SKIP LOCKED</code> を付けます。<code>FOR UPDATE</code> は読んだ行に排他ロックを取り（<ChapterLink n={15} section="pessimistic" />の「悲観的ロック」）、<code>SKIP LOCKED</code> はほかのトランザクションがロックしている行を待たずに結果から除きます。MySQL では 8.0 から使えます。MySQL のマニュアルは、ロックされた行を飛ばすとデータの一貫しない見え方になるので一般のトランザクションの処理には向かないが、キューのように使う表を複数のセッションが読むときにロックの競合を避けるために使えると説明しています<Ref n={5} />。中継を2つ以上動かしても、片方がロックした行はもう片方が飛ばすので、同じ行を同時に送ることはありません。
+            <code>lock("FOR UPDATE SKIP LOCKED")</code> は、SELECT の末尾に <code>FOR UPDATE SKIP LOCKED</code> を付けます。<code>FOR UPDATE</code> は読んだ行に排他ロックを取り（<ChapterLink n={15} section="pessimistic" />）、<code>SKIP LOCKED</code> はほかのトランザクションがロックしている行を待たずに結果から除きます。MySQL では 8.0 から使えます。MySQL のマニュアルは、ロックされた行を飛ばすとデータの一貫しない見え方になるので一般のトランザクションの処理には向かないが、キューのように使う表を複数のセッションが読むときにロックの競合を避けるために使えると説明しています<Ref n={5} />。中継を2つ以上動かしても、片方がロックした行はもう片方が飛ばすので、同じ行を同時に送ることはありません。
           </p>
           <Code
             lang="text"
@@ -741,6 +749,7 @@ B: [4, 5, 6] をロックした（A がロックしている行は待たずに�
 # CRM の API を呼ぶ Adapter。送り先の URL は環境変数で決める
 class CrmClient
   class Error < StandardError; end
+  class TransientError < Error; end
 
   def initialize(url: ENV.fetch("CRM_URL", "https://crm.example.com"))
     @http = Faraday.new(url:) do |f|
@@ -753,15 +762,20 @@ class CrmClient
   def deliver(event_id:, event_type:, payload:)
     res = @http.post("/events", { event_id:, type: event_type, data: payload }.to_json,
                      "Content-Type" => "application/json", "Idempotency-Key" => event_id)
-    raise Error, "CRM が #{res.status} を返した" unless res.success?
+    return if res.success?
+
+    error = res.status == 429 || (500..599).cover?(res.status) ? TransientError : Error
+    raise error, "CRM が #{res.status} を返した"
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+    raise TransientError, e.class.name
   rescue Faraday::Error => e
-    raise Error, "#{e.class}: #{e.message}"
+    raise Error, e.class.name
   end
 end
 `}
           />
           <p>
-            CrmClient は 2xx 以外の応答と Faraday の例外（接続の失敗・タイムアウト）を <code>CrmClient::Error</code> にまとめます。中継のジョブはこの例外だけを rescue するので、プログラムの誤りのようなほかの例外では、ジョブ自体が失敗します。CRM が Idempotency-Key ヘッダーを受け付けるなら、同じ <code>event_id</code> の2回目のリクエストを CRM の側で捨てられます（<ChapterLink n={52} section="idea" />）。外部の API を Adapter に分ける理由は<ChapterLink n={33} section="adapters" />で扱いました。
+            この例では接続失敗・タイムアウト・429・5xx を一時エラーとして扱います。実際には API の契約で再試行できる応答を確認し、429 に Retry-After があれば次回の時刻に反映します。Faraday のエラー名を記録し、応答の本文は保存しません。中継が捕まえるのは <code>CrmClient::Error</code> 系の例外です。ほかの例外はジョブの失敗になります。CRM が Idempotency-Key ヘッダーを受け付けるなら、同じ <code>event_id</code> の2回目のリクエストを CRM の側で捨てられます（<ChapterLink n={52} section="idea" />）。外部の API を Adapter に分ける理由は<ChapterLink n={33} section="adapters" />で扱いました。
           </p>
           <h3>実行して確かめる</h3>
           <p>scene の節の A と同じリクエストを、パターンを適用した後のコードに送りました。続けて、ニックネームを直して送りました。</p>
@@ -791,7 +805,7 @@ end
           </p>
           <h3>中継のジョブを動かす</h3>
           <p>
-            中継のジョブは、数秒〜数十秒ごとに定期実行します。Solid Queue なら config/recurring.yml に書けます。定期実行の設定と、止まったことに気づくための監視は<ChapterLink n={18} section="recurring-jobs" />の「定期実行と、実行予定の監視」で扱いました。間隔を待たずに送りたい場合は、COMMIT の後に <code>RelayOutboxJob.perform_later</code> を積むこともできます。その投入が失われても、行が残っているので定期実行で送られます（<ChapterLink n={34} section="external-boundaries" />の受付のトランザクション）。
+            中継のジョブは、数秒〜数十秒ごとに定期実行します。Solid Queue なら config/recurring.yml に書けます。定期実行の設定と、止まったことに気づくための監視は<ChapterLink n={18} section="recurring-jobs" />で扱いました。間隔を待たずに送りたい場合は、COMMIT の後に <code>RelayOutboxJob.perform_later</code> を積むこともできます。その投入が失われても、行が残っているので定期実行で送られます（<ChapterLink n={34} section="external-boundaries" />の受付のトランザクション）。
           </p>
           <h3>送る順序</h3>
           <p>
@@ -810,11 +824,11 @@ end
             id は INSERT の時点で決まるので、id 2 の行が COMMIT される前に、中継は id 3 の行を送ることがあります。同じ会員の変更なら、2つ目のトランザクションの members の UPDATE が1つ目の行ロックを待つので、outbox の行は COMMIT の順に id が付きます（ChangeMemberEmail は UPDATE の後に INSERT します）。別の会員どうしの順序は入れ替わりますが、メールアドレスの変更では問題になりません。
           </p>
           <p>
-            中継を複数動かした場合も、片方が失敗した行を残している間に、もう片方が同じ会員の後の行を送ることがあります。同じ会員のメッセージの順序を厳密に守る必要があるなら、中継を1つにするか、会員の ID（<code>aggregate_id</code>）ごとに受け持つ中継を決めます。受け取る側で古いメッセージを捨てる方法もあります（メッセージに版番号や変更の日時を持たせ、受け取った中で最も新しいものだけを反映する）。
+            中継を複数動かした場合も、片方が失敗した行を残している間に、もう片方が同じ会員の後の行を送ることがあります。1つの中継であっても、失敗行を除外して後続行を送ったあとに失敗行を戻すと順序は逆転します。すべての変更を順に届ける要件なら、会員ごとに採番し、先行行が成功するまで同じ会員の後続行を送らない設計が必要です。最新の値だけ必要なら、会員の更新ごとに増える番号をメッセージに含め、受信側は適用済みの番号より大きい場合だけ反映します。
           </p>
           <h3>失敗し続ける行の扱い</h3>
           <p>
-            順序を守るために失敗した行の後を送らない作りでは、CRM が受け付けないメッセージ（内容の誤りなど）が1件あると、後の行がすべて止まります。そこで <code>mark_failed!</code> は、送信を試した回数が <code>MAX_ATTEMPTS</code>（10回）に達した行に <code>failed_at</code> を記録します。<code>pending</code> のスコープは <code>failed_at</code> のある行を含まないので、次の回からは後の行が送られます。<code>failed_at</code> の付いた行は、<code>last_error</code> を見て人が原因を調べ、直したら <code>failed_at</code> を NULL に戻して送り直します。再試行の間隔を空ける方法は<ChapterLink n={54} section="idea" />の Retry with Backoff で扱います。
+            中継は失敗した行でその回の処理を止めます。CRM が受け付けない内容の行が先頭に残ると、後の行も待ち続けます。<code>mark_failed!</code> は、上限の対象となる失敗が <code>MAX_ATTEMPTS</code>（10回）に達した行に <code>failed_at</code> を記録します。ネットワークの一時障害だけで行を除外すると、障害が直ったあとも通知が欠落するため、その失敗は上限に数えません。<code>pending</code> のスコープは <code>failed_at</code> のある行を含まないので、次の回からは後の行が送られます。<code>failed_at</code> の付いた行は、<code>last_error</code> を見て人が原因を調べ、直したら <code>failed_at</code> と失敗回数を戻して送り直します。受信側で適用済みの更新番号を確認し、古い内容が新しい内容を上書きしないようにします。再試行の間隔を空ける方法は<ChapterLink n={54} section="idea" />の Retry with Backoff で扱います。
           </p>
           <h3>送り終えた行の掃除と監視</h3>
           <ul>
@@ -885,7 +899,7 @@ end
 # テスト用の CRM。受け取る側として、event_id で重複を捨てる
 class FakeCrm
   attr_reader :received, :emails
-  attr_accessor :down_times, :timeout_times
+  attr_accessor :down_times, :timeout_times, :reject_times
 
   def initialize
     @received = [] # 届いたメッセージ（重複を含む）
@@ -893,6 +907,7 @@ class FakeCrm
     @processed = Set.new
     @down_times = 0 # 次の n 回は、受け取らずに失敗する（止まっている）
     @timeout_times = 0 # 次の n 回は、受け取って処理したのに、応答が届かずに失敗する
+    @reject_times = 0 # 次の n 回は、内容が受け付けられない
     @lock = Mutex.new # 2つの中継から同時に呼ばれる
   end
 
@@ -900,13 +915,17 @@ class FakeCrm
     @lock.synchronize do
       if down_times.positive?
         self.down_times -= 1
-        raise CrmClient::Error, "CRM に接続できない"
+        raise CrmClient::TransientError, "CRM に接続できない"
+      end
+      if reject_times.positive?
+        self.reject_times -= 1
+        raise CrmClient::Error, "CRM が内容を受け付けなかった"
       end
       received << event_id
       emails[payload["member_id"]] = payload["email"] if @processed.add?(event_id) # 処理済みの ID なら何もしない
       if timeout_times.positive?
         self.timeout_times -= 1
-        raise CrmClient::Error, "応答がタイムアウトした"
+        raise CrmClient::TransientError, "応答がタイムアウトした"
       end
     end
   end
@@ -914,7 +933,7 @@ end
 `}
           />
           <p>
-            代役は CrmClient と同じ <code>deliver</code> を持ち、中継のジョブには <code>perform_now(crm:)</code> で渡します。<code>Set#add?</code> は、要素を加えたら self を、すでにあれば nil を返すので、初めての <code>event_id</code> のときだけ会員のメールアドレスを反映します。<code>timeout_times</code> を設定すると、受け取って処理した後で例外を投げ、図 89-3 の状態を作れます。
+            代役は CrmClient と同じ <code>deliver</code> を持ち、中継のジョブには <code>perform_now(crm:)</code> で渡します。<code>Set#add?</code> は、要素を加えたら self を、すでにあれば nil を返すので、初めての <code>event_id</code> のときだけ会員のメールアドレスを反映します。<code>timeout_times</code> を設定すると、受け取って処理した後で例外を投げ、図 106-3 の状態を作れます。
           </p>
           <h3>同じトランザクションで書かれることのテスト</h3>
           <Code
@@ -982,7 +1001,7 @@ RSpec.describe RelayOutboxJob do
     crm.down_times = 1
 
     expect(relay).to eq(0)
-    expect(OutboxMessage.pending.pluck(:attempts, :last_error)).to eq([[1, "CRM に接続できない"], [0, nil]])
+    expect(OutboxMessage.pending.pluck(:attempts, :last_error)).to eq([[0, "CRM に接続できない"], [0, nil]])
     expect(relay).to eq(2)
     expect(crm.emails[member.id]).to eq("second@example.com")
   end
@@ -1002,7 +1021,7 @@ RSpec.describe RelayOutboxJob do
   it "MAX_ATTEMPTS 回失敗した行は送信を諦め、後の行を送る" do
     change("broken@example.com")
     change("next@example.com")
-    crm.down_times = OutboxMessage::MAX_ATTEMPTS
+    crm.reject_times = OutboxMessage::MAX_ATTEMPTS
 
     OutboxMessage::MAX_ATTEMPTS.times { relay }
 
@@ -1023,7 +1042,7 @@ end
 `}
           />
           <p>
-            <code>perform_now</code> はジョブをキューに入れずにその場で実行し、<code>perform</code> の戻り値（送った件数）を返します。3つ目の例は、図 89-3 の流れをそのまま再現しています。CRM には同じ <code>event_id</code> が2回届き、メールアドレスは1回だけ反映されました。
+            <code>perform_now</code> はジョブをキューに入れずにその場で実行し、<code>perform</code> の戻り値（送った件数）を返します。3つ目の例は、図 106-3 の流れをそのまま再現しています。CRM には同じ <code>event_id</code> が2回届き、メールアドレスは1回だけ反映されました。
           </p>
           <h3>2つの中継を同時に動かすテスト</h3>
           <Code
@@ -1222,7 +1241,7 @@ OutboxMessage.create!(event_type: "member.updated", aggregate_id: member.id.to_s
         <>
           <h3>より単純な方法</h3>
           <ul>
-            <li>COMMIT の後に送る、またはジョブを積む：食い違いがまれで、食い違っても困らない（後で手作業で直せる、次の変更で上書きされる）なら、図 89-1 の B の書き方で足ります。</li>
+            <li>COMMIT の後に送る、またはジョブを積む：食い違いがまれで、食い違っても困らない（後で手作業で直せる、次の変更で上書きされる）なら、図 106-1 の B の書き方で足ります。</li>
             <li>送り先から取りに来てもらう：送るのではなく、外部のサービスが変更の一覧を API で定期的に取りに来る形にできれば、送信の失敗を考えずに済みます。</li>
           </ul>
           <h3>after_commit で直接ジョブを積む方法と、その限界</h3>
@@ -1230,17 +1249,17 @@ OutboxMessage.create!(event_type: "member.updated", aggregate_id: member.id.to_s
             Rails では、COMMIT の後にジョブを積む方法がいくつかあります。<code>after_commit</code> のコールバック（<ChapterLink n={14} section="after-commit" />）、<code>ActiveRecord.after_all_transactions_commit</code>、ジョブのクラスに書く <code>self.enqueue_after_transaction_commit = true</code>（<ChapterLink n={18} section="transaction" />）です。Sidekiq にも、ジョブを積む処理を COMMIT の後に回す <code>Sidekiq.transactional_push!</code> があり、Sidekiq 8.1.7 のソースでは Active Record 7.2 以降なら <code>ActiveRecord.after_all_transactions_commit</code> で積んでいます<Ref n={12} />。
           </p>
           <p>
-            どれも図 89-1 の A（ROLLBACK したのにジョブが残る）は防げますが、B（COMMIT した後に積めない）は防げません。送るべきだという記録が業務のデータと同じトランザクションで DB に残るかどうかが、outbox との違いです。Rails のガイドは Solid Queue を別の DB に置く場合の方法として <code>enqueue_after_transaction_commit</code> を勧めていますが<Ref n={9} />、COMMIT の直後にプロセスが止まった場合の投入の欠落は、outbox か同じ DB のジョブキューでなければ防げません。
+            どれも図 106-1 の A（ROLLBACK したのにジョブが残る）は防げますが、B（COMMIT した後に積めない）は防げません。送るべきだという記録が業務のデータと同じトランザクションで DB に残るかどうかが、outbox との違いです。Rails のガイドは Solid Queue を別の DB に置く場合の方法として <code>enqueue_after_transaction_commit</code> を勧めていますが<Ref n={9} />、COMMIT の直後にプロセスが止まった場合の投入の欠落は、outbox か同じ DB のジョブキューでなければ防げません。
           </p>
           <h3>トランザクションログを読む中継（CDC）</h3>
           <p>
             DB の変更を、DB が書くトランザクションログから取り出して外部に送る方法を <Term en="change data capture">CDC</Term> と呼びます。MySQL の binlog（バイナリログ）は、DB に COMMIT された順にすべての操作を記録し、レプリケーションと復旧に使われます。Debezium（DB の変更を取り出して Kafka などに送るオープンソースのソフトウェア）の MySQL コネクターは、この binlog を読んで行の変更をイベントにします<Ref n={7} />。Debezium には outbox の表への INSERT を取り出して送る仕組み（Outbox Event Router）もあります<Ref n={8} />。microservices.io は、この方法の短所として、DB ごとの仕組みが必要になることと、重複して送るのを避けにくいことを挙げています<Ref n={3} />。
           </p>
-          <Figure n="89-4" title="中継の方式の比較" caption="上から、この章のポーリング、トランザクションログを読む方式（CDC）、業務と同じ DB のジョブキュー。青い文字は長所、赤い文字は短所。">
+          <Figure n="106-4" title="中継の方式の比較" caption="上から、この章のポーリング、トランザクションログを読む方式（CDC）、業務と同じ DB のジョブキュー。青い文字は長所、赤い文字は短所。">
             <RelayMethodsFigure />
           </Figure>
           <p>
-            図 89-4 の1行目がこの章の方式で、SQL と Active Job だけで作れます。microservices.io は、ポーリングはどの SQL データベースでも動くが、順序を守って送るのが難しいとしています<Ref n={2} />。2行目の CDC は遅れが小さく、binlog は COMMIT の順に並ぶので、送り先が Kafka なら採用を考えます。そのときも受け取る側の重複排除は必要です。3行目は、Solid Queue を業務と同じ DB に置く場合で、rails-impl の節で説明した前提が必要です。
+            図 106-4 の1行目がこの章の方式で、SQL と Active Job だけで作れます。microservices.io は、ポーリングはどの SQL データベースでも動くが、順序を守って送るのが難しいとしています<Ref n={2} />。2行目の CDC は遅れが小さく、binlog は COMMIT の順に並ぶので、送り先が Kafka なら採用を考えます。そのときも受け取る側の重複排除は必要です。3行目は、Solid Queue を業務と同じ DB に置く場合で、rails-impl の節で説明した前提が必要です。
           </p>
           <h3>Rails の標準機能・gem との使い分け</h3>
           <ul>
@@ -1252,7 +1271,7 @@ OutboxMessage.create!(event_type: "member.updated", aggregate_id: member.id.to_s
           <ul>
             <li>Domain Events（<ChapterLink n={51} section="idea" />）：outbox に書くのは、ドメインイベントから作った外部向けのメッセージです。microservices.io も、Domain event パターンがこのパターンを必要にするとしています<Ref n={1} />。同じプロセスの中で購読者に届けるだけなら、outbox はいりません。</li>
             <li>Idempotency Key / Deduplication（<ChapterLink n={52} section="idea" />）：outbox の配信は少なくとも1回なので、受け取る側はメッセージの ID を記録して重複を捨てます。送る側は、メッセージの ID を送り先の冪等性キーとして渡します。</li>
-            <li>Retry with Backoff（<ChapterLink n={54} section="idea" />）：中継が送信に失敗したときに、送り直す間隔を決めます。この章の中継は次の定期実行まで待つだけなので、送り先が長く止まっているときに間隔を広げるなら、<code>attempts</code> から次に送る時刻を決めます。</li>
+            <li>Retry with Backoff（<ChapterLink n={54} section="idea" />）：中継が送信に失敗したときに、送り直す間隔を決めます。この例は次の定期実行まで待ちます。一時エラーが続く間に間隔を延ばす場合は、送信を打ち切るための回数と分けて、次に試す時刻を保存します。</li>
             <li>Event Sourcing：イベントの記録そのものを正しいデータとして保存する考え方で、outbox を別に持つ必要がなくなります。microservices.io は代わりの解決として挙げています<Ref n={1} />。MSDP のカタログと本書では扱いません。</li>
           </ul>
           <h3>採用する条件</h3>
@@ -1281,6 +1300,16 @@ OutboxMessage.create!(event_type: "member.updated", aggregate_id: member.id.to_s
               CRM のメールアドレスが古いままだとお知らせのメールが届かないので、変更は必ず伝える必要があります。CRM は止まることがあり、そのときもメールアドレスの変更は受け付けたいので、Transactional Outbox を使いました。ジョブキューは Redis にあり、ジョブを積むことを DB のトランザクションに入れられません。CRM の側で <code>event_id</code> による重複排除ができることが前提です。
             </p>
           </Callout>
+        </>
+      ),
+    },
+    {
+      id: 'delivery-criteria',
+      title: '通知が欠けた場合の影響から方式を選ぶ',
+      body: (
+        <>
+          <p>再生成できる表示用キャッシュの更新まで Outbox に入れると、テーブルが増え、未送信行の監視や掃除が必要になります。たとえば、期限が過ぎた値を再取得できる場合は、期限とキャッシュキーの更新で対処できます。</p>
+          <p>契約先へ必ず知らせる必要があり、通知を取り出し直せることが条件なら、更新と同じ DB に送信予定を残します。このとき、古い通知を適用してもよいか、順番が必要か、失敗行を誰が調べるかを、重複検出とあわせて決めます。</p>
         </>
       ),
     },

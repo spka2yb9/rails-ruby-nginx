@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 40-1 場面の構成：税込み金額を計算する4か所 ---------- */
+/* ---------- 図 57-1 場面の構成：税込み金額を計算する4か所 ---------- */
 const sceneRows: { place: string[]; out: string[]; diff: string; ok?: boolean }[] = [
   { place: ['Product#price_with_tax', 'app/models/product.rb', '税率 8・10、整数の割り算で切り捨て'], out: ['カート・決済', '1,238円'], diff: '請求した金額', ok: true },
   { place: ['ProductsHelper#price_label', 'app/helpers/products_helper.rb', '税率 0.08・0.1、Float を四捨五入'], out: ['商品ページ', '268円・438円'], diff: '1個につき +1円' },
@@ -15,7 +16,7 @@ const sceneRows: { place: string[]; out: string[]; diff: string; ok?: boolean }[
 function SceneFigure() {
   return (
     <Svg
-      id="40-1"
+      id="57-1"
       w={780}
       h={440}
       label={`products・orders・order_items のテーブルには税抜きの単価、税区分、数量だけが入っている。税込みの金額は4か所でそれぞれ計算している。${sceneRows
@@ -56,7 +57,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 40-2 同じ注文から3通りの合計が出る計算 ---------- */
+/* ---------- 図 57-2 同じ注文から3通りの合計が出る計算 ---------- */
 const calcRows: { head: string[]; bread: string[]; soap: string[]; total: string; diff: string; base?: boolean }[] = [
   { head: ['カート・決済', 'Order#total'], bread: ['248 × 1.08 = 267.84 → 267', '267 × 3 = 801'], soap: ['398 × 1.1 = 437.8', '→ 437（切り捨て）'], total: '1,238円', diff: '基準', base: true },
   { head: ['確認メール', 'テンプレート'], bread: ['267.84 → 268（四捨五入）', '268 × 3 = 804'], soap: ['437.8 → 438', '（四捨五入）'], total: '1,242円', diff: '+4円' },
@@ -75,7 +76,7 @@ function CalcFigure() {
   const rowH = 58
   return (
     <Svg
-      id="40-2"
+      id="57-2"
       w={780}
       h={34 + calcRows.length * rowH + 30}
       label={`税抜き248円の食パン（軽減税率8%）を3個と、税抜き398円の洗剤（標準税率10%）を1個買った注文の税込み金額。${calcRows
@@ -111,7 +112,7 @@ function CalcFigure() {
   )
 }
 
-/* ---------- 図 40-3 知識の重複とコードの見た目の重複 ---------- */
+/* ---------- 図 57-3 知識の重複とコードの見た目の重複 ---------- */
 function QuadrantFigure() {
   const quads: { x: number; y: number; lines: string[]; fill: 'box5' | 'box' | 'bg'; accent?: boolean; dashed?: boolean }[] = [
     { x: 90, y: 30, lines: ['同じ知識・違うコード', 'まとめる（見つけにくい重複）', '例：8・0.08・1.08・BigDecimal("0.08")', 'どれも軽減税率の8%'], fill: 'box5', accent: true },
@@ -121,7 +122,7 @@ function QuadrantFigure() {
   ]
   return (
     <Svg
-      id="40-3"
+      id="57-3"
       w={780}
       h={420}
       label="縦軸は知識が同じか違うか、横軸はコードの見た目が似ているかどうか。同じ知識で違うコードは、8・0.08・1.08・BigDecimal のように書き方が違う同じ税率で、見つけにくいがまとめる対象。同じ知識で似たコードは、商品ページとメールの (price * 1.1).round のような重複で、DRY の対象。違う知識で似たコードは、年齢と数量の検証や、税込みの単価と請求書の税額の切り捨てのような偶然の一致で、まとめない。違う知識で違うコードは関係がない"
@@ -152,7 +153,7 @@ function QuadrantFigure() {
   )
 }
 
-/* ---------- 図 40-4 直す前と後 ---------- */
+/* ---------- 図 57-4 直す前と後 ---------- */
 function BeforeAfterFigure() {
   const before = [
     ['Product#price_with_tax', '8・10、切り捨て'],
@@ -169,7 +170,7 @@ function BeforeAfterFigure() {
   ]
   return (
     <Svg
-      id="40-4"
+      id="57-4"
       w={780}
       h={400}
       label="直す前は、Product#price_with_tax、ProductsHelper#price_label、確認メールのテンプレート、SalesCsv#to_s の4か所がそれぞれ税率と丸め方を持ち、決済 1,238円、商品ページ 268円、メール 1,242円、CSV 1,240円と違う金額を出していた。直した後は、税率と端数の規則を Tax モジュールだけが持つ。Product#price_with_tax は Tax.included_price を呼び、OrderItem#subtotal は price_with_tax に数量を掛け、Order#total は subtotal を足す。商品ページ・確認メール・経理の CSV・カートと決済は、この3つのメソッドを呼ぶ。金額の書式は config/locales/ja.yml の number.currency.format にあり、商品ページと確認メールが number_to_currency で使う。どこから呼んでも 1,238円になる"
@@ -227,7 +228,7 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 40-5 規則を変えるときに直すファイル ---------- */
+/* ---------- 図 57-5 規則を変えるときに直すファイル ---------- */
 const changeRows: { what: string[]; before: string[]; after: string[]; count: string }[] = [
   { what: ['飲食料品の税率を変える'], before: ['●', '●', '●×2', '●'], after: ['●', ''], count: '4 → 1' },
   { what: ['端数を四捨五入に変える'], before: ['●', '●', '●×2', '●'], after: ['●', ''], count: '4 → 1' },
@@ -247,7 +248,7 @@ function ChangeFigure() {
   const top = 80
   return (
     <Svg
-      id="40-5"
+      id="57-5"
       w={780}
       h={top + changeRows.length * rowH + 40}
       label={`規則を変えるときに直すファイルの数。${changeRows
@@ -292,11 +293,11 @@ function ChangeFigure() {
   )
 }
 
-/* ---------- 図 40-6 まとめるかどうかの判断 ---------- */
+/* ---------- 図 57-6 まとめるかどうかの判断 ---------- */
 function DecisionFigure() {
   return (
     <Svg
-      id="40-6"
+      id="57-6"
       w={780}
       h={450}
       label="似たコードや同じ値が2か所以上にあるとき。問1：片方を変える理由が生じたとき、もう片方も必ず同じように変えるか。いいえなら別の知識なのでまとめない（偶然の一致）。はいなら問2：その知識に1つの名前を付けられるか。いいえなら、まだまとめずに重複のまま例が増えるのを待つ（WET と AHA の章）。はいなら1か所にまとめて名前を付ける（DRY。例 Tax.included_price）。まとめた後に、呼び出し側ごとのフラグや分岐が増えたら、別の知識が混ざっているので分け直す（Receipt の例）"
@@ -338,7 +339,7 @@ function DecisionFigure() {
   )
 }
 
-/* ---------- 図 40-7 Rails の DRY の仕組み ---------- */
+/* ---------- 図 57-7 Rails の DRY の仕組み ---------- */
 const railsRows: [string, string, string][] = [
   ['テーブルの列と型', 'db/schema.rb（モデルに列を書かない）', 'Product.attribute_names'],
   ['列が取りうる値の一覧', 'enum（述語メソッドとスコープを作る）', 'reduced?・Product.reduced'],
@@ -358,7 +359,7 @@ function RailsFigure() {
   const rowH = 38
   return (
     <Svg
-      id="40-7"
+      id="57-7"
       w={780}
       h={50 + railsRows.length * rowH + 10}
       label={`Rails で知識を1か所にする仕組み。${railsRows.map((r) => `${r[0]}は${r[1]}に置く。この章の例は${r[2]}`).join('。')}`}
@@ -393,7 +394,7 @@ const chapter: Chapter = {
     '見た目が同じでも変わる理由が違うコードを見分け、まとめすぎを避けられる',
     'Rails のスキーマ・enum・ヘルパー・i18n・concern が、それぞれどの知識を1か所にする仕組みかを説明できる',
   ],
-  prerequisites: [56, 16, 46],
+  prerequisites: [56, 16],
   sections: [
     {
       id: 'scene',
@@ -562,9 +563,9 @@ end
 `}
           />
           <p>
-            図 40-1 はテーブルと4か所の計算、それぞれの出力の関係です。テーブルには税抜きの単価・税区分・数量しか入っていないので、税込みの金額は読み出すたびに4か所で別々に計算されます。
+            図 57-1 はテーブルと4か所の計算、それぞれの出力の関係です。テーブルには税抜きの単価・税区分・数量しか入っていないので、税込みの金額は読み出すたびに4か所で別々に計算されます。
           </p>
-          <Figure n="40-1" title="場面の構成：税込みの金額を計算する4か所" caption="破線の矢印はテーブルの値の参照、実線の矢印は計算した金額の出力。右端は決済の金額との差。">
+          <Figure n="57-1" title="場面の構成：税込みの金額を計算する4か所" caption="破線の矢印はテーブルの値の参照、実線の矢印は計算した金額の出力。右端は決済の金額との差。">
             <SceneFigure />
           </Figure>
           <h3>同じ注文の金額を4か所で比べる</h3>
@@ -603,9 +604,9 @@ puts "  経理の CSV   合計: #{csv_total.to_fs(:delimited)}円（明細の税
 `}
           />
           <p>
-            同じ注文なのに、決済は1,238円、確認メールは1,242円、経理の CSV は1,240円です。利用者は1,238円を支払ったのに、メールには1,242円と書かれています。経理の CSV の合計は決済サービスから入金された金額と2円合いません。商品ページで268円と表示された食パンは、カートに入れると267円になります。図 40-2 は、3通りの合計がどの計算から生まれたかを並べたものです。
+            同じ注文なのに、決済は1,238円、確認メールは1,242円、経理の CSV は1,240円です。利用者は1,238円を支払ったのに、メールには1,242円と書かれています。経理の CSV の合計は決済サービスから入金された金額と2円合いません。商品ページで268円と表示された食パンは、カートに入れると267円になります。図 57-2 は、3通りの合計がどの計算から生まれたかを並べたものです。
           </p>
-          <Figure n="40-2" title="同じ注文から3通りの合計が出る計算" caption="決済（1行目）を基準に、違う結果になった計算を赤で示した。">
+          <Figure n="57-2" title="同じ注文から3通りの合計が出る計算" caption="決済（1行目）を基準に、違う結果になった計算を赤で示した。">
             <CalcFigure />
           </Figure>
           <p>
@@ -763,19 +764,19 @@ app/models/sales_csv.rb:5:  TAX_RATES = { "standard" => BigDecimal("0.10"), "red
           <p>
             反対に、コードが同じでも知識が違えば重複ではありません。同書はワインの注文サイトで「年齢」と「注文の数量」を検証する2つの関数の例を挙げています。どちらも「整数で、0以上」を確かめるので中身は同じですが、2つは別々の事柄を検証していて、規則がたまたま同じなだけです。同書はこれを「重複ではなく偶然の一致」と呼んでいます<Ref n={2} />。年齢の規則が「20歳以上」に変わっても、数量の規則は変わりません。
           </p>
-          <p>図 40-3 は、知識が同じかどうかと、コードの見た目が似ているかどうかの2つの軸で、重複を4つに分けたものです。</p>
-          <Figure n="40-3" title="知識の重複とコードの見た目の重複" caption="DRY の対象は上の段（知識が同じ）。左上はコードが似ていないので検索では見つけにくい。右下はコードが似ていても、まとめない。">
+          <p>図 57-3 は、知識が同じかどうかと、コードの見た目が似ているかどうかの2つの軸で、重複を4つに分けたものです。</p>
+          <Figure n="57-3" title="知識の重複とコードの見た目の重複" caption="DRY の対象は上の段（知識が同じ）。左上はコードが似ていないので検索では見つけにくい。右下はコードが似ていても、まとめない。">
             <QuadrantFigure />
           </Figure>
           <p>
-            図 40-3 で DRY がまとめる対象にするのは上の段の2つです。左上の「同じ知識・違うコード」は、見た目が違うので検索やコードの比較では見つけにくく、変更の漏れが起きやすい重複です。右下の「違う知識・似たコード」は、見た目が同じでもまとめません。1つにすると、片方の規則が変わったときに、もう片方も一緒に変わってしまいます。
+            図 57-3 で DRY がまとめる対象にするのは上の段の2つです。左上の「同じ知識・違うコード」は、見た目が違うので検索やコードの比較では見つけにくく、変更の漏れが起きやすい重複です。右下の「違う知識・似たコード」は、見た目が同じでもまとめません。1つにすると、片方の規則が変わったときに、もう片方も一緒に変わってしまいます。
           </p>
           <h3>データと外部とのやり取りにある重複</h3>
           <p>
             同書は、データの構造にも知識の重複が入り込むと書いています。例に挙げているのは、始点と終点と長さを持つ線のクラスです。長さは始点と終点から決まるので、長さをフィールドに保存すると同じ知識を2つの形で持つことになり、同書は長さを計算で求めるメソッドにするよう勧めています。性能のために計算の結果を保存するときは、重複の影響をクラスの中に閉じ込め、始点や終点を変えるメソッドの中で長さも計算し直すようにします<Ref n={2} />。この章のテーブルに税込みの金額を保存していないのは、税込みの金額が税抜きの単価と税率から決まるからです。注文した時点の金額を残すために保存する場合は<ChapterLink n={88} section="scene" />で扱います。
           </p>
           <p>
-            外部の API やライブラリとやり取りするコードにも重複があります。アプリのコードは相手の API の項目名やエラーコードの意味を知っていなければならず、相手が変わるとアプリのコードも変わります。同書はこの重複を避けられないものとし、影響を小さくする方法を挙げています<Ref n={2} />。外部とのやり取りを1つのクラスに集める方法は<ChapterLink n={42} section="idea" />で扱いました。
+            外部の API やライブラリとやり取りするコードにも重複があります。アプリのコードは相手の API の項目名やエラーコードの意味を知っていなければならず、相手が変わるとアプリのコードも変わります。同書はこの重複を避けられないものとし、影響を小さくする方法を挙げています<Ref n={2} />。外部とのやり取りを1つのクラスに集める方法は<ChapterLink n={42} section="idea" />で扱います。
           </p>
           <h3>この章の例にある知識</h3>
           <p>前の節のコードに含まれていた知識を、変わる理由とあわせて並べます。</p>
@@ -885,7 +886,7 @@ app/models/sales_csv.rb:5:  TAX_RATES = { "standard" => BigDecimal("0.10"), "red
           </ul>
           <h3>手順3：Tax モジュール</h3>
           <p>
-            税率と、税込みの単価の端数の処理を、Tax モジュールに書きます。税率は百分率の整数で持ち、計算は Rational（分数で数を正確に表す Ruby のクラス）で行います。Float の 1.1 を掛けると、12000 × 1.1 が 13200.000000000002 になるような誤差が出ます（Ruby 4.0.9 で確認）。Float の誤差と丸め方の詳細は<ChapterLink n={46} section="money" />で扱いました。
+            税率と、税込みの単価の端数の処理を、Tax モジュールに書きます。税率は百分率の整数で持ち、計算は Rational（分数で数を正確に表す Ruby のクラス）で行います。Float の 1.1 を掛けると、12000 × 1.1 が 13200.000000000002 になるような誤差が出ます（Ruby 4.0.9 で確認）。Float の誤差と丸め方の詳細は<ChapterLink n={46} section="money" />で扱います。
           </p>
           <Code
             lang="ruby"
@@ -1071,8 +1072,8 @@ app/models/tax.rb:4:  RATES = { "standard" => 10, "reduced" => 8 }.freeze
 app/models/tax.rb:14:    (price * Rational(100 + rate(category), 100)).floor
 `}
           />
-          <p>税率と丸め方は tax.rb だけに残りました。図 40-4 は直す前と後の構造を比べたものです。</p>
-          <Figure n="40-4" title="直す前と後：計算の場所と呼び出し" caption="直した後の点線の枠はモデルのメソッド。実線の矢印は呼び出し。">
+          <p>税率と丸め方は tax.rb だけに残りました。図 57-4 は直す前と後の構造を比べたものです。</p>
+          <Figure n="57-4" title="直す前と後：計算の場所と呼び出し" caption="直した後の点線の枠はモデルのメソッド。実線の矢印は呼び出し。">
             <BeforeAfterFigure />
           </Figure>
           <p>
@@ -1112,9 +1113,9 @@ app/models/tax.rb:14:    (price * Rational(100 + rate(category), 100)).floor
 `}
           />
           <p>
-            1行の変更で、4か所の金額がそろって1,242円に変わりました。失敗したテストは端数の規則そのものを確かめる Tax のテストだけです。規則を変えたので、このテストの期待値も一緒に変えます。図 40-5 は規則を変えるときに直すファイルの数を、直す前と後で比べたものです。
+            1行の変更で、4か所の金額がそろって1,242円に変わりました。失敗したテストは端数の規則そのものを確かめる Tax のテストだけです。規則を変えたので、このテストの期待値も一緒に変えます。図 57-5 は規則を変えるときに直すファイルの数を、直す前と後で比べたものです。
           </p>
-          <Figure n="40-5" title="規則を変えるときに直すファイル" caption="●は税率・丸め方・書式を表すコードがあるファイル。直す前の数には grep で見つけにくい書き方の場所も含む。">
+          <Figure n="57-5" title="規則を変えるときに直すファイル" caption="●は税率・丸め方・書式を表すコードがあるファイル。直す前の数には grep で見つけにくい書き方の場所も含む。">
             <ChangeFigure />
           </Figure>
           <p>
@@ -1269,15 +1270,15 @@ Finished in 0.58516 seconds (files took 1.71 seconds to load)
 `}
           />
           <p>
-            <code>included_price</code> と <code>included_tax</code> は、どちらも Rational を掛けて <code>floor</code> を呼ぶ1行で、見た目は似ています。この2行をさらに1つのメソッドにまとめないのは、図 40-3 の右下（違う知識・似たコード）に当たるからです。
+            <code>included_price</code> と <code>included_tax</code> は、どちらも Rational を掛けて <code>floor</code> を呼ぶ1行で、見た目は似ています。この2行をさらに1つのメソッドにまとめないのは、図 57-3 の右下（違う知識・似たコード）に当たるからです。
           </p>
           <h3>フラグでまとめる誤り</h3>
           <p>
             2つを1つにまとめようとすると、<code>Tax.calculate(amount, category, mode: :unit_price)</code> と <code>mode: :invoice_tax</code> のように、呼び出し側ごとの違いをフラグの引数で渡すメソッドになりがちです。メソッドの中は <code>mode</code> の分岐になり、片方の規則を変えるたびに、もう片方の呼び出し側のテストも確かめることになります。フラグの引数が増えていく過程と、誤った共通化を戻す手順は、<ChapterLink n={60} section="scene" />と<ChapterLink n={76} section="apply" />で扱います。
           </p>
           <h3>当てはめすぎを見分ける目安</h3>
-          <p>図 40-6 は似たコードや同じ値を見つけたときに、まとめるかどうかを決める問いを順に並べたものです。</p>
-          <Figure n="40-6" title="まとめるかどうかの判断" caption="問1は「変更の理由が同じか」を問う。問3はまとめた後に見直すための問い。">
+          <p>図 57-6 は似たコードや同じ値を見つけたときに、まとめるかどうかを決める問いを順に並べたものです。</p>
+          <Figure n="57-6" title="まとめるかどうかの判断" caption="問1は「変更の理由が同じか」を問う。問3はまとめた後に見直すための問い。">
             <DecisionFigure />
           </Figure>
           <p>
@@ -1387,15 +1388,15 @@ save! の例外:    ActiveRecord::NotNullViolation: Mysql2::Error: Column 'name'
               <code>number_to_currency</code> は、ロケールごとの <code>number.currency.format</code> を読みます<Ref n={9} />。英語のロケールでは <code>$1,238.00</code> になり、書式という知識はロケールのファイルに1か所だけあります。
             </li>
           </ul>
-          <p>図 40-7 は Rails で知識を1か所にするときの置き場所をまとめたものです。</p>
-          <Figure n="40-7" title="Rails で知識を1か所にする仕組み" caption="concern はこの章のコードでは使っていない。価格と税区分の列を持つモデルが2つ以上あり、price_with_tax が同じ知識なら concern に移せる。">
+          <p>図 57-7 は Rails で知識を1か所にするときの置き場所をまとめたものです。</p>
+          <Figure n="57-7" title="Rails で知識を1か所にする仕組み" caption="concern はこの章のコードでは使っていない。価格と税区分の列を持つモデルが2つ以上あり、price_with_tax が同じ知識なら concern に移せる。">
             <RailsFigure />
           </Figure>
           <p>
-            図 40-7 の concern は <code>ActiveSupport::Concern</code> を使ったモジュールで、複数のモデルに共通のメソッド・関連・コールバックを1か所に書きます<Ref n={15} />。この章では、価格と税区分を持つのが Product だけなので、concern にしていません。たとえばギフトの包装料のように、税区分を持つ別のモデルが増え、そのモデルの税込みの価格も同じ規則で求めるなら、そのときに <code>price_with_tax</code> を concern に移します。DHH が concern をどう使っているかは<ChapterLink n={31} section="concern" />で扱いました。
+            図 57-7 の concern は <code>ActiveSupport::Concern</code> を使ったモジュールで、複数のモデルに共通のメソッド・関連・コールバックを1か所に書きます<Ref n={15} />。この章では、価格と税区分を持つのが Product だけなので、concern にしていません。たとえばギフトの包装料のように、税区分を持つ別のモデルが増え、そのモデルの税込みの価格も同じ規則で求めるなら、そのときに <code>price_with_tax</code> を concern に移します。DHH が concern をどう使っているかは<ChapterLink n={31} section="concern" />で扱いました。
           </p>
           <p>
-            Value Object（値オブジェクト）も知識を1か所にする方法です。金額を通貨とあわせて持ち、丸め方を引数で指定させる Money は、<ChapterLink n={33} section="value-objects" />と<ChapterLink n={46} section="money" />で扱いました。この章の店は円だけを扱い、計算も税率を掛けて丸めるだけなので、モジュールの関数で足りると判断しました。
+            Value Object（値オブジェクト）も知識を1か所にする方法です。金額を通貨とあわせて持ち、丸め方を引数で指定させる Money の基本は <ChapterLink n={33} section="value-objects" />、丸め方を含む実装は <ChapterLink n={46} section="money" /> で扱います。この章の店は円だけを扱い、計算も税率を掛けて丸めるだけなので、モジュールの関数で足りると判断しました。
           </p>
           <h3>Rails でも残す重複</h3>
           <p>
@@ -1410,6 +1411,29 @@ save! の例外:    ActiveRecord::NotNullViolation: Mysql2::Error: Column 'name'
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          1か所にまとめるのは、片方を変えたらもう片方も必ず同じに変える知識です。この章では税率と、税込みの単価の端数を処理する規則を Tax モジュールに集めました。領収書に載せる税率ごとの消費税額は端数を処理する規則が違うので、税率の表だけを共有し、計算は別のメソッドに書きました。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は同じ注文の合計が決済 1,238円・メール 1,242円・CSV 1,240円の3通りだった。Tax に集めた後は4か所が 1,238円にそろい、税率や端数の規則を変えるときに直すファイルが4つから1つ（tax.rb）になった。</>,
+        basis: <ChapterLink n={59} section="apply" />,
+      },
+      cost: {
+        text: <>領収書の消費税額は「1枚につき税率ごとに1回」端数を処理する規則で、税込みの単価の差を使い回すと、食パン3個の消費税額が59円ではなく57円になった。まとめる範囲を見誤ると、別の規則で決まる金額まで変わる。</>,
+        basis: <ChapterLink n={59} section="overuse" />,
+      },
+      alternative: {
+        text: <>税率の表（<code>Tax::RATES</code>）だけを共有し、税込みの単価（<code>included_price</code>）と領収書の消費税額（<code>included_tax</code>）は別のメソッドに書く。<code>mode:</code> のようなフラグの引数で1つのメソッドにまとめない。</>,
+        basis: <ChapterLink n={59} section="overuse" />,
+      },
+      criterion: {
+        text: <>片方を変えるとき、もう片方も必ず同じに変えるか。業務の言葉で1つの名前を付けられるか。送料無料の基準とクーポンの最低金額のように、同じ 3,000円でも別の事実を表す定数はまとめない。</>,
+        basis: <ChapterLink n={59} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

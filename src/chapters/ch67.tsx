@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 48-1 場面の構成 ---------- */
+/* ---------- 図 65-1 場面の構成 ---------- */
 function SceneFigure() {
   const rows: { y: number; lines: string[]; accent?: boolean }[] = [
     { y: 44, lines: ['OrdersController#confirm', 'rescue SokoLink::ApiError'] },
@@ -14,7 +15,7 @@ function SceneFigure() {
   ]
   return (
     <Svg
-      id="48-1"
+      id="65-1"
       w={760}
       h={384}
       label="アプリの OrdersController#confirm は SokoLink::ApiError を rescue し、ConfirmOrderJob は retry_on SokoLink::ApiError を書き、Order#confirm! と #cancel! は SokoLink::Client を作って reserve と cancel を呼び、OutOfStockError を rescue する。3つのテストは instance_double(SokoLink::Client) と SokoLink::Reservation を使う。どれも SokoLink の SDK 1.4 に直接依存し、SDK が倉庫 API と通信する。SDK の名前を書いているファイルはアプリに3つ、テストに3つあり、SDK を更新すると6つとも直す"
@@ -42,11 +43,11 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 48-3 依存の向き（逆転の前と後） ---------- */
+/* ---------- 図 65-3 依存の向き（逆転の前と後） ---------- */
 function DirectionFigure() {
   return (
     <Svg
-      id="48-3"
+      id="65-3"
       w={760}
       h={420}
       label="適用前は、上位の Order#confirm! が下位の SokoLink::Client（SDK 1.4）に依存し、依存の矢印が上位から下位へ境界を越える。SDK は倉庫 API を呼ぶ。SDK が変わると Order も変わる。適用後は、Order#confirm! は上位の側に置いた取り決め Inventory だけを使い、下位の Inventory::SokoLinkWarehouse が Inventory を満たす。境界を越える矢印は下位から上位へ向く。SokoLinkWarehouse が SDK を使い、SDK が倉庫 API を呼ぶ。SDK が変わっても Order は変わらない"
@@ -107,7 +108,7 @@ function DirectionFigure() {
   )
 }
 
-/* ---------- 図 48-4 上位の方針・取り決め・下位の詳細 ---------- */
+/* ---------- 図 65-4 上位の方針・取り決め・下位の詳細 ---------- */
 function LayersFigure() {
   const cols: { x: number; head: string; fill: 'box5' | 'box2' | 'box4'; dashed?: boolean; items: string[][]; mono?: boolean; foot: string }[] = [
     {
@@ -141,7 +142,7 @@ function LayersFigure() {
   ]
   return (
     <Svg
-      id="48-4"
+      id="65-4"
       w={780}
       h={300}
       label={`注文の確定を3つに分けた。${cols.map((c) => `${c.head}：${c.items.map((i) => i.join('')).join('、')}。${c.foot}`).join('。')}。上位の方針は取り決めを使い、下位の詳細は取り決めを満たす`}
@@ -169,7 +170,7 @@ function LayersFigure() {
   )
 }
 
-/* ---------- 図 48-5 DIP と DI の違い ---------- */
+/* ---------- 図 65-5 DIP と DI の違い ---------- */
 function DipDiFigure() {
   const cells: { x: number; y: number; lines: string[]; accent?: boolean }[] = [
     { x: 200, y: 52, lines: ['適用前の Order#confirm!', 'SokoLink::Client.new を中で呼ぶ', 'テスト：Client.new を書き換える', 'SDK 2.0：Order とテストを直す'] },
@@ -179,7 +180,7 @@ function DipDiFigure() {
   ]
   return (
     <Svg
-      id="48-5"
+      id="65-5"
       w={780}
       h={380}
       label="横に DI を使うかどうか、縦に DIP に沿うかどうかを取った4つの組み合わせ。DI なしで DIP に沿わないのは適用前の Order#confirm! で、SDK のクライアントを中で作り、SDK 2.0 で Order とテストを直す。DI ありで DIP に沿わないのは DI だけを使った版で、SDK の代役を引数で渡せるが、SDK 2.0 で Order とテストを直す。DI なしで DIP に沿うのは Service Locator で、取り決めに依存するが実装をメソッドの中で設定から取り出すので、依存先が引数に現れない。DI ありで DIP に沿うのはこの章の直した形で、テストでは Fake を引数で渡し、SDK 2.0 では Adapter だけを直す"
@@ -198,7 +199,7 @@ function DipDiFigure() {
   )
 }
 
-/* ---------- 図 48-6 SDK 2.0 への更新で直したファイル ---------- */
+/* ---------- 図 65-6 SDK 2.0 への更新で直したファイル ---------- */
 function ChangeScopeFigure() {
   const before: [string, string][] = [
     ['app/models/order.rb', '+8 −5'],
@@ -223,7 +224,7 @@ function ChangeScopeFigure() {
   ]
   return (
     <Svg
-      id="48-6"
+      id="65-6"
       w={780}
       h={400}
       label={`SDK を 2.0 に更新したときに直したファイル。適用前は ${before.map(([f, d]) => `${f}（${d}）`).join('、')} の6つで、注文の確定の規則の書き方も rescue から if に変わった。適用後は ${after.filter(([, d]) => d).map(([f, d]) => `${f}（${d}）`).join('、')} の2つだけで、Order・コントローラー・ジョブ・取り決め・組み立てる場所・ほかのテストは変更なし`}
@@ -263,11 +264,11 @@ function ChangeScopeFigure() {
   )
 }
 
-/* ---------- 図 48-7 取り決めを挟むかの判断 ---------- */
+/* ---------- 図 65-7 取り決めを挟むかの判断 ---------- */
 function JudgeFigure() {
   return (
     <Svg
-      id="48-7"
+      id="65-7"
       w={760}
       h={440}
       label="横軸は変更を決めるのは誰か（左が自分たちと Rails、右が外部の会社）、縦軸は差し替える必要（下が実装は1つ、上が複数の実装やテストでの置き換え）。右上は取り決めと Adapter を作る領域で、倉庫・決済・SMS の SDK や外部の API のクライアントが入る。右下は SDK を1つのクラスに集める領域で、1社だけで替える予定のない外部が入り、取り決めの明文化は2社目が来たときに行う。左上は Rails の部品の設定で替える領域で、Active Job・Action Mailer・Rails.cache が入る。左下はそのまま依存する領域で、Active Record・Time.current・Ruby の標準ライブラリ・自分たちの値オブジェクトが入る。左下に取り決めを挟むのが当てはめすぎで、例は Heavy::OrderRepository と Heavy::Clock"
@@ -303,11 +304,11 @@ function JudgeFigure() {
   )
 }
 
-/* ---------- 図 48-8 Active Job のアダプターとこの章の倉庫 ---------- */
+/* ---------- 図 65-8 Active Job のアダプターとこの章の倉庫 ---------- */
 function RailsFigure() {
   return (
     <Svg
-      id="48-8"
+      id="65-8"
       w={780}
       h={330}
       label="上の段は Rails の Active Job。ConfirmOrderJob が perform_later を呼び、ActiveJob::Base がキューに入れる。Active Job は enqueue と enqueue_at に応答するという取り決めを持ち、SidekiqAdapter（sidekiq の gem が提供）、TestAdapter、AsyncAdapter などがそれを満たす。どれを使うかは config.active_job.queue_adapter で選び、test では :test を使う。下の段はこの章の倉庫。OrdersController と ConfirmOrderJob が Order#confirm! を呼び、Order は取り決め Inventory を使う。Inventory::SokoLinkWarehouse とテストの FakeWarehouse がそれを満たす。どれを使うかは config/initializers/warehouse.rb で作って config.x.warehouse に入れる"
@@ -476,7 +477,7 @@ end
 `}
           />
           <p>
-            テストは <code>SokoLink::Client.new</code> をテストの間だけ書き換えて、<code>instance_double</code>（RSpec の代役で、本物のクラスにあるメソッドだけを受け付ける）を返すようにしています。代役の種類と書き方は<ChapterLink n={40} section="test-doubles" />で説明しました。
+            テストは <code>SokoLink::Client.new</code> をテストの間だけ書き換えて、<code>instance_double</code>（RSpec の代役で、本物のクラスにあるメソッドだけを受け付ける）を返すようにしています。代役の種類と書き方は<ChapterLink n={40} section="test-doubles" />で説明します。
           </p>
           <Code
             lang="ruby"
@@ -516,15 +517,15 @@ end
           <p>
             request spec（コントローラーの 503）とジョブのテスト（再試行の予約）も、同じように <code>SokoLink::ApiError</code> を投げる代役を使っています。SDK 1.4 では5件のテストがすべて通ります。
           </p>
-          <Figure n="48-1" title="場面の構成：SDK の名前を書いている箇所" caption="赤い文字は SDK のクラス名・メソッド名を書いている箇所。太い枠は注文の確定の規則を持つ Order。">
+          <Figure n="65-1" title="場面の構成：SDK の名前を書いている箇所" caption="赤い文字は SDK のクラス名・メソッド名を書いている箇所。太い枠は注文の確定の規則を持つ Order。">
             <SceneFigure />
           </Figure>
           <p>
-            図 48-1 はこの場面のクラスと、SDK の名前を書いている箇所です。注文の確定の規則を持つ Order だけでなく、コントローラー・ジョブ・3つのテストが SDK のクラスを直接使っています。SDK の名前を書いているファイルは、アプリとテストを合わせて6つです。
+            図 65-1 はこの場面のクラスと、SDK の名前を書いている箇所です。注文の確定の規則を持つ Order だけでなく、コントローラー・ジョブ・3つのテストが SDK のクラスを直接使っています。SDK の名前を書いているファイルは、アプリとテストを合わせて6つです。
           </p>
           <h3>SDK を 2.0 に更新すると</h3>
-          <p>倉庫会社が SDK 2.0 を出し、1.x の保守を終えると知らせてきました。2.0 の変更点は図 48-2 のとおりです。</p>
-          <Figure n="48-2" title="SokoLink の SDK 1.4 と 2.0 の違い" caption="本書の架空の SDK。vendor/sdks に置いた SDK のコードで動かした。">
+          <p>倉庫会社が SDK 2.0 を出し、1.x の保守を終えると知らせてきました。2.0 の変更点は図 65-2 のとおりです。</p>
+          <Figure n="65-2" title="SokoLink の SDK 1.4 と 2.0 の違い" caption="本書の架空の SDK。vendor/sdks に置いた SDK のコードで動かした。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -684,21 +685,21 @@ Finished in 0.00004 seconds (files took 0.92716 seconds to load)
           <p>
             Martin は続けて、アプリの重要な方針と業務のモデルを持つのは上位のモジュールなのに、上位が下位に依存すると、下位の変更が上位に変更を強いると書き、本来は上位が下位に変更を強いる側であるべきだと述べています<Ref n={1} />。この章の場面では、倉庫会社の SDK の更新（下位の変更）が、注文の確定の規則（上位）の書き方を変えさせていました。
           </p>
-          <Figure n="48-3" title="依存の向き（逆転の前と後）" caption="実線の矢印は使う（名前を書いている）関係、破線の矢印は取り決めを満たす関係。横の破線は上位と下位の境界。">
+          <Figure n="65-3" title="依存の向き（逆転の前と後）" caption="実線の矢印は使う（名前を書いている）関係、破線の矢印は取り決めを満たす関係。横の破線は上位と下位の境界。">
             <DirectionFigure />
           </Figure>
           <p>
-            図 48-3 はこの章の注文の確定で依存の向きを比べたものです。左の適用前では、Order が SDK を直接使い、依存の矢印が上位から下位へ境界を越えています。右の適用後では、Order は注文の側に置いた取り決め Inventory だけを使い、SDK を使う <code>Inventory::SokoLinkWarehouse</code> が Inventory を満たします。境界を越える矢印は下位から上位へ向きます。
+            図 65-3 はこの章の注文の確定で依存の向きを比べたものです。左の適用前では、Order が SDK を直接使い、依存の矢印が上位から下位へ境界を越えています。右の適用後では、Order は注文の側に置いた取り決め Inventory だけを使い、SDK を使う <code>Inventory::SokoLinkWarehouse</code> が Inventory を満たします。境界を越える矢印は下位から上位へ向きます。
           </p>
           <p>
             処理の呼び出しの順は適用後も Order → SokoLinkWarehouse → SDK → 倉庫 API のままです。変わったのは、どのコードがどのコードの名前を書いているかという依存の向きだけです。また、取り決めを上位の側に置くことも、向きを逆にするための条件です。取り決めを SDK の側に置くと、SDK を替えるときに取り決めも替わり、上位は結局 SDK の変更の影響を受けます。
           </p>
           <h3>上位の方針と下位の詳細を分ける</h3>
-          <Figure n="48-4" title="上位の方針・取り決め・下位の詳細" caption="下位の詳細の列は、SDK 1.4 から 2.0 への変更を矢印で示した。">
+          <Figure n="65-4" title="上位の方針・取り決め・下位の詳細" caption="下位の詳細の列は、SDK 1.4 から 2.0 への変更を矢印で示した。">
             <LayersFigure />
           </Figure>
           <p>
-            図 48-4 はこの章の処理を上位の方針・取り決め・下位の詳細の3つに分けたものです。上位の方針を変えるのは店の運営の決定で、下位の詳細を変えるのは倉庫会社の SDK の更新です。2つは変わる理由も時期も違います。真ん中の取り決めにはどちらの変更でも変わりにくいことだけを書きます。下位の詳細の列にある4つの変更は、どれも取り決めの列に現れません。
+            図 65-4 はこの章の処理を上位の方針・取り決め・下位の詳細の3つに分けたものです。上位の方針を変えるのは店の運営の決定で、下位の詳細を変えるのは倉庫会社の SDK の更新です。2つは変わる理由も時期も違います。真ん中の取り決めにはどちらの変更でも変わりにくいことだけを書きます。下位の詳細の列にある4つの変更は、どれも取り決めの列に現れません。
           </p>
           <p>
             Martin の記事には、方針の層（Policy Layer）が仕組みの層を使い、仕組みの層が道具の層（Utility Layer）を使う構造で、方針の層が一番下の層の変更の影響まで受けるという例もあります。依存は推移するので、方針の層は道具の層に間接的に依存するからです。Martin は下の層ごとに抽象を置き、各層が抽象だけを使うようにすることで、この推移的な依存を断ちました<Ref n={1} />。
@@ -763,11 +764,11 @@ Failures:
           <p>
             依存先を引数で受け取っても、Order が SDK の <code>reserve</code> と <code>OutOfStockError</code> を書いていることは変わりません。そのため、SDK の更新で同じように Order とテストを直すことになります。Brett L. Schuchert は Martin Fowler のサイトの記事で、DI は依存先をどう手に入れるか（配線）の問題で、DIP は依存先がどんな形か（抽象の水準）の問題であり、別のことを扱うと整理しています<Ref n={3} />。同じ記事は DI でデータベースの接続をゲームのプログラムに注入する例を挙げ、DI ではあっても、問題の領域よりずっと低い水準の依存先を注入しているので望ましくないと書いています<Ref n={3} />。
           </p>
-          <Figure n="48-5" title="DIP と DI の違い" caption="横は依存先の受け取り方（DI を使うか）、縦は依存先の形（DIP に沿うか）。太い枠がこの章の直した形。">
+          <Figure n="65-5" title="DIP と DI の違い" caption="横は依存先の受け取り方（DI を使うか）、縦は依存先の形（DIP に沿うか）。太い枠がこの章の直した形。">
             <DipDiFigure />
           </Figure>
           <p>
-            図 48-5 は DI を使うかどうかと、DIP に沿うかどうかの組み合わせを並べたものです。右上の DI だけを使った版は、テストで代役を渡せますが、SDK を更新すると Order とテストを直すことになる点は変わりません。左下は、Order が取り決めには依存しているものの、実装をメソッドの中で設定から取り出す書き方です。これは Service Locator と呼ばれ、どの依存先を使うかがメソッドの中を読まないとわかりません（<ChapterLink n={40} section="anti-patterns" />）。この章では右下のように、取り決めに依存する形（DIP）と、その実装を引数で受け取る形（DI）を組み合わせます。
+            図 65-5 は DI を使うかどうかと、DIP に沿うかどうかの組み合わせを並べたものです。右上の DI だけを使った版は、テストで代役を渡せますが、SDK を更新すると Order とテストを直すことになる点は変わりません。左下は、Order が取り決めには依存しているものの、実装をメソッドの中で設定から取り出す書き方です。これは Service Locator と呼ばれ、どの依存先を使うかがメソッドの中を読まないとわかりません（<ChapterLink n={40} section="anti-patterns" />）。この章では右下のように、取り決めに依存する形（DIP）と、その実装を引数で受け取る形（DI）を組み合わせます。
           </p>
           <p>
             DIP の説明で <Term en="Inversion of Control">制御の反転</Term>（IoC）という言葉が出てくることもあります。Schuchert は IoC を、どちらが呼び出しを始めるか（自分のコードがフレームワークを呼ぶのか、フレームワークが自分のコードを呼び返すのか）の問題として、DIP と区別しています<Ref n={3} />。Rails がリクエストを受けてコントローラーのアクションを呼ぶのは IoC の例で、依存の向きとは別の話です。
@@ -889,7 +890,7 @@ end
 `}
           />
           <p>
-            Adapter は取り決めの形（商品コードと数量の Hash）を SDK の形（<code>sku</code>・<code>qty</code> の配列）に変え、SDK の結果と例外を取り決めの値と例外に変えます。SDK の名前を書いているのはこのクラスだけです。app/adapters のように app/ の下に作ったディレクトリは、設定を足さなくても Rails が自動で読み込みます。Adapter の書き方と、変換で気を付けることは<ChapterLink n={42} section="rails-impl" />で詳しく説明しました。
+            Adapter は取り決めの形（商品コードと数量の Hash）を SDK の形（<code>sku</code>・<code>qty</code> の配列）に変え、SDK の結果と例外を取り決めの値と例外に変えます。SDK の名前を書いているのはこのクラスだけです。app/adapters のように app/ の下に作ったディレクトリは、設定を足さなくても Rails が自動で読み込みます。Adapter の書き方と、変換で気を付けることは<ChapterLink n={42} section="rails-impl" />で詳しく説明します。
           </p>
           <h3>3. 組み立てる場所</h3>
           <Code
@@ -904,7 +905,7 @@ end
 `}
           />
           <p>
-            どの実装を使うかを決めるコードは、アプリの起動時に1か所で実行します。<code>config.x</code> はアプリが独自の設定を入れられる場所で、<code>to_prepare</code> は起動時と、開発環境でコードを再読み込みするたびに実行されるブロックです<Ref n={9} />。app/ の下のクラスは再読み込みされるので、initializer から直接参照せずに <code>to_prepare</code> の中で作ります。本番で API キーが無いときに起動を止める方法などは、<ChapterLink n={40} section="rails-impl" />で説明しました。
+            どの実装を使うかを決めるコードは、アプリの起動時に1か所で実行します。<code>config.x</code> はアプリが独自の設定を入れられる場所で、<code>to_prepare</code> は起動時と、開発環境でコードを再読み込みするたびに実行されるブロックです<Ref n={9} />。app/ の下のクラスは再読み込みされるので、initializer から直接参照せずに <code>to_prepare</code> の中で作ります。本番で API キーが無いときに起動を止める方法などは、<ChapterLink n={40} section="rails-impl" />で説明します。
           </p>
           <h3>4. Order・コントローラー・ジョブを取り決めに依存させる</h3>
           <Code
@@ -1027,7 +1028,7 @@ end
 `}
           />
           <p>
-            Adapter のテストでは WebMock（外部への HTTP の通信を止め、登録した応答を返す gem）で SokoLink の API を置き換え、同じ <code>shared_examples</code> を当てます。WebMock の使い方は<ChapterLink n={40} section="test" />、2つの Adapter に同じテストを当てる方法は<ChapterLink n={42} section="test" />で説明しました。
+            Adapter のテストでは WebMock（外部への HTTP の通信を止め、登録した応答を返す gem）で SokoLink の API を置き換え、同じ <code>shared_examples</code> を当てます。WebMock の使い方は<ChapterLink n={40} section="test" />、2つの Adapter に同じテストを当てる方法は<ChapterLink n={42} section="test" />で説明します。
           </p>
           <Code
             lang="ruby"
@@ -1172,11 +1173,11 @@ end
 13 examples, 0 failures
 `}
           />
-          <Figure n="48-6" title="SDK 2.0 への更新で直したファイル（適用前と適用後）" caption="git diff --stat の行数。+ は足した行、− は消した行。適用後の Fake と共通のテストは spec/support の2つのファイル。">
+          <Figure n="65-6" title="SDK 2.0 への更新で直したファイル（適用前と適用後）" caption="git diff --stat の行数。+ は足した行、− は消した行。適用後の Fake と共通のテストは spec/support の2つのファイル。">
             <ChangeScopeFigure />
           </Figure>
           <p>
-            図 48-6 は SDK 2.0 への更新で直したファイルを、適用前と適用後で比べたものです。適用前は6つのファイルを直し、店の規則の書き方まで変わりました。適用後は Adapter とそのテストの2つだけで、注文の規則のコードとテストは変わっていません。SDK を 2.0 に替えても、組み立てる場所（initializer）のコードは変わっていません。
+            図 65-6 は SDK 2.0 への更新で直したファイルを、適用前と適用後で比べたものです。適用前は6つのファイルを直し、店の規則の書き方まで変わりました。適用後は Adapter とそのテストの2つだけで、注文の規則のコードとテストは変わっていません。SDK を 2.0 に替えても、組み立てる場所（initializer）のコードは変わっていません。
           </p>
           <p>
             代わりに増えたものもあります。取り決め・Adapter・組み立てる場所・Fake・共通のテストの5つのファイルと、形を変換するコードです。SDK の形と取り決めの形が違うので、変換を誤ると、Adapter のテストを書かない限り本番で初めて気付くことになります。この費用に見合うかどうかは、次の節で考えます。
@@ -1314,11 +1315,11 @@ end
             Active Record も <code>Time.current</code> も <code>Rails.logger</code> も、このアプリで別の実装に替える予定がありません。変わるとしても Rails の更新に合わせてアプリ全体で対応するものです。取り決めを挟んでも守れる変更が無く、列を足すたびに詰め替えのコードを直す手間だけが増えています。<code>Heavy::Clock</code> もテストでは Rails の <code>travel_to</code>（テストの間だけ現在時刻を置き換える）で足ります。
           </p>
           <h3>判断の目安</h3>
-          <Figure n="48-7" title="取り決めを挟むかの判断" caption="模式図。境目は目安で、同じ依存先でもアプリの事情で位置が変わる。">
+          <Figure n="65-7" title="取り決めを挟むかの判断" caption="模式図。境目は目安で、同じ依存先でもアプリの事情で位置が変わる。">
             <JudgeFigure />
           </Figure>
           <p>
-            図 48-7 は依存先を2つの軸で分け、取り決めを挟むかを判断する目安です。横軸はその依存先の変更を誰が決めるかです。外部の会社が決める SDK や API は、こちらの都合と関係なく変わります。縦軸は差し替える必要の大きさです。複数の実装を使い分ける場合や、テストで通信・課金・送信を避けたい場合は、差し替える必要が大きくなります。
+            図 65-7 は依存先を2つの軸で分け、取り決めを挟むかを判断する目安です。横軸はその依存先の変更を誰が決めるかです。外部の会社が決める SDK や API は、こちらの都合と関係なく変わります。縦軸は差し替える必要の大きさです。複数の実装を使い分ける場合や、テストで通信・課金・送信を避けたい場合は、差し替える必要が大きくなります。
           </p>
           <p>
             右上の倉庫・決済・SMS の SDK は、この章のように取り決めと Adapter を作る効果が大きい領域です。右下の、1社だけで替える予定も無い外部のサービスでは、まず SDK を呼ぶコードを1つのクラスに集めるところまでにします。それだけでも SDK の更新で直す範囲は1つのクラスに収まり、費用は小さく済みます。取り決めを別のファイルに書き、Fake と共通のテストを作るのは、2社目が来たときや、テストで困ったときでも間に合います。左上の Active Job などは Rails がすでに取り決めを持っているので、自分で書く必要はありません（次の節）。左下の Active Record・現在時刻・Ruby の標準ライブラリ・自分たちの値オブジェクトには、そのまま依存します。
@@ -1461,13 +1462,13 @@ Active Record:        ActiveRecord::ConnectionAdapters::Mysql2Adapter
 `}
           />
           <p>
-            ConfirmOrderJob のコードは同じで、test では TestAdapter に、development では SidekiqAdapter に入ります。メールの送り方（<code>delivery_method</code>）、キャッシュの保存先（キャッシュストア）、データベースのアダプターも、設定で実装を選ぶ同じ構造です。これらは Rails がすでに取り決めを持っているので、アプリで取り決めを書き足す必要はありません。図 48-7 の左上の領域です。
+            ConfirmOrderJob のコードは同じで、test では TestAdapter に、development では SidekiqAdapter に入ります。メールの送り方（<code>delivery_method</code>）、キャッシュの保存先（キャッシュストア）、データベースのアダプターも、設定で実装を選ぶ同じ構造です。これらは Rails がすでに取り決めを持っているので、アプリで取り決めを書き足す必要はありません。図 65-7 の左上の領域です。
           </p>
-          <Figure n="48-8" title="Active Job のアダプターと、この章の倉庫" caption="破線の箱は取り決め、破線の矢印は取り決めを満たす関係。">
+          <Figure n="65-8" title="Active Job のアダプターと、この章の倉庫" caption="破線の箱は取り決め、破線の矢印は取り決めを満たす関係。">
             <RailsFigure />
           </Figure>
           <p>
-            図 48-8 は Active Job とこの章の倉庫を並べたものです。どちらも、使う側は取り決めだけを使い、実装は取り決めを満たし、どれを使うかは設定で決めます。違うのは取り決めを決めた側で、Active Job では Rails が、倉庫ではこのアプリが決めています。倉庫への取り決めはこのアプリの業務の言葉で書くもので、Rails や倉庫会社が用意してくれるものではありません。
+            図 65-8 は Active Job とこの章の倉庫を並べたものです。どちらも、使う側は取り決めだけを使い、実装は取り決めを満たし、どれを使うかは設定で決めます。違うのは取り決めを決めた側で、Active Job では Rails が、倉庫ではこのアプリが決めています。倉庫への取り決めはこのアプリの業務の言葉で書くもので、Rails や倉庫会社が用意してくれるものではありません。
           </p>
           <h3>Ruby のダックタイピングと取り決め</h3>
           <p>
@@ -1495,6 +1496,29 @@ Active Record:        ActiveRecord::ConnectionAdapters::Mysql2Adapter
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          取り決めを挟むのは、変更を外部の会社が決め、差し替える必要が大きい依存先です。この章では倉庫会社の SDK を呼ぶコードを Adapter に集め、Order には注文の側で決めた取り決めだけを使わせました。自分たちや Rails が変更を決める DB・現在時刻・ログには、取り決めを挟みません。
+        </>
+      ),
+      benefit: {
+        text: <>SDK 2.0 への更新で直すファイルが、Order・コントローラー・ジョブとそのテストの6つから、Adapter とそのテストの2つになった。Order のテストは SDK のクラスを1つも書かず、メモリー上の在庫で取り決めを満たす Fake で動く。</>,
+        basis: <><ChapterLink n={67} section="scene" />、<ChapterLink n={67} section="apply" /></>,
+      },
+      cost: {
+        text: <>取り決め・Adapter・組み立てる場所・Fake・共通のテストの5つのファイルと、SDK の形を取り決めの形に変換するコードが増えた。変換を誤ると、Adapter のテストを書かない限り本番で初めて気付く。</>,
+        basis: <ChapterLink n={67} section="apply" />,
+      },
+      alternative: {
+        text: <>1社だけで替える予定も無い外部のサービスは、まず SDK を呼ぶコードを1つのクラスに集めるところまでにする。それだけでも SDK の更新で直す範囲は1つのクラスに収まる。DB・時計・ログにまで取り決めを挟んだ例では、列を1つ使うだけで4つのファイルを直すことになった。</>,
+        basis: <ChapterLink n={67} section="overuse" />,
+      },
+      criterion: {
+        text: <>その依存先の変更を決めるのは外部の会社か、自分たちや Rails か。実装が複数あるか、替える予定があるか。テストで通信・課金・送信を避けたいか。業務の規則を書いたコードが直接使っているか。</>,
+        basis: <ChapterLink n={67} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

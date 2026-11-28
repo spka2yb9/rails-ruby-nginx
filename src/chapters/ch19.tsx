@@ -6,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 22-1 メールが届くまで ---------- */
+/* ---------- 図 29-1 メールが届くまで ---------- */
 function MailFlowFigure() {
   const cmds: [string, string][] = [
     ['EHLO localhost', '250'],
@@ -18,7 +18,7 @@ function MailFlowFigure() {
   ]
   return (
     <Svg
-      id="22-1"
+      id="29-1"
       w={780}
       h={330}
       label="アプリケーションは送信用の SMTP サーバーに接続し、SMTP の手順でメールを渡す。送信用のサーバーは、宛先のアドレスのドメインのメールを受け取るサーバーを調べ、そこへ SMTP で渡す。受信者はメールソフトや Web メールで、そのサーバーに届いたメールを読む。下段は、アプリケーションと SMTP サーバーのやり取りで、EHLO、MAIL FROM、RCPT TO、DATA、メールの文字列と「.」の行、QUIT を順に送り、サーバーはそれぞれに 250・354・221 などの番号で応答する"
@@ -61,11 +61,11 @@ function MailFlowFigure() {
   )
 }
 
-/* ---------- 図 22-2 メーラーがメールを作って送るまで ---------- */
+/* ---------- 図 29-2 メーラーがメールを作って送るまで ---------- */
 function MailerFlowFigure() {
   return (
     <Svg
-      id="22-2"
+      id="29-2"
       w={780}
       h={250}
       label="ArticleMailer.with(article: 記事).published.deliver_now を呼ぶと、published アクションが @article を用意して mail で宛先と件名を決める。アクションと同じ名前のテキスト用と HTML 用のテンプレートから本文が作られ、2つの部分を持つ1通のメールになる。配送方法が smtp なら SMTP サーバーに送り、test ならテスト環境で ActionMailer::Base.deliveries の配列に入れる"
@@ -230,11 +230,11 @@ function VariantTimingFigure() {
   )
 }
 
-/* ---------- 図 22-4 ファイルのアップロードと保存先 ---------- */
+/* ---------- 図 29-4 ファイルのアップロードと保存先 ---------- */
 function UploadFigure() {
   return (
     <Svg
-      id="22-4"
+      id="29-4"
       w={780}
       h={290}
       label="ブラウザーは、file_field を含むフォームの値を multipart/form-data の形式で POST する。要求の本文は boundary の文字列で区切られ、title の値と、photo.png のファイル名・種類・中身のバイト列が入る。Rails の params では、ファイルは ActionDispatch::Http::UploadedFile になり、中身は一時ファイルに書かれている。一時ファイルは応答の後に消されるので、要求を処理している間に、サーバーのディスクかクラウドのストレージに保存し、どのファイルがどの記事のものかをデータベースに記録する"
@@ -265,11 +265,11 @@ function UploadFigure() {
   )
 }
 
-/* ---------- 図 22-3 deliver_later の処理経路 ---------- */
+/* ---------- 図 29-3 deliver_later の処理経路 ---------- */
 function DeliverFigure() {
   return (
     <Svg
-      id="22-3"
+      id="29-3"
       w={780}
       h={250}
       label="ArticleMailer.with(article: a).published は MessageDelivery を返すだけで、メールはまだ作られない。deliver_now ならその場でメーラーのアクションを実行してテンプレートを描画し、Mail::Message を SMTP などで送る。deliver_later なら、メーラー名・アクション名・params を ActionMailer::MailDeliveryJob の引数にしてキューに入れる。ジョブの実行時に、Sidekiq などのプロセスで同じ順に描画と送信が行われる。記事は GlobalID で渡るので、実行時のデータでメールが作られる"
@@ -288,7 +288,7 @@ function DeliverFigure() {
       </T>
       <Box x={300} y={116} w={220} h={50} lines={['MailDeliveryJob を投入', '("ArticleMailer", "published", …)']} fs={11} fill="box2" subTone="muted" />
       <Arrow x1={520} y1={141} x2={548} y2={141} />
-      <Box x={550} y={120} w={210} h={44} lines={['キュー（Redis など）', '第21章']} fs={11.5} fill="box4" subTone="muted" />
+      <Box x={550} y={120} w={210} h={44} lines={['キュー（Redis など）', '第28章']} fs={11.5} fill="box4" subTone="muted" />
       <Arrow d="M655,164 L655,196 L520,196" />
       <Box x={300} y={176} w={220} h={44} lines={['ジョブの実行（別のプロセス）', 'deliver_now と同じ処理（上段）']} fs={11} fill="box" subTone="muted" />
       <T x={20} y={240} fs={11} tone="muted">
@@ -298,7 +298,7 @@ function DeliverFigure() {
   )
 }
 
-/* ---------- 図 22-5 ActiveStorage のテーブル ---------- */
+/* ---------- 図 29-5 ActiveStorage のテーブル ---------- */
 function TablesFigure() {
   const cols = (x: number, y: number, title: string, rows: string[], fill: 'box' | 'box4' | 'box5', w = 220) => (
     <g>
@@ -316,7 +316,7 @@ function TablesFigure() {
   )
   return (
     <Svg
-      id="22-5"
+      id="29-5"
       w={780}
       h={300}
       label="articles の行は、active_storage_attachments の record_type と record_id で参照される。attachments は name（cover）と blob_id を持ち、active_storage_blobs の行を指す。blobs はファイルの key、filename、content_type、byte_size、checksum、service_name、metadata を持ち、ファイルの本体はストレージのサービスに key の名前で保存される。variant を作ると、active_storage_variant_records に元の blob_id と変換内容のダイジェストが記録され、変換後のファイルは別の blob として、record_type が ActiveStorage::VariantRecord の attachment でつながる"
@@ -340,11 +340,11 @@ function TablesFigure() {
   )
 }
 
-/* ---------- 図 22-6 リダイレクトとプロキシ ---------- */
+/* ---------- 図 29-6 リダイレクトとプロキシ ---------- */
 function ModeFigure() {
   return (
     <Svg
-      id="22-6"
+      id="29-6"
       w={780}
       h={250}
       label="リダイレクト方式では、ブラウザーが /rails/active_storage/blobs/redirect/署名付きID/cover.png を要求すると、Rails は 5 分で期限が切れるストレージの URL に 302 でリダイレクトし、ブラウザーはストレージからファイルを直接取得する。プロキシ方式では、Rails がストレージからファイルを読んでブラウザーに返すので、転送の間 Puma のスレッドを使うが、CDN でキャッシュできる"
@@ -382,7 +382,7 @@ function ModeFigure() {
   )
 }
 
-/* ---------- 図 22-7 直接アップロード ---------- */
+/* ---------- 図 29-7 直接アップロード ---------- */
 function DirectFigure() {
   const lanes = [
     { x: 50, t: 'ブラウザー' },
@@ -397,7 +397,7 @@ function DirectFigure() {
   ]
   return (
     <Svg
-      id="22-7"
+      id="29-7"
       w={780}
       h={220}
       label="S3 を使った直接アップロードの例。ブラウザーがまず Rails にファイル名・サイズ・チェックサムを POST する。Rails は blob の行を作り、アップロード先の URL と signed_id を返す。ブラウザーがその URL で S3 にファイルを PUT してから、signed_id を記事のフォームで Rails に送る"
@@ -509,7 +509,7 @@ S: 221 Bye
             <Ref n={9} />。
           </p>
           <p>
-            実際の運用では、メールはいくつかのサーバーを経由して届きます（図 22-1）。アプリケーションが接続するのは、送信に使う SMTP サーバーです。メールの送信を請け負うサービスや、会社のメールサーバーを使います。送信用のサーバーは、宛先のアドレスの
+            実際の運用では、メールはいくつかのサーバーを経由して届きます（図 29-1）。アプリケーションが接続するのは、送信に使う SMTP サーバーです。メールの送信を請け負うサービスや、会社のメールサーバーを使います。送信用のサーバーは、宛先のアドレスの
             @ より後ろ（example.com）から、そのドメインのメールを受け取るサーバーを DNS（ドメイン名からサーバーの場所を調べる仕組み）で探し、そのサーバーへ同じく SMTP で渡します
             <Ref n={8} />。受信者はメールソフトや Web メールで、そのサーバーに届いたメールを読みます。アプリケーションの処理は、送信用のサーバーが 250
             を返した時点で終わります。受信者に届いたかどうかは、この時点ではわかりません。
@@ -522,7 +522,7 @@ S: 221 Bye
             </ChapterLink>
             の節）。
           </p>
-          <Figure n="22-1" title="メールが届くまで" caption="Net::SMTP と検証用の SMTP サーバーでの実測と、RFC 5321 をもとにした模式図。送信用のサーバーから先は実測していない。">
+          <Figure n="29-1" title="メールが届くまで" caption="Net::SMTP と検証用の SMTP サーバーでの実測と、RFC 5321 をもとにした模式図。送信用のサーバーから先は実測していない。">
             <MailFlowFigure />
           </Figure>
         </>
@@ -653,7 +653,7 @@ C: .
           <p>
             <code>Content-Type: multipart/alternative</code> は、同じ内容を別の形式で表した部分を並べたメールであることを表します。boundary
             の文字列で区切られた text/plain（文字だけの本文）と text/html（HTML の本文）の部分があり、受信者のメールソフトはどちらか一方を選んで表示します
-            <Ref n={12} />（図 22-2）。このように複数の部分からなるメールをマルチパートのメールと呼びます。
+            <Ref n={12} />（図 29-2）。このように複数の部分からなるメールをマルチパートのメールと呼びます。
           </p>
           <p>
             MIME-Version、Content-Type、Content-Transfer-Encoding は、<Term en="Multipurpose Internet Mail Extensions">MIME</Term>{' '}
@@ -672,7 +672,7 @@ C: .
             <ChapterLink n={16} />
             ）。次の節では、メーラーとコントローラーが実際に同じクラスを継承していることを確かめます。
           </p>
-          <Figure n="22-2" title="メーラーがメールを作って送るまで" caption="デモの ArticleMailer を検証用の SMTP サーバーに送った実測と、Rails 8.1.4.1 の設定の既定値をもとにした模式図。">
+          <Figure n="29-2" title="メーラーがメールを作って送るまで" caption="デモの ArticleMailer を検証用の SMTP サーバーに送った実測と、Rails 8.1.4.1 の設定の既定値をもとにした模式図。">
             <MailerFlowFigure />
           </Figure>
         </>
@@ -844,7 +844,7 @@ end
           </p>
           <p>
             保存されるのはメーラーの名前、アクションの名前、params と引数だけです。記事は GlobalID で渡るので、ジョブが実行されたときに記事を読み直して、その時点のデータでメールを描画します（図
-            22-3）。投入の後で記事を変更すれば、変更後の内容が送られます。<ChapterLink n={18} section="transaction" />
+            29-3）。投入の後で記事を変更すれば、変更後の内容が送られます。<ChapterLink n={18} section="transaction" />
             で見たとおり、トランザクションの中で <code>deliver_later</code> を呼ぶと、COMMIT 前にジョブが実行されて記事を見つけられないことがあります。
           </p>
           <p>
@@ -909,7 +909,7 @@ end
             ）。Sidekiq の <code>-q</code> は、ジョブを取り出すキューの名前の指定です。Sidekiq を <code>-q mailers</code> などで起動している既存のアプリケーションでは、load_defaults
             を上げるとメールのジョブが別のキューに入るので確かめます。そのキューを見ているプロセスが無いと、メールのジョブだけが実行されずに残ります。
           </p>
-          <Figure n="22-3" title="deliver_later の処理経路" caption="Rails 8.1.4.1 の message_delivery.rb・mail_delivery_job.rb と、デモで投入されたジョブをもとにした模式図。">
+          <Figure n="29-3" title="deliver_later の処理経路" caption="Rails 8.1.4.1 の message_delivery.rb・mail_delivery_job.rb と、デモで投入されたジョブをもとにした模式図。">
             <DeliverFigure />
           </Figure>
         </>
@@ -1012,7 +1012,7 @@ Processing by ProbeController#echo as */*
             <Ref n={17} />。ファイルを残すには、要求を処理している間に、別の場所へ保存します。
           </p>
           <p>
-            保存先にはサーバーのディスクとクラウドのストレージがあります（図 22-4）。ディスクに保存すると手軽ですが、ファイルはそのサーバーの中にしかないので、サーバーが複数台あると、ほかのサーバーからは読めません。クラウドのストレージは Amazon
+            保存先にはサーバーのディスクとクラウドのストレージがあります（図 29-4）。ディスクに保存すると手軽ですが、ファイルはそのサーバーの中にしかないので、サーバーが複数台あると、ほかのサーバーからは読めません。クラウドのストレージは Amazon
             S3 のように、ファイルを保存して後から取り出せるサービスで、どのサーバーからも同じファイルを読み書きできます。どちらに保存しても、どのファイルがどの記事のものかを、データベースに記録しておく必要があります。
           </p>
           <p>
@@ -1040,7 +1040,7 @@ local:
             が作るファイルではコメントになっています。どのサービスを使うかは環境ごとの設定ファイルで選び、デモの開発環境は <code>config.active_storage.service = :local</code> です。次の節では、ActiveStorage
             がファイルを添付したときに、データベースのどのテーブルに何を記録するかを確かめます。
           </p>
-          <Figure n="22-4" title="ファイルのアップロードと保存先" caption="Rails 8.1.4.1 のデモでの実測（フォームの HTML、要求の本文、ログ）と、Rack 3.2.8 の tempfile_reaper.rb をもとにした模式図。">
+          <Figure n="29-4" title="ファイルのアップロードと保存先" caption="Rails 8.1.4.1 のデモでの実測（フォームの HTML、要求の本文、ログ）と、Rack 3.2.8 の tempfile_reaper.rb をもとにした模式図。">
             <UploadFigure />
           </Figure>
         </>
@@ -1098,7 +1098,7 @@ path: storage/ov/8a/ov8aaow7e2mjrsfdyd1vgfwb9bzr
             COMMIT の後、Attachment の <code>after_create_commit</code> が ActiveStorage::AnalyzeJob を投入しました。このジョブが画像の幅と高さなどを調べて metadata に書き込みます。解析と、後で述べる事前のバリアントの生成は ActiveJob
             で行われるので、Sidekiq などのワーカーが動いていないと metadata は埋まりません。
           </p>
-          <Figure n="22-5" title="ActiveStorage のテーブル" caption="activestorage 8.1.4.1 のマイグレーションと、デモで添付・バリアントの生成をしたときに作られた行をもとにした図。">
+          <Figure n="29-5" title="ActiveStorage のテーブル" caption="activestorage 8.1.4.1 のマイグレーションと、デモで添付・バリアントの生成をしたときに作られた行をもとにした図。">
             <TablesFigure />
           </Figure>
           <p>
@@ -1155,9 +1155,9 @@ end
 `}
           />
           <p>
-            S3 を使う場合、2回目の要求はブラウザーから S3 に直接送られ、Puma を通りません。一方、<code>rails_storage_proxy_path</code> を使うプロキシ方式では、Rails がストレージからファイルを読んでブラウザーに返します（図 22-6）。CDN を前に置いてキャッシュさせる用途ですが、CDN にキャッシュが無い間は、大きなファイルの転送の間 Puma のスレッドを使います。
+            S3 を使う場合、2回目の要求はブラウザーから S3 に直接送られ、Puma を通りません。一方、<code>rails_storage_proxy_path</code> を使うプロキシ方式では、Rails がストレージからファイルを読んでブラウザーに返します（図 29-6）。CDN を前に置いてキャッシュさせる用途ですが、CDN にキャッシュが無い間は、大きなファイルの転送の間 Puma のスレッドを使います。
           </p>
-          <Figure n="22-6" title="リダイレクト方式とプロキシ方式" caption="Active Storage Overview と activestorage 8.1.4.1 の blobs/redirect_controller.rb・proxy_controller.rb をもとにした模式図。">
+          <Figure n="29-6" title="リダイレクト方式とプロキシ方式" caption="Active Storage Overview と activestorage 8.1.4.1 の blobs/redirect_controller.rb・proxy_controller.rb をもとにした模式図。">
             <ModeFigure />
           </Figure>
           <Callout kind="warn" title="URL を知っていれば誰でも取得できる">
@@ -1176,7 +1176,7 @@ end
         <>
           <p>
             <code>form.file_field :cover, direct_upload: true</code> と Active Storage の JavaScript を使うと、ブラウザーはまずファイル名やサイズを Rails に送り、アップロード先を問い合わせます。
-            図 22-7 は保存先が S3 の場合です。画像本体はブラウザーから S3 に届くので、Rails が画像を転送する間、Puma のスレッドを使うこともありません。<Ref n={4} />
+            図 29-7 は保存先が S3 の場合です。画像本体はブラウザーから S3 に届くので、Rails が画像を転送する間、Puma のスレッドを使うこともありません。<Ref n={4} />
             下のログは、保存先にローカルディスクを使ったデモで、最初の問い合わせに返った応答です。
           </p>
           <Code
@@ -1195,7 +1195,7 @@ POST /rails/active_storage/direct_uploads  {"blob":{"filename":"photo.png","byte
             もう1つの <code>signed_id</code> は、最後に記事フォームで Rails に送る値です。これでどの blob を記事の表紙にするかが決まります。
             PUT が成功しても、その後に利用者がフォームを閉じたら、保存されたファイルと blob の行は記事に結び付かずに残ります。
           </p>
-          <Figure n="22-7" title="直接アップロードの流れ" caption="S3 に画像を置く場合。②で受け取る URL は③のファイル転送に、signed_id は④の記事の保存に使う。">
+          <Figure n="29-7" title="直接アップロードの流れ" caption="S3 に画像を置く場合。②で受け取る URL は③のファイル転送に、signed_id は④の記事の保存に使う。">
             <DirectFigure />
           </Figure>
         </>
@@ -1285,6 +1285,162 @@ variant_records: 1 blobs: 2
       ),
     },
     {
+      id: 'cable-and-text',
+      title: 'Action Cable の通知と Action Text の本文',
+      body: (
+        <>
+          <h3>Action Cable でコメントの追加を通知する</h3>
+          <p>ブラウザーは <ChapterLink n={24} section="websocket">WebSocket</ChapterLink> で Action Cable に接続し、チャンネルを購読するとサーバーから通知を受け取れます。たとえば記事を閲覧できる利用者にだけ購読を許可し、コメントの保存を確定した後に記事のチャンネルへ通知を送ります。<Ref n={23} /></p>
+          <p>接続時には利用者を認証し、購読時には記事ごとに認可します。複数のサーバーで配信する場合は、あるサーバーで発行した通知を別のサーバーの接続へ届けられる共有アダプターを使います。切断中の通知に備えて、再接続時には HTTP で最新のコメントを読み直す設計にできます。</p>
+          <p>Action Cable の部品は次の4つです。<Ref n={23} /></p>
+          <ul>
+            <li>接続（connection）：ブラウザーのページ1つが張る1本の WebSocket です。<code>/cable</code> への HTTP の要求を Upgrade で WebSocket に切り替えて作ります。サーバー側では ApplicationCable::Connection の <code>connect</code> が利用者を確かめ、<code>identified_by</code> で接続に利用者を結び付けます。</li>
+            <li>チャンネル（channel）：通知の種類ごとのクラスです。ここではコメントの通知を CommentsChannel にまとめます。</li>
+            <li>サブスクリプション（subscription）：1本の接続の上で、ブラウザーがチャンネルを購読したものです。1本の接続で複数の購読を持てます。チャンネルの <code>subscribed</code> が購読を受け入れるかを決め、<code>stream_for</code> で受け取る配信先（broadcasting）を登録します。</li>
+            <li>broadcast：サーバー側のコードが配信先の名前を指定して送るメッセージです。その配信先を登録した購読すべてに届きます。</li>
+          </ul>
+          <p>Turbo などの JavaScript のライブラリを使わずに、1ファイルの Rails 8.1.4.1 のアプリで確かめました。接続の確認と、公開済みの記事だけを購読できるチャンネルの部分です。</p>
+          <Code
+            lang="ruby"
+            title="cable_app.rb（抜粋）"
+            code={`
+config.action_cable.cable = { "adapter" => "redis", "url" => "redis://ag-19-r:6379/1" }
+config.action_cable.allowed_request_origins = ["http://app.example"]
+
+module ApplicationCable
+  class Connection < ActionCable::Connection::Base
+    identified_by :current_user
+
+    def connect
+      self.current_user = User.find_signed(request.params[:token], purpose: :cable) || reject_unauthorized_connection
+    end
+  end
+end
+
+class CommentsChannel < ActionCable::Channel::Base
+  def subscribed
+    article = Article.find_by(id: params[:article_id])
+    return reject unless article&.readable_by?(current_user)   # 公開済みか、自分の記事
+    stream_for article
+  end
+end
+
+# broadcast.rb（サーバーとは別のプロセスで実行する）
+CommentsChannel.broadcast_to(Article.find(1), { comment_id: 5, body: "新しいコメント" })
+`}
+          />
+          <p>
+            このデモでは、利用者の署名付き ID（<code>signed_id</code>）を URL の token に入れて接続します。ブラウザーから使う実際のアプリでは、ログインの Cookie で利用者を確かめるのが一般的です。Puma で動かしたサーバーに、Ruby で書いた WebSocket のクライアント（websocket-driver を使用）から接続しました。→ はクライアントが送ったメッセージ、← はサーバーから届いたメッセージで、3秒ごとに届く ping は省いています。
+          </p>
+          <Code
+            lang="text"
+            code={`
+== トークンなしで接続
+open（HTTP 101 で WebSocket に切り替わった）
+← {"type":"disconnect","reason":"unauthorized","reconnect":false}
+close code=1000
+== トークン付きで接続
+open（HTTP 101 で WebSocket に切り替わった）
+← {"type":"welcome"}
+→ {"command":"subscribe","identifier":"{\\"channel\\":\\"CommentsChannel\\",\\"article_id\\":1}"}
+← {"identifier":"{\\"channel\\":\\"CommentsChannel\\",\\"article_id\\":1}","type":"confirm_subscription"}
+→ {"command":"subscribe","identifier":"{\\"channel\\":\\"CommentsChannel\\",\\"article_id\\":2}"}
+← {"identifier":"{\\"channel\\":\\"CommentsChannel\\",\\"article_id\\":2}","type":"reject_subscription"}
+== 別のプロセスで broadcast_to を実行
+broadcasting_for: comments:Z2lkOi8vY2FibGUtZGVtby9BcnRpY2xlLzE
+← {"identifier":"{\\"channel\\":\\"CommentsChannel\\",\\"article_id\\":1}","message":{"comment_id":5,"body":"新しいコメント"}}
+`}
+          />
+          <Code
+            lang="text"
+            title="サーバーのログ（抜粋。token の値は省略）"
+            code={`
+Started GET "/cable" [WebSocket] for 172.29.0.4 at 2026-11-27 17:16:47 +0000
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+An unauthorized connection attempt was rejected
+Started GET "/cable?token=…" [WebSocket] for 172.29.0.4 at 2026-11-27 17:16:47 +0000
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Registered connection (Z2lkOi8vY2FibGUtZGVtby9Vc2VyLzE)
+CommentsChannel is transmitting the subscription confirmation
+CommentsChannel is streaming from comments:Z2lkOi8vY2FibGUtZGVtby9BcnRpY2xlLzE
+CommentsChannel is transmitting the subscription rejection
+CommentsChannel transmitting {"comment_id" => 5, "body" => "新しいコメント"} (via streamed from comments:Z2lkOi8vY2FibGUtZGVtby9BcnRpY2xlLzE)
+`}
+          />
+          <ol>
+            <li>token の無い接続も WebSocket への切り替えまでは進みました。その後 connect の <code>reject_unauthorized_connection</code> により、サーバーが <code>disconnect</code>（reason は unauthorized、再接続しない指示）を送って接続を閉じました。</li>
+            <li>token のある接続には <code>welcome</code> が届き、購読を待つ状態になりました。購読の要求はチャンネル名と記事の ID を JSON の文字列にした identifier で送ります。</li>
+            <li>公開済みの記事1の購読は <code>confirm_subscription</code>、下書きの記事2の購読は subscribed の <code>reject</code> により <code>reject_subscription</code> になりました。同じ接続の上で、購読ごとに許可と拒否が分かれています。</li>
+            <li>broadcast_to の配信先の名前はチャンネル名の comments と、記事の GlobalID（<code>gid://cable-demo/Article/1</code> を Base64 にした文字列）をつないだものです。別のプロセスから送ったメッセージが、記事1の購読にだけ届きました。</li>
+          </ol>
+          <p>
+            別のプロセスから送ったメッセージが届いたのは、アダプターが Redis を中継したためです。broadcast は Redis に PUBLISH し、サーバーのプロセスは購読中の配信先を Redis で SUBSCRIBE しています。デモの途中で Redis（8.10.3）の <code>PUBSUB CHANNELS</code> を見ると、<code>comments:Z2lk…</code> と、接続ごとの <code>action_cable/Z2lk…</code>、内部用の <code>_action_cable_internal</code> がありました。開発環境の既定の <code>async</code> アダプターは同じプロセスの中だけで配信するので、Puma のワーカーが複数あるときや、ジョブのプロセスから送るときには届きません。
+          </p>
+          <p>
+            rails new が作る config/cable.yml の雛形は、本番環境のアダプターが redis です。Solid の gem を省かずに作ったアプリでは、続けて <code>bin/rails solid_cable:install</code> が実行され、本番環境のアダプターが <code>solid_cable</code> に書き換わります。Solid Cable はメッセージを DB のテーブルに書き、各サーバーがテーブルを定期的に読み出して（既定は 0.1 秒ごと）、購読している接続に送ります。Redis を別に用意しなくてよい代わりに、DB に読み書きが増えます。<Ref n={25} />
+          </p>
+          <p>
+            Nginx を前に置く場合は、<code>/cable</code> への要求に Upgrade と Connection のヘッダーを付けて Puma に渡す設定が要ります。設定が無いと、Action Cable は WebSocket の要求と判断できずに 404 を返します（<ChapterLink n={24} section="websocket" />
+            ）。切り替えた後の WebSocket の読み書きは Puma のスレッドを使わず、Action Cable のイベントループ（nio4r）と、channel の処理用のスレッド（既定で4本）が受け持ちます。
+          </p>
+          <h3>Action Text で書式付きの本文と添付を扱う</h3>
+          <p>記事モデルに <code>has_rich_text :body</code> を宣言し、フォームに <code>form.rich_textarea :body</code> を置くと、太字やリストを含む本文を入力できます。Action Text は記事と関連付けた <code>action_text_rich_texts</code> の行に本文を保存し、添付ファイルの保存には Active Storage を使います。導入時は <code>bin/rails action_text:install</code> で生成される変更を確認します。すでに同名の属性を使うアプリでは、既存データの移行方法も決めます。<Ref n={24} /></p>
+          <p>
+            <code>has_rich_text :body</code> は、<code>rich_text_body</code> という has_one の関連（<code>as: :record</code> のポリモーフィック関連、<code>dependent: :destroy</code>）と、<code>body</code>・<code>body=</code> のメソッドを定義します。本文は articles テーブルの列ではなく action_text_rich_texts の行に入ります。1ファイルのアプリ（SQLite）で、危ない属性とタグを含む HTML とファイル1つを添付した本文を保存しました。<Ref n={26} />
+          </p>
+          <Code
+            lang="ruby"
+            title="text.rb（抜粋）"
+            code={`
+class Article < ActiveRecord::Base
+  has_rich_text :body
+end
+
+blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("メモの本文\\n"), filename: "memo.txt", content_type: "text/plain")
+html = %(<h1>見出し</h1><p onclick="alert(1)">本文と<strong>太字</strong></p><script>alert(1)</script>) +
+  %(<action-text-attachment sgid="#{blob.attachable_sgid}"></action-text-attachment>)
+article = Article.create!(title: "記事", body: html)
+`}
+          />
+          <Code
+            lang="text"
+            title="実行結果（抜粋）"
+            code={`
+ActionText::RichText.first.attributes.slice("id", "name", "record_type", "record_id")
+# => {"id" => 1, "name" => "body", "record_type" => "Article", "record_id" => 1}
+
+（body の列に保存された値）
+<h1>見出し</h1><p onclick="alert(1)">本文と<strong>太字</strong></p><script>alert(1)</script><action-text-attachment sgid="eyJfcmFpbHMi…"></action-text-attachment>
+
+ActiveStorage::Attachment の行
+# => [{"name" => "embeds", "record_type" => "ActionText::RichText", "record_id" => 1, "blob_id" => 1}]
+
+Article.find(1).body.to_s
+<div class="trix-content">
+  <h1>見出し</h1><p>本文と<strong>太字</strong></p>alert(1)<action-text-attachment sgid="eyJfcmFpbHMi…" content-type="text/plain" filename="memo.txt" filesize="16"><figure class="attachment attachment--file attachment--txt">
+  …（ファイル名と大きさの figcaption）
+</figure></action-text-attachment>
+</div>
+
+Article.find(1).body.to_plain_text
+# => "見出し\\n\\n本文と太字\\n\\n[memo.txt]"
+`}
+          />
+          <ul>
+            <li>保存先：action_text_rich_texts の行は、name（属性の名前の body）、record_type と record_id（どのモデルのどの行の本文か）、body（HTML）の列を持ちます。1つのモデルに has_rich_text を2つ書いても、name で区別して同じテーブルに入ります。</li>
+            <li>添付：HTML の中の添付は blob を指す署名付きの ID（sgid）を持つ <code>action-text-attachment</code> の要素で表します。RichText は <code>has_many_attached :embeds</code> を持ち、保存の前に本文から blob を集めて embeds に入れます。そのため、active_storage_attachments には record_type が ActionText::RichText、name が embeds の行ができました。ファイルの本体と blob の行は Active Storage の仕組みのまま保存されます。</li>
+            <li>サニタイズ：body の列には onclick と script を含む HTML がそのまま保存されました。危ない属性とタグを取り除くのは表示のときで、<code>to_s</code>（ビューの <code>&lt;%= @article.body %&gt;</code>）は許可したタグと属性だけを残します。結果の HTML では onclick と script の要素が消え、script の中身の <code>alert(1)</code> は文字として残りました。<code>raw</code> や <code>html_safe</code> で body の HTML を直接出力すると、この処理を通りません。</li>
+          </ul>
+          <p>
+            表示の処理は、ActionText::ContentHelper の <code>render_action_text_content</code> が添付の部分を描画してから、<code>sanitize_action_text_content</code> で Rails::HTML4 の SafeListSanitizer に通します。許可するタグはサニタイザーの既定のタグに、<code>action-text-attachment</code>・figure・figcaption を加えたものです。<Ref n={27} />
+          </p>
+          <p>
+            複数の記事を一覧に並べる画面では、記事ごとに本文や添付を読み込むと N+1 になることがあります。デモで3件の記事の本文を読むと、<code>Article.all</code> では action_text_rich_texts への SELECT が3回、<code>Article.with_rich_text_body</code> では <code>record_id IN (?, ?, ?)</code> の1回でした。添付も表示するなら <code>with_rich_text_body_and_embeds</code> を使います。書式が不要なら、本文は文字列の列と通常の入力欄で扱えます。
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'summary',
       title: 'まとめ',
       body: (
@@ -1326,6 +1482,11 @@ variant_records: 1 blobs: 2
     { title: "Active Storage Overview", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/active_storage_overview.html", accessed: "2026-11-20", version: "Rails 8.1", note: "添付ファイル、配信、サービス設定、直接アップロード。" },
     { title: "File Upload Cheat Sheet", publisher: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html", accessed: "2026-11-20", note: "ファイル形式・サイズと配信の認可。" },
     { title: 'ActiveStorage::Service::DiskService#url_for_direct_upload', publisher: 'Ruby on Rails API', url: 'https://api.rubyonrails.org/classes/ActiveStorage/Service/DiskService.html#method-i-url_for_direct_upload', accessed: '2026-11-23', note: 'ローカルディスクに直接アップロードする場合、Rails のディスクサービスへの URL を返す。' },
+    { title: 'Action Cable Overview', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/action_cable_overview.html', accessed: '2026-11-27', version: 'Rails 8.1', note: '接続の認証、チャンネルの購読と配信、アダプター。' },
+    { title: 'Action Text Overview', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/action_text_overview.html', accessed: '2026-11-27', version: 'Rails 8.1', note: 'has_rich_text、フォーム、書式付き本文と Active Storage の関連。' },
+    { title: 'rails/solid_cable README', publisher: 'rails/solid_cable（GitHub）', url: 'https://github.com/rails/solid_cable/blob/main/README.md', accessed: '2026-11-27', version: 'main ブランチ', note: 'メッセージを DB のテーブルに保存してポーリングするアダプターであること、solid_cable:install が本番環境の cable.yml を書き換えること、polling_interval の既定値 0.1 秒。rails new の run_solid は railties 8.1.4.1 の app_base.rb で確認。' },
+    { title: 'actiontext/lib/action_text/attribute.rb・app/models/action_text/rich_text.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actiontext/lib/action_text/attribute.rb#L53-L92`, accessed: '2026-11-27', version: 'Rails 8.1.4.1', note: 'has_rich_text が定義する has_one の関連と body・body= のメソッド、RichText の has_many_attached :embeds と before_validation。' },
+    { title: 'actiontext/app/helpers/action_text/content_helper.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/actiontext/app/helpers/action_text/content_helper.rb`, accessed: '2026-11-27', version: 'Rails 8.1.4.1', note: 'render_action_text_content と sanitize_action_text_content。SafeListSanitizer の既定のタグに action-text-attachment・figure・figcaption を加えること。' },
   ],
 }
 

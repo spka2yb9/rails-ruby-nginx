@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 60-1 注文の確定に関係するクラスと、問題が起きる箇所 ---------- */
+/* ---------- 図 77-1 注文の確定に関係するクラスと、問題が起きる箇所 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="60-1"
+      id="77-1"
       w={780}
       h={400}
       label="利用者のアプリが POST /orders/1/checkout に use_points=1500 を送る。CheckoutsController#create は、入力を to_i で数値にして used_points に入れ、PaymentGateway#charge で決済代行会社の API に請求し、order.update の戻り値を見ずに 200 を返す。PaymentGateway は、起動時に config/initializers/payment.rb が ENV から読んだ秘密鍵で本文に署名する。問題1は、秘密鍵の環境変数が無くても起動できること。問題2は、1500 や -500 を確かめずに使うこと。問題3は、orders テーブルへの保存に失敗しても 200 を返すこと"
@@ -55,7 +56,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 60-2 問題に気づく時点と、起きること ---------- */
+/* ---------- 図 77-2 問題に気づく時点と、起きること ---------- */
 const costStages = [
   { head: ['テスト・CI', '書いた直後'], who: '開発者', what: ['テストが失敗する', '直してから出す'] },
   { head: ['起動', 'デプロイの時'], who: 'デプロイした人', what: ['新しい版が起動しない', '利用者が使う前に止まる'] },
@@ -68,7 +69,7 @@ function CostFigure() {
   const cx = (i: number) => 116 + i * 132
   return (
     <Svg
-      id="60-2"
+      id="77-2"
       w={780}
       h={320}
       label="問題に気づく時点を左から時間の順に5つ並べた。テストと CI では開発者が気づき、直してから出せる。起動の時はデプロイした人が気づき、新しい版が起動しないので利用者が使う前に止まる。入力を受け取った時は利用者が気づき、その要求だけを断るので利用者が入力を直す。処理の途中、たとえば決済の後では利用者と運用の担当が気づき、決済済みで注文が未払いのまま残り、返金と手作業の修正が要る。後日の照合や問い合わせで気づくと、原因の行を探してデータを直すことになる。左の3つが fail fast（すぐに見える形で止まる）、右の2つが fail slowly（後で別の場所で壊れる）で、右へ行くほど手間と影響が大きくなる"
@@ -107,11 +108,11 @@ function CostFigure() {
   )
 }
 
-/* ---------- 図 60-3 ENV[] と ENV.fetch の違い ---------- */
+/* ---------- 図 77-3 ENV[] と ENV.fetch の違い ---------- */
 function EnvFetchFigure() {
   return (
     <Svg
-      id="60-3"
+      id="77-3"
       w={780}
       h={300}
       label="上段は直す前の ENV[&quot;PAYMENT_SECRET&quot;]。起動時に nil を設定に入れ、GET /up は 200 を返し、最初の決済で HMAC に nil を渡して TypeError になる。例外の行は payment_gateway.rb の11行目で、メッセージは no implicit conversion of nil into String。PAYMENT_SECRET の名前は出てこない。下段は直した後の ENV.fetch(&quot;PAYMENT_SECRET&quot;)。起動時に KeyError（key not found: PAYMENT_SECRET）になり、アプリは起動せず /up も応答しない。例外の行と足りない変数の名前が同じメッセージに出る"
@@ -152,7 +153,7 @@ function EnvFetchFigure() {
   )
 }
 
-/* ---------- 図 60-5 直す前と直した後の、注文の確定の流れ ---------- */
+/* ---------- 図 77-5 直す前と直した後の、注文の確定の流れ ---------- */
 const beforeSteps: { lines: string[] }[] = [
   { lines: ['use_points = 入力.to_i', '"-500" も "abc" も数値になる'] },
   { lines: ['決済代行会社に請求', '確かめていない金額で請求する'] },
@@ -171,7 +172,7 @@ function BeforeAfterFigure() {
   const sy = (i: number) => 40 + i * 70
   return (
     <Svg
-      id="60-5"
+      id="77-5"
       w={780}
       h={420}
       label="左は直す前の注文の確定の流れ。入力を to_i で数値にするので -500 や abc も数値になり、確かめていない金額で決済代行会社に請求し、order.update の false を見ずに 200 と status paid を返す。DB の注文は pending のままで charge_id は空になる。右は直した後の流れ。params.expect で use_points を受け取り、無ければ 400 を返す。order.invalid? で確かめ、誤りなら 422 とメッセージを返して請求しない。請求した後は order.update! で保存し、失敗したら ChargeNotRecorded にして 500 を返し、報告する。最後に 200 を返す"
@@ -217,7 +218,7 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 60-4 save と save! の使い分け ---------- */
+/* ---------- 図 77-4 save と save! の使い分け ---------- */
 const saveKinds = [
   { x: 20, who: ['利用者の入力', 'フォーム・API の値'], how: ['valid? や save の戻り値を見る', '誤りは 422 とメッセージで返す'] },
   { x: 275, who: ['プログラムが決めた値', '確かめた後の値・ジョブ・バッチ'], how: ['save! / update! を使う', '失敗は例外（500 にして報告）'] },
@@ -227,7 +228,7 @@ const saveKinds = [
 function SaveFigure() {
   return (
     <Svg
-      id="60-4"
+      id="77-4"
       w={780}
       h={320}
       label="保存する値を決めたのは誰かで、save と save! を選ぶ図。利用者の入力（フォームや API の値）なら、valid? や save の戻り値を見て、誤りは 422 とメッセージで返す。プログラムが決めた値（確かめた後の値、ジョブ、バッチ）なら、save! や update! を使い、失敗は例外にして 500 を返し報告する。外部から届くデータ（Webhook や CSV）は、境界で形と値を確かめる（Defensive Programming の章）。注意として、コントローラーの中で RecordInvalid が起きると、Rails は 422 の応答にしてエラーの報告にも送らないので、プログラムの誤りとして扱う保存は別の例外に変えるか自分で報告する"
@@ -251,7 +252,7 @@ function SaveFigure() {
   )
 }
 
-/* ---------- 図 60-6 問題の出どころと、止める範囲 ---------- */
+/* ---------- 図 77-6 問題の出どころと、止める範囲 ---------- */
 const scopes = [
   ['アプリ全体', '起動しない'],
   ['1つの要求', '4xx・5xx を返す'],
@@ -274,7 +275,7 @@ function JudgeFigure() {
   const rowY = (r: number) => 76 + r * 36
   return (
     <Svg
-      id="60-6"
+      id="77-6"
       w={780}
       h={410}
       label="問題の出どころごとに、止める範囲を表にした図。列は止める範囲で、アプリ全体（起動しない）、1つの要求（4xx や 5xx を返す）、1件の処理（報告して次へ）、その機能だけ（代わりの表示）。必須の設定の抜けはアプリ全体を止める。任意の設定の抜けはその機能だけを止める。利用者の入力の誤りは1つの要求を 422 で断る。プログラムの誤りや内部の不整合は1つの要求を 500 にして報告する。バッチの1件の不正なデータは報告して次へ進む。必須の外部サービス（決済）の障害は、その要求の失敗を伝える。任意の外部サービス（おすすめ）の障害は、その機能だけを空の一覧にする。外部から届くデータは、署名や形の誤りなら要求を 4xx で断り、中身の誤りならその1件を記録して除く"
@@ -406,8 +407,8 @@ end`}
   end
 end`}
           />
-          <p>図 60-1 はこのコードに関係するクラス・設定・外部のサービスと、次の項から確かめる3つの問題の場所です。</p>
-          <Figure n="60-1" title="注文の確定に関係するクラスと、問題が起きる箇所" caption="赤い文字は、この節で実行結果を確かめる3つの問題。">
+          <p>図 77-1 はこのコードに関係するクラス・設定・外部のサービスと、次の項から確かめる3つの問題の場所です。</p>
+          <Figure n="77-1" title="注文の確定に関係するクラスと、問題が起きる箇所" caption="赤い文字は、この節で実行結果を確かめる3つの問題。">
             <SceneFigure />
           </Figure>
           <h3>PAYMENT_SECRET を設定せずに起動する</h3>
@@ -552,11 +553,11 @@ end`}
           <p>
             記事の最初の例は設定ファイルから最大の接続数を読むメソッドです。値が無いときに既定値の 10 を返す書き方では、設定ファイルの名前を書き間違えても動き続け、利用者が使い始めてから原因のわからない遅さとして表に出ます。値が無いときに、設定の名前とファイルのパスを含む例外を投げる書き方なら、書き間違えた直後にソフトウェアが止まり、開発者はすぐに直せると Shore は説明しています<Ref n={1} />。前の節の PAYMENT_SECRET と同じ形の問題です。
           </p>
-          <Figure n="60-2" title="問題に気づく時点と、起きること" caption="前の節のコードに当てはめた模式図。Shore の記事の「fail fast」と「failing slowly」の対比を、気づく時点の順に並べた。">
+          <Figure n="77-2" title="問題に気づく時点と、起きること" caption="前の節のコードに当てはめた模式図。Shore の記事の「fail fast」と「failing slowly」の対比を、気づく時点の順に並べた。">
             <CostFigure />
           </Figure>
           <p>
-            図 60-2 は同じ問題に気づく時点を左から順に並べたものです。左の3つは、問題が起きたその場で止まる場合です。右の2つは、処理が先に進んでから気づく場合で、決済のように外部に結果が残る処理が間に入ると、元に戻すための手作業が増えます。Shore も、この方法でバグの数がすぐに減るわけではなく、ほとんどの不具合を見つけやすくするのだと書いています<Ref n={1} />。
+            図 77-2 は同じ問題に気づく時点を左から順に並べたものです。左の3つは、問題が起きたその場で止まる場合です。右の2つは、処理が先に進んでから気づく場合で、決済のように外部に結果が残る処理が間に入ると、元に戻すための手作業が増えます。Shore も、この方法でバグの数がすぐに減るわけではなく、ほとんどの不具合を見つけやすくするのだと書いています<Ref n={1} />。
           </p>
           <h3>アサーションを置く場所と、メッセージに書くこと</h3>
           <p>
@@ -642,9 +643,9 @@ Did you mean?  "PAYMENT_ENDPOINT"
             code={`起動しました`}
           />
           <p>
-            例外の行は initializer の6行目で、メッセージに足りない環境変数の名前が出ています。Ruby の did_you_mean は、名前の似たキー（PAYMENT_ENDPOINT）も示しました。アプリが起動しないので /up も応答せず、ロードバランサーやデプロイの仕組みは、このサーバーに利用者の要求を流しません。図 60-3 は直す前と直した後で、問題が表に出る時点を比べたものです。
+            例外の行は initializer の6行目で、メッセージに足りない環境変数の名前が出ています。Ruby の did_you_mean は、名前の似たキー（PAYMENT_ENDPOINT）も示しました。アプリが起動しないので /up も応答せず、ロードバランサーやデプロイの仕組みは、このサーバーに利用者の要求を流しません。図 77-3 は直す前と直した後で、問題が表に出る時点を比べたものです。
           </p>
-          <Figure n="60-3" title="ENV[] と ENV.fetch の違い" caption="上段は前の節の実行結果、下段はこの項の実行結果をもとにした図。">
+          <Figure n="77-3" title="ENV[] と ENV.fetch の違い" caption="上段は前の節の実行結果、下段はこの項の実行結果をもとにした図。">
             <EnvFetchFigure />
           </Figure>
           <Callout kind="note" title="空の文字列は ENV.fetch を通る">
@@ -783,8 +784,8 @@ end`}
           <p>
             2つ目は、決済代行会社の応答に id が無い場合です。<code>charge["id"]</code> なら nil を保存して先に進むところを、<code>charge.fetch("id")</code> にしたので KeyError で止まり、報告されました。どちらの場合も請求は済んでいるので、担当者は報告を受けて、決済代行会社の管理画面と突き合わせて対応します。月末の照合で見つかる場合と比べると、気づくまでの時間と、調べる範囲が短くなります。
           </p>
-          <p>図 60-4 は save と save! を、保存する値を誰が決めたかで選ぶ目安です。</p>
-          <Figure n="60-4" title="save と save! の使い分け" caption="模式図。外部から届くデータの扱いは Defensive Programming の章で詳しく扱う。">
+          <p>図 77-4 は save と save! を、保存する値を誰が決めたかで選ぶ目安です。</p>
+          <Figure n="77-4" title="save と save! の使い分け" caption="模式図。外部から届くデータの扱いは Defensive Programming の章で詳しく扱う。">
             <SaveFigure />
           </Figure>
           <h3>手順4：インスタンス変数に入れる値を確かめる</h3>
@@ -813,8 +814,8 @@ end`}
           <p>
             例外は、空の値が渡された PaymentGateway.new の行で起き、メッセージに確かめる環境変数の名前が出ます。請求のメソッド（charge）の中の HMAC の行まで進んでから TypeError になる直す前と比べると、原因の場所に近い所で止まります。
           </p>
-          <p>図 60-5 は注文の確定の流れを直す前と比べたものです。</p>
-          <Figure n="60-5" title="直す前と直した後の、注文の確定の流れ" caption="起動時に確かめる処理（手順1）は図 60-3 に示した。直した後の紫の箱は、問題があればその場で止まる所。">
+          <p>図 77-5 は注文の確定の流れを直す前と比べたものです。</p>
+          <Figure n="77-5" title="直す前と直した後の、注文の確定の流れ" caption="起動時に確かめる処理（手順1）は図 77-3 に示した。直した後の紫の箱は、問題があればその場で止まる所。">
             <BeforeAfterFigure />
           </Figure>
           <h3>直す順序</h3>
@@ -837,7 +838,7 @@ end`}
             Fail Fast を「問題が見つかったら、何でも例外にして止める」と読むと、問題と関係のない処理まで止まります。この節では月に1回のポイント付与のバッチと、注文完了のページの2つの例を動かします。どちらも前の節の「プログラムが決めた値は update! で保存する」「失敗は例外にする」を、止める範囲を考えずに当てはめた形です。
           </p>
           <h3>1人の会員のデータの誤りで、月のポイント付与が止まる</h3>
-          <p>この店では毎月1日に全会員へ 100 ポイントを付与します。付与する値はプログラムが決めた値なので、図 60-4 の目安に従って update! で保存しました。</p>
+          <p>この店では毎月1日に全会員へ 100 ポイントを付与します。付与する値はプログラムが決めた値なので、図 77-4 の目安に従って update! で保存しました。</p>
           <Code
             lang="ruby"
             title="app/models/monthly_point_grant.rb（当てはめすぎた形）"
@@ -1028,8 +1029,8 @@ end`}
             </li>
           </ul>
           <h3>止める範囲を決める目安</h3>
-          <p>図 60-6 は、問題がどこから来たかごとに、止める範囲を並べたものです。列は止める範囲で、左の列ほど広く止めます。</p>
-          <Figure n="60-6" title="問題の出どころと、止める範囲" caption="この章の例に当てはめた目安。外部から届くデータは Defensive Programming の章、外部サービスの障害は Graceful Degradation の章で詳しく扱う。">
+          <p>図 77-6 は、問題がどこから来たかごとに、止める範囲を並べたものです。列は止める範囲で、左の列ほど広く止めます。</p>
+          <Figure n="77-6" title="問題の出どころと、止める範囲" caption="この章の例に当てはめた目安。外部から届くデータは Defensive Programming の章、外部サービスの障害は Graceful Degradation の章で詳しく扱う。">
             <JudgeFigure />
           </Figure>
           <p>
@@ -1053,7 +1054,7 @@ end`}
           <p>
             Shore が勧めた全体の例外ハンドラーに当たる仕組みは、Rails にはじめから入っています。コントローラーのアクションから例外が出ると、ミドルウェアの ActionDispatch::ShowExceptions が例外を受け取り、例外のクラスに対応する HTTP のステータスコードで応答を作ります。対応は ActionDispatch::ExceptionWrapper の rescue_responses という表で決まり、表に無い例外は 500 になります<Ref n={10} />。ShowExceptions は、例外が表にあるかどうかを要求の情報（action_dispatch.report_exception）に記録し、ActionDispatch::Executor は、表に無い例外だけを Rails.error に報告します<Ref n={9} /><Ref n={11} />。Rails Guides も、rescue_responses にある例外は 500 にならず、直す必要のあるバグでもないことが多いので報告しないと説明しています<Ref n={4} />。
           </p>
-          <Figure n="60-7" title="Rails が例外を変える応答と、報告するかどうか" caption="Rails 8.1.4.1 のソース（rescue_responses の表と、Active Record が加える対応）による。右の列はこの章で使った場面。">
+          <Figure n="77-7" title="Rails が例外を変える応答と、報告するかどうか" caption="Rails 8.1.4.1 のソース（rescue_responses の表と、Active Record が加える対応）による。右の列はこの章で使った場面。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1094,10 +1095,10 @@ end`}
             </div>
           </Figure>
           <p>
-            図 60-7 の上の3行は利用者の要求の誤りとして扱われる例外です。Active Record は RecordNotFound と RecordInvalid をこの表に加えています<Ref n={8} />。手順3で、請求の後の update! の失敗が 422 になり報告されなかったのは、RecordInvalid が3行目にあるからでした。最後の行の例外は 500 になって報告されるので、この章では、利用者には直せない失敗を、表に無い例外（ChargeNotRecorded）に変えました。
+            図 77-7 の上の3行は利用者の要求の誤りとして扱われる例外です。Active Record は RecordNotFound と RecordInvalid をこの表に加えています<Ref n={8} />。手順3で、請求の後の update! の失敗が 422 になり報告されなかったのは、RecordInvalid が3行目にあるからでした。最後の行の例外は 500 になって報告されるので、この章では、利用者には直せない失敗を、表に無い例外（ChargeNotRecorded）に変えました。
           </p>
           <p>
-            この仕組みがあるので、予期しない例外を rescue して 500 を返すコードを、コントローラーに書く必要はありません。rescue は図 60-6 で止める範囲を狭めると決めた所（バッチの1件、おすすめ商品の取得）に限ります。特定の例外を決まった応答に変える rescue_from の使い方は <ChapterLink n={10} section="exceptions" /> で扱いました。
+            この仕組みがあるので、予期しない例外を rescue して 500 を返すコードを、コントローラーに書く必要はありません。rescue は図 77-6 で止める範囲を狭めると決めた所（バッチの1件、おすすめ商品の取得）に限ります。特定の例外を決まった応答に変える rescue_from の使い方は <ChapterLink n={10} section="exceptions" /> で扱いました。
           </p>
           <h3>設定を、値が空なら止まる形で読む</h3>
           <p>
@@ -1214,7 +1215,7 @@ sql_mode: ONLY_FULL_GROUP_BY,NO_AUTO_VALUE_ON_ZERO,NO_ZERO_IN_DATE,NO_ZERO_DATE,
             Ruby と Rails は止める書き方と止めない書き方の両方を用意しています。ENV.fetch と ENV[]、save! と save、find（見つからなければ RecordNotFound）と find_by（nil を返す）、config.x の secret! と secret です。save! のように名前が ! で終わるメソッドは、失敗を例外で伝える側であることが多く、使う側は名前で選べます。
           </p>
           <p>
-            Rails Doctrine の「Provide sharp knives」は、Ruby と Rails が強い道具をあえて用意し、正しい使い方を、道具を禁止するのではなく、規約と後押し（nudges）と教育で広めるという考え方を説明しています<Ref n={17} />。save の戻り値を見ないことも、必須の設定を ENV[] で読むことも、Rails は禁止しません。そのため、この章の使い分け（図 60-4・図 60-6）は、チームの規約として決めます。レビューでは「戻り値を見ていない save」「必須なのに ENV[] で読んでいる設定」を確かめます。一方で、params.expect が 400 を返すこと、RecordInvalid が 422 になること、MySQL の strict モードが既定で有効なことは、Rails が既定の設定で、問題を早く止める側に寄せている部分です。
+            Rails Doctrine の「Provide sharp knives」は、Ruby と Rails が強い道具をあえて用意し、正しい使い方を、道具を禁止するのではなく、規約と後押し（nudges）と教育で広めるという考え方を説明しています<Ref n={17} />。save の戻り値を見ないことも、必須の設定を ENV[] で読むことも、Rails は禁止しません。そのため、この章の使い分け（図 77-4・図 77-6）は、チームの規約として決めます。レビューでは「戻り値を見ていない save」「必須なのに ENV[] で読んでいる設定」を確かめます。一方で、params.expect が 400 を返すこと、RecordInvalid が 422 になること、MySQL の strict モードが既定で有効なことは、Rails が既定の設定で、問題を早く止める側に寄せている部分です。
           </p>
           <Callout kind="v72">
             <p>
@@ -1224,7 +1225,7 @@ sql_mode: ONLY_FULL_GROUP_BY,NO_AUTO_VALUE_ON_ZERO,NO_ZERO_IN_DATE,NO_ZERO_DATE,
           <h3>本書のほかの章との関係</h3>
           <ul>
             <li>
-              <ChapterLink n={14} section="validations" />：バリデーションの書き方と、save と save! の違いを扱いました。この章の図 60-4 はそのどちらを選ぶかの目安です。
+              <ChapterLink n={14} section="validations" />：バリデーションの書き方と、save と save! の違いを扱いました。この章の図 77-4 はそのどちらを選ぶかの目安です。
             </li>
             <li>
               <ChapterLink n={13} section="strict-loading" />：strict_loading は読み込んでいない関連を後から読もうとした所で例外を投げ、N+1 問題を開発中に見つけるための Rails の機能です。
@@ -1245,6 +1246,29 @@ sql_mode: ONLY_FULL_GROUP_BY,NO_AUTO_VALUE_ON_ZERO,NO_ZERO_IN_DATE,NO_ZERO_DATE,
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          止めるのは、続けると誤ったデータや外部への誤った要求（請求・メール）が残る処理の手前です。この章では、必須の設定は起動時に、利用者の入力は請求の前に、確かめた後の保存の失敗は例外にして止めました。止める範囲は問題が見つかった1件・1つの機能に限り、関係のない処理は続けます。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、秘密鍵の環境変数が無くても起動して最初の決済で原因を示さない TypeError になり、1,500 ポイントの入力で保存に失敗しても 1,500円を請求して「paid」と返した。直した後は、起動時と請求の前で止まり、決済済みの売上と未払いの注文が残らなくなった。</>,
+        basis: <><ChapterLink n={79} section="scene" />、<ChapterLink n={79} section="apply" /></>,
+      },
+      cost: {
+        text: <>止めた場合に、問題と関係のない処理まで止まることがある。月のポイント付与を update! で止めた例では、名前が空の会員B で繰り返しが終わり、誤りの無い会員C にも付与されなかった。もう一度実行すると会員A に2回目の 100 ポイントが付いた。</>,
+        basis: <ChapterLink n={79} section="overuse" />,
+      },
+      alternative: {
+        text: <>バッチは1件ごとに RecordInvalid だけを rescue して Rails.error に報告し、残りの会員に付与を続ける。おすすめ商品の取得の失敗は Faraday::Error だけを rescue し、完了ページは 200 を返しておすすめの欄だけを空にする。</>,
+        basis: <ChapterLink n={79} section="overuse" />,
+      },
+      criterion: {
+        text: <>続けた場合に、誤ったデータや外部への誤った要求が残るか。止めた場合に、ほかの会員への付与や注文の確認のような関係のない処理まで止まるか。アプリ全体を止めるのは、必須の設定が無い場合だけにする。</>,
+        basis: <ChapterLink n={79} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

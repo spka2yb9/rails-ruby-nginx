@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 45-1 場面の構成 ---------- */
+/* ---------- 図 62-1 場面の構成 ---------- */
 function SceneFigure() {
   const cols: { title: string; file: string; whens: string[]; missing?: boolean }[] = [
     { title: 'payment_fee', file: 'app/models/order.rb', whens: ['when "card"', 'when "konbini"', 'when "pay_later"', 'when "bank_transfer"'] },
@@ -16,7 +17,7 @@ function SceneFigure() {
   for (let i = 0; i < cols.length; i++) xs.push(12 + i * 192)
   return (
     <Svg
-      id="45-1"
+      id="62-1"
       w={780}
       h={400}
       label="支払い方法による違いが、4つの case 文に書かれている。app/models/order.rb の payment_fee と payment_due_at、checkouts_helper.rb の payment_label、app/views/order_mailer の confirmation.text.erb。銀行振込を足すとき、開発者は最初の3つに when bank_transfer を足したが、注文確認メールのテンプレートには足さなかった。テンプレートの case は konbini と pay_later だけを書き、それ以外を else でカードの文面にしているので、銀行振込の注文に「クレジットカードでのお支払いが完了しています」と書いたメールが届く"
@@ -65,7 +66,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 45-2 支払い方法と書く場所の表 ---------- */
+/* ---------- 図 62-2 支払い方法と書く場所の表 ---------- */
 function MatrixFigure() {
   const heads = [
     ['一覧の定数', 'order.rb'],
@@ -84,7 +85,7 @@ function MatrixFigure() {
   for (let i = 0; i < heads.length; i++) cx.push(170 + i * 122)
   return (
     <Svg
-      id="45-2"
+      id="62-2"
       w={780}
       h={340}
       label="行が支払い方法（card、konbini、pay_later、bank_transfer）、列がコードを書く場所（一覧の定数、手数料、期限、表示名、メールの案内）の表。直す前のコードは列ごとに1つの case 文になっていて、支払い方法を1行足すには5つの列のすべてに書く必要がある。card のメールの案内は else で書かれている。bank_transfer は一覧の定数・手数料・期限・表示名には足したが、メールの案内には足しておらず、else のカードの文面になる"
@@ -140,11 +141,11 @@ function MatrixFigure() {
   )
 }
 
-/* ---------- 図 45-4 直す前と直した後の構造 ---------- */
+/* ---------- 図 62-4 直す前と直した後の構造 ---------- */
 function StructureFigure() {
   return (
     <Svg
-      id="45-4"
+      id="62-4"
       w={780}
       h={420}
       label="直す前は、Order の payment_fee と payment_due_at、CheckoutsHelper の payment_label、confirmation.text.erb の案内がそれぞれ case 文で支払い方法をすべて知っていて、Order::PAYMENT_METHODS が一覧を持つ。支払い方法を足すたびに4つを開く。直した後は、Order・CheckoutsHelper・confirmation.text.erb が PaymentMethod::ALL から id で支払い方法を選ぶ。どの支払い方法も id・label・fee(order)・due_at(order) という取り決めを満たし、Card・Konbini・PayLater のクラスがそれを実装する。メールの案内は id と同じ名前の部分テンプレート（_card・_konbini・_pay_later）に書く"
@@ -194,7 +195,7 @@ function StructureFigure() {
   )
 }
 
-/* ---------- 図 45-5 拡張する部分と閉じる部分 ---------- */
+/* ---------- 図 62-5 拡張する部分と閉じる部分 ---------- */
 function OpenClosedFigure() {
   const closed = [
     ['Order', 'payment_fee など'],
@@ -208,7 +209,7 @@ function OpenClosedFigure() {
   for (let i = 0; i < closed.length; i++) pos.push({ x: 26 + (i % 2) * 215, y: 52 + Math.floor(i / 2) * 62 })
   return (
     <Svg
-      id="45-5"
+      id="62-5"
       w={780}
       h={370}
       label="銀行振込を足すとき、閉じる部分として Order、CheckoutsHelper、confirmation.text.erb、PaymentMethod.fetch、既存の Card・Konbini・PayLater、既存の案内の部分テンプレートは変えない。拡張する部分として、新しいクラス BankTransfer と新しい部分テンプレート _bank_transfer.text.erb を足す。変える既存のコードは、PaymentMethod::ALL に BankTransfer.new を足す1行だけ。payment_method_spec は ALL のすべての支払い方法に同じテストを実行する"
@@ -235,7 +236,7 @@ function OpenClosedFigure() {
   )
 }
 
-/* ---------- 図 45-6 自動で登録する仕組みと読み込みの時期 ---------- */
+/* ---------- 図 62-6 自動で登録する仕組みと読み込みの時期 ---------- */
 function LoadingFigure() {
   const lanes = [
     {
@@ -259,7 +260,7 @@ function LoadingFigure() {
   ]
   return (
     <Svg
-      id="45-6"
+      id="62-6"
       w={780}
       h={320}
       label="eager_load が false の development と CI なしのテストでは、起動した時点で registry は空で、選択肢を作ると何も出ない。PaymentMethod::Konbini を一度参照すると、その時点で Konbini だけが registry に加わる。eager_load が true の production と CI=1 のテストでは、起動時に app のファイルをすべて読み込むので registry に card・konbini・pay_later の3つが入り、選択肢も3つになる。並び順はファイルを読み込む順で決まる"
@@ -289,7 +290,7 @@ function LoadingFigure() {
   )
 }
 
-/* ---------- 図 45-7 一覧から選ぶ構造にするかの判断 ---------- */
+/* ---------- 図 62-7 一覧から選ぶ構造にするかの判断 ---------- */
 function JudgeFigure() {
   const cells = [
     { x: 130, y: 50, head: 'case のまま、else で例外を投げる', lines: ['足すことはまれだが、書く場所が多い', '直し忘れを実行時に見つける'] },
@@ -299,7 +300,7 @@ function JudgeFigure() {
   ]
   return (
     <Svg
-      id="45-7"
+      id="62-7"
       w={780}
       h={450}
       label="横軸は種類が増える見込み（低い・高い）、縦軸は種類による違いが出る場所の数（1か所・複数）。増える見込みが高く違いが複数の場所に出るなら、一覧から選ぶ構造にする。この章の支払い方法がこれに当たる。増える見込みは低いが場所が多いなら、case のまま else で例外を投げて直し忘れを見つける。増える見込みが高く違いが1か所なら、Hash の一覧1つで足りる。どちらも低いなら case か if のままにする。どの位置でも、自動で登録する仕組みや使わない拡張点は足さない"
@@ -370,7 +371,7 @@ const chapter: Chapter = {
       body: (
         <>
           <p>
-            この章では EC サイトの支払い方法を例に、開放閉鎖の原則（OCP）を扱います。支払い方法ごとの処理を、種類ごとのクラスに分けて一覧から選ぶ実装の詳細は<ChapterLink n={41} section="rails-impl" />（Strategy / Policy）で送料を例に説明しました。この章では、種類を足すときに既存のコードのどこを書き換えるかに注目し、直す前と直した後で書き換える範囲がどう変わるかを、動かして確かめます。
+            この章では EC サイトの支払い方法を例に、開放閉鎖の原則（OCP）を扱います。支払い方法ごとの処理を、種類ごとのクラスに分けて一覧から選ぶ実装の詳細は<ChapterLink n={41} section="rails-impl" />（Strategy / Policy）で送料を例に説明します。この章では、種類を足すときに既存のコードのどこを書き換えるかに注目し、直す前と直した後で書き換える範囲がどう変わるかを、動かして確かめます。
           </p>
           <h3>そもそも支払い方法ごとに何が違うのか</h3>
           <p>雑貨を売る EC サイトでは、注文の画面でお客様が支払い方法を選びます。今は次の3つを扱っています。</p>
@@ -515,9 +516,9 @@ end
 `}
           />
           <p>
-            図 45-1 はこのコードの構成です。支払い方法による違いが、2つのファイルとテンプレートにある4つの case 文に分かれています。図の強調色の行と「直し忘れ」は、次に足す銀行振込の結果です。
+            図 62-1 はこのコードの構成です。支払い方法による違いが、2つのファイルとテンプレートにある4つの case 文に分かれています。図の強調色の行と「直し忘れ」は、次に足す銀行振込の結果です。
           </p>
-          <Figure n="45-1" title="場面の構成" caption="4つの箱がそれぞれ1つの case 文。強調色の when は銀行振込のために足した行。">
+          <Figure n="62-1" title="場面の構成" caption="4つの箱がそれぞれ1つの case 文。強調色の when は銀行振込のために足した行。">
             <SceneFigure />
           </Figure>
           <h3>銀行振込を足す</h3>
@@ -574,9 +575,9 @@ app/models/order.rb:20:    when "pay_later" then (ordered_at + 14.days).end_of_d
 `}
           />
           <p>
-            図 45-2 は支払い方法を行に、コードを書く場所を列にした表です。依頼は「行を1つ足す」ことですが、直す前のコードは列ごとに1つの case 文になっているので、行を足すには5つの列すべてに書く必要があります。銀行振込の行は4つの列に足し、メールの案内の列だけが抜けています。
+            図 62-2 は支払い方法を行に、コードを書く場所を列にした表です。依頼は「行を1つ足す」ことですが、直す前のコードは列ごとに1つの case 文になっているので、行を足すには5つの列すべてに書く必要があります。銀行振込の行は4つの列に足し、メールの案内の列だけが抜けています。
           </p>
-          <Figure n="45-2" title="支払い方法と、コードを書く場所" caption="破線の枠1つが case 文（または一覧の定数）1つ。card のメールの案内は else で書かれている。">
+          <Figure n="62-2" title="支払い方法と、コードを書く場所" caption="破線の枠1つが case 文（または一覧の定数）1つ。card のメールの案内は else で書かれている。">
             <MatrixFigure />
           </Figure>
           <h3>このコードの問題</h3>
@@ -629,7 +630,7 @@ app/models/order.rb:20:    when "pay_later" then (ordered_at + 14.days).end_of_d
           <p>
             Martin は2002年の著書『Agile Software Development, Principles, Patterns, and Practices』の第9章を「OCP: The Open-Closed Principle」にあてています<Ref n={3} />。2017年の『Clean Architecture』の第8章では、「A Thought Experiment」「Directional Control（依存の向きの管理）」「Information Hiding」の節を立てています<Ref n={4} />。2014年の記事では、多くの場所を書き換えて機能を足すことを、Martin Fowler が『Refactoring』で Shotgun Surgery と名付けたこと、エディターのようにプラグインで機能を足せるシステムが OCP の到達点であることを書いています<Ref n={2} />。
           </p>
-          <Figure n="45-3" title="OCP の定義の移り変わり" caption="Meyer の定義は Martin の2014年の記事の引用による。">
+          <Figure n="62-3" title="OCP の定義の移り変わり" caption="Meyer の定義は Martin の2014年の記事の引用による。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -671,7 +672,7 @@ app/models/order.rb:20:    when "pay_later" then (ordered_at + 14.days).end_of_d
           </Figure>
           <h3>Ruby での「抽象」</h3>
           <p>
-            Ruby には、抽象クラスやインターフェースを宣言する構文がありません。この章では、どの支払い方法も <code>id</code>・<code>label</code>・<code>fee(order)</code>・<code>due_at(order)</code> に応答する、という取り決めをコメントに書き、それを満たすオブジェクトを同じように扱います。同じ名前のメソッドを持つことで取り決めを満たす書き方はダックタイピングと呼ばれ、<ChapterLink n={41} section="rails-impl" />で説明しました。取り決めが守られているかは、宣言ではなく、一覧のすべての支払い方法に同じテストを実行して確かめます。
+            Ruby には、抽象クラスやインターフェースを宣言する構文がありません。この章では、どの支払い方法も <code>id</code>・<code>label</code>・<code>fee(order)</code>・<code>due_at(order)</code> に応答する、という取り決めをコメントに書き、それを満たすオブジェクトを同じように扱います。同じ名前のメソッドを持つことで取り決めを満たす書き方はダックタイピングと呼ばれ、<ChapterLink n={41} section="rails-impl" />で説明します。取り決めが守られているかは、宣言ではなく、一覧のすべての支払い方法に同じテストを実行して確かめます。
           </p>
           <h3>似た原則との違い</h3>
           <div className="table-wrap">
@@ -905,9 +906,9 @@ Finished in 0.0772 seconds (files took 0.80777 seconds to load)
 `}
           />
           <p>
-            直す前から使っているメーラーのテスト（コンビニ払いとカード）もそのまま成功し、script/demo.rb で表示した3つのメールの本文も、直す前と同じでした。図 45-4 は直す前と直した後の構造の比較です。直す前は4つの場所がそれぞれ支払い方法をすべて知っていましたが、直した後は、使う側は一覧から選んで取り決めのメソッドを呼ぶだけになります。
+            直す前から使っているメーラーのテスト（コンビニ払いとカード）もそのまま成功し、script/demo.rb で表示した3つのメールの本文も、直す前と同じでした。図 62-4 は直す前と直した後の構造の比較です。直す前は4つの場所がそれぞれ支払い方法をすべて知っていましたが、直した後は、使う側は一覧から選んで取り決めのメソッドを呼ぶだけになります。
           </p>
-          <Figure n="45-4" title="直す前と直した後の構造" caption="破線の箱は Ruby では宣言しない取り決め。破線の矢印は、クラスが取り決めを満たすことと、一覧から取り決めを満たすオブジェクトを選ぶことを表す。">
+          <Figure n="62-4" title="直す前と直した後の構造" caption="破線の箱は Ruby では宣言しない取り決め。破線の矢印は、クラスが取り決めを満たすことと、一覧から取り決めを満たすオブジェクトを選ぶことを表す。">
             <StructureFigure />
           </Figure>
           <h3>銀行振込をもう一度足す</h3>
@@ -985,9 +986,9 @@ $ git diff --no-index --stat after after_change
             変えたファイルは4つで、そのうち2つは新しいファイルです。既存のアプリのコードで書き換えたのは、一覧の1行だけでした。Order・CheckoutsHelper・メールのテンプレート・既存の3つの支払い方法のクラスは開いていません。ヘルパーのテストを書き換えたのは、画面の選択肢が増えるという、依頼どおりの変化を確かめるためです。
           </p>
           <p>
-            図 45-5 は銀行振込を足したときの、閉じる部分と拡張する部分です。新しい支払い方法を足すたびに書き換える既存のコードは、Martin の記事の表と同じく一覧だけで、ほかの部分は変更に対して閉じています。
+            図 62-5 は銀行振込を足したときの、閉じる部分と拡張する部分です。新しい支払い方法を足すたびに書き換える既存のコードは、Martin の記事の表と同じく一覧だけで、ほかの部分は変更に対して閉じています。
           </p>
-          <Figure n="45-5" title="拡張する部分と閉じる部分" caption="枠が強調色の領域は、銀行振込のために足したファイル。">
+          <Figure n="62-5" title="拡張する部分と閉じる部分" caption="枠が強調色の領域は、銀行振込のために足したファイル。">
             <OpenClosedFigure />
           </Figure>
           <p>
@@ -1088,9 +1089,9 @@ $ CI=1 bundle exec rspec
 `}
           />
           <p>
-            同じコードで、手元では失敗し、CI では成功します。開発環境の注文の画面には支払い方法が1つも出ず、どれかの支払い方法のクラスを参照した後は、その分だけが出ます。Rails ガイドは、単一テーブル継承（STI）のサブクラスについて同じ問題を挙げ、遅延読み込みではクラスが必要になったときに初めて読み込まれるため、サブクラスを前もって読み込む必要があると説明しています<Ref n={6} />。全部を読み込んだ場合も、一覧の並び（画面の選択肢の順）はファイルを読み込む順で決まり、ガイドは eager loading でファイルを読み込む順は決まっていないと書いています<Ref n={6} />。図 45-6 は、環境ごとに一覧が変わる流れです。
+            同じコードで、手元では失敗し、CI では成功します。開発環境の注文の画面には支払い方法が1つも出ず、どれかの支払い方法のクラスを参照した後は、その分だけが出ます。Rails ガイドは、単一テーブル継承（STI）のサブクラスについて同じ問題を挙げ、遅延読み込みではクラスが必要になったときに初めて読み込まれるため、サブクラスを前もって読み込む必要があると説明しています<Ref n={6} />。全部を読み込んだ場合も、一覧の並び（画面の選択肢の順）はファイルを読み込む順で決まり、ガイドは eager loading でファイルを読み込む順は決まっていないと書いています<Ref n={6} />。図 62-6 は、環境ごとに一覧が変わる流れです。
           </p>
-          <Figure n="45-6" title="自動で登録する仕組みと、クラスを読み込む時期" caption="上の段は eager_load が無効の環境、下の段は有効の環境。強調した箱が期待と違う結果。">
+          <Figure n="62-6" title="自動で登録する仕組みと、クラスを読み込む時期" caption="上の段は eager_load が無効の環境、下の段は有効の環境。強調した箱が期待と違う結果。">
             <LoadingFigure />
           </Figure>
           <p>
@@ -1104,8 +1105,8 @@ $ CI=1 bundle exec rspec
           <p>
             Martin の言う戦略的な閉鎖に沿うと、OCP を当てはめるのは、起こりやすい変更の方向に限ります<Ref n={1} />。この EC サイトでは、カード、コンビニ払い、後払いと支払い方法が順に増えてきたので、「支払い方法が増える」は起こりやすい変更です。一方、「合計は商品の合計に手数料を足す」という式や、「送料無料にするのは合計が5,000円以上」という判定を、将来の別の計算方法のために差し替えられる構造にしても、閉じる対象は起きていない変更です。そうした構造は読む量を増やすだけで、KISS（<ChapterLink n={57} />）に反します。
           </p>
-          <p>図 45-7 は一覧から選ぶ構造にするかどうかの目安です。横軸は種類が増える見込み、縦軸は種類による違いが出る場所の数です。</p>
-          <Figure n="45-7" title="一覧から選ぶ構造にするかの判断" caption="模式図。強調した箱は、どの位置でも足さないもの。">
+          <p>図 62-7 は一覧から選ぶ構造にするかどうかの目安です。横軸は種類が増える見込み、縦軸は種類による違いが出る場所の数です。</p>
+          <Figure n="62-7" title="一覧から選ぶ構造にするかの判断" caption="模式図。強調した箱は、どの位置でも足さないもの。">
             <JudgeFigure />
           </Figure>
           <ul>
@@ -1155,8 +1156,8 @@ $ CI=1 bundle exec rspec
           <p>
             Rails にも、Rails のコードを書き換えずに種類を足せる場所が多くあります。たとえば Active Job は、ジョブをどのキューのシステム（Sidekiq、Solid Queue など）に入れるかを、<code>config.active_job.queue_adapter = :sidekiq</code> のように名前で指定します。Active Job は指定された名前を <code>camelize</code> して末尾に Adapter を付け、<code>ActiveJob::QueueAdapters::SidekiqAdapter</code> という定数を探します<Ref n={9} />。Active Job の README は、新しいアダプターのプルリクエストは受け付けず、アダプターは各ライブラリが自分の gem の中で提供するよう勧めると書いています<Ref n={8} />。本書の検証環境の Sidekiq 8.1.7 も、このアダプターを Sidekiq の gem の中に持っています<Ref n={10} />。キューのシステムを足すときに Active Job のコードは変わらない、という OCP の形です。
           </p>
-          <p>図 45-8 は、Rails のおもな拡張点を、足し方と、足しても変わらない部分に分けて並べたものです。</p>
-          <Figure n="45-8" title="Rails のおもな拡張点" caption="どれも Rails のコードを書き換えずに種類を足す方法。">
+          <p>図 62-8 は、Rails のおもな拡張点を、足し方と、足しても変わらない部分に分けて並べたものです。</p>
+          <Figure n="62-8" title="Rails のおもな拡張点" caption="どれも Rails のコードを書き換えずに種類を足す方法。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1219,7 +1220,7 @@ $ CI=1 bundle exec rspec
             Active Job のアダプターも部分テンプレートも、名前の規約で探す相手を決めます。Rails Doctrine の Convention over Configuration が、Person クラスと people テーブルのように、規約から関連や外部キーを導く例を挙げているのと同じ考え方です<Ref n={5} />。この章の部分テンプレートも、支払い方法の id と同じ名前にするという規約で、使う側の case をなくしました。
           </p>
           <p>
-            ただし、名前で探す相手を、利用者が送ってきた値から決めてはいけません。この章では、id を Order のバリデーションで一覧と照らし合わせてから使っています。画面から送られた文字列を <code>constantize</code> でクラスに変える危険は<ChapterLink n={41} section="idea" />で説明しました。
+            ただし、名前で探す相手を、利用者が送ってきた値から決めてはいけません。この章では、id を Order のバリデーションで一覧と照らし合わせてから使っています。画面から送られた文字列を <code>constantize</code> でクラスに変える危険は<ChapterLink n={41} section="idea" />で説明します。
           </p>
           <h3>既存のクラスを書き換える道具</h3>
           <p>
@@ -1253,6 +1254,29 @@ $ CI=1 bundle exec rspec
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          OCP を当てはめるのは、起こりやすい変更の方向だけです。この EC サイトでは支払い方法が順に増えてきたので、支払い方法ごとのクラスと一覧に直しました。増える見込みのない種類や、違いが1か所だけの種類は、case や Hash の一覧のままにします。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、銀行振込を足すときに Order・CheckoutsHelper・メールのテンプレートを書き換え、メールの case 文を直し忘れてカードの文面が送られた。直した後は、既存のアプリのコードで書き換えたのは一覧の1行だけで、部分テンプレートの作り忘れは契約のテストが ActionView::Template::Error で知らせた。</>,
+        basis: <><ChapterLink n={64} section="scene" />、<ChapterLink n={64} section="apply" /></>,
+      },
+      cost: {
+        text: <>支払い方法ごとのクラスと部分テンプレート、一覧のすべてに同じテストを実行する契約のテストが要る。閉じているのは「支払い方法が増える」変更だけで、すべての支払い方法に分割払いの回数を持たせるような依頼では、すべてのクラスと使う側を書き換える。</>,
+        basis: <ChapterLink n={64} section="apply" />,
+      },
+      alternative: {
+        text: <>違いが手数料だけなら Hash の一覧1つで足りる。増える見込みが低い種類は case のままにし、else で例外を投げて足し忘れに気づけるようにする。一覧の1行も書かずにサブクラスを自動で登録する仕組みは、開発環境では起動した直後の一覧が空になったので使わない。</>,
+        basis: <ChapterLink n={64} section="overuse" />,
+      },
+      criterion: {
+        text: <>その種類はこれまでに足されてきたか、足す依頼が予定されているか。種類による違いがいくつの場所に書かれているか。足し忘れたとき、else に入って誤った結果のまま進むか、例外やテストですぐに気づけるか。</>,
+        basis: <ChapterLink n={64} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

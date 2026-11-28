@@ -4,14 +4,14 @@ import { explanation27 } from '../explanations/operations'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
-/* ---------- 図 31-1 テーブルの構造 ---------- */
+/* ---------- 図 46-1 テーブルの構造 ---------- */
 function TableFigure() {
   const cell = (x: number, y: number, w: number, h: number, text: string | string[], fill: 'box' | 'box4' | 'box5' | 'bg', mono?: boolean) => (
     <Box x={x} y={y} w={w} h={h} lines={text} fs={11} fill={fill} rx={0} mono={mono} subTone="muted" />
   )
   return (
     <Svg
-      id="31-1"
+      id="46-1"
       w={780}
       h={318}
       label="authors テーブルは id・name・email の列を持ち、id は主キー、name と email は NOT NULL、email には一意の索引 index_authors_on_email がある。1行が1人の著者を表す。articles テーブルの author_id には外部キー制約があり、authors テーブルに有る id だけを入れられる"
@@ -63,11 +63,11 @@ function TableFigure() {
   )
 }
 
-/* ---------- 図 31-2 db:migrate で変わるもの ---------- */
+/* ---------- 図 46-2 db:migrate で変わるもの ---------- */
 function MigrateFlowFigure() {
   return (
     <Svg
-      id="31-2"
+      id="46-2"
       w={780}
       h={262}
       label="bin/rails db:migrate は、db/migrate のマイグレーションのファイルのうち未適用のものを実行する。1. MySQL に ALTER TABLE を送って articles に display_title 列を追加し、2. schema_migrations テーブルに番号を記録し、3. DB の今の構造を db/schema.rb に書き出す。db:rollback は逆の操作を実行し、記録を消して schema.rb を書き直す"
@@ -97,7 +97,7 @@ function MigrateFlowFigure() {
   )
 }
 
-/* ---------- 図 31-3 動いているアプリケーションとテーブルの変更 ---------- */
+/* ---------- 図 46-3 動いているアプリケーションとテーブルの変更 ---------- */
 function LiveChangeFigure() {
   const x0 = 150
   const sec = 28 // 1秒あたりの幅
@@ -111,7 +111,7 @@ function LiveChangeFigure() {
   )
   return (
     <Svg
-      id="31-3"
+      id="46-3"
       w={780}
       h={350}
       label="上は列名を変えた場合。古いプロセスは改名の前は title で読み書きできたが、改名の後は title が無いので例外になった。改名の後に起動した新しいプロセスは display_title で読み書きできた。下は約79万行の articles で列の型を変えた場合。ALTER TABLE はテーブルを写すのに約21秒かかり、その途中の SELECT は0.57秒で返ったが、UPDATE は ALTER TABLE が終わるまで約18秒待った"
@@ -292,7 +292,7 @@ function DeploymentFigure() {
     ['④ 読み取りを新列へ', '差分確認後に切替', '戻す期間中は旧列にも書く'],
     ['⑤ 旧列の利用を終了', '旧列を無視するコードを配布', '全プロセスの切替後に旧列を削除'],
   ]
-  return <Svg id="31-4" w={760} h={422} label="列名の変更を段階的に行う模式図。列の追加、両方に書くコードの配布、既存行の補完、読み取りの切替、旧列の利用終了と削除の順に進む。各段階でWebとジョブの全プロセスの切替を確認する。">
+  return <Svg id="46-4" w={760} h={422} label="列名の変更を段階的に行う模式図。列の追加、両方に書くコードの配布、既存行の補完、読み取りの切替、旧列の利用終了と削除の順に進む。各段階でWebとジョブの全プロセスの切替を確認する。">
     {rows.map(([a, b, c], i) => <g key={a}>
       <Box x={20} y={12 + i * 82} w={230} h={60} lines={[a, b]} fs={12} bold subTone="muted" />
       <Arrow x1={252} y1={42 + i * 82} x2={286} y2={42 + i * 82} />
@@ -303,7 +303,7 @@ function DeploymentFigure() {
 }
 
 function LockFigure() {
-  return <Svg id="31-5" w={720} h={274} label="メタデータロック待ちの模式図。接続Aの未完了トランザクションがテーブルの定義を保護する。接続BのALTER TABLEは定義変更用のロックを待ち、さらに接続CのSELECTも待つことがある。Aを終了するとBが進める。">
+  return <Svg id="46-5" w={720} h={274} label="メタデータロック待ちの模式図。接続Aの未完了トランザクションがテーブルの定義を保護する。接続BのALTER TABLEは定義変更用のロックを待ち、さらに接続CのSELECTも待つことがある。Aを終了するとBが進める。">
     <Box x={20} y={18} w={200} h={64} lines={['接続A：トランザクション', 'SELECT 後も未完了']} fs={12} subTone="muted" />
     <Box x={260} y={18} w={200} h={64} lines={['接続B：ALTER TABLE', '定義変更用のロック待ち']} fs={12} fill="box5" subTone="muted" />
     <Box x={500} y={18} w={200} h={64} lines={['接続C：後続の SELECT', '待たされることがある']} fs={12} subTone="muted" />
@@ -316,7 +316,7 @@ function LockFigure() {
 }
 
 function RecoveryFigure() {
-  return <Svg id="31-6" w={720} h={260} label="マイグレーションの途中失敗の模式図。列の追加は成功し、続くSQLは失敗した。MySQLでは列が残る場合がある。適用済み一覧だけでなく実際のテーブルを確認し、継続・修正・復元の手順を選ぶ。">
+  return <Svg id="46-6" w={720} h={260} label="マイグレーションの途中失敗の模式図。列の追加は成功し、続くSQLは失敗した。MySQLでは列が残る場合がある。適用済み一覧だけでなく実際のテーブルを確認し、継続・修正・復元の手順を選ぶ。">
     <Box x={20} y={20} w={190} h={62} lines={['1. 列の追加', '成功して残る']} fs={13} fill="box4" subTone="muted" />
     <Arrow x1={212} y1={51} x2={258} y2={51} />
     <Box x={260} y={20} w={190} h={62} lines={['2. 次の SQL', '失敗']} fs={13} fill="bg" subTone="danger" />
@@ -413,9 +413,9 @@ name なし: ActiveRecord::NotNullViolation
           />
           <p>
             3つとも MySQL が保存を断り、行は増えませんでした。アプリケーションのコードに誤りがあっても、制約があれば矛盾したデータは DB に入りません。テーブルの列・型・索引・制約をまとめて、テーブルの構造と呼びます（図
-            31-1）。この章で扱うマイグレーションは、この構造を変えるためのコードです。
+            46-1）。この章で扱うマイグレーションは、この構造を変えるためのコードです。
           </p>
-          <Figure n="31-1" title="テーブルの構造" caption="デモのコピーの authors と articles テーブル（列の一部）。">
+          <Figure n="46-1" title="テーブルの構造" caption="デモのコピーの authors と articles テーブル（列の一部）。">
             <TableFigure />
           </Figure>
         </>
@@ -579,7 +579,7 @@ $ bin/rails db:migrate:status
           </p>
           <p>
             適用を取り消すには <code>bin/rails db:rollback</code> を実行します。最後に適用したマイグレーションの change が逆向きに実行され、add_column の逆の remove_column
-            で列が消えました。schema_migrations の記録も消え、schema.rb も書き直されます（図 31-2）。
+            で列が消えました。schema_migrations の記録も消え、schema.rb も書き直されます（図 46-2）。
           </p>
           <Code
             lang="text"
@@ -592,7 +592,7 @@ $ bin/rails db:rollback
 == 20261116070437 AddDisplayTitleToArticles: reverted (0.0759s) ===============
 `}
           />
-          <Figure n="31-2" title="db:migrate で変わるもの" caption="デモのコピーでの実行とログをもとにした図。">
+          <Figure n="46-2" title="db:migrate で変わるもの" caption="デモのコピーでの実行とログをもとにした図。">
             <MigrateFlowFigure />
           </Figure>
         </>
@@ -728,14 +728,14 @@ Time  State                            Info
           <p>
             MySQL は列の型を変えるとき、新しい型のテーブルを作り、すべての行を写します（SHOW PROCESSLIST の copy to tmp table）。この変更の間は同じテーブルに書き込めません<Ref n={3} />
             。約21秒の間に送った SELECT は 0.57 秒で返りましたが、UPDATE は Waiting for table metadata lock（テーブルの定義にかかるロックの待ち）の状態になり、ALTER TABLE
-            が終わるまで約18秒待ちました（図 31-3）。本番環境なら、その間に記事を保存しようとした要求は、応答を返せずに待ち続けます。一方、同じ 786,432 行のテーブルに add_column で列を追加したときは
+            が終わるまで約18秒待ちました（図 46-3）。本番環境なら、その間に記事を保存しようとした要求は、応答を返せずに待ち続けます。一方、同じ 786,432 行のテーブルに add_column で列を追加したときは
             0.0939 秒で終わりました。MySQL 8.4 は列の追加を、行を写さずにテーブルの定義の情報だけを書き換える方式（INSTANT）で行うからです<Ref n={3} />。
           </p>
           <p>
             このように、本番環境のマイグレーションでは変更の内容に加えて、変更の間に動いているコードと、変更にかかる時間とロックを考えます。次の節では適用の記録をもう一度整理し、その後の節で、古いコードと新しいコードが同時に動いても失敗しない変更の順序と、MySQL
             の変更方式とロックの待ちを扱います。
           </p>
-          <Figure n="31-3" title="動いているアプリケーションとテーブルの変更" caption="デモのコピー（Rails 8.1.4.1・MySQL 8.4）での実測をもとにした模式図。">
+          <Figure n="46-3" title="動いているアプリケーションとテーブルの変更" caption="デモのコピー（Rails 8.1.4.1・MySQL 8.4）での実測をもとにした模式図。">
             <LiveChangeFigure />
           </Figure>
           <p>古いコードと新しいコードが同時に動いても壊れないように変更する考え方は、<ChapterLink n={92} /> で後方互換性の原則として扱います。</p>
@@ -781,8 +781,8 @@ execute "INVALID SQL FOR LAB"                     # 失敗
     </> },
     { id: 'deploy-order', title: '列名を変えるときは複数回の変更に分ける', body: <>
       <p>デプロイでWebプロセスを順番に入れ替える間は、旧コードと新コードが同時に動きます。Sidekiqのワーカー（ジョブを実行する別のプロセス。<ChapterLink n={18} section="sidekiq" />）や定期処理も、Webとは別に古いコードを実行していることがあります。title をいきなり display_title に改名すると、まだ title を読む旧コードは失敗します。</p>
-      <p>そこで、先に使える構造を増やし、コードとデータを移してから不要な構造を減らします。この進め方は expand/contract と呼ばれます。図31-4は、名前を変えるために新しい列を追加する例です。矢印の各段階を、一度のデプロイに詰め込まずに進めます。<Ref n={6} /></p>
-      <Figure n="31-4" title="列とコードを段階的に切り替える" caption="模式図。両方の列へ書く処理は、すべての書き込み経路で必要です。"><DeploymentFigure /></Figure>
+      <p>そこで、先に使える構造を増やし、コードとデータを移してから不要な構造を減らします。この進め方は expand/contract と呼ばれます。図46-4は、名前を変えるために新しい列を追加する例です。矢印の各段階を、一度のデプロイに詰め込まずに進めます。<Ref n={6} /></p>
+      <Figure n="46-4" title="列とコードを段階的に切り替える" caption="模式図。両方の列へ書く処理は、すべての書き込み経路で必要です。"><DeploymentFigure /></Figure>
       <p>新しい列は、まずNULLを許す状態で追加します。その後、両方の列に同じ値を書くコードを配布します。古い書き込み処理が残っていると、新しい列に値がある行でも旧列だけが変更されて不一致になります。Web・ジョブ・バッチの切替完了を確認してから、過去の行を補完します。</p>
       <Code lang="ruby" title="同じ更新で両方の列を保存する例" code={`
 article.update!(title: new_title, display_title: new_title)
@@ -822,8 +822,8 @@ end
         <tr><td>INPLACE</td><td>従来のテーブルコピー方式を避けて変更する</td><td>操作によっては内部でテーブルを再構築し、多くの時間や領域を使う</td></tr>
         <tr><td>COPY</td><td>変更後のテーブルへデータをコピーする</td><td>書き込みへの影響と作業領域を考慮する</td></tr>
       </tbody></table></div>
-      <p>MySQLのオンラインDDLは、対応する構造変更を通常の読み書きと並行して進める仕組みです。ただし、テーブルの列などの定義を保護する<Term en="metadata lock">メタデータロック</Term>は必要です。行を更新していないSELECTでも、トランザクションが終わるまでこのロックを保持する場合があります。図31-5のように、待っているDDLが後続の処理を待たせることもあります。<Ref n={4} /></p>
-      <Figure n="31-5" title="オンラインDDLでも起こるロック待ち" caption="模式図。破線は、一方の処理が他方を待たせる関係を表します。"><LockFigure /></Figure>
+      <p>MySQLのオンラインDDLは、対応する構造変更を通常の読み書きと並行して進める仕組みです。ただし、テーブルの列などの定義を保護する<Term en="metadata lock">メタデータロック</Term>は必要です。行を更新していないSELECTでも、トランザクションが終わるまでこのロックを保持する場合があります。図46-5のように、待っているDDLが後続の処理を待たせることもあります。<Ref n={4} /></p>
+      <Figure n="46-5" title="オンラインDDLでも起こるロック待ち" caption="模式図。破線は、一方の処理が他方を待たせる関係を表します。"><LockFigure /></Figure>
       <Code lang="sql" title="隔離したDBで確認した、待ち時間を制限する例" code={`
 -- 接続A（SELECT後、まだトランザクションを終えない）
 START TRANSACTION;
@@ -888,7 +888,7 @@ end
     },
     { id: 'recovery', title: '失敗したら定義・データ・コードを分けて確認する', body: <>
       <p>失敗したときは、まずどのSQLまで成功したか、現在どのコードが動いているかを確認します。db:migrate:status、実行ログ、SHOW CREATE TABLE、索引と制約の情報を照合します。schema.rbは手元の記録なので、失敗した環境の実際の状態と一致するとは限りません。</p>
-      <Figure n="31-6" title="途中失敗から復旧方法を選ぶ" caption="模式図。列が残る現象は、本章のMySQL検証でも確認しました。"><RecoveryFigure /></Figure>
+      <Figure n="46-6" title="途中失敗から復旧方法を選ぶ" caption="模式図。列が残る現象は、本章のMySQL検証でも確認しました。"><RecoveryFigure /></Figure>
       <p>問題が新しいコードだけにあり、DBは旧コードと互換なら、コードだけ戻す選択肢があります。一方、列を削除した後に旧コードへ戻しても動きません。DBの逆操作を実行する場合も、その操作でさらにデータを失わないか、実行に必要な時間とロックを確認します。</p>
       <p>削除・変換で失った値は、バックアップや更新履歴からの復元が必要です。バックアップの取得時点以降の更新をどう扱うかまで含めて復旧方法を考えます。適用履歴を手で書き換えて成功したことにする、エラーを無条件で無視する、といった対処では、環境ごとの状態の違いが残ります。</p>
       <p>事前検証では、本番に近いテーブル定義とデータ量を用意し、旧コード・新コードとの組み合わせを確かめます。所要時間だけでなく、待ち時間、追加領域、更新中の読み書き、失敗後の状態も観察します。変更を中止する条件と復旧担当を決めておくと、待ち続けるDDLを前に判断が遅れることを防げます。</p>

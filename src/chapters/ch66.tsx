@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 47-1 場面の構成 ---------- */
+/* ---------- 図 64-1 場面の構成 ---------- */
 const sceneClients = [
   { name: 'CheckoutService', job: '注文の確定', uses: 'charge' },
   { name: 'PreorderService', job: '予約商品', uses: 'authorize・capture・void' },
@@ -21,7 +22,7 @@ const sceneAdapters: { lines: string[]; company: string; fill: 'box' | 'box5'; t
 function SceneFigure() {
   return (
     <Svg
-      id="47-1"
+      id="64-1"
       w={780}
       h={420}
       label="上の段は決済を使う4つのクラス。CheckoutService は注文の確定で charge を、PreorderService は予約商品で authorize・capture・void を、RefundService は管理画面の返金で refund を、SubscriptionService は定期便で create_subscription と cancel_subscription を呼ぶ。4つとも、7つのメソッドを持つ1つの Payments の取り決めを通して決済会社の Adapter を使う。下の段の3つの Adapter は、取り決めの7つのメソッドをすべて定義している。CardPayAdapter は7つすべてを実装し、KonbiniAdapter は charge だけを実装してほかの6つは NotImplementedError を発生させ、PayLaterAdapter は charge と refund を実装してほかの5つは NotImplementedError を発生させる。各 Adapter の下に、カード決済・コンビニ払い・後払いの会社がある。RefundService がコンビニ払いの注文で refund を呼ぶと NotImplementedError で止まり、respond_to?(:refund) は3社とも true を返す"
@@ -65,7 +66,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 47-2 返金ボタンから 500 までの流れ ---------- */
+/* ---------- 図 64-2 返金ボタンから 500 までの流れ ---------- */
 function TimelineFigure() {
   const xs = [80, 235, 390, 545, 700]
   const names = ['管理者（ブラウザー）', 'RefundsController', 'RefundService', 'KonbiniAdapter', 'orders テーブル']
@@ -79,7 +80,7 @@ function TimelineFigure() {
   ]
   return (
     <Svg
-      id="47-2"
+      id="64-2"
       w={780}
       h={396}
       label="注文一覧では、コンビニ払いの注文でも refundable?（respond_to?(:refund)）が true なので、返金ボタンが出ている。管理者がボタンを押すと、ブラウザーは POST /admin/orders/2/refund を RefundsController に送る。RefundsController は RefundService の call を呼び、RefundService は KonbiniAdapter の refund を呼ぶ。KonbiniAdapter は NotImplementedError を発生させる。RefundService の rescue => e は StandardError だけを捕まえるので、NotImplementedError はそのまま RefundsController に戻り、Rails はブラウザーに 500 Internal Server Error を返す。orders テーブルの注文は status が paid のままで、refund_error にも何も入らない"
@@ -120,11 +121,11 @@ function TimelineFigure() {
   )
 }
 
-/* ---------- 図 47-3 例外クラスの継承関係と rescue => e の範囲 ---------- */
+/* ---------- 図 64-3 例外クラスの継承関係と rescue => e の範囲 ---------- */
 function ExceptionFigure() {
   return (
     <Svg
-      id="47-3"
+      id="64-3"
       w={780}
       h={310}
       label="Exception の下に ScriptError と StandardError がある。ScriptError の下に NotImplementedError と LoadError がある。StandardError の下に NameError、ArgumentError、RuntimeError があり、NameError の下に NoMethodError がある。クラスを書かない rescue（rescue => e）が捕まえるのは StandardError とその下のクラスだけで、Payments::KonbiniAdapter#refund が発生させた NotImplementedError はその範囲の外にある"
@@ -163,7 +164,7 @@ function ExceptionFigure() {
   )
 }
 
-/* ---------- 図 47-4 大きな取り決めと、使う側ごとの取り決め ---------- */
+/* ---------- 図 64-4 大きな取り決めと、使う側ごとの取り決め ---------- */
 const splitClients = ['注文の確定', '予約商品', '管理画面の返金', '定期便']
 const splitRoles = [
   ['請求', 'charge'],
@@ -182,7 +183,7 @@ function SplitFigure() {
   const adY = [64, 154, 244]
   return (
     <Svg
-      id="47-4"
+      id="64-4"
       w={780}
       h={362}
       label="左は直す前。注文の確定・予約商品・管理画面の返金・定期便の4つの使う側が、7つのメソッドを並べた1つの Payments の取り決めを使う。CardPay・Konbini・PayLater の3つの Adapter は、どれもこの取り決めの7つのメソッドをすべて定義し、対応しない機能は空のメソッド（NotImplementedError）にする。空のメソッドは CardPay が0、Konbini が6、PayLater が5。右は直した後。使う側ごとに取り決めを分け、注文の確定は請求（charge）、予約商品は与信（authorize・capture・void）、管理画面の返金は返金（refund）、定期便は定期課金（create_subscription・cancel_subscription）の取り決めを使う。右の CardPay・Konbini・PayLater の箱の中には、満たす取り決めを書いた。CardPay は請求・与信・返金・定期課金の4つを満たし、Konbini は請求だけ、PayLater は請求と返金を満たす。各社は満たす取り決めのメソッドだけを定義する"
@@ -239,7 +240,7 @@ function SplitFigure() {
   )
 }
 
-/* ---------- 図 47-6 役割ごとの shared_examples ---------- */
+/* ---------- 図 64-6 役割ごとの shared_examples ---------- */
 const contractBoxes = [
   ['請求の取り決めを満たす', 'charge'],
   ['返金の取り決めを満たす', 'refund'],
@@ -274,7 +275,7 @@ function ContractsFigure() {
   }
   return (
     <Svg
-      id="47-6"
+      id="64-6"
       w={780}
       h={292}
       label="上の段は spec/support/payment_contracts.rb に書いた4つの shared_examples。請求の取り決め（charge）、返金の取り決め（refund）、与信の取り決め（authorize・capture・void）、定期課金の取り決め（create_subscription・cancel_subscription）。下の段は3つの Adapter の spec。card_pay_adapter_spec.rb は4つの取り決めをすべて組み込む。pay_later_adapter_spec.rb は請求と返金を組み込む。konbini_adapter_spec.rb は請求だけを組み込み、refund を持たないことも確かめる"
@@ -288,7 +289,7 @@ function ContractsFigure() {
       {links.map((l) => (
         <Arrow key={l.key} x1={l.x1} y1={86} x2={l.x2} y2={198} dashed />
       ))}
-      <T x={10} y={150} fs={11} tone="muted">
+      <T x={480} y={150} fs={11} tone="muted">
         it_behaves_like で組み込む
       </T>
       {specBoxes.map((s, j) => (
@@ -298,7 +299,7 @@ function ContractsFigure() {
   )
 }
 
-/* ---------- 図 47-7 定期課金の一時停止を足したときに変えたファイル ---------- */
+/* ---------- 図 64-7 定期課金の一時停止を足したときに変えたファイル ---------- */
 const changeBefore: { file: string; diff: string; unrelated?: boolean }[] = [
   { file: 'app/adapters/payments.rb', diff: '+3 −1' },
   { file: 'app/adapters/payments/card_pay_adapter.rb', diff: '+1' },
@@ -317,7 +318,7 @@ const changeAfter: { file: string; diff: string }[] = [
 function ChangeFigure() {
   return (
     <Svg
-      id="47-7"
+      id="64-7"
       w={780}
       h={358}
       label={`定期課金を一時停止する pause_subscription を足したときに変えたファイル。直す前は7ファイルで15行を足し1行を消した。${changeBefore.map((c) => `${c.file}（${c.diff}${c.unrelated ? '、定期課金に対応しない会社のため' : ''}）`).join('、')}。直した後は3ファイルで8行を足し1行を消した。${changeAfter.map((c) => `${c.file}（${c.diff}）`).join('、')}。コンビニ払いと後払いの Adapter と spec は変えていない`}
@@ -359,7 +360,7 @@ function ChangeFigure() {
   )
 }
 
-/* ---------- 図 47-8 取り決めの大きさの判断 ---------- */
+/* ---------- 図 64-8 取り決めの大きさの判断 ---------- */
 const judgeCols: { lines: string[]; accent?: boolean }[] = [
   { lines: ['1つの大きな取り決め', '対応しない機能の空のメソッド', 'respond_to? が対応を表さない', 'ほかの使う側のための変更が及ぶ'] },
   {
@@ -372,7 +373,7 @@ const judgeCols: { lines: string[]; accent?: boolean }[] = [
 function JudgeFigure() {
   return (
     <Svg
-      id="47-8"
+      id="64-8"
       w={780}
       h={392}
       label="横軸は取り決めの大きさで、左ほど大きく（1つにまとめる）、右ほど小さい（1つのメソッドずつ）。左の1つの大きな取り決めでは、対応しない機能の空のメソッドができ、respond_to? が対応を表さず、ほかの使う側のための変更が及ぶ。中央の、使う側が一緒に呼ぶメソッドの組を1つの取り決めにする形がこの章の勧める大きさで、組のメソッドはそろえて実装し、authorize から capture までの手順をまとめて確かめられる。右の1つのメソッドごとの取り決めでは、組の一部だけを実装でき、手順を確かめるテストを置けず、取り決めの名前と spec が増える。分ける前に確かめること：取り決めを満たす実装が2つ以上あるか、使う側ごとに呼ぶメソッドの組が違うか、取り決めの一部に対応しない実装があるか、これから足すか"
@@ -421,7 +422,7 @@ function JudgeFigure() {
   )
 }
 
-/* ---------- 図 47-9 Ruby のダックタイピングと取り決め ---------- */
+/* ---------- 図 64-9 Ruby のダックタイピングと取り決め ---------- */
 const duckRows: { client: string[]; role: string; objects: string[] }[] = [
   { client: ['IO.copy_stream', '書き込み先に'], role: 'write(data)', objects: ['File・StringIO', 'LineCounter（この章で作った）'] },
   { client: ['render(obj)', '部分テンプレートを選ぶ'], role: 'to_partial_path', objects: ['Order などのモデル', 'RefundNotice（この章で作った）'] },
@@ -436,7 +437,7 @@ const duckWays = [
 function DuckFigure() {
   return (
     <Svg
-      id="47-9"
+      id="64-9"
       w={780}
       h={366}
       label="Ruby では、使う側が送るメソッドが取り決めになり、そのメソッドに応えるオブジェクトならクラスを問わずに使える。IO.copy_stream は書き込み先に write(data) を送り、File・StringIO・この章で作った LineCounter が応える。Action View の render(obj) は部分テンプレートを選ぶために to_partial_path を送り、Order などのモデルや、この章で作った RefundNotice が応える。RefundService は refund(charge_id:, amount:) を送り、CardPayAdapter と PayLaterAdapter が応える。Ruby で取り決めを書き表す方法は3つ。コメントは取り決めのメソッドと約束を書くが実行はされない。shared_examples は取り決めを満たすかを RSpec で実行して確かめる。RBS の interface はメソッドの引数と戻り値の型を書き、rbs コマンドで構文を確かめる"
@@ -486,7 +487,7 @@ const chapter: Chapter = {
     '1つのメソッドごとに分けるなどの分けすぎを見分け、使う側が一緒に呼ぶメソッドの組を単位に取り決めの大きさを決められる',
     'Ruby のダックタイピング、RBS の interface、Action Pack やキャッシュのストアの取り決めを、ISP の考え方で読める',
   ],
-  prerequisites: [20, 42, 65],
+  prerequisites: [20, 65],
   sections: [
     {
       id: 'scene',
@@ -614,7 +615,7 @@ end
 `}
           />
           <p>
-            KonbiniAdapter は、7つのメソッドのうち6つが <code>NotImplementedError</code> を発生させるだけのメソッドです。この章の Adapter は外部と通信せず、決済会社が返す ID の形の文字列を返します。本物の会社と通信する Adapter の書き方は <ChapterLink n={42} section="rails-impl" /> で扱いました。
+            KonbiniAdapter は、7つのメソッドのうち6つが <code>NotImplementedError</code> を発生させるだけのメソッドです。この章の Adapter は外部と通信せず、決済会社が返す ID の形の文字列を返します。本物の会社と通信する Adapter の書き方は <ChapterLink n={42} section="rails-impl" /> で扱います。
           </p>
           <p>
             取り決めのテストは RSpec の <Term en="shared examples">shared_examples</Term>（複数の spec で使う例のまとまりに名前を付けて登録し、<code>it_behaves_like</code> で組み込んで実行する機能<Ref n={8} />）に書いています。7つのメソッドすべてに応答することを、すべての Adapter で確かめます。
@@ -733,11 +734,11 @@ class Admin::RefundsController < ApplicationController
 end
 `}
           />
-          <Figure n="47-1" title="場面の構成" caption="実線の矢印は呼び出し、破線の矢印は「取り決めを満たす」関係を表す。色を付けた箱が、この節で問題が起きるクラス。">
+          <Figure n="64-1" title="場面の構成" caption="実線の矢印は呼び出し、破線の矢印は「取り決めを満たす」関係を表す。色を付けた箱が、この節で問題が起きるクラス。">
             <SceneFigure />
           </Figure>
           <p>
-            図 47-1 はこの場面のクラスの関係です。4つの使う側はそれぞれ7つのうち1〜3個のメソッドしか呼びません。それでも3社の Adapter は7つのメソッドをすべて定義しています。問題が起きるのは、色を付けた KonbiniAdapter です。
+            図 64-1 はこの場面のクラスの関係です。4つの使う側はそれぞれ7つのうち1〜3個のメソッドしか呼びません。それでも3社の Adapter は7つのメソッドをすべて定義しています。問題が起きるのは、色を付けた KonbiniAdapter です。
           </p>
           <h3>どの会社が、どの機能に対応しているか</h3>
           <p>3社の Adapter の7つのメソッドを実際に呼び、<code>NotImplementedError</code> になるものを数えました。</p>
@@ -819,17 +820,17 @@ app/services/refund_service.rb:4:in 'RefundService#call'
 app/controllers/admin/refunds_controller.rb:7:in 'Admin::RefundsController#create'
 `}
           />
-          <Figure n="47-2" title="返金ボタンから 500 までの流れ" caption="縦に時間、列に関係するオブジェクトを並べた。破線の矢印は例外や応答が戻る向き。">
+          <Figure n="64-2" title="返金ボタンから 500 までの流れ" caption="縦に時間、列に関係するオブジェクトを並べた。破線の矢印は例外や応答が戻る向き。">
             <TimelineFigure />
           </Figure>
           <p>
-            図 47-2 はこの流れを時間の順に並べたものです。管理者は、押せるはずのボタンを押して 500 のエラー画面を見ます。注文は paid のままで、返金できなかった理由も記録されません。
+            図 64-2 はこの流れを時間の順に並べたものです。管理者は、押せるはずのボタンを押して 500 のエラー画面を見ます。注文は paid のままで、返金できなかった理由も記録されません。
           </p>
-          <Figure n="47-3" title="例外クラスの継承関係と rescue => e の範囲" caption="Ruby の組み込みの例外クラスのうち、この章に関係するものだけを描いた。矢印はサブクラスから親のクラスへ向く。">
+          <Figure n="64-3" title="例外クラスの継承関係と rescue => e の範囲" caption="Ruby の組み込みの例外クラスのうち、この章に関係するものだけを描いた。矢印はサブクラスから親のクラスへ向く。">
             <ExceptionFigure />
           </Figure>
           <p>
-            図 47-3 は例外クラスの継承関係です。<code>{'rescue => e'}</code> が捕まえるのは破線の枠の中だけで、<code>NotImplementedError</code> は枠の外にあります。Sidekiq のジョブで同じ rescue を書いていた場合も、同じように捕まりません。
+            図 64-3 は例外クラスの継承関係です。<code>{'rescue => e'}</code> が捕まえるのは破線の枠の中だけで、<code>NotImplementedError</code> は枠の外にあります。Sidekiq のジョブで同じ rescue を書いていた場合も、同じように捕まりません。
           </p>
           <h3>定期便に一時停止を足すと</h3>
           <p>
@@ -939,11 +940,11 @@ Failures:
           <p>
             場面の節の7つのメソッドの取り決めは、カード決済の会社の Adapter の public メソッドを並べたもので、ヘッダーインターフェースにあたります。使う側ごとのやり取りを見ると、請求・与信・返金・定期課金の4つの役割が見えてきます。
           </p>
-          <Figure n="47-4" title="大きな取り決めと、使う側ごとの取り決め" caption="実線の矢印は呼び出し、左の破線の矢印は「取り決めを満たす」関係を表す。右の Adapter の箱には満たす取り決めを書いた。空のメソッドは NotImplementedError を発生させるだけのメソッド。">
+          <Figure n="64-4" title="大きな取り決めと、使う側ごとの取り決め" caption="実線の矢印は呼び出し、左の破線の矢印は「取り決めを満たす」関係を表す。右の Adapter の箱には満たす取り決めを書いた。空のメソッドは NotImplementedError を発生させるだけのメソッド。">
             <SplitFigure />
           </Figure>
           <p>
-            図 47-4 は2つの形を並べたものです。左では、どの使う側も7つのメソッドの取り決めを使い、どの Adapter も7つすべてを定義します。右では、使う側ごとに取り決めがあり、Adapter は満たす取り決めのメソッドだけを定義します。CardPayAdapter は1つのクラスのまま、4つの取り決めを満たします。分けるのは使う側から見える取り決めで、実装のクラスを細かく分けるわけではありません。
+            図 64-4 は2つの形を並べたものです。左では、どの使う側も7つのメソッドの取り決めを使い、どの Adapter も7つすべてを定義します。右では、使う側ごとに取り決めがあり、Adapter は満たす取り決めのメソッドだけを定義します。CardPayAdapter は1つのクラスのまま、4つの取り決めを満たします。分けるのは使う側から見える取り決めで、実装のクラスを細かく分けるわけではありません。
           </p>
           <h3>似た原則との違い</h3>
           <ul>
@@ -958,7 +959,7 @@ Failures:
             </li>
             <li>High Cohesion（<ChapterLink n={69} />）：Martin は太ったインターフェースを、まとまりのないインターフェースと説明しています。ISP は、インターフェースを使う側ごとのまとまりに分けます。</li>
             <li>
-              Adapter パターン（<ChapterLink n={42} section="anti-patterns" />）：外部のサービスの機能をすべて取り決めに入れると、対応しない会社の Adapter に <code>NotImplementedError</code> が並ぶ、という誤りを扱いました。この章の場面はその誤りを実際に動かして確かめたものです。
+              Adapter パターン（<ChapterLink n={42} section="anti-patterns" />）：外部のサービスの機能をすべて取り決めに入れると、対応しない会社の Adapter に <code>NotImplementedError</code> が並ぶ、という誤りを扱います。この章の場面はその誤りを実際に動かして確かめたものです。
             </li>
           </ul>
         </>
@@ -994,9 +995,9 @@ app/services/subscription_service.rb:8:.cancel_subscription
 `}
           />
           <p>
-            <code>order.rb</code> の <code>:refund</code> は <code>respond_to?(:refund)</code> の引数です。検索の結果を、使う側ごとにまとめたのが図 47-5 です。
+            <code>order.rb</code> の <code>:refund</code> は <code>respond_to?(:refund)</code> の引数です。検索の結果を、使う側ごとにまとめたのが図 64-5 です。
           </p>
-          <Figure n="47-5" title="使う側と、呼ぶメソッドの組" caption="手順1の検索の結果をまとめた。右の列はその組の取り決めを満たす会社。">
+          <Figure n="64-5" title="使う側と、呼ぶメソッドの組" caption="手順1の検索の結果をまとめた。右の列はその組の取り決めを満たす会社。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1045,7 +1046,7 @@ app/services/subscription_service.rb:8:.cancel_subscription
             </div>
           </Figure>
           <p>
-            図 47-5 から、7つのメソッドは使う側ごとに4つの組に分かれ、組をまたいで呼ぶ使う側がないことがわかります。PreorderService の3つのメソッドは、1つの予約で順に呼ぶので、1つの組にします。どれか1つでも欠けると、予約を最後まで扱えないからです。
+            図 64-5 から、7つのメソッドは使う側ごとに4つの組に分かれ、組をまたいで呼ぶ使う側がないことがわかります。PreorderService の3つのメソッドは、1つの予約で順に呼ぶので、1つの組にします。どれか1つでも欠けると、予約を最後まで扱えないからです。
           </p>
           <h3>手順2：一緒に呼ぶメソッドの組を、1つの取り決めにする</h3>
           <Code
@@ -1172,11 +1173,11 @@ Failures:
           <p>
             取り決めのテストはすべて通り、KonbiniAdapter の <code>refund</code> の例だけが失敗しました。場面の節で返金ボタンを出していた原因が、テストの失敗として見えています。
           </p>
-          <Figure n="47-6" title="役割ごとの shared_examples と、組み込む spec" caption="上の段の破線の箱は共通のテスト。破線の矢印は it_behaves_like で組み込むことを表す。">
+          <Figure n="64-6" title="役割ごとの shared_examples と、組み込む spec" caption="上の段の破線の箱は共通のテスト。破線の矢印は it_behaves_like で組み込むことを表す。">
             <ContractsFigure />
           </Figure>
           <p>
-            図 47-6 は4つの共通のテストと、それを組み込む spec の関係です。どの Adapter も満たす取り決めのテストだけを実行します。直す前は、どの Adapter も7つすべてに応答することを確かめていました。
+            図 64-6 は4つの共通のテストと、それを組み込む spec の関係です。どの Adapter も満たす取り決めのテストだけを実行します。直す前は、どの Adapter も7つすべてに応答することを確かめていました。
           </p>
           <h3>手順4：Adapter から空のメソッドを消す</h3>
           <Code
@@ -1253,7 +1254,7 @@ cancel_subscription  true             false            false
 `}
           />
           <p>
-            直した後の表は図 47-5 の「満たす会社」の列と一致します。<code>respond_to?</code> が、その会社が機能に対応しているかを表すようになりました。管理画面の注文一覧と、spec 全体の結果は次のとおりです。
+            直した後の表は図 64-5 の「満たす会社」の列と一致します。<code>respond_to?</code> が、その会社が機能に対応しているかを表すようになりました。管理画面の注文一覧と、spec 全体の結果は次のとおりです。
           </p>
           <Code
             lang="text"
@@ -1324,11 +1325,11 @@ Finished in 0.12029 seconds (files took 1.81 seconds to load)
  3 files changed, 8 insertions(+), 1 deletion(-)
 `}
           />
-          <Figure n="47-7" title="直す前と後の比較：定期課金の一時停止を足したときに変えたファイル" caption="どちらも git diff --no-index --stat の結果から描いた。色を付けた箱は定期課金に対応しない会社のために変えたファイル。">
+          <Figure n="64-7" title="直す前と後の比較：定期課金の一時停止を足したときに変えたファイル" caption="どちらも git diff --no-index --stat の結果から描いた。色を付けた箱は定期課金に対応しない会社のために変えたファイル。">
             <ChangeFigure />
           </Figure>
           <p>
-            図 47-7 は同じ機能を足したときに変えたファイルを、直す前と後で並べたものです。直す前は7ファイルで、そのうち4つが定期課金に対応しない2社のファイルでした。直した後は3ファイルで、2社のファイルは変えていません。定期便のための変更は定期課金の取り決めと、それを満たす会社にだけ及びます。
+            図 64-7 は同じ機能を足したときに変えたファイルを、直す前と後で並べたものです。直す前は7ファイルで、そのうち4つが定期課金に対応しない2社のファイルでした。直した後は3ファイルで、2社のファイルは変えていません。定期便のための変更は定期課金の取り決めと、それを満たす会社にだけ及びます。
           </p>
           <h3>コンビニ払いの返金を、どこで扱うか</h3>
           <p>
@@ -1455,11 +1456,11 @@ Failures:
             ISP がよく効果を出すのは、実装を差し替える境目です。この章の決済会社の Adapter や、後で見るキャッシュのストアのように、同じ取り決めを複数の実装が満たし、実装ごとに対応する機能が違う場所です。モデルのメソッドが多いこと自体は、ISP の違反として扱わなくてかまいません。モデルが大きくなりすぎたときの分け方は、SRP（<ChapterLink n={63} />）と High Cohesion（<ChapterLink n={69} />）で扱います。
           </p>
           <h3>判断の目安</h3>
-          <Figure n="47-8" title="取り決めの大きさの判断" caption="模式図。中央の大きさを目安にし、両端の症状が出ていないかで確かめる。">
+          <Figure n="64-8" title="取り決めの大きさの判断" caption="模式図。中央の大きさを目安にし、両端の症状が出ていないかで確かめる。">
             <JudgeFigure />
           </Figure>
           <p>
-            図 47-8 は取り決めの大きさと、両端で起きることを並べたものです。左端（1つの大きな取り決め）では場面の節の問題が起き、右端（1つのメソッドごと）ではこの節の問題が起きます。中央の「使う側が一緒に呼ぶメソッドの組」を1つの取り決めにする形を目安にします。図の下の4つの問いのうち、1と2のどちらにも当てはまらないなら、分けずに1つの取り決めのままにしておきます。
+            図 64-8 は取り決めの大きさと、両端で起きることを並べたものです。左端（1つの大きな取り決め）では場面の節の問題が起き、右端（1つのメソッドごと）ではこの節の問題が起きます。中央の「使う側が一緒に呼ぶメソッドの組」を1つの取り決めにする形を目安にします。図の下の4つの問いのうち、1と2のどちらにも当てはまらないなら、分けずに1つの取り決めのままにしておきます。
           </p>
         </>
       ),
@@ -1546,11 +1547,11 @@ end
           <p>
             rbs 4.2.0 の <code>rbs parse sig/payments.rbs</code> と <code>rbs -I sig validate</code> は、どちらもエラーを出さずに終わりました。RBS のファイルは Ruby のコードとは別のファイルで、この章のアプリを動かすときには読み込んでいません。Adapter が interface のとおりに書かれているかは、型を検査する道具を別に使って確かめます。RBS を使わないチームでも、使う側ごとに interface を1つ書けるかを考えると、取り決めの大きさを決める目安になります。
           </p>
-          <Figure n="47-9" title="Ruby のダックタイピングと取り決め" caption="実線の矢印はメソッドの呼び出し、破線の矢印は「取り決めを満たす」関係。下の段の色を付けた箱が、この章で取り決めを確かめるのに主に使った方法。">
+          <Figure n="64-9" title="Ruby のダックタイピングと取り決め" caption="実線の矢印はメソッドの呼び出し、破線の矢印は「取り決めを満たす」関係。下の段の色を付けた箱が、この章で取り決めを確かめるのに主に使った方法。">
             <DuckFigure />
           </Figure>
           <p>
-            図 47-9 は使う側・取り決め・応えるオブジェクトの関係を、この章の3つの例で並べたものです。どの例でも、取り決めは使う側が送るメソッドで決まり、応えるオブジェクトのクラスは問われません。Ruby には interface の宣言を確かめる仕組みがないので、この章では shared_examples を使い、取り決めを満たすかを実行して確かめました。
+            図 64-9 は使う側・取り決め・応えるオブジェクトの関係を、この章の3つの例で並べたものです。どの例でも、取り決めは使う側が送るメソッドで決まり、応えるオブジェクトのクラスは問われません。Ruby には interface の宣言を確かめる仕組みがないので、この章では shared_examples を使い、取り決めを満たすかを実行して確かめました。
           </p>
           <h3>Action Pack が求めるのは、機能ごとの小さな取り決め</h3>
           <p>
@@ -1648,9 +1649,9 @@ NotImplementedError: TinyStore does not support delete_matched
 `}
           />
           <p>
-            3つのメソッドを実装しただけで、主な5つのメソッドは動きました。一方で <code>respond_to?(:delete_matched)</code> は true を返し、呼ぶと <code>NotImplementedError</code> になります。場面の節の KonbiniAdapter と同じ状態です。Rails に入っているストアと Solid Cache が、この5つのメソッドを持つかをソースで確かめたのが図 47-10 です。
+            3つのメソッドを実装しただけで、主な5つのメソッドは動きました。一方で <code>respond_to?(:delete_matched)</code> は true を返し、呼ぶと <code>NotImplementedError</code> になります。場面の節の KonbiniAdapter と同じ状態です。Rails に入っているストアと Solid Cache が、この5つのメソッドを持つかをソースで確かめたのが図 64-10 です。
           </p>
-          <Figure n="47-10" title="キャッシュのストアと、対応しないことがあるメソッド" caption="Rails 8.1.4.1 と solid_cache 1.0.10 のソースで確かめた。×は呼ぶと NotImplementedError になるもの。MemoryStore・FileStore・NullStore はこの章のアプリでも確かめた。">
+          <Figure n="64-10" title="キャッシュのストアと、対応しないことがあるメソッド" caption="Rails 8.1.4.1 と solid_cache 1.0.10 のソースで確かめた。×は呼ぶと NotImplementedError になるもの。MemoryStore・FileStore・NullStore はこの章のアプリでも確かめた。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1696,7 +1697,7 @@ NotImplementedError: TinyStore does not support delete_matched
             </div>
           </Figure>
           <p>
-            図 47-10 のとおり、<code>delete_matched</code> は MemoryStore と FileStore では動きますが、MemCacheStore と Solid Cache では <code>NotImplementedError</code> になります。Rails 8.1 の Guides は Solid Cache を新しいアプリの既定のキャッシュストアと説明しています<Ref n={25} />。開発環境のストアで <code>Rails.cache.delete_matched("products/*")</code> が動いても、本番のストアでは動かないことがあります。しかも場面の節で見たとおり、<code>NotImplementedError</code> は <code>{'rescue => e'}</code> では捕まりません。
+            図 64-10 のとおり、<code>delete_matched</code> は MemoryStore と FileStore では動きますが、MemCacheStore と Solid Cache では <code>NotImplementedError</code> になります。Rails 8.1 の Guides は Solid Cache を新しいアプリの既定のキャッシュストアと説明しています<Ref n={25} />。開発環境のストアで <code>Rails.cache.delete_matched("products/*")</code> が動いても、本番のストアでは動かないことがあります。しかも場面の節で見たとおり、<code>NotImplementedError</code> は <code>{'rescue => e'}</code> では捕まりません。
           </p>
           <p>
             アプリのコードで主な5つのメソッドだけを使うようにすると、ストアを替えても動き続けます。キーの一部が同じエントリーをまとめて消したいときは、キーにバージョンや更新日時を含め、古いキーを読まなくなる形にします（キャッシュのキーの作り方は <ChapterLink n={22} section="rails-cache" />）。使う側が必要とするメソッドの組に合わせて自分のコードを書くことも、ISP の当てはめ方の1つです。
@@ -1713,7 +1714,7 @@ NotImplementedError: TinyStore does not support delete_matched
           <h3>本書のほかの章との関係</h3>
           <ul>
             <li>
-              <ChapterLink n={42} section="test" />：決済の Adapter の取り決めを shared_examples に書く方法を扱いました。この章ではそれを使う側ごとの取り決めに分けました。
+              <ChapterLink n={42} section="test" />：決済の Adapter の取り決めを shared_examples に書く方法を扱います。この章ではそれを使う側ごとの取り決めに分けました。
             </li>
             <li>
               <ChapterLink n={65} />：<code>NotImplementedError</code> を発生させるだけのメソッドは、親の約束を守れない実装でもあります。
@@ -1731,6 +1732,29 @@ NotImplementedError: TinyStore does not support delete_matched
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          取り決めに入れるのは、1つの使う側が一緒に呼ぶメソッドの組です。この章では7つのメソッドを並べた決済の取り決めを使う側ごとに分け、Adapter には満たす取り決めのメソッドだけを書きました。取り決めを満たす実装や使う側が1つしかないなら、分けずにおきます。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は Adapter の21個のメソッドのうち11個が NotImplementedError を出すだけで、コンビニ払いの注文に押すと 500 になる返金ボタンが出た。直した後は、定期便の一時停止を足すときに変えたファイルが7つから3つになり、定期課金に対応しない2社のファイルは変えずに済んだ。</>,
+        basis: <><ChapterLink n={66} section="scene" />、<ChapterLink n={66} section="apply" /></>,
+      },
+      cost: {
+        text: <>取り決めごとに名前と共通のテスト（shared_examples）が増え、1つの会社がどの取り決めを満たすかを Adapter と spec で確かめる箇所が増える。返金の取り決めを満たさない会社の注文には、振込の手続きの案内のような別の業務の流れを用意する必要がある。</>,
+        basis: <ChapterLink n={66} section="apply" />,
+      },
+      alternative: {
+        text: <>1つのメソッドごとに取り決めを分けると、後払いの Adapter が void を持たないまま spec を通り、予約のキャンセルで NoMethodError になった。与信のように一緒に呼ぶ3つのメソッドは1つの取り決めにし、組のテストで抜けを見つける。Active Record のモデルは使う側ごとのインターフェースに分けない。</>,
+        basis: <ChapterLink n={66} section="overuse" />,
+      },
+      criterion: {
+        text: <>取り決めを満たす実装が2つ以上あるか。使う側ごとに呼ぶメソッドの組が違うか。取り決めの一部に対応しない実装が今あるか、これから足すか。どれにも当てはまらないなら、1つの取り決めのままにする。</>,
+        basis: <ChapterLink n={66} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

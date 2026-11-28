@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 68-1 再設定のメールとクーポンの照合で数える処理と、問題が起きる箇所 ---------- */
+/* ---------- 図 85-1 再設定のメールとクーポンの照合で数える処理と、問題が起きる箇所 ---------- */
 const throttleRows = [
   { code: 'ip = request.remote_ip', policy: true, mech: false },
   { code: 'return if ip.start_with?("10.0.")', policy: true, mech: false },
@@ -18,7 +19,7 @@ function SceneFigure() {
   const rowY = (i: number) => 84 + i * 28
   return (
     <Svg
-      id="68-1"
+      id="85-1"
       w={780}
       h={430}
       label="直す前の PasswordResetsController の throttle メソッドの6行を、方針の行と仕組みの行に印を付けて並べた。数える対象の IP を取る行と社内のネットワークを除く行は方針、キーを作る行と Rails.cache から読む行は仕組み、3分の期限を付けて書く行と10回を超えたら 429 を返す行は、方針と仕組みが1行に混ざっている。CouponChecksController はこの数える処理を書き写し、キーと10分・5回を書き換えている。どちらも Rails.cache に読み書きする。上限の数を変えるにも数える処理の行を開いて直すこと、write のたびに期限を付け直すこと、数え方の誤りが2つのコントローラーの両方にあることが問題になる"
@@ -72,7 +73,7 @@ function SceneFigure() {
         ・上限の数（10回・5回）を変えるにも、read と write の行の間を読んで直す
       </T>
       <T x={20} y={384} fs={12} tone="danger">
-        ・write のたびに expires_in を付け直すので、要求が続くと数が減らない（図 68-2）
+        ・write のたびに expires_in を付け直すので、要求が続くと数が減らない（図 85-2）
       </T>
       <T x={20} y={406} fs={12} tone="danger">
         ・数え方の誤りは書き写した2つのコントローラーの両方にある
@@ -81,7 +82,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 68-2 40分おきの要求で、数と期限がどう変わるか ---------- */
+/* ---------- 図 85-2 40分おきの要求で、数と期限がどう変わるか ---------- */
 const timelineRows = [
   { t: '0分', before: ['1', '60分まで', '202'], after: ['1', '60分まで', '202'] },
   { t: '40分', before: ['2', '100分まで', '202'], after: ['2', '60分まで', '202'] },
@@ -97,7 +98,7 @@ function TimelineFigure() {
   const widths = [60, 110, 80]
   return (
     <Svg
-      id="68-2"
+      id="85-2"
       w={780}
       h={402}
       label="同じメールアドレスで40分おきに5回、パスワードの再設定を求めたときの、数と期限と応答。上限は1時間に3回。直す前のコードは write のたびに期限を60分後に付け直すので、数は1、2、3、4、5と増え続け、120分と160分の要求は 429 になった。rate_limit は最初の1回で期限を決め、期限が切れたら1から数え直すので、数は1、2、1、2、1となり、すべて 202 になった"
@@ -158,7 +159,7 @@ function TimelineFigure() {
   )
 }
 
-/* ---------- 図 68-3 Hydra の方針モジュールと KMPS、この章のコード ---------- */
+/* ---------- 図 85-3 Hydra の方針モジュールと KMPS、この章のコード ---------- */
 const policyModules = [
   { x: 20, lines: ['方針モジュール A', 'タイムシェアリング'] },
   { x: 175, lines: ['方針モジュール B', 'バッチの処理'] },
@@ -168,7 +169,7 @@ const policyModules = [
 function HydraFigure() {
   return (
     <Svg
-      id="68-3"
+      id="85-3"
       w={780}
       h={410}
       label="左は Hydra の構成。利用者のレベルに方針モジュールが3つあり、それぞれがタイムシェアリング、バッチの処理、デバッグ中の方針を持つ。方針モジュールは、優先度、使えるプロセッサー、時間の割り当て、ページの数の上限をパラメーターとして KMPS に設定し、プロセスを開始する。カーネルの KMPS はパラメーターに従ってプロセスを切り替え、方針どうしを公平に調停し、プロセスが止まると方針モジュールに知らせる。KMPS は C.mmp のプロセッサーを使う。右はこの章のコードの対応。コントローラーの rate_limit の宣言が方針で、to・within・by を渡す。ActionController::RateLimiting が仕組みで、キーを作って数え、超えたら with を呼ぶ。数はキャッシュのストアに保存する"
@@ -190,11 +191,11 @@ function HydraFigure() {
         </g>
       ))}
       <Box x={20} y={110} w={450} h={60} dashed fill="bg" lines={['パラメーター（SETPCB）：優先度・使えるプロセッサー・', '時間の割り当て・ページの数の上限。START・STOP']} fs={11} />
-      <T x={20} y={184} fs={11} tone="muted">
+      <T x={124} y={184} fs={11} tone="muted">
         カーネル（仕組み）
       </T>
       <Box x={20} y={198} w={450} h={60} fill="box5" lines={['KMPS（Kernel Multiprocessing System）', 'パラメーターに従ってプロセスを切り替え、方針どうしを公平に調停する']} fs={12} bold subTone="muted" />
-      <T x={480} y={150} fs={10} tone="muted">
+      <T x={470} y={40} fs={10} tone="muted" anchor="end">
         破線：停止の知らせ
       </T>
       <Arrow x1={245} y1={258} x2={245} y2={292} />
@@ -218,11 +219,11 @@ function HydraFigure() {
   )
 }
 
-/* ---------- 図 68-5 直す前と後：方針を変えるときに開く場所 ---------- */
+/* ---------- 図 85-5 直す前と後：方針を変えるときに開く場所 ---------- */
 function CompareFigure() {
   return (
     <Svg
-      id="68-5"
+      id="85-5"
       w={780}
       h={420}
       label="左は直す前。PasswordResetsController と CouponChecksController の throttle メソッドが、方針と数える仕組みを両方持ち、どちらも Rails.cache を読み書きする。上限の変更では throttle の中を直し、メールアドレスの制限を足すときは数える処理を写して11行足し5行消した。右は直した後。2つのコントローラーには rate_limit の宣言（方針）だけがあり、ActionController::RateLimiting がキーを作って increment で数え、超えたら with を呼ぶ。数はキャッシュのストアに保存し、ストアは環境ごとの設定で選ぶ。上限の変更は宣言の1行、数える場所の変更は環境の設定で済む"
@@ -271,18 +272,18 @@ function CompareFigure() {
   )
 }
 
-/* ---------- 図 68-7 方針をどこまで切り離すかの目安 ---------- */
+/* ---------- 図 85-7 方針をどこまで切り離すかの目安 ---------- */
 const judgeCells = [
   { x: 120, y: 40, fill: 'box5' as const, lines: ['仕組みを1か所にまとめ、', '方針は宣言の行に書く', '（この章の rate_limit）'], tone: 'acc' as const },
   { x: 450, y: 40, fill: 'box4' as const, lines: ['方針をデータとして持つ', '（管理画面・DB の表）', '単位の検証とテストを足す'], tone: undefined },
-  { x: 120, y: 190, fill: 'box' as const, lines: ['その場に書いてよい', '2つ目の方針が来てから', '仕組みを取り出す'], tone: undefined },
-  { x: 450, y: 190, fill: 'box' as const, lines: ['値だけを外に出す', '（環境変数・credentials・', 'config_for）'], tone: undefined },
+  { x: 120, y: 194, fill: 'box' as const, lines: ['その場に書いてよい', '2つ目の方針が来てから', '仕組みを取り出す'], tone: undefined },
+  { x: 450, y: 194, fill: 'box' as const, lines: ['値だけを外に出す', '（環境変数・credentials・', 'config_for）'], tone: undefined },
 ]
 
 function JudgeFigure() {
   return (
     <Svg
-      id="68-7"
+      id="85-7"
       w={780}
       h={400}
       label="横軸は、方針を変える人と時期。左は開発者がコードと一緒に変える、右は開発者以外がデプロイせずに変える。縦軸は、同じ仕組みを使う方針の数。下は1つ、上は複数。左上は、仕組みを1か所にまとめ方針は宣言の行に書く（この章の rate_limit）。右上は、方針をデータとして持ち、単位の検証とテストを足す。左下は、その場に書いてよく、2つ目の方針が来てから仕組みを取り出す。右下は、値だけを環境変数・credentials・config_for に出す。この節の YAML は、開発者だけが変えデプロイも要る左上の場所に、右上の作りを持ち込んだもの"
@@ -315,17 +316,17 @@ function JudgeFigure() {
       ))}
       <circle cx={400} cy={150} r={7} fill="var(--fig-danger)" />
       <Arrow x1={398} y1={146} x2={448} y2={110} dashed />
-      <T x={300} y={174} fs={11} tone="danger">
+      <T x={300} y={169} fs={11} tone="danger">
         この節の YAML：左上の場所に
       </T>
-      <T x={300} y={174 + 16} fs={11} tone="danger">
+      <T x={300} y={169 + 15} fs={11} tone="danger">
         右上の作りを持ち込んだ
       </T>
     </Svg>
   )
 }
 
-/* ---------- 図 68-8 rate_limit・Pundit・retry_on の方針と仕組み ---------- */
+/* ---------- 図 85-8 rate_limit・Pundit・retry_on の方針と仕組み ---------- */
 const railsRows = [
   {
     name: 'rate_limit',
@@ -348,7 +349,7 @@ function RailsFigure() {
   const rowY = (i: number) => 52 + i * 92
   return (
     <Svg
-      id="68-8"
+      id="85-8"
       w={780}
       h={346}
       label="Rails と gem の3つの機能を、アプリが書く方針と、Rails や gem が持つ仕組みに分けた。rate_limit は、アプリが to・within・by を宣言し、Rails がキーを作って increment で数え、上限を超えたら with を呼ぶ。Pundit は、アプリがポリシーのクラスに update? などの判断を書き、authorize がポリシーのクラスを探して呼び、false なら NotAuthorizedError を発生させる。retry_on は、アプリが例外の種類・待ち方・回数を宣言し、Active Job が rescue_from で受けて実行の回数を数え、待ち時間を計算してジョブを入れ直す"
@@ -480,11 +481,11 @@ end
 3 examples, 0 failures
 `}
           />
-          <Figure n="68-1" title="パスワードの再設定で回数を数えるメソッドと、問題が起きる箇所" caption="青い丸は方針（何を・何回まで・超えたらどうするか）、黒い丸は仕組み（どう数えるか）を書いた行。">
+          <Figure n="85-1" title="パスワードの再設定で回数を数えるメソッドと、問題が起きる箇所" caption="青い丸は方針（何を・何回まで・超えたらどうするか）、黒い丸は仕組み（どう数えるか）を書いた行。">
             <SceneFigure />
           </Figure>
           <p>
-            図 68-1 は throttle の6行に、方針を書いた行と仕組みを書いた行の印を付けたものです。IP アドレスを取る行と社内のネットワークを除く行は方針、キーを作る行とキャッシュから読む行は仕組みです。残りの2行は、3分・10回・429 という方針と、write・比較という仕組みが1行に混ざっています。テストは通っていますが、方針だけを変えたいときにもこの6行を読んで直すことになります。
+            図 85-1 は throttle の6行に、方針を書いた行と仕組みを書いた行の印を付けたものです。IP アドレスを取る行と社内のネットワークを除く行は方針、キーを作る行とキャッシュから読む行は仕組みです。残りの2行は、3分・10回・429 という方針と、write・比較という仕組みが1行に混ざっています。テストは通っていますが、方針だけを変えたいときにもこの6行を読んで直すことになります。
           </p>
           <h3>セキュリティの担当者からの変更の依頼</h3>
           <p>運用を始めて1か月後、セキュリティの担当者から2つの依頼が来ました。</p>
@@ -589,11 +590,11 @@ Failures:
           <p>
             40分おきに送る会員の4回目と5回目が断られました。原因は <code>Rails.cache.write(key, count, expires_in: 1.hour)</code> にあります。write は呼ぶたびに有効期限を「今から1時間後」に付け直すので、前の要求から1時間がたたないうちに次の要求が来ると、数が0に戻りません。この行が実際に作っていた規則は「最後の要求から1時間、数を残す」で、担当者が決めた「1時間に3回まで」とは違います。
           </p>
-          <Figure n="68-2" title="40分おきの要求で、数と期限がどう変わるか" caption="同じメールアドレスで40分おきに5回、再設定を求めた。右の列は後の節で rate_limit に置き換えた後の結果。">
+          <Figure n="85-2" title="40分おきの要求で、数と期限がどう変わるか" caption="同じメールアドレスで40分おきに5回、再設定を求めた。右の列は後の節で rate_limit に置き換えた後の結果。">
             <TimelineFigure />
           </Figure>
           <p>
-            図 68-2 の左の列が直す前のコードです。期限が60分後、100分後、140分後と延び続け、数は 1 から 5 まで増えました。右の列は後の節で直した後の結果で、最初の要求で決めた期限が切れると1から数え直すので、5回とも受け付けます。
+            図 85-2 の左の列が直す前のコードです。期限が60分後、100分後、140分後と延び続け、数は 1 から 5 まで増えました。右の列は後の節で直した後の結果で、最初の要求で決めた期限が切れると1から数え直すので、5回とも受け付けます。
           </p>
           <p>
             この誤りは IP アドレスの制限にも、写したクーポンの照合にもあります。3分や10分の短い期限では、要求の間隔がたまたま期限より長かったので、これまでのテストでは見つかりませんでした。さらに、read と write を別々に呼んでいるので、同じキーに2つの要求が同時に来ると、両方が同じ数を読んで同じ数を書き、1回分を数えないことがあります。
@@ -644,11 +645,11 @@ Failures:
           <p>
             論文の最初の例はプロセスのスケジューリングです。KMPS（Kernel Multiprocessing System）はカーネルの中のスケジューリングの仕組みで、利用者のレベルのスケジューラーを<Term en="Policy Module">方針モジュール</Term>と呼びます。方針モジュールは、自分が受け持つプロセスについて、優先度・使えるプロセッサー・時間の割り当て・ページの数の上限をパラメーターとして設定し、プロセスを開始します。KMPS はそのパラメーターに従って短い間隔でプロセスを切り替え、プロセスが止まると方針モジュールに知らせます<Ref n={1} />。
           </p>
-          <Figure n="68-3" title="Hydra の方針モジュールと KMPS、この章のコードとの対応" caption="左は Levin ほか（1975）の2節をもとにした模式図。右はこの章で後に直したコード。">
+          <Figure n="85-3" title="Hydra の方針モジュールと KMPS、この章のコードとの対応" caption="左は Levin ほか（1975）の2節をもとにした模式図。右はこの章で後に直したコード。">
             <HydraFigure />
           </Figure>
           <p>
-            図 68-3 の左のように、タイムシェアリング・バッチの処理・デバッグ中の3つの方針モジュールを同時に動かしても、KMPS は1つです。論文は、ある方針モジュールの誤りがほかの方針モジュールに悪い影響を与えないことを KMPS が保証すると書いています<Ref n={1} />。
+            図 85-3 の左のように、タイムシェアリング・バッチの処理・デバッグ中の3つの方針モジュールを同時に動かしても、KMPS は1つです。論文は、ある方針モジュールの誤りがほかの方針モジュールに悪い影響を与えないことを KMPS が保証すると書いています<Ref n={1} />。
           </p>
           <p>
             論文は KMPS を「実はパラメーターを持つ方針（parameterized policy）」だとも書いています。判断を速くするために、短い間隔の判断はカーネルが行い、その判断の基準だけを方針モジュールがパラメーターで決めるからです。その代わり、パラメーターで表せない方針は作れません。論文は、実装できる方針の範囲はカーネルの仕組みが提供するパラメーターの種類と数で決まり、その範囲の広さは設計者の見通しに左右されると述べています<Ref n={1} />。
@@ -712,8 +713,8 @@ Failures:
         <>
           <p>直す順序は4つの手順に分けます。方針と仕組みを書き分け、方針をテストに書いてから、仕組みを置き換えます。</p>
           <h3>手順1：直す前のコードを方針と仕組みに分ける</h3>
-          <p>最初に、throttle に書かれていることを1つずつ取り出し、方針と仕組みのどちらかに分けます。図 68-4 は依頼を反映した後のコードについて分けたものです。</p>
-          <Figure n="68-4" title="直す前のコードを方針と仕組みに分ける" caption="右の列は手順3で置き換えた後に書く場所。">
+          <p>最初に、throttle に書かれていることを1つずつ取り出し、方針と仕組みのどちらかに分けます。図 85-4 は依頼を反映した後のコードについて分けたものです。</p>
+          <Figure n="85-4" title="直す前のコードを方針と仕組みに分ける" caption="右の列は手順3で置き換えた後に書く場所。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -772,7 +773,7 @@ Failures:
             </div>
           </Figure>
           <p>
-            図 68-4 の上の4行はセキュリティの担当者の判断で変わるものです。下の3行はどの制限でも同じで、変わるのは数える場所を変えるときだけです。Rails 8.1 の <code>rate_limit</code> は、下の3行を Rails の中に持ち、上の4行を引数で受け取ります<Ref n={3} />。
+            図 85-4 の上の4行はセキュリティの担当者の判断で変わるものです。下の3行はどの制限でも同じで、変わるのは数える場所を変えるときだけです。Rails 8.1 の <code>rate_limit</code> は、下の3行を Rails の中に持ち、上の4行を引数で受け取ります<Ref n={3} />。
           </p>
           <h3>手順2：方針をテストに書く</h3>
           <p>
@@ -967,15 +968,15 @@ rate-limit:password_resets:email:a@example.com => 4
    rate_limit to: 3, within: 1.hour, only: :create, name: "email", by: :requested_email
 `}
           />
-          <Figure n="68-5" title="直す前と後：方針を変えるときに開く場所" caption="左は依頼を反映した直す前のコード。行数は throttle メソッドの def から end まで。">
+          <Figure n="85-5" title="直す前と後：方針を変えるときに開く場所" caption="左は依頼を反映した直す前のコード。行数は throttle メソッドの def から end まで。">
             <CompareFigure />
           </Figure>
           <p>
-            図 68-5 の左では方針の変更のたびに throttle の中を開き、メールアドレスの制限を足すときは数える処理を写しました。右では、方針の変更は宣言の行だけで、数える処理の誤りを直すことも、数える場所を変えることも、コントローラーに触れずにできます。
+            図 85-5 の左では方針の変更のたびに throttle の中を開き、メールアドレスの制限を足すときは数える処理を写しました。右では、方針の変更は宣言の行だけで、数える処理の誤りを直すことも、数える場所を変えることも、コントローラーに触れずにできます。
           </p>
           <h3>変わるものと置き場所</h3>
           <p>直した後のコードについて、何がどのくらい変わり、どこに書いてあるかをまとめます。</p>
-          <Figure n="68-6" title="変更の頻度と置き場所" caption="頻度はこの章の EC サイトでの想定。">
+          <Figure n="85-6" title="変更の頻度と置き場所" caption="頻度はこの章の EC サイトでの想定。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1022,7 +1023,7 @@ rate-limit:password_resets:email:a@example.com => 4
             </div>
           </Figure>
           <p>
-            図 68-6 の上の行ほど頻繁に、アプリの外の人の判断で変わります。頻繁に変わるものをコントローラーの先頭の短い宣言に置き、変わらないものを Rails に任せたので、変更の依頼が来たときに開く場所が1か所に決まりました。
+            図 85-6 の上の行ほど頻繁に、アプリの外の人の判断で変わります。頻繁に変わるものをコントローラーの先頭の短い宣言に置き、変わらないものを Rails に任せたので、変更の依頼が来たときに開く場所が1か所に決まりました。
           </p>
         </>
       ),
@@ -1140,10 +1141,10 @@ Failures:
             Levin らの論文が KMPS について書いたことは、この YAML にも当てはまります。実装できる方針の範囲は、仕組みが用意したパラメーターの種類と数で決まります<Ref n={1} />。rate_limit はすでに方針を受け取るパラメーターを持っていて、その上に YAML の層を足しても、方針の範囲は広がらず、狭くなりました。Ruby の宣言なら書けた <code>1.hour</code> や、メソッドを呼ぶ by: と with: が、YAML では書けないからです。
           </p>
           <h3>判断の目安</h3>
-          <Figure n="68-7" title="方針をどこまで切り離すかの目安" caption="模式図。横軸は方針を変える人と時期、縦軸は同じ仕組みを使う方針の数。">
+          <Figure n="85-7" title="方針をどこまで切り離すかの目安" caption="模式図。横軸は方針を変える人と時期、縦軸は同じ仕組みを使う方針の数。">
             <JudgeFigure />
           </Figure>
-          <p>図 68-7 の4つの場所は次のように使い分けます。</p>
+          <p>図 85-7 の4つの場所は次のように使い分けます。</p>
           <ul>
             <li>
               左下（方針が1つで、開発者がコードと一緒に変える）：方針と仕組みを同じメソッドに書いても、困ることは少ない場所です。数える処理を書くのが1か所だけなら、2つ目の制限が必要になったときに仕組みを取り出せば足ります。ただし、レート制限のように Rails に仕組みがあるなら、1つ目から使います。
@@ -1228,7 +1229,7 @@ Failures:
             </table>
           </div>
           <p>
-            キーの形、数の増やし方、期限の扱い、上限との比べ方は引数になく、Rails の中で決まっています<Ref n={3} />。Rails 8.1 の認証のジェネレーターが作る SessionsController と PasswordsController にも、<code>rate_limit to: 10, within: 3.minutes, only: :create</code> の宣言が入っています<Ref n={13} />。ログインとパスワードの再設定に制限を掛けるという方針を、Rails が最初から書いておく形です。
+            キーの形式やカウントの更新、上限の判定は Rails が扱います。<Ref n={3} /> Rails 8.1.4.1 の認証ジェネレーターは、ログインの <code>create</code> に「3分に10回」の制限を設定します。Action Mailer が有効なら、パスワード再設定の <code>create</code> にも同じ制限を設定します。生成されたコードは <code>with:</code> を指定し、超過時にそれぞれの入力画面へリダイレクトします。<Ref n={13} /><Ref n={18} />
           </p>
           <h3>キャッシュのストアと、数える範囲</h3>
           <p>
@@ -1254,15 +1255,15 @@ Failures:
           </Callout>
           <h3>Rails のほかの機能に見る方針と仕組み</h3>
           <p>Rails とよく使う gem には、rate_limit と同じく、アプリが方針を書き、ライブラリが仕組みを持つ機能がほかにもあります。</p>
-          <Figure n="68-8" title="rate_limit・Pundit・retry_on の方針と仕組み" caption="左がアプリに書くコード、右が Rails や gem の中で動く処理。">
+          <Figure n="85-8" title="rate_limit・Pundit・retry_on の方針と仕組み" caption="左がアプリに書くコード、右が Rails や gem の中で動く処理。">
             <RailsFigure />
           </Figure>
           <ul>
             <li>
-              Pundit では、誰が何をしてよいかという認可の方針を、モデルごとのポリシーのクラスに普通の Ruby のメソッドとして書きます。コントローラーの <code>authorize</code> は、レコードに対応するポリシーのクラスを探し、アクション名に ? を付けたメソッドを呼び、false なら Pundit::NotAuthorizedError を発生させます<Ref n={15} />。Pundit を使った認可は<ChapterLink n={41} section="pundit" />で扱いました。
+              Pundit では、誰が何をしてよいかという認可の方針を、モデルごとのポリシーのクラスに普通の Ruby のメソッドとして書きます。コントローラーの <code>authorize</code> は、レコードに対応するポリシーのクラスを探し、アクション名に ? を付けたメソッドを呼び、false なら Pundit::NotAuthorizedError を発生させます<Ref n={15} />。Pundit を使った認可は<ChapterLink n={41} section="pundit" />で扱います。
             </li>
             <li>
-              Active Job の <code>retry_on</code> では、どの例外で、何回まで、どう待って再試行するかをジョブのクラスに宣言します。Active Job は rescue_from で例外を受け、実行の回数を数え、待ち時間を計算してジョブを入れ直し、回数を超えたら例外を投げ直します<Ref n={16} />。再試行の待ち方は<ChapterLink n={54} />で扱いました。
+              Active Job の <code>retry_on</code> では、どの例外で、何回まで、どう待って再試行するかをジョブのクラスに宣言します。Active Job は rescue_from で例外を受け、実行の回数を数え、待ち時間を計算してジョブを入れ直し、回数を超えたら例外を投げ直します<Ref n={16} />。再試行の待ち方は<ChapterLink n={54} />で扱います。
             </li>
           </ul>
           <h3>Rails Doctrine との関係</h3>
@@ -1278,7 +1279,7 @@ Failures:
               <ChapterLink n={21} section="authentication" />：ログインとパスワードの再設定に、アカウントと接続元の両方で頻度の制限を掛けることを扱いました。この章の2つの制限はその方針を rate_limit で書いたものです。
             </li>
             <li>
-              <ChapterLink n={43} section="alternatives" />：Rack のミドルウェアで制限する Rack::Attack と、コントローラーで制限する rate_limit の使い分けを扱いました。
+              <ChapterLink n={43} section="alternatives" />：Rack のミドルウェアで制限する Rack::Attack と、コントローラーで制限する rate_limit の使い分けを扱います。
             </li>
             <li>
               <ChapterLink n={68} />（SoC）と<ChapterLink n={63} />（SRP）：この章の分け方は、変わる理由が違うものを分けるという点で、2つの原則と同じ考え方です。
@@ -1290,6 +1291,29 @@ Failures:
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          方針（何ごとに・何回まで・どの時間で数えるか）は使う場所の近くに短い宣言で書き、仕組み（数の保存・増やし方・期限の扱い）は1か所にまとめます。この章ではコントローラーごとに手で書いていた数え方を Rails 8.1 の rate_limit に任せ、方針を宣言の行に集めました。方針を YAML やデータに出すのは、開発者以外がデプロイせずに方針を変えるときだけです。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、write のたびに期限を付け直す誤りが写した3か所に広がり、40分おきに送る会員の4回目と5回目が断られた。rate_limit に置き換えると、テストを変えずに40分おきの例も通った。IP アドレスの制限を5分間に20回までに緩める依頼は、宣言の1行の差分で済んだ。</>,
+        basis: <><ChapterLink n={87} section="scene" />、<ChapterLink n={87} section="apply" /></>,
+      },
+      cost: {
+        text: <>方針はコントローラーの宣言に、仕組みは Rails とキャッシュのストアにあるので、実際に数えている値は別々に確かめる。テストの環境の :null_store では一度も断らず、MemoryStore はプロセスごとに数えるので、本番では複数のプロセスで共有できるストアを選ぶ必要がある。</>,
+        basis: <ChapterLink n={87} section="apply" />,
+      },
+      alternative: {
+        text: <>環境ごとに上限だけを変えたいなら、値だけを環境変数・credentials・config_for で読む。すべての制限を YAML に出した例では、within: 60 を分のつもりで書いて60秒で数が戻り、制限を知るために読む場所がコントローラー・concern・YAML の3つになった。</>,
+        basis: <ChapterLink n={87} section="overuse" />,
+      },
+      criterion: {
+        text: <>誰がいつ方針を変えるか（開発者がコードと一緒に変えるか、開発者以外がデプロイせずに変えるか）。同じ仕組みを使う方針がいくつあるか。Rails にすでに仕組みがあるなら、1つ目の方針から使う。</>,
+        basis: <ChapterLink n={87} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',
@@ -1323,6 +1347,7 @@ Failures:
     { title: 'lib/pundit/context.rb と README', publisher: 'varvet/pundit（GitHub）', url: 'https://github.com/varvet/pundit/blob/v2.5.2/lib/pundit/context.rb#L62-L73', accessed: '2026-11-21', version: 'Pundit 2.5.2（手元の gem で確認）', note: 'authorize がポリシーのクラスを探してクエリのメソッドを呼び、false なら NotAuthorizedError を発生させること。README で、ポリシーのクラスが普通の Ruby のクラスであり、認可の判断をそこに書くこと。' },
     { title: 'activejob/lib/active_job/exceptions.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activejob/lib/active_job/exceptions.rb#L64-L83`, accessed: '2026-11-21', version: 'Rails 8.1.4.1', note: 'retry_on が rescue_from で例外を受け、実行の回数が attempts より少なければ待ち時間を計算して retry_job し、超えたら例外を投げ直すこと。47行目のコメントに wait: :polynomially_longer, attempts: 10 の例があること。' },
     { title: 'Design Patterns: Elements of Reusable Object-Oriented Software', publisher: 'Erich Gamma ほか / Addison-Wesley（InformIT の書籍ページ）', url: 'https://www.informit.com/store/design-patterns-elements-of-reusable-object-oriented-9780201633610', accessed: '2026-11-13', version: '1994年刊', note: 'Strategy の別名が Policy であること（第9部の Strategy / Policy の章の出典を流用）。' },
+    { title: 'Rails authentication generator: passwords_controller.rb.tt', publisher: 'rails/rails（GitHub）', url: `${GH}/railties/lib/rails/generators/rails/authentication/templates/app/controllers/passwords_controller.rb.tt`, accessed: '2026-11-27', version: 'Rails 8.1.4.1', note: 'Action Mailer が有効な構成で制限を生成する条件と、超過時のリダイレクト。' },
   ],
 }
 

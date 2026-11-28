@@ -4,7 +4,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 87-2 直接呼び出す場合と、イベントを発行する場合 ---------- */
+/* ---------- 図 104-2 直接呼び出す場合と、イベントを発行する場合 ---------- */
 function DirectVsEventFigure() {
   const direct: [string, number, boolean][] = [
     ['PointGrant.create!', 50, false],
@@ -20,7 +20,7 @@ function DirectVsEventFigure() {
   ]
   return (
     <Svg
-      id="87-2"
+      id="104-2"
       w={780}
       h={330}
       label="左は直接呼び出す場合。RegistrationsController の create が、ポイントの保存、ようこそのメール、Slack への通知、追加した紹介の特典をそれぞれ呼び出し、後の処理を足すたびに登録のコードとテストを変える。右はイベントを発行する場合。RegisterMember は MemberRegistered というイベントを ActiveSupport::Notifications に発行するだけで、ポイント、メール、Slack、紹介の特典の購読者がそれぞれイベントを受け取る。購読者は config/initializers/domain_events.rb にまとめ、後の処理を足すときはここに購読者を足す"
@@ -63,7 +63,7 @@ function DirectVsEventFigure() {
   )
 }
 
-/* ---------- 図 87-3 同期の配信と非同期の配信 ---------- */
+/* ---------- 図 104-3 同期の配信と非同期の配信 ---------- */
 function SyncAsyncFigure() {
   const lanes: [number, string, 'box' | 'box2' | 'box4'][] = [
     [80, 'RegisterMember', 'box'],
@@ -83,15 +83,15 @@ function SyncAsyncFigure() {
   )
   return (
     <Svg
-      id="87-3"
+      id="104-3"
       w={780}
-      h={466}
+      h={452}
       label="RegisterMember は BEGIN し、会員を INSERT してから in_transaction の通知を出す。Notifications はポイントの購読者をその場で呼び、購読者は同じトランザクションでポイントを INSERT する。RegisterMember が COMMIT した後に after_commit の通知が出て、購読者がメールと Slack 通知のジョブを Redis に積み、応答はすぐに返る。後で Sidekiq のワーカーがジョブを取り出してメールを送り、Slack に投稿する。失敗したら retry_on でジョブを積み直す"
     >
       {lanes.map(([x, name, fill]) => (
         <g key={name}>
           <Box x={x - 70} y={10} w={140} h={32} lines={name} fill={fill} fs={12} />
-          <line x1={x} y1={42} x2={x} y2={456} stroke="var(--fig-line)" strokeDasharray="3 4" />
+          <line x1={x} y1={42} x2={x} y2={404} stroke="var(--fig-line)" strokeDasharray="3 4" />
         </g>
       ))}
       <rect x={A - 60} y={62} width={PT - A + 180} height={150} rx={6} fill="var(--fig-box2)" opacity={0.35} />
@@ -111,8 +111,11 @@ function SyncAsyncFigure() {
       </T>
       {msg(266, A, BUS, 'after_commit の通知')}
       <Arrow x1={BUS} y1={296} x2={Q - 2} y2={296} accent />
+      <T x={BUS + 10} y={272} fs={11}>
+        メールと Slack 通知の
+      </T>
       <T x={BUS + 10} y={287} fs={11}>
-        メールと Slack 通知のジョブを積む
+        ジョブを積む
       </T>
       <T x={A + 8} y={326} fs={11} tone="acc">
         すぐに応答を返す（302）
@@ -132,7 +135,7 @@ function SyncAsyncFigure() {
   )
 }
 
-/* ---------- 図 87-1 コミットの前にジョブを積むと起きること ---------- */
+/* ---------- 図 104-1 コミットの前にジョブを積むと起きること ---------- */
 const beforeCommitSteps: { db: string; queue: string; mail: string; bad: boolean }[] = [
   { db: 'BEGIN・会員とポイントを INSERT', queue: '', mail: '', bad: false },
   { db: '（トランザクションの中）', queue: 'deliver_later：メールのジョブ', mail: '', bad: false },
@@ -145,7 +148,7 @@ function BeforeCommitFigure() {
   const row = (i: number) => 52 + i * 52
   return (
     <Svg
-      id="87-1"
+      id="104-1"
       w={780}
       h={row(beforeCommitSteps.length) + 6}
       label="パターンを使う前の登録を、Slack に接続できない状態で実行した流れ。BEGIN の後に会員とポイントを INSERT し、トランザクションの中でメールのジョブを Redis に積む。続く Slack への投稿が例外になり、ROLLBACK される。会員とポイントは残らないが、Redis に積んだジョブは残り、ワーカーが実行すると、登録されていない人にようこそのメールが届く"
@@ -174,7 +177,7 @@ function BeforeCommitFigure() {
   )
 }
 
-/* ---------- 図 87-4 イベントを処理するタイミングと、途中で失敗したときに起きること ---------- */
+/* ---------- 図 104-4 イベントを処理するタイミングと、途中で失敗したときに起きること ---------- */
 const timingRows: { when: string[]; example: string[]; failure: string[]; use: string[]; bad?: boolean }[] = [
   {
     when: ['コミットの前', '同じトランザクションの中'],
@@ -185,7 +188,7 @@ const timingRows: { when: string[]; example: string[]; failure: string[]; use: s
   {
     when: ['コミットの前に', 'DB の外へ（誤り）'],
     example: ['メールのジョブを', 'Redis に積む'],
-    failure: ['会員がいないのに', 'メールが届く（図 87-1）'],
+    failure: ['会員がいないのに', 'メールが届く（図 104-1）'],
     use: ['使わない'],
     bad: true,
   },
@@ -214,7 +217,7 @@ function TimingFigure() {
   ]
   return (
     <Svg
-      id="87-4"
+      id="104-4"
       w={780}
       h={top + timingRows.length * step + 4}
       label={`イベントを処理するタイミングごとの比較。${timingRows.map((r) => `${r.when.join('')}：例は${r.example.join('')}。途中で失敗すると${r.failure.join('')}。${r.use.join('')}`).join('。')}`}
@@ -338,11 +341,11 @@ Redis のキュー default のジョブ: 1 件
           <p>
             Slack への投稿が例外になったので、トランザクションは ROLLBACK され、会員もポイントも残りませんでした。利用者にはエラーの画面が表示されます。社内向けの通知が届かなかっただけで、登録そのものが失敗しています。一方、トランザクションの中で積んだメールのジョブは Redis に残り、実行すると、登録されていない人にようこそのメールが届きました。
           </p>
-          <Figure n="87-1" title="コミットの前にジョブを積むと起きること" caption="上の実行結果を、MySQL・Redis・メールの列に並べた図。上から下へ時間が進む。色を付けた枠は、ROLLBACK の後に残ったもの。">
+          <Figure n="104-1" title="コミットの前にジョブを積むと起きること" caption="上の実行結果を、MySQL・Redis・メールの列に並べた図。上から下へ時間が進む。色を付けた枠は、ROLLBACK の後に残ったもの。">
             <BeforeCommitFigure />
           </Figure>
           <p>
-            図 87-1 のとおり、MySQL の ROLLBACK は MySQL の中の変更だけを取り消します。Redis に積んだジョブは、MySQL のトランザクションの外にあるので残ります。
+            図 104-1 のとおり、MySQL の ROLLBACK は MySQL の中の変更だけを取り消します。Redis に積んだジョブは、MySQL のトランザクションの外にあるので残ります。
           </p>
           <h3>後の処理を足すと、登録のテストが壊れる</h3>
           <p>
@@ -409,12 +412,12 @@ Failures:
           </p>
           <h3>使う場面</h3>
           <p>
-            最初は、登録の処理が後の処理を順に直接呼ぶ書き方で十分です。しかし後の処理は増えていき、CRM への登録、紹介した人への特典、管理者への通知などが加わるたびに、登録の処理を変えることになります（図 87-2 の左）。直接呼ぶ書き方では、失敗の影響も広がります。最初の節のとおり、Slack に接続できないだけで登録全体がエラーになりました。
+            最初は、登録の処理が後の処理を順に直接呼ぶ書き方で十分です。しかし後の処理は増えていき、CRM への登録、紹介した人への特典、管理者への通知などが加わるたびに、登録の処理を変えることになります（図 104-2 の左）。直接呼ぶ書き方では、失敗の影響も広がります。最初の節のとおり、Slack に接続できないだけで登録全体がエラーになりました。
           </p>
-          <Figure n="87-2" title="直接呼び出す場合と、イベントを発行する場合" caption="左は最初の節のコード、右はこの章の Rails の実装の構成。破線の枠は、後から足す処理。">
+          <Figure n="104-2" title="直接呼び出す場合と、イベントを発行する場合" caption="左は最初の節のコード、右はこの章の Rails の実装の構成。破線の枠は、後から足す処理。">
             <DirectVsEventFigure />
           </Figure>
-          <p>図 87-2 の右では、登録の処理はイベントを発行するだけで、後の処理は購読者として別の場所に並びます。次のような兆候があれば、Domain Events が必要になっている可能性があります。</p>
+          <p>図 104-2 の右では、登録の処理はイベントを発行するだけで、後の処理は購読者として別の場所に並びます。次のような兆候があれば、Domain Events が必要になっている可能性があります。</p>
           <ul>
             <li>1つの業務の処理（登録、注文の確定など）の後に、関係の薄い処理がいくつも並んでいる</li>
             <li>後の処理を足すたびに、本体の処理とそのテストを変えている</li>
@@ -446,24 +449,24 @@ Failures:
           <p>
             この章では、DB への書き込み（ポイントの付与）は同期で、会員の保存と同じトランザクションの中で行います。メールの送信と Slack への通知は非同期にし、コミットの後にジョブとして積みます。メールの送信に時間がかかっても、Slack が止まっていても、登録の応答はすぐに返ります。
           </p>
-          <Figure n="87-3" title="同期の配信と非同期の配信" caption="この章の RegisterMember の流れを、関係者ごとの列に並べた図。上から下へ時間が進む。薄い色の範囲が1つのトランザクション。点線より下は、応答を返した後に別のプロセスで起きること。">
+          <Figure n="104-3" title="同期の配信と非同期の配信" caption="この章の RegisterMember の流れを、関係者ごとの列に並べた図。上から下へ時間が進む。薄い色の範囲が1つのトランザクション。点線より下は、応答を返した後に別のプロセスで起きること。">
             <SyncAsyncFigure />
           </Figure>
           <p>
-            図 87-3 の上半分は1つのリクエストの中で起き、ポイントの購読者は会員の INSERT と同じトランザクションで動きます。COMMIT の後に積んだジョブは、下半分のとおり Sidekiq のワーカーが別のプロセスで実行します。
+            図 104-3 の上半分は1つのリクエストの中で起き、ポイントの購読者は会員の INSERT と同じトランザクションで動きます。COMMIT の後に積んだジョブは、下半分のとおり Sidekiq のワーカーが別のプロセスで実行します。
           </p>
           <h3>解決方法：イベントを処理するタイミングを決める</h3>
           <p>
-            DB のトランザクションとイベントの処理の順序は、このパターンで最も間違えやすい点です。Microsoft の説明も、ドメインイベントをコミットの直前に配るか直後に配るかは、後の処理を同じトランザクションに含めるかどうかを決める重要な判断だとしています<Ref n={3} />。取り消せない処理（メールの送信、外部の API の呼び出し、DB の外のキューにジョブを積むこと）をコミットの前に行うと、最初の節の図 87-1 の問題が起きます。そのため、取り消せない処理はコミットの後に行います。
+            DB のトランザクションとイベントの処理の順序は、このパターンで最も間違えやすい点です。Microsoft の説明も、ドメインイベントをコミットの直前に配るか直後に配るかは、後の処理を同じトランザクションに含めるかどうかを決める重要な判断だとしています<Ref n={3} />。取り消せない処理（メールの送信、外部の API の呼び出し、DB の外のキューにジョブを積むこと）をコミットの前に行うと、最初の節の図 104-1 の問題が起きます。そのため、取り消せない処理はコミットの後に行います。
           </p>
           <p>
-            ただし、コミットの後にも問題が残ります。コミットが終わってからジョブを積むまでの間にプロセスが止まると、会員は保存されたのにジョブは積まれず、メールは送られません。図 87-4 は処理するタイミングごとに、途中で失敗したときに起きることをまとめたものです。
+            ただし、コミットの後にも問題が残ります。コミットが終わってからジョブを積むまでの間にプロセスが止まると、会員は保存されたのにジョブは積まれず、メールは送られません。図 104-4 は処理するタイミングごとに、途中で失敗したときに起きることをまとめたものです。
           </p>
-          <Figure n="87-4" title="イベントを処理するタイミングと、途中で失敗したときに起きること" caption="MSDP の第12章の比較を、この章の Rails の実装に合わせて直した図。2行目（破線の枠）は使ってはいけない方式。">
+          <Figure n="104-4" title="イベントを処理するタイミングと、途中で失敗したときに起きること" caption="MSDP の第12章の比較を、この章の Rails の実装に合わせて直した図。2行目（破線の枠）は使ってはいけない方式。">
             <TimingFigure />
           </Figure>
           <p>
-            図 87-4 の最後の行は、送る予定を業務のデータと同じトランザクションで DB に記録する方法で、<ChapterLink n={53} section="idea" />の Transactional Outbox で扱います。この章では、メールと Slack への通知は失われても登録に影響しない処理として、3行目のコミットの後の方式を使います。
+            図 104-4 の最後の行は、送る予定を業務のデータと同じトランザクションで DB に記録する方法で、<ChapterLink n={53} section="idea" />の Transactional Outbox で扱います。この章では、メールと Slack への通知は失われても登録に影響しない処理として、3行目のコミットの後の方式を使います。
           </p>
           <h3>解決方法：内部のイベントと外部に公開するイベントを分ける</h3>
           <p>
@@ -532,7 +535,7 @@ Failures:
             <Term en="job queue">ジョブキュー</Term>は、後で実行する処理（ジョブ）をためておく場所です。処理を積む側は積んだらすぐに戻り、<Term en="worker">ワーカー</Term>と呼ぶ別のプロセスがジョブを取り出して実行します。失敗したジョブは決めた回数まで実行し直せます。Rails の Active Job のガイドは、時間がかかる処理や重要でない処理を HTTP のリクエストと応答から切り離し、バックグラウンドのキューで実行することで、Web のリクエストを速く保つと、目的を説明しています<Ref n={10} />。
           </p>
           <p>
-            Rails では、Active Job がジョブを書くための共通の形を決め、実際にジョブを保存して実行する仕組み（キューのバックエンド）をアダプターで選びます。この本のアプリは Sidekiq を使います。Sidekiq の Wiki によると、<code>perform_async</code> などはジョブを表すハッシュを JSON の文字列にして Redis のキューに入れ、Sidekiq のサーバーのプロセスがキューからジョブを取り出して <code>perform</code> を呼びます<Ref n={11} />。キューとワーカーの仕組みは<ChapterLink n={18} section="queue-worker" />の「キューとワーカー、Redis」と<ChapterLink n={18} section="sidekiq" />の「Sidekiq の構成と Redis の中身」で、Active Job のジョブの書き方は<ChapterLink n={18} section="job-basics" />の「ActiveJob のジョブの書き方」で扱いました。
+            Rails では、Active Job がジョブを書くための共通の形を決め、実際にジョブを保存して実行する仕組み（キューのバックエンド）をアダプターで選びます。この本のアプリは Sidekiq を使います。Sidekiq の Wiki によると、<code>perform_async</code> などはジョブを表すハッシュを JSON の文字列にして Redis のキューに入れ、Sidekiq のサーバーのプロセスがキューからジョブを取り出して <code>perform</code> を呼びます<Ref n={11} />。キューとワーカーの仕組みは<ChapterLink n={18} section="queue-worker" />と<ChapterLink n={18} section="sidekiq" />で、Active Job のジョブの書き方は<ChapterLink n={18} section="job-basics" />で扱いました。
           </p>
           <p>この章の実装で登録の後に Redis に入ったジョブは、次のとおりです（イベントの ID と時刻は整えた）。</p>
           <Code
@@ -581,7 +584,7 @@ after_all_transactions_commit・ロールバックの後: Redis のジョブ 0 �
 `}
           />
           <p>
-            このアプリ（<code>config.load_defaults 8.1</code>）では <code>enqueue_after_transaction_commit</code> が false なので、トランザクションの中の <code>deliver_later</code> は、その場で Redis にジョブを積み、ロールバックの後も残りました。<code>ActiveRecord.after_all_transactions_commit</code> に渡したブロックは、開いているトランザクションがすべてコミットされた後に呼ばれ、ロールバックされると呼ばれません<Ref n={9} />。ジョブのクラスで <code>self.enqueue_after_transaction_commit = true</code> にすると、トランザクションの中で <code>perform_later</code> を呼んでも、積むのをコミットの後まで遅らせます。Active Job のガイドは、どちらに頼っているか分からなければ、ApplicationJob で有効にするのが最も安全な既定だとしています<Ref n={10} />。トランザクションとジョブを積む時刻の関係は<ChapterLink n={18} section="transaction" />の「トランザクションと投入の時刻」でも扱いました。
+            このアプリ（<code>config.load_defaults 8.1</code>）では <code>enqueue_after_transaction_commit</code> が false なので、トランザクションの中の <code>deliver_later</code> は、その場で Redis にジョブを積み、ロールバックの後も残りました。<code>ActiveRecord.after_all_transactions_commit</code> に渡したブロックは、開いているトランザクションがすべてコミットされた後に呼ばれ、ロールバックされると呼ばれません<Ref n={9} />。ジョブのクラスで <code>self.enqueue_after_transaction_commit = true</code> にすると、トランザクションの中で <code>perform_later</code> を呼んでも、積むのをコミットの後まで遅らせます。Active Job のガイドは、どちらに頼っているか分からなければ、ApplicationJob で有効にするのが最も安全な既定だとしています<Ref n={10} />。トランザクションとジョブを積む時刻の関係は<ChapterLink n={18} section="transaction" />でも扱いました。
           </p>
           <Callout kind="v72">
             <p>
@@ -590,7 +593,7 @@ after_all_transactions_commit・ロールバックの後: Redis のジョブ 0 �
           </Callout>
           <h3>Solid Queue を同じ DB に置くと、ジョブを積むことも同じトランザクションに入る</h3>
           <p>
-            Rails 8 の既定のキューのバックエンドの Solid Queue は、ジョブを DB のテーブルに保存します。Active Job のガイドによると、Solid Queue がアプリケーションと同じ DB を使う場合、ジョブを積むことは周りの Active Record のトランザクションの中で行われ、ロールバックすればジョブも積まれません。ただし、Rails 8 は Solid Queue を既定で別の DB に置き、ガイドはこの性質に頼らず <code>enqueue_after_transaction_commit</code> を使うことを勧めています<Ref n={10} />。Sidekiq と Solid Queue の違いは<ChapterLink n={18} section="solid-queue" />の「Solid Queue との違い」で扱いました。
+            Rails 8 の既定のキューのバックエンドの Solid Queue は、ジョブを DB のテーブルに保存します。Active Job のガイドによると、Solid Queue がアプリケーションと同じ DB を使う場合、ジョブを積むことは周りの Active Record のトランザクションの中で行われ、ロールバックすればジョブも積まれません。ただし、Rails 8 は Solid Queue を既定で別の DB に置き、ガイドはこの性質に頼らず <code>enqueue_after_transaction_commit</code> を使うことを勧めています<Ref n={10} />。Sidekiq と Solid Queue の違いは<ChapterLink n={18} section="solid-queue" />で扱いました。
           </p>
           <div className="table-wrap">
             <table>
@@ -725,7 +728,7 @@ end
 `}
           />
           <p>
-            <code>ActiveSupport::Notifications</code> は、もともと処理の時間などを計測するための Rails の仕組みで、<code>instrument</code> で名前と値（ペイロード）を付けて通知し、<code>subscribe</code> で同じ名前の通知を受け取ります<Ref n={6} />。購読のブロックは、<code>instrument</code> を呼んだスレッドで、その場で呼ばれます（計測としての使い方は<ChapterLink n={22} section="notifications" />の「ActiveSupport::Notifications」）。そのため、トランザクションの中で <code>instrument</code> を呼べば、購読者の DB の変更も同じトランザクションに入ります。
+            <code>ActiveSupport::Notifications</code> は、もともと処理の時間などを計測するための Rails の仕組みで、<code>instrument</code> で名前と値（ペイロード）を付けて通知し、<code>subscribe</code> で同じ名前の通知を受け取ります<Ref n={6} />。購読のブロックは、<code>instrument</code> を呼んだスレッドで、その場で呼ばれます（計測としての使い方は<ChapterLink n={22} section="notifications" />）。そのため、トランザクションの中で <code>instrument</code> を呼べば、購読者の DB の変更も同じトランザクションに入ります。
           </p>
           <p>
             <code>DomainEvents.publish</code> は、1つのイベントを2回通知します。1回目はその場で <code>.in_transaction</code> の購読者に、2回目は <code>after_all_transactions_commit</code> でコミットの後に <code>.after_commit</code> の購読者に届けます。購読者は、購読する名前の末尾で、どちらの時点で呼ばれるかを選びます。トランザクションの外で発行した場合は、<code>after_all_transactions_commit</code> がブロックをすぐに呼ぶので、2つの通知が続けて出ます<Ref n={9} />。
@@ -804,7 +807,7 @@ end
 `}
           />
           <p>
-            <code>retry_on</code> は、指定した例外が起きたら、例外を外に出さずに同じジョブを後で実行し直すよう積み直します。<code>wait</code> の時間には既定で最大 15% のゆらぎが加わり、<code>attempts</code> の回数（最初の実行を含む）を使い切ると例外を外に出します<Ref n={15} />。その後は Sidekiq の再試行の仕組みに渡ります（<ChapterLink n={18} section="retry" />の「再試行と Dead」）。最初の節と同じく Slack に接続できない状態で、パターンを使った後の登録を実行しました。
+            <code>retry_on</code> は、指定した例外が起きたら、例外を外に出さずに同じジョブを後で実行し直すよう積み直します。<code>wait</code> の時間には既定で最大 15% のゆらぎが加わり、<code>attempts</code> の回数（最初の実行を含む）を使い切ると例外を外に出します<Ref n={15} />。その後は Sidekiq の再試行の仕組みに渡ります（<ChapterLink n={18} section="retry" />）。最初の節と同じく Slack に接続できない状態で、パターンを使った後の登録を実行しました。
           </p>
           <Code
             lang="text"
@@ -899,7 +902,7 @@ raise_on_error=false: 受け取ったイベント 1 件、エラーレポータ�
 `}
           />
           <p>
-            <code>Rails.event</code> のイベントは、名前・値・タグ・コンテキスト・時刻・呼び出した場所を持つハッシュで、ログや監視のサービスに後から処理しやすい形で送るための仕組みです。本番の環境では購読者の例外を報告して処理を続けるので、ポイントの付与のように、失敗したら登録ごと取り消したい処理には向きません。イベントを保存して再送する仕組みもありません。この章では、業務の後の処理を動かすためには <code>ActiveSupport::Notifications</code> を使い、<code>Rails.event</code> は「会員が登録された」ことをログや分析に出す用途に限ります。Service Object の章での扱いは<ChapterLink n={33} section="design-patterns" />の「Rails で使う設計パターン」にもあります。
+            <code>Rails.event</code> のイベントは、名前・値・タグ・コンテキスト・時刻・呼び出した場所を持つハッシュで、ログや監視のサービスに後から処理しやすい形で送るための仕組みです。本番の環境では購読者の例外を報告して処理を続けるので、ポイントの付与のように、失敗したら登録ごと取り消したい処理には向きません。イベントを保存して再送する仕組みもありません。この章では、業務の後の処理を動かすためには <code>ActiveSupport::Notifications</code> を使い、<code>Rails.event</code> は「会員が登録された」ことをログや分析に出す用途に限ります。Service Object の章での扱いは<ChapterLink n={33} section="event-notifications" />にもあります。
           </p>
           <h3>リファクタリングの順序</h3>
           <ol>
@@ -980,7 +983,7 @@ end
 `}
           />
           <p>
-            テストの環境では Active Job の :test アダプターを使うので、ジョブは実行されずに記録だけされます。<code>have_enqueued_mail</code> と <code>have_enqueued_job</code> は、ブロックの中で積まれたメールとジョブの種類と引数を確かめます（<ChapterLink n={20} section="jobs-mail" />の「ジョブとメールのテスト」）。例は RSpec の既定どおりテスト用のトランザクションの中で動きますが、<code>after_all_transactions_commit</code> のブロックは <code>RegisterMember</code> のトランザクションが終わった時点で呼ばれ、ジョブが積まれました。2つ目の例は外側のトランザクションをロールバックすると、そのブロックが呼ばれないことを確かめています。
+            テストの環境では Active Job の :test アダプターを使うので、ジョブは実行されずに記録だけされます。<code>have_enqueued_mail</code> と <code>have_enqueued_job</code> は、ブロックの中で積まれたメールとジョブの種類と引数を確かめます（<ChapterLink n={20} section="jobs-mail" />）。例は RSpec の既定どおりテスト用のトランザクションの中で動きますが、<code>after_all_transactions_commit</code> のブロックは <code>RegisterMember</code> のトランザクションが終わった時点で呼ばれ、ジョブが積まれました。2つ目の例は外側のトランザクションをロールバックすると、そのブロックが呼ばれないことを確かめています。
           </p>
           <Code
             lang="ruby"
@@ -1135,7 +1138,7 @@ Finished in 0.17928 seconds (files took 0.91228 seconds to load)
           </p>
           <h3>コミットの前に、取り消せない処理をする</h3>
           <p>
-            トランザクションの中でメールを送ったり、Redis のキューにジョブを積んだりすると、ROLLBACK されても取り消せません（最初の節の図 87-1）。<code>.in_transaction</code> の購読者に次のように書くのが典型的な誤りです。
+            トランザクションの中でメールを送ったり、Redis のキューにジョブを積んだりすると、ROLLBACK されても取り消せません（最初の節の図 104-1）。<code>.in_transaction</code> の購読者に次のように書くのが典型的な誤りです。
           </p>
           <Code
             lang="ruby"
@@ -1199,7 +1202,7 @@ end
           </ul>
           <h3>モデルのコールバック</h3>
           <p>
-            <code>Member</code> に <code>after_create_commit :notify_staff</code> と書いても、コミットの後に通知のジョブを積めます。Rails のガイドは、<code>after_commit</code> は DB のトランザクションに含まれない外部のシステムとやり取りするときに最も役立つと説明しています<Ref n={8} />（<ChapterLink n={14} section="after-commit" />の「after_save と after_commit」）。ただしコールバックは、そのモデルを保存するすべての処理で動きます。管理画面からの会員の一括登録や、テストのデータの作成でも、Slack に通知が飛びます。Domain Events は「会員登録という業務の操作」が発行するので、会員の行を作るたびではなく、登録の操作のときだけ購読者が動きます。コールバックに置く処理の選び方は<ChapterLink n={30} section="callback-design" />の「コールバックに置く処理を選ぶ」で扱いました。
+            <code>Member</code> に <code>after_create_commit :notify_staff</code> と書いても、コミットの後に通知のジョブを積めます。Rails のガイドは、<code>after_commit</code> は DB のトランザクションに含まれない外部のシステムとやり取りするときに最も役立つと説明しています<Ref n={8} />（<ChapterLink n={14} section="after-commit" />）。ただしコールバックは、そのモデルを保存するすべての処理で動きます。管理画面からの会員の一括登録や、テストのデータの作成でも、Slack に通知が飛びます。Domain Events は「会員登録という業務の操作」が発行するので、会員の行を作るたびではなく、登録の操作のときだけ購読者が動きます。コールバックに置く処理の選び方は<ChapterLink n={30} section="callback-design" />で扱いました。
           </p>
           <h3>Observer</h3>
           <p>

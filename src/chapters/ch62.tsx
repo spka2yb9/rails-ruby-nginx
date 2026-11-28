@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 43-1 場面の構成 ---------- */
+/* ---------- 図 60-1 場面の構成 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="43-1"
+      id="60-1"
       w={760}
       h={390}
       label="月次の集計、問い合わせの画面、データの移行の3つが Order を使う。Order には default_scope でキャンセルしていない注文に絞る条件と、after_save で状態が変わったらメールを送るコールバックが書かれている。default_scope はすべての検索に canceled_at IS NULL を加え、集計の件数が決済代行の明細と合わず、キャンセルした注文を開けない。after_save はデータの移行の update! でも動き、お客さまにメールが届く。どちらも呼び出し側のコードには現れない"
@@ -55,7 +56,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 43-2 書いたコードと実際に動く処理 ---------- */
+/* ---------- 図 60-2 書いたコードと実際に動く処理 ---------- */
 function WrittenVsRunFigure() {
   const rows: { code: string; run: string[]; note: string }[] = [
     { code: 'Order.where(created_at: month).count', run: ['WHERE canceled_at IS NULL', '  AND created_at BETWEEN …'], note: '5件のうち4件' },
@@ -68,7 +69,7 @@ function WrittenVsRunFigure() {
   const rh = 60
   return (
     <Svg
-      id="43-2"
+      id="60-2"
       w={760}
       h={top + rows.length * rh + 6}
       label={`書いたコードと、実際に実行される SQL と処理の対応。${rows.map((r) => `${r.code} は ${r.run.join(' ')} になり、結果は${r.note}`).join('。')}`}
@@ -99,7 +100,7 @@ function WrittenVsRunFigure() {
   )
 }
 
-/* ---------- 図 43-4 規約による暗黙と隠れた副作用 ---------- */
+/* ---------- 図 60-4 規約による暗黙と隠れた副作用 ---------- */
 function ConventionVsHiddenFigure() {
   const x0 = 150
   const y0 = 40
@@ -107,7 +108,7 @@ function ConventionVsHiddenFigure() {
   const h = 300
   return (
     <Svg
-      id="43-4"
+      id="60-4"
       w={760}
       h={400}
       label="横軸は暗黙に決まることの種類で、左から名前と場所の対応、値の整形と検証、対象の行と外部への副作用。縦軸は、それを知っている人の範囲で、上が Rails を使う人全員（ガイドに書かれている）、下がそのアプリのモデルを読んだ人だけ。左上にテーブル名・外部キー・テンプレートの規約、上の中央に created_at と updated_at の自動の設定がある。下の中央に normalizes と validates があり、モデルに宣言され、すべての経路で成り立たせる。右下に default_scope、after_save のメール、Current を読む既定値があり、呼び出しの結果を変えるので呼び出し側に書く。右下の領域が明示する対象"
@@ -180,7 +181,7 @@ function ConventionVsHiddenFigure() {
   )
 }
 
-/* ---------- 図 43-5 明示にした後の呼び出しの流れ ---------- */
+/* ---------- 図 60-5 明示にした後の呼び出しの流れ ---------- */
 function BeforeAfterFigure() {
   const rows: { caller: string; before: string[]; after: string[] }[] = [
     { caller: '月次の集計', before: ['Order.where(…).count', '→ 暗黙に canceled_at IS NULL'], after: ['Order.where(…).count', 'Order.where(…).active.count'] },
@@ -192,7 +193,7 @@ function BeforeAfterFigure() {
   const rh = 74
   return (
     <Svg
-      id="43-5"
+      id="60-5"
       w={760}
       h={top + rows.length * rh + 4}
       label={`呼び出し元ごとに、適用前に書いたコードと実際に起きたこと、適用後に書くコードを並べた図。${rows
@@ -302,11 +303,11 @@ end
           <p>
             この Order を、3つの別の仕事が使います。経理の担当者が見る月次の集計、サポートの担当者がお客さまの問い合わせに答えるときに使う注文の画面、そして状態の名前を整理するデータの移行です。以前のシステムは発送済みの注文の状態を <code>sent</code> と保存していたので、新しい名前の <code>shipped</code> にそろえることになりました。
           </p>
-          <Figure n="43-1" title="注文のモデルを使う3つの仕事と、問題が起きる箇所" caption="色の付いた枠が Order。点線の枠の default_scope と after_save は、左の3つの呼び出し側のコードには現れない。">
+          <Figure n="60-1" title="注文のモデルを使う3つの仕事と、問題が起きる箇所" caption="色の付いた枠が Order。点線の枠の default_scope と after_save は、左の3つの呼び出し側のコードには現れない。">
             <SceneFigure />
           </Figure>
           <p>
-            図 43-1 で、3つの仕事の担当者が書くのは左の矢印に添えたコードだけです。Order の中の点線の枠の処理は Order のファイルを開かないと見えません。
+            図 60-1 で、3つの仕事の担当者が書くのは左の矢印に添えたコードだけです。Order の中の点線の枠の処理は Order のファイルを開かないと見えません。
           </p>
           <h3>動かして確かめる</h3>
           <p>
@@ -362,11 +363,11 @@ sent のまま残った注文: [3]
           <p>
             4のデータの移行では、お客さま2人に「注文の状況が変わりました」のメールが届きました。移行を書いた人は状態の名前を書き換えただけですが、update! が保存するたびに after_save が実行されたからです。さらに、キャンセルした ID 3 の注文は移行されずに sent のまま残りました。移行の対象を選ぶ <code>Order.where(status: "sent")</code> にも default_scope の条件が付いたからです。sent を前提にしたコードを消した後で、この注文を読む処理がエラーになる可能性があります。
           </p>
-          <Figure n="43-2" title="書いたコードと、実際に実行される SQL と処理" caption="左が呼び出し側に書いたコード、中央が実行された SQL と処理。default_scope の条件とコールバックが、書いていないのに加わっている。">
+          <Figure n="60-2" title="書いたコードと、実際に実行される SQL と処理" caption="左が呼び出し側に書いたコード、中央が実行された SQL と処理。default_scope の条件とコールバックが、書いていないのに加わっている。">
             <WrittenVsRunFigure />
           </Figure>
           <p>
-            図 43-2 は、書いたコードと実際に実行された SQL と処理を並べたものです。どの行でも、中央の列には左の列に書いていない条件や処理が含まれています。右の列の結果はどれも例外にならず（2を除く）、件数やメールとして表に出ます。
+            図 60-2 は、書いたコードと実際に実行された SQL と処理を並べたものです。どの行でも、中央の列には左の列に書いていない条件や処理が含まれています。右の列の結果はどれも例外にならず（2を除く）、件数やメールとして表に出ます。
           </p>
           <h3>default_scope はどの操作に加わるか</h3>
           <p>
@@ -387,7 +388,7 @@ Order.unscope(where: :canceled_at).count       => 2
 sato.orders.unscope(where: :canceled_at).count => 2
 `}
           />
-          <Figure n="43-3" title="default_scope の条件が加わる操作と、加わらない操作" caption="Rails 8.1.4.1 で、default_scope { where(canceled_at: nil) } を書いた Order で確かめた結果。">
+          <Figure n="60-3" title="default_scope の条件が加わる操作と、加わらない操作" caption="Rails 8.1.4.1 で、default_scope { where(canceled_at: nil) } を書いた Order で確かめた結果。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -438,7 +439,7 @@ sato.orders.unscope(where: :canceled_at).count => 2
             </div>
           </Figure>
           <p>
-            図 43-3 のとおり、default_scope の条件は、検索・関連・JOIN・一括の更新まで加わります。一方で、読み込み済みのレコードの reload や update! には加わりません。Rails のソースのコメントも、default_scope はレコードの作成のときには使われ、レコードの更新や削除のときには使われないと説明しています。<Ref n={5} />
+            図 60-3 のとおり、default_scope の条件は、検索・関連・JOIN・一括の更新まで加わります。一方で、読み込み済みのレコードの reload や update! には加わりません。Rails のソースのコメントも、default_scope はレコードの作成のときには使われ、レコードの更新や削除のときには使われないと説明しています。<Ref n={5} />
             条件を外す方法は2つあり、unscoped はすべての条件を外し、<code>unscope(where: :canceled_at)</code> はその列の条件だけを外します。どの操作に加わり、どう外すかは Order のファイルの1行からは読み取れません。
           </p>
           <h3>このコードの問題</h3>
@@ -586,14 +587,14 @@ Order.reflect_on_association(:user).foreign_key => "user_id"
             規約の対応が成り立たないと、最初の検索で例外になります。規約で決まった値は <code>Order.table_name</code> や関連の <code>foreign_key</code> で取り出して確かめることもできます。default_scope の条件が加わったときは、例外にならずに件数が4件になりました。失敗が例外として表に出るかどうかが、テストや運用で気づけるかどうかを左右します。
           </p>
           <Figure
-            n="43-4"
+            n="60-4"
             title="規約による暗黙と、隠れた副作用の位置"
             caption="縦は、それを知っている人の範囲、横は、暗黙に決まることの種類。赤の点線で囲んだ右下が、呼び出し側に書く対象。模式図で、位置は本書の判断による。"
           >
             <ConventionVsHiddenFigure />
           </Figure>
           <p>
-            図 43-4 は、Rails のアプリにある暗黙を、知っている人の範囲と、決まることの種類で並べたものです。左上の CoC の規約と上の中央の timestamps は、Rails を使う人全員が知っています。下の中央の normalizes と validates は、アプリのモデルに書かれた宣言ですが、決めるのは値の整形と検証で、どの経路で保存しても成り立たせたい条件です。右下の default_scope、after_save のメール、Current を読む既定値は、アプリのモデルにだけ書かれ、呼び出しの結果（対象の行・外に送るもの・使う値）を変えます。この右下を、呼び出し側に書く対象にします。
+            図 60-4 は、Rails のアプリにある暗黙を、知っている人の範囲と、決まることの種類で並べたものです。左上の CoC の規約と上の中央の timestamps は、Rails を使う人全員が知っています。下の中央の normalizes と validates は、アプリのモデルに書かれた宣言ですが、決めるのは値の整形と検証で、どの経路で保存しても成り立たせたい条件です。右下の default_scope、after_save のメール、Current を読む既定値は、アプリのモデルにだけ書かれ、呼び出しの結果（対象の行・外に送るもの・使う値）を変えます。この右下を、呼び出し側に書く対象にします。
           </p>
           <h3>コールバックそのものを避けるのではない</h3>
           <p>
@@ -603,7 +604,7 @@ Order.reflect_on_association(:user).foreign_key => "user_id"
           <Callout kind="note" title="Doctrine の Provide sharp knives との関係">
             <p>
               The Rails Doctrine の「Provide sharp knives」の柱は、誤って使うと害のある強力な機能も、禁止するのではなく、規約と教育で正しく使えるようにすると述べ、例に concern を挙げています。<Ref n={2} />
-              本書の <ChapterLink n={31} section="doctrine" /> では、コールバックと CurrentAttributes もこの柱に関わる機能として扱いました。この章の判断も、これらの機能を使ったうえで、呼び出しの結果を変える処理を置くかどうかを図 43-4 の位置で決めるものです。
+              本書の <ChapterLink n={31} section="doctrine" /> では、コールバックと CurrentAttributes もこの柱に関わる機能として扱いました。この章の判断も、これらの機能を使ったうえで、呼び出しの結果を変える処理を置くかどうかを図 60-4 の位置で決めるものです。
             </p>
           </Callout>
         </>
@@ -714,11 +715,11 @@ sent のまま残った注文: []
           <p>
             4のデータの移行は、キャンセルした注文を含む3件を書き換え、メールは送られず、sent のまま残った注文もありません。5では、ship! を呼んだときだけ、鈴木さんに発送のお知らせが届きました。
           </p>
-          <Figure n="43-5" title="直す前と後の呼び出しの流れ" caption="左の赤の行が、適用前に呼び出し側から見えなかった処理。適用後は、絞り込みと通知が呼び出し側のコードに書かれている。">
+          <Figure n="60-5" title="直す前と後の呼び出しの流れ" caption="左の赤の行が、適用前に呼び出し側から見えなかった処理。適用後は、絞り込みと通知が呼び出し側のコードに書かれている。">
             <BeforeAfterFigure />
           </Figure>
           <p>
-            図 43-5 は、4つの呼び出し元について、適用前に書いたコードと隠れて起きたこと、適用後に書くコードを並べたものです。適用後の列では、キャンセルを除くかどうか（.active）、コールバックを通すかどうか（update_all）、メールを送るかどうか（ship!）が、それぞれの呼び出しに書かれています。呼び出し元の担当者は Order のファイルを開かなくても、自分の書いたコードから結果を読めます。
+            図 60-5 は、4つの呼び出し元について、適用前に書いたコードと隠れて起きたこと、適用後に書くコードを並べたものです。適用後の列では、キャンセルを除くかどうか（.active）、コールバックを通すかどうか（update_all）、メールを送るかどうか（ship!）が、それぞれの呼び出しに書かれています。呼び出し元の担当者は Order のファイルを開かなくても、自分の書いたコードから結果を読めます。
           </p>
           <h3>テストで固定する</h3>
           <Code
@@ -863,7 +864,7 @@ PlainUser.find_by(email: EmailNormalizer.call("tanaka@example.com"))
           </p>
           <h3>判断の目安</h3>
           <p>宣言（暗黙）に置くか、呼び出し側に書くかは、「その処理を飛ばしたい呼び出し元があるか」と「その処理が呼び出しの結果を変えるか」で決めます。</p>
-          <Figure n="43-6" title="宣言に置く処理と、呼び出し側に書く処理" caption="「飛ばしたい呼び出し元」は、データの移行、管理画面での修正、一括の取り込みなど、通常の画面と目的の違う呼び出し元を指す。">
+          <Figure n="60-6" title="宣言に置く処理と、呼び出し側に書く処理" caption="「飛ばしたい呼び出し元」は、データの移行、管理画面での修正、一括の取り込みなど、通常の画面と目的の違う呼び出し元を指す。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -914,7 +915,7 @@ PlainUser.find_by(email: EmailNormalizer.call("tanaka@example.com"))
             </div>
           </Figure>
           <p>
-            図 43-6 の上の2行は、どの呼び出し元にとっても同じ結果になるべき処理なので、宣言のまま残します。下の行の多くは、呼び出し元によって必要かどうかが変わる処理なので、呼び出し側に書きます。画面ごとの検証の置き場所は <ChapterLink n={33} section="model-form-objects" /> で、Current の扱いは <ChapterLink n={31} section="callbacks-current" /> で扱っています。
+            図 60-6 の上の2行は、どの呼び出し元にとっても同じ結果になるべき処理なので、宣言のまま残します。下の行の多くは、呼び出し元によって必要かどうかが変わる処理なので、呼び出し側に書きます。画面ごとの検証の置き場所は <ChapterLink n={33} section="model-form-objects" /> で、Current の扱いは <ChapterLink n={31} section="callbacks-current" /> で扱っています。
           </p>
         </>
       ),
@@ -929,7 +930,7 @@ PlainUser.find_by(email: EmailNormalizer.call("tanaka@example.com"))
           <ul>
             <li>名前付きのスコープ（<code>scope :active</code>）：呼び出し側が付けたときだけ条件を加えます。</li>
             <li>
-              <code>unscope(where: :canceled_at)</code>：指定した条件だけを外します。unscoped と違い、関連の条件は残ります（図 43-3）。
+              <code>unscope(where: :canceled_at)</code>：指定した条件だけを外します。unscoped と違い、関連の条件は残ります（図 60-3）。
             </li>
             <li>
               コールバックを通さないメソッド：<code>update_all</code>・<code>update_column</code>・<code>update_columns</code>・<code>insert_all</code>・<code>delete_all</code> などは、コールバックを実行しません。Rails のガイドは、これらのメソッドを一覧にしたうえで、コールバックにある業務の規則を飛ばすことになるので注意して使うよう書いています。<Ref n={3} />
@@ -968,6 +969,29 @@ PlainUser.find_by(email: EmailNormalizer.call("tanaka@example.com"))
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          宣言（暗黙）に置くか、呼び出し側に書くかは、その処理を飛ばしたい呼び出し元があるかと、その処理が呼び出しの結果を変えるかで決めます。この章の default_scope と after_save のメールは、呼び出し元によって必要かどうかが変わるので、呼び出し側に書く形に直しました。normalizes のように、どの経路でも同じ結果にしたい処理は宣言のまま残します。
+        </>
+      ),
+      benefit: {
+        text: <>適用前は11月の注文が4件と数えられ（明細は5件）、キャンセルした注文を ID で開くと RecordNotFound になり、データの移行でお客さま2人にメールが届いた。<code>.active</code> と <code>ship!</code> を呼び出し側に書くと、件数は5件になり、移行ではメールが送られず、<code>ship!</code> を呼んだときだけ発送のお知らせが届いた。</>,
+        basis: <><ChapterLink n={62} section="scene" />、<ChapterLink n={62} section="apply" /></>,
+      },
+      cost: {
+        text: <>呼び出しのたびに <code>.active</code> や <code>ship!</code> を書く必要があり、書き忘れた経路では条件や通知が抜ける。コールバックを消す変更と明示的な呼び出しを足す変更は、同じリリースに入れる必要がある。</>,
+        basis: <ChapterLink n={62} section="apply" />,
+      },
+      alternative: {
+        text: <>どの経路でも成り立たせたい整形は normalizes の宣言に残す。呼び出し側に移して CSV の取り込みで呼び忘れた例では、先頭に空白が付いたアドレスが保存され、その会員はログインできなかった。規約で決まるテーブル名や外部キーは書かず、規約から外れるときだけ書く。</>,
+        basis: <ChapterLink n={62} section="overuse" />,
+      },
+      criterion: {
+        text: <>その処理を飛ばしたい呼び出し元（データの移行・管理画面での修正・集計）があるか。その処理が件数や送るメールのような呼び出しの結果を変えるか。どちらにも当てはまらない処理は宣言に置く。</>,
+        basis: <ChapterLink n={62} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

@@ -1,14 +1,16 @@
+import { useState } from 'react'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { FigureChoices } from '../visuals/study-figure'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 33-1 注文の取り消しで処理を置く場所 ---------- */
+/* ---------- 図 47-1 注文の取り消しで処理を置く場所 ---------- */
 function CancelPlacementFigure() {
   return (
     <Svg
-      id="33-1"
+      id="47-1"
       w={760}
       h={350}
       label="購入者の画面の OrdersController、管理画面の Admin::OrdersController、支払期限切れを処理する ExpireOrdersJob の3つの呼び出し元が、どれも同じ Order#cancel! を呼ぶ。Order#cancel! は取り消せる状態かを確かめ、在庫を戻して状態を更新し、同じトランザクションで確定する。保存先の MySQL は status の候補、数量が1以上であること、外部キーをモデルを通らない更新に対しても守る。取り消しメールはコミット後にジョブで送り、送信に失敗しても取り消しは残る"
@@ -53,7 +55,7 @@ function CancelPlacementFigure() {
   )
 }
 
-/* ---------- 図 33-2 complete! を分ける3つの案 ---------- */
+/* ---------- 図 47-2 complete! を分ける3つの案 ---------- */
 function ThreePlansFigure() {
   type Fill = 'box' | 'box2' | 'box4' | 'box5'
   const col = (x0: number, title: string, top: string[], topFill: Fill, left: string[], right: string[], rightFill: Fill, notes: string[]) => (
@@ -75,7 +77,7 @@ function ThreePlansFigure() {
   )
   return (
     <Svg
-      id="33-2"
+      id="47-2"
       w={760}
       h={270}
       label="注文の受付を3つの案で分けた構成。案A は Order#place! が状態を確かめて保存し、小計は OrderItem、割引額は Coupon が計算する。注文と明細の保存で完結する小さな処理に向く。案B は Order に組み込む Concern の Order::Placeable が受付の操作を持ち、価格の計算を Order::Pricing、金額と通貨の組を Money に分ける。呼び出し方を変えずに、DB なしで試せる計算を分けられる。案C は Service Object の Orders::Place が手順を進め、Order は状態の規則を、在庫と決済要求はそれぞれの処理を受け持つ。複数の呼び出し元で同じ手順を使い、外部決済や部分的な失敗がある場合に向く"
@@ -89,11 +91,11 @@ function ThreePlansFigure() {
   )
 }
 
-/* ---------- 図 33-3 EC サイトの関連 ---------- */
+/* ---------- 図 47-3 EC サイトの関連 ---------- */
 function AssociationFigure() {
   return (
     <Svg
-      id="33-3"
+      id="47-3"
       w={760}
       h={330}
       label="EC サイトの関連。Order は User を参照する。OrderItem は Order の一部として作られ、Product を参照する。Payment と Shipment は Order の一部として作られる。ShipmentItem は Shipment の一部として作られ、発送した OrderItem を参照し、数量を持つ。矢印は外部キーを持つ側から参照先へ向き、元の側が複数、先の側が1つ。実線は親なしでは意味を持たない記録、破線は独立して存在する相手への参照。どの関連も restrict_with_exception で、注文の履歴を削除しない"
@@ -127,11 +129,11 @@ function AssociationFigure() {
   )
 }
 
-/* ---------- 図 33-4 User に集める場合と分ける場合 ---------- */
+/* ---------- 図 47-4 User に集める場合と分ける場合 ---------- */
 function UserBoundaryFigure() {
   return (
     <Svg
-      id="33-4"
+      id="47-4"
       w={760}
       h={300}
       label="左は users テーブルに email、password_digest、会社名と会社での役割、請求先、プロフィール、契約の状態をすべて入れた場合。担当者が辞めて行を無効にすると、会社の契約や請求先の扱いも一緒に変わる。右は役割ごとに分けた場合。User はログインする人、Membership は User と Organization をつなぐ所属で、組織ごとの role を持つ。契約と請求先の Account は Organization に付き、任意の公開情報の Profile は User に付く。担当者が替わっても契約は Organization に残り、管理者かどうかは所属ごとに決まる"
@@ -181,13 +183,13 @@ function UserBoundaryFigure() {
   )
 }
 
-/* ---------- 図 33-5 注文の状態と許可する遷移 ---------- */
+/* ---------- 図 47-5 注文の状態と許可する遷移 ---------- */
 function OrderStateFigure() {
   const states = ['draft', 'pending', 'paid', 'shipped', 'completed']
   const events = ['place!', 'mark_paid!', 'ship!', 'complete!']
   return (
     <Svg
-      id="33-5"
+      id="47-5"
       w={760}
       h={290}
       label="注文の状態は draft、pending、paid、shipped、completed の順に進む。draft から pending へは place!、pending から paid へは mark_paid!、paid から shipped へは ship!、shipped から completed へは complete! で進む。draft と pending からは cancel! で cancelled へ進める。paid からは返金の手続き、shipped からは返品の手続きという別の記録で扱い、cancelled には戻さない。enum が決めるのは状態の名前と保存する値だけで、どの遷移を許すかはメソッドで決める"
@@ -220,6 +222,79 @@ function OrderStateFigure() {
         破線は支払後・発送後の取り消しを cancelled に戻さず、返金や返品という別の記録として扱う流れ
       </T>
     </Svg>
+  )
+}
+
+/* ---------- 図 47-6 状態と操作を選んで、可否・ロック・履歴を確かめる（操作できる図） ---------- */
+const ORDER_STATES = ['draft', 'pending', 'paid', 'shipped', 'completed', 'cancelled'] as const
+const ORDER_OPS = ['ship!(actor: staff)', 'cancel!(actor: user)', 'update!(status: "shipped")'] as const
+
+/** この節の Order を SQLite と MySQL 8.4.13 で実行した結果と同じ規則 */
+function runOrderOp(state: string, op: number) {
+  if (op === 2) {
+    return state === 'shipped'
+      ? { after: state, result: '成功（値が変わらないので SQL を送らない）', lock: 'with_lock を使わない（読み直さない）', history: 0, sql: [] as string[][], failed: false }
+      : { after: 'shipped', result: '成功（遷移の条件を確かめない）', lock: 'with_lock を使わない（読み直さない）', history: 0, sql: [['BEGIN'], ['UPDATE orders', 'SET status'], ['COMMIT']], failed: false }
+  }
+  const [target, allowed, message] = op === 0 ? ['shipped', ['paid'], '支払済みの注文だけ発送できます'] as const : ['cancelled', ['draft', 'pending'], '支払後の取り消しは返金の手続きで扱います'] as const
+  const lock = 'with_lock で注文の行をロックして読み直す'
+  const select = ['SELECT …', 'FOR UPDATE']
+  if (state === target) return { after: state, result: '成功（何もしない）', lock, history: 0, sql: [['BEGIN'], select, ['COMMIT']], failed: false }
+  if (!(allowed as readonly string[]).includes(state)) return { after: state, result: `InvalidTransition：${message}`, lock, history: 0, sql: [['BEGIN'], select, ['ROLLBACK']], failed: true }
+  return { after: target, result: '成功（遷移する）', lock, history: 1, sql: [['BEGIN'], select, ['INSERT', 'order_transitions'], ['UPDATE orders', 'SET status'], ['COMMIT']], failed: false }
+}
+
+function OrderTransitionSim() {
+  const [stateIndex, setStateIndex] = useState(2)
+  const [op, setOp] = useState(0)
+  const before = ORDER_STATES[stateIndex]
+  const r = runOrderOp(before, op)
+  return (
+    <Figure
+      n="47-6"
+      title="状態と操作を選んで、可否・ロック・履歴を確かめる"
+      caption="この節の Order を、6つの状態と3つの操作のすべての組み合わせで SQLite と MySQL 8.4.13 で実行した結果を、状態と SQL の種類だけに縮めて描いた概念図です。SQL は MySQL の形で、SQLite では SELECT に FOR UPDATE が付かず、BEGIN immediate で書き込みを順番待ちにします。1つの操作を単独で実行した場合で、同時に届いた操作がロックを待つ時間は含みません。"
+    >
+      <FigureChoices label="実行前の状態" options={ORDER_STATES} selected={stateIndex} onSelect={setStateIndex} />
+      <FigureChoices label="操作" options={ORDER_OPS} selected={op} onSelect={setOp} />
+      <Svg id="47-6" w={760} h={176} label={`${before} の注文に ${ORDER_OPS[op]} を呼ぶと、${r.result}。実行後の状態は ${r.after}、履歴の行は ${r.history} 行増える。SQL は ${r.sql.length ? r.sql.map((x) => x.join(' ')).join('、') : 'なし'}。`}>
+        <T x={10} y={12} fs={11} tone="muted">注文の状態（太枠が実行前、塗りが実行後）</T>
+        {ORDER_STATES.map((s, k) => (
+          <Box key={s} x={10 + k * 125} y={24} w={112} h={44} lines={s === before && s === r.after ? [s, '実行前・実行後'] : s === before ? [s, '実行前'] : s === r.after ? [s, '実行後'] : s} mono fs={12} fill={s === r.after ? 'box5' : 'bg'} accent={s === before} subTone="muted" />
+        ))}
+        <T x={10} y={96} fs={11} tone="muted">{`送る SQL（MySQL）　履歴の行 +${r.history}`}</T>
+        {r.sql.length ? (
+          r.sql.map((q, k) => (
+            <g key={k}>
+              <Box x={10 + k * 150} y={110} w={136} h={44} lines={q} mono fs={10.5} fill={q[0] === 'ROLLBACK' ? 'box5' : q[0].startsWith('INSERT') ? 'box4' : 'box'} accent={q[0] === 'ROLLBACK'} />
+              {k < r.sql.length - 1 && <Arrow x1={146 + k * 150} y1={132} x2={158 + k * 150} y2={132} />}
+            </g>
+          ))
+        ) : (
+          <T x={10} y={132} fs={12}>SQL を送らない</T>
+        )}
+      </Svg>
+      <div className="table-wrap" aria-live="polite">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">結果</th>
+              <th scope="col">ロック</th>
+              <th scope="col">履歴の行</th>
+              <th scope="col">実行後の状態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{r.failed ? <strong>{r.result}</strong> : r.result}</td>
+              <td>{r.lock}</td>
+              <td>{r.history ? '1 行増える' : '増えない'}</td>
+              <td><code>{r.after}</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </Figure>
   )
 }
 
@@ -311,9 +386,9 @@ end
             取り消しの条件の確認、在庫を戻す処理、状態の更新は <code>Order#cancel!</code> に移りました。中身は後の「状態の集合と遷移の規則を分ける」の節で書きます。管理画面とジョブも同じ <code>cancel!</code> を呼べば、条件を変えるときに直すのは1か所です。
           </p>
           <p>
-            図 33-1 は書き直した後に各処理をどこに置いたかを示したものです。左の3つの呼び出し元はどれも中央の <code>Order#cancel!</code> を呼び、取り消しの規則はそこに1か所だけあります。右の箱はモデルを通らない更新に対しても DB が守る条件、下の箱はコミットの後に行う処理で、ここで失敗しても取り消し自体は残ります。
+            図 47-1 は書き直した後に各処理をどこに置いたかを示したものです。左の3つの呼び出し元はどれも中央の <code>Order#cancel!</code> を呼び、取り消しの規則はそこに1か所だけあります。右の箱はモデルを通らない更新に対しても DB が守る条件、下の箱はコミットの後に行う処理で、ここで失敗しても取り消し自体は残ります。
           </p>
-          <Figure n="33-1" title="注文の取り消しで処理を置く場所" caption="模式図。呼び出し元・業務の規則・DB の制約・コミット後の処理を、受け持つ範囲ごとに並べている。">
+          <Figure n="47-1" title="注文の取り消しで処理を置く場所" caption="模式図。呼び出し元・業務の規則・DB の制約・コミット後の処理を、受け持つ範囲ごとに並べている。">
             <CancelPlacementFigure />
           </Figure>
           <p>
@@ -699,9 +774,9 @@ end
             分ける前に、<code>complete!</code> が「注文の受付」「支払いの完了」「配送の完了」のどれを指すのかを決めます。ここでは注文の受付を <code>place!</code>、支払いの完了を <code>mark_paid!</code>、全体の完了を <code>complete!</code> と呼び分けます。名前があいまいなまま分割すると、そのあいまいさが別のファイルに移るだけです。
           </p>
           <p>
-            名前を決めたら、注文の受付（<code>place!</code>）の分け方を図 33-2 の3つの案で比べます。3つの列が3つの案で、各列の上の箱が呼び出し元から最初に呼ばれるもの、下の2つの箱がそこから使われるもの、いちばん下の文がその案の向く場面です。
+            名前を決めたら、注文の受付（<code>place!</code>）の分け方を図 47-2 の3つの案で比べます。3つの列が3つの案で、各列の上の箱が呼び出し元から最初に呼ばれるもの、下の2つの箱がそこから使われるもの、いちばん下の文がその案の向く場面です。
           </p>
-          <Figure n="33-2" title="注文の受付を分ける3つの案" caption="模式図。紫の箱は Concern（モジュール）、強調した箱は呼び出し元から最初に呼ばれるもの。">
+          <Figure n="47-2" title="注文の受付を分ける3つの案" caption="模式図。紫の箱は Concern（モジュール）、強調した箱は呼び出し元から最初に呼ばれるもの。">
             <ThreePlansFigure />
           </Figure>
           <ul>
@@ -901,9 +976,9 @@ pen.reload.price_cents               # => 350（現在の価格）
             <code>has_many</code> や <code>belongs_to</code> は、相手のレコードを読み出すメソッドを作るだけでなく、どちらがどちらに依存するか、親を保存・削除したときに子をどう扱うかの方針も表します。外部キーは <code>belongs_to</code> を書く側のテーブルに置き、<code>has_one</code> を宣言するだけでは DB 上の1対1は保証されないので、子の外部キーに一意索引を付けます。これらの基本は <ChapterLink n={13} section="basics">関連の基本的な使い方</ChapterLink> と <ChapterLink n={13} section="association-lifecycle">一対一の関連と、親を消すときの方針</ChapterLink> で扱いました。<Ref n={3} /> この節では EC サイトの関連を例に、所有・削除・集合の方針を決めます。
           </p>
           <p>
-            図 33-3 はこの節で設計する関連を示したものです。矢印は外部キーを持つテーブルから参照先へ向き、元の側が複数、先の側が1つです。実線は親の一部として一緒に作られ、親なしでは意味を持たない記録を、破線は独立して存在する相手への参照を表します。たとえば OrderItem は注文の明細なので Order へは実線、Product は注文と関係なく存在するので破線です。
+            図 47-3 はこの節で設計する関連を示したものです。矢印は外部キーを持つテーブルから参照先へ向き、元の側が複数、先の側が1つです。実線は親の一部として一緒に作られ、親なしでは意味を持たない記録を、破線は独立して存在する相手への参照を表します。たとえば OrderItem は注文の明細なので Order へは実線、Product は注文と関係なく存在するので破線です。
           </p>
-          <Figure n="33-3" title="EC サイトの関連" caption="模式図。箱の2行目は、そのテーブルが持つ外部キーの列。">
+          <Figure n="47-3" title="EC サイトの関連" caption="模式図。箱の2行目は、そのテーブルが持つ外部キーの列。">
             <AssociationFigure />
           </Figure>
           <Code
@@ -1131,9 +1206,9 @@ latest_payment =
             </table>
           </div>
           <p>
-            User に集めると、テーブルと JOIN が少なく、個人向けの単純なサービスなら早く作れます。一方、<code>company_id</code>、<code>company_role</code>、請求先、プロフィール、契約の状態まですべて User に入れると、担当者が替わったときに、契約まで別の人に移ったように見えてしまいます。図 33-4 は同じ情報を User に集めた場合と、役割ごとに分けた場合を並べたものです。
+            User に集めると、テーブルと JOIN が少なく、個人向けの単純なサービスなら早く作れます。一方、<code>company_id</code>、<code>company_role</code>、請求先、プロフィール、契約の状態まですべて User に入れると、担当者が替わったときに、契約まで別の人に移ったように見えてしまいます。図 47-4 は同じ情報を User に集めた場合と、役割ごとに分けた場合を並べたものです。
           </p>
-          <Figure n="33-4" title="User に集める場合と役割ごとに分ける場合" caption="模式図。右の矢印は外部キーを持つ側から参照先へ向く。破線の箱は任意の記録。">
+          <Figure n="47-4" title="User に集める場合と役割ごとに分ける場合" caption="模式図。右の矢印は外部キーを持つ側から参照先へ向く。破線の箱は任意の記録。">
             <UserBoundaryFigure />
           </Figure>
           <p>
@@ -1215,9 +1290,9 @@ Membership.insert_all!([{ user_id: user.id, organization_id: company_a.id, role:
             注文は作られてから完了するまでにいくつかの状態を通ります。ここでは draft（下書き）→ pending（支払い待ち）→ paid（支払済み）→ shipped（発送済み）→ completed（完了）と進み、draft と pending からは cancelled（取り消し）へ進めるとします。ある状態から別の状態へ移ることを<Term en="state transition">状態遷移</Term>と呼びます。状態の名前を決めるだけでは設計は終わらず、支払済みの注文を取り消すには返金が必要か、発送済みの注文は取り消しではなく返品の手続きにするか、といった遷移の規則も決めます。
           </p>
           <p>
-            図 33-5 はこの注文の状態と許可する遷移を示したもので、箱が状態、矢印が許可する遷移、矢印に添えた名前はその遷移で呼ぶメソッドです。破線は取り消しではなく返金・返品という別の手続きで扱う流れです。
+            図 47-5 はこの注文の状態と許可する遷移を示したもので、箱が状態、矢印が許可する遷移、矢印に添えた名前はその遷移で呼ぶメソッドです。破線は取り消しではなく返金・返品という別の手続きで扱う流れです。
           </p>
-          <Figure n="33-5" title="注文の状態と許可する遷移" caption="模式図。この章の例で許可する遷移だけを矢印にしている。">
+          <Figure n="47-5" title="注文の状態と許可する遷移" caption="模式図。この章の例で許可する遷移だけを矢印にしている。">
             <OrderStateFigure />
           </Figure>
           <p>
@@ -1383,6 +1458,10 @@ expired.transitions.pluck(:from_status, :to_status, :actor_type, :reason)
           <p>
             2回目の <code>ship!</code> は既に shipped なので何もせずに終わり、履歴も増えませんでした。ジョブの再試行や二重送信で同じ操作が2回届いても、結果が変わらないようにするためです。ブロックの中の <code>next</code> はブロックを抜けるだけで、トランザクションはそのままコミットされます。発送済みの注文への <code>cancel!</code> は InvalidTransition になりました。遷移の履歴（実行者、変更前と変更後の状態、理由、日時）は状態の更新と同じトランザクションで保存します。別々に保存すると、状態は変わったのに履歴が無い、という不整合が起こり得るからです。
           </p>
+          <p>
+            図 47-6 では実行前の状態と操作を選び、操作が許可されるか、ロックを取るか、履歴の行が増えるかを確かめられます。InvalidTransition になる組み合わせでは、ロックを取って読み直した後に例外が発生し、トランザクションは ROLLBACK で終わります。3つ目の <code>update!(status: "shipped")</code> は次の小見出しで扱う経路です。with_lock で読み直さず、履歴も残さずに、どの状態からでも shipped になります。
+          </p>
+          <OrderTransitionSim />
           <Callout kind="v72">
             この節で使った enum のオプション <code>instance_methods</code>・<code>validate</code> と、次の節の <code>normalizes</code>、前の節の <code>serialize</code> の <code>coder:</code> は、Rails 7.2.4 にも同じ形であります（activerecord 7.2.4 の gem のソースで確認）。
           </Callout>
@@ -1584,7 +1663,7 @@ Order.insert_all([{ user_id: user.id, status: "pending",
             <li>コールバックにはどの保存経路でも必要な短い処理を置き、経路によって要否が変わる通知や外部への処理は、明示的な操作とコミット後の仕組みで扱います。</li>
           </ul>
           <p>
-            次の <ChapterLink n={33} /> ではこの章でモデルの外に置く候補として挙げた Service Object・Form Object・Query Object・Value Object を、作る条件と約束の書き方から扱います。
+            この章でモデルの外に置く候補として挙げた Service Object・Form Object・Query Object・Value Object は、<ChapterLink n={33} /> で、作る条件と約束の書き方から扱います。
           </p>
         </>
       ),

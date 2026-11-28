@@ -3,10 +3,11 @@ import { withExplanations } from '../explanations/shared'
 import { explanation22 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { labelFor } from '../content/label'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 25-1 応答時間と、Rails が測る時間 ---------- */
+/* ---------- 図 34-1 応答時間と、Rails が測る時間 ---------- */
 function ResponseTimeFigure() {
   const x0 = 250
   const scale = 44 // 1ms あたりの幅
@@ -17,7 +18,7 @@ function ResponseTimeFigure() {
   ]
   return (
     <Svg
-      id="25-1"
+      id="34-1"
       w={780}
       h={260}
       label="同じ GET /articles/1 の要求で、curl が測った応答時間は11.2ms、Rack::Runtime のミドルウェアが測った x-runtime は8.7ms、ログの Completed の行は7ms だった。外側の時間ほど、通信や Puma の処理、ミドルウェアの処理を多く含む。Completed の7ms のうち、Views が3.6ms、ActiveRecord が1.3ms（SQL 2回）で、残りはコントローラーなどの Ruby の処理"
@@ -52,7 +53,7 @@ function ResponseTimeFigure() {
   )
 }
 
-/* ---------- 図 25-2 時間のかかる場所の違い ---------- */
+/* ---------- 図 34-2 時間のかかる場所の違い ---------- */
 function SlowPartsFigure() {
   const rows = [
     { t: 'GET /articles/1', total: 7, v: 3.6, ar: 1.3, note: '7ms（2 queries）' },
@@ -63,7 +64,7 @@ function SlowPartsFigure() {
   const W = 420
   return (
     <Svg
-      id="25-2"
+      id="34-2"
       w={780}
       h={230}
       label="3つの要求の Completed の行を、全体を100%とした内訳で並べた。記事のページ（7ms）は Views が約半分、ActiveRecord が2割弱。DB で0.2秒待つ /lab/io（202ms）はほぼすべてが ActiveRecord。Ruby で計算する /lab/cpu（546ms）は Views も ActiveRecord もほぼ0で、残りがすべて Ruby の処理だった"
@@ -105,11 +106,11 @@ function SlowPartsFigure() {
   )
 }
 
-/* ---------- 図 25-4 キャッシュのヒットとミス ---------- */
+/* ---------- 図 34-4 キャッシュのヒットとミス ---------- */
 function CacheFigure() {
   return (
     <Svg
-      id="25-4"
+      id="34-4"
       w={780}
       h={290}
       label="Rails.cache.fetch はキーでキャッシュを探す。見つかればヒットで、保存した値をすぐに返す（0.1ms）。見つからないか有効期限が切れていればミスで、ブロックの処理（約500ms）を実行し、結果をキーと有効期限とともに保存してから返す。元のデータが変わっても、有効期限が来るまでは保存した古い値が返る"
@@ -138,7 +139,7 @@ function CacheFigure() {
   )
 }
 
-/* ---------- 図 25-3 1リクエストの処理時間の内訳 ---------- */
+/* ---------- 図 34-3 1リクエストの処理時間の内訳 ---------- */
 function BreakdownFigure() {
   // デモの実測（ms）。start はリクエストの開始からの時刻
   const rows: { t: string; start: number; dur: number; fill: 'box' | 'box2' | 'box4' | 'box5' }[] = [
@@ -155,7 +156,7 @@ function BreakdownFigure() {
   const rowH = 30
   return (
     <Svg
-      id="25-3"
+      id="34-3"
       w={780}
       h={rows.length * rowH + 80}
       label="GET /articles/1 の処理をイベントの開始時刻と処理時間で並べた。リクエスト全体が約6.9ms、そのうちコントローラーの処理が約5.4ms。記事を読む SQL が0.5ms、レイアウトの描画が3.1ms で、その中のテンプレートの描画が2.6ms、テンプレートの中で関連のコメントを読む SQL が0.6ms、コメントのパーシャルの描画が0.08ms だった。SQL がテンプレートの描画の中で実行されている。ログの Views は描画の時間からこの SQL の時間を引いた値になる"
@@ -191,11 +192,11 @@ function BreakdownFigure() {
   )
 }
 
-/* ---------- 図 25-5 キャッシュの層 ---------- */
+/* ---------- 図 34-5 キャッシュの層 ---------- */
 function LayersFigure() {
   const rows = [
     { t: 'ブラウザーの HTTP キャッシュ', s: 'Cache-Control・ETag・Last-Modified に従い、要求しないか条件付き GET を送る', fill: 'bg' as const },
-    { t: 'CDN・Nginx（第27章）', s: 'public な応答や、ダイジェスト付きのアセットを保存して返す', fill: 'bg' as const },
+    { t: `CDN・Nginx（${labelFor(24)}）`, s: 'public な応答や、ダイジェスト付きのアセットを保存して返す', fill: 'bg' as const },
     { t: '条件付き GET', s: 'fresh_when・stale? が一致すれば 304。テンプレートの描画を省ける', fill: 'box2' as const },
     { t: 'フラグメントキャッシュ', s: 'cache・cached: true で、描画した HTML の断片を Rails.cache に保存', fill: 'box' as const },
     { t: '低レベルのキャッシュ', s: 'Rails.cache.fetch で、計算結果や外部 API の応答を保存', fill: 'box' as const },
@@ -203,7 +204,7 @@ function LayersFigure() {
   ]
   return (
     <Svg
-      id="25-5"
+      id="34-5"
       w={780}
       h={rows.length * 46 + 26}
       label="キャッシュの層を、ブラウザーに近い順に並べた。ブラウザーの HTTP キャッシュ、CDN や Nginx、Rails の条件付き GET（fresh_when・stale? による 304）、フラグメントキャッシュ（描画した HTML の断片）、低レベルのキャッシュ（Rails.cache.fetch）、そしてそれらを保存するキャッシュストア（MemoryStore、Redis、Memcached、Solid Cache）。上の層で返せるほど、下の層の処理を省ける"
@@ -453,12 +454,12 @@ Completed 200 OK in 7ms (Views: 3.6ms | ActiveRecord: 1.3ms (2 queries, 0 cached
           </ul>
           <p>
             3つの時間を比べると、curl の 11.2ms、x-runtime の 8.7ms、Completed の 7ms の順に短くなっています。x-runtime は Rack::Runtime というミドルウェア（要求の前後に処理を挟む部品）が付けるヘッダーで、そのミドルウェアから内側の処理にかかった時間です
-            <Ref n={8} />。Completed の時間は、コントローラーがアクションを処理した時間で、その外側のミドルウェアの処理は含みません。curl の時間には、さらに通信と Puma の処理が加わります（図 25-1）。利用者が待つのは、いちばん外側の時間です。
+            <Ref n={8} />。Completed の時間は、コントローラーがアクションを処理した時間で、その外側のミドルウェアの処理は含みません。curl の時間には、さらに通信と Puma の処理が加わります（図 34-1）。利用者が待つのは、いちばん外側の時間です。
           </p>
           <p>
             Completed の 7ms のうち、Views と ActiveRecord を足すと 4.9ms で、残りの約 2ms はどちらにも入りません。コントローラーの Ruby の処理などが、この残りに入ります。次の節では、要求によってこの内訳がどう違うかを比べます。
           </p>
-          <Figure n="25-1" title="応答時間と、Rails が測る時間" caption="デモの GET /articles/1 を1回要求したときの実測値（curl・x-runtime・ログ）をもとにした模式図。">
+          <Figure n="34-1" title="応答時間と、Rails が測る時間" caption="デモの GET /articles/1 を1回要求したときの実測値（curl・x-runtime・ログ）をもとにした模式図。">
             <ResponseTimeFigure />
           </Figure>
         </>
@@ -487,7 +488,7 @@ Completed 200 OK in 7ms (Views: 3.6ms | ActiveRecord: 1.3ms (2 queries, 0 cached
           />
           <p>
             /lab/io は約 202ms のほとんどが ActiveRecord で、SQL の応答を待つ時間でした。/lab/cpu は 475〜596ms かかりましたが、Views も ActiveRecord もほぼ 0
-            で、残りはすべてコントローラーの中の Ruby の計算です（図 25-2）。ActiveRecord が長ければ SQL を、Views が長ければテンプレートを調べます。どちらも短ければ、コントローラーやモデルの Ruby
+            で、残りはすべてコントローラーの中の Ruby の計算です（図 34-2）。ActiveRecord が長ければ SQL を、Views が長ければテンプレートを調べます。どちらも短ければ、コントローラーやモデルの Ruby
             のコードや、外部の API の応答を待つ時間を調べます。
           </p>
           <p>
@@ -531,7 +532,7 @@ end
           <p>
             Completed の行の Views と ActiveRecord の値は、Rails の中の各処理が発行するイベントから計算されています。次の節では1件の要求の中で発行されるイベントを時刻順に並べて、内訳の計算を確かめます。
           </p>
-          <Figure n="25-2" title="時間のかかる場所の違い" caption="デモの開発環境で、3つの要求を処理したときの Completed の行（/lab/cpu は 546ms の回）をもとにした図。">
+          <Figure n="34-2" title="時間のかかる場所の違い" caption="デモの開発環境で、3つの要求を処理したときの Completed の行（/lab/cpu は 546ms の回）をもとにした図。">
             <SlowPartsFigure />
           </Figure>
           <p>直す前に測って遅い場所を確かめる考え方は、<ChapterLink n={90} /> で原則として扱います。</p>
@@ -577,14 +578,14 @@ Completed 200 OK in 5ms (Views: 2.9ms | ActiveRecord: 1.1ms (2 queries, 0 cached
           <p>
             コメントを読む SQL は、テンプレートの描画の途中（+4.21ms）で実行されています。ビューで関連をたどると、そこで初めて SQL が送られるからです（<ChapterLink n={12} section="lazy" />
             ）。render_template などのイベントの時間にはこの SQL も含まれますが、ログの Views は描画の時間から描画中の SQL の時間を引いた値で、引いた分は ActiveRecord に加えられます（activerecord の
-            controller_runtime.rb の <code>cleanup_view_runtime</code>）。デモでも、ActiveRecord の 1.1ms は2つの SQL（0.52ms と 0.61ms）の合計でした（図 25-3）。Views と ActiveRecord
+            controller_runtime.rb の <code>cleanup_view_runtime</code>）。デモでも、ActiveRecord の 1.1ms は2つの SQL（0.52ms と 0.61ms）の合計でした（図 34-3）。Views と ActiveRecord
             は重ならないので、どちらが長いかで、描画と SQL のどちらに時間がかかったかを判断できます。
           </p>
           <p>
             Server-Timing は、開発環境の設定ファイルの <code>config.server_timing = true</code> で入る ActionDispatch::ServerTiming のミドルウェアが付けるヘッダーで、イベントの名前ごとの合計時間です
             <Ref n={1} />。ブラウザーの開発者ツールのネットワークの画面で、サーバー側の内訳として表示されます。
           </p>
-          <Figure n="25-3" title="1リクエストの処理時間の内訳" caption="デモアプリケーション（Rails 8.1.4.1、開発環境、MySQL 8.4）での GET /articles/1 の実測。1回の計測なので、値は目安。">
+          <Figure n="34-3" title="1リクエストの処理時間の内訳" caption="デモアプリケーション（Rails 8.1.4.1、開発環境、MySQL 8.4）での GET /articles/1 の実測。1回の計測なので、値は目安。">
             <BreakdownFigure />
           </Figure>
         </>
@@ -765,14 +766,14 @@ Rails.cache = ActiveSupport::Cache::MemoryStore
 `}
           />
           <p>
-            1回目はミスで、ブロックを実行して約 530ms かかりました。2回目と3回目はヒットで、0.1ms 以下でした。有効期限の1秒を過ぎた4回目は、もう一度ブロックを実行しました（図 25-4）。有効期限は、古い値が使われる時間を区切ります。元のデータが変わったときにキーを変えて、古い値を使わないようにする方法もあり、「フラグメントキャッシュ」の節で扱います。値の保存先をキャッシュストアと呼び、デモの開発環境はプロセスのメモリーに保存する
+            1回目はミスで、ブロックを実行して約 530ms かかりました。2回目と3回目はヒットで、0.1ms 以下でした。有効期限の1秒を過ぎた4回目は、もう一度ブロックを実行しました（図 34-4）。有効期限は、古い値が使われる時間を区切ります。元のデータが変わったときにキーを変えて、古い値を使わないようにする方法もあり、「フラグメントキャッシュ」の節で扱います。値の保存先をキャッシュストアと呼び、デモの開発環境はプロセスのメモリーに保存する
             MemoryStore です（「Rails.cache とキャッシュストア」の節）。
           </p>
           <p>
-            キャッシュはブラウザー、ブラウザーと Rails の間のサーバー、Rails の中の各所に置けます（図 25-5）。ブラウザーに近いところで応答を返せるほど、その後ろの処理を省けます。次の節では、ブラウザーが保存した応答を使い回す
+            キャッシュはブラウザー、ブラウザーと Rails の間のサーバー、Rails の中の各所に置けます（図 34-5）。ブラウザーに近いところで応答を返せるほど、その後ろの処理を省けます。次の節では、ブラウザーが保存した応答を使い回す
             HTTP キャッシュを扱います。
           </p>
-          <Figure n="25-4" title="キャッシュのヒットとミス" caption="デモでの Rails.cache.fetch（MemoryStore、有効期限1秒）の実測をもとにした模式図。">
+          <Figure n="34-4" title="キャッシュのヒットとミス" caption="デモでの Rails.cache.fetch（MemoryStore、有効期限1秒）の実測をもとにした模式図。">
             <CacheFigure />
           </Figure>
         </>
@@ -843,7 +844,7 @@ Rails.cache = ActiveSupport::Cache::MemoryStore
             と一致すれば <code>head :not_modified</code> で応答します。記事を読む SQL の1回だけで、描画をせずに1ms で返りました。既定の Cache-Control は <code>private</code>{' '}
             なので、利用者のブラウザーに保存でき、複数の利用者で共有するキャッシュには保存できません。ログインした利用者ごとに内容が違うページを <code>public: true</code> にすると、CDN（配信する内容の複製を多数のサーバーに置いて返すサービス）などで他の利用者に同じ応答が返るので注意します。
           </p>
-          <Figure n="25-5" title="キャッシュの層" caption="Caching with Rails（ガイド）と、この章の実測をもとにまとめた図。">
+          <Figure n="34-5" title="キャッシュの層" caption="Caching with Rails（ガイド）と、この章の実測をもとにまとめた図。">
             <LayersFigure />
           </Figure>
         </>
@@ -974,7 +975,7 @@ store.fetch("ranking/top", expires_in: 10.minutes) { Article.order(views_count: 
                 <tr>
                   <td>MemCacheStore・RedisCacheStore</td>
                   <td>Memcached・Redis</td>
-                  <td>全プロセスで共有。Memcached は一杯になると古いものから消える。Redis の既定（maxmemory-policy が noeviction）では一杯になると書き込みがエラーになるので、キャッシュに使うなら allkeys-lru などを設定する（デモの redis:8 の既定値で確認）</td>
+                  <td>複数プロセスで共有できる。Redis 8 のデモの既定値は <code>maxmemory=0</code>、<code>maxmemory-policy=noeviction</code>。上限を設定するときは、同時にどのキーを削除できるかを決める。<Ref n={18} /></td>
                 </tr>
                 <tr>
                   <td>Solid Cache</td>
@@ -988,6 +989,7 @@ store.fetch("ranking/top", expires_in: 10.minutes) { Article.order(views_count: 
             ガイドによると、MemoryStore はプロセスごとのメモリーに保存するので、Puma のクラスタモードで複数のワーカーを動かすと、ワーカーごとに別々のキャッシュになります
             <Ref n={5} />。コンソールで <code>Rails.cache.clear</code> を実行しても、動いているサーバーのキャッシュは消えません。
           </p>
+          <p>Redis をキャッシュ専用にする場合、上限到達時に最終アクセスが古いと見なしたキーを削除する <code>allkeys-lru</code> などを選べます。ジョブのキューと同じインスタンスに置くと、キャッシュ容量の都合でジョブに必要なキーまで削除される構成になり得ます。また、Redis に接続できないと Rails の RedisCacheStore ではキャッシュミスが増え、普段キャッシュから返せていた要求も DB に届きます。<Ref n={18} /><Ref n={19} />（<ChapterLink n={106} />）。</p>
           <Callout kind="v72">
             <p>
               Notifications、Server-Timing、ETag、フラグメントキャッシュの仕組みは Rails 7.2.4 でも同じです。Rails 8.0 から、新規のアプリケーションの本番環境のキャッシュストアは Solid Cache
@@ -1001,18 +1003,19 @@ store.fetch("ranking/top", expires_in: 10.minutes) { Article.order(views_count: 
     },
     {
       id: 'index-and-caching-decisions',
-      title: "PostgreSQL の実行計画とキャッシュの判断",
+      title: "MySQL の実行計画とキャッシュの判断",
       body: (
         <>
           <p>
             関連を <code>preload</code> すると、親の ID を使う <code>IN (...)</code> の問い合わせが作られます。大量の ID を一度に渡すと、MySQL の通信サイズの制限に達したり、範囲を最適化するメモリーの上限を超えて実行計画が変わったりすることがあります。管理バッチでは件数を分けて読み、ページの表示では必要な範囲だけを取得します。<Ref n={13} /><Ref n={14} />（<ChapterLink n={13} section="preload">先読みの SQL</ChapterLink>）。
           </p>
           <p>
-            <ChapterLink n={37} section="explain-rails">MySQL の実行計画</ChapterLink> と比べると、PostgreSQL の計画では、全表を読む <code>Seq Scan</code>、索引から行を得る <code>Index Scan</code>、必要な値を索引が持つときに選ばれる <code>Index Only Scan</code> などの名前で経路を見られます。行が少ない場合などには全表の読み取りが適切な場合もあります。estimated rows と actual rows、実行回数を比べると、推定のずれや繰り返しがわかります。実行付きの <code>EXPLAIN ANALYZE</code> は実際に文を実行するので、実行の影響を確認して使います。<Ref n={15} />
+            一覧の読み取りが重いときは、<ChapterLink n={37} section="explain-rails">MySQL の実行計画</ChapterLink>で、索引を使うか、どの段階で何行を処理するかを確認します。<code>EXPLAIN ANALYZE</code> では推定行数と実測行数、<code>loops</code>（繰り返し回数）を比べられます。対象の文を実行するため、負荷や変更の影響を確認した環境で使います。<Ref n={15} />
           </p>
           <p>
             関連の読み込み回数を減らしても重い処理にはキャッシュを検討できます。 Solid Cache を使うときは、<code>config/cache.yml</code> の <code>max_age</code> や <code>max_size</code> などで、有効期間・容量に合う保管量を決めます。<Ref n={16} /><code>Rails.cache.fetch</code> で検索結果を保存するなら、検索条件・利用者に見せてよい範囲・有効期限をキーや設計に反映します。無効化条件とヒット率を見て、保存する費用に見合うかを確かめます。<Ref n={10} /><Ref n={17} />
           </p>
+          <p>前日分のランキングなら有効期限まで同じ計算結果を使えます。記事本文なら <code>cache_key_with_version</code> にレコードのバージョンを含め、更新後の要求で別のキーを使えます。記事とコメントをまとめた結果では、コメントだけの更新でもバージョンが変わるよう、コメントの変更をキーに反映します。古い情報を表示できない権限判定では、失効を即時に反映できる経路を先に決めます。<Ref n={5} /></p>
         </>
       ),
     },
@@ -1049,9 +1052,11 @@ store.fetch("ranking/top", expires_in: 10.minutes) { Article.order(views_count: 
     { title: "Active Job Basics", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/active_job_basics.html", accessed: "2026-11-20", version: "Rails 8.1", note: "ジョブの設定、キュー、再試行、定期実行。" },
     { title: "Packet Too Large", publisher: "MySQL Reference Manual", url: "https://dev.mysql.com/doc/refman/8.4/en/packet-too-large.html", accessed: "2026-11-20", version: "MySQL 8.4", note: "max_allowed_packet の制限。" },
     { title: "Range Optimization", publisher: "MySQL Reference Manual", url: "https://dev.mysql.com/doc/refman/8.4/en/range-optimization.html", accessed: "2026-11-20", version: "MySQL 8.4", note: "多数の値を渡す範囲最適化とメモリー上限。" },
-    { title: "Using EXPLAIN", publisher: "PostgreSQL Documentation", url: "https://www.postgresql.org/docs/current/using-explain.html", accessed: "2026-11-20", note: "実行計画のスキャン方式と EXPLAIN ANALYZE。" },
+    { title: "EXPLAIN Statement", publisher: "MySQL Reference Manual", url: "https://dev.mysql.com/doc/refman/8.4/en/explain.html", accessed: "2026-11-27", version: "MySQL 8.4", note: "EXPLAIN ANALYZE で文を実行し、推定行数と実測値、繰り返し回数を出すこと。" },
     { title: "Solid Cache", publisher: "rails/solid_cache", url: "https://github.com/rails/solid_cache", accessed: "2026-11-20", note: "DB をキャッシュストアに使う構成。" },
     { title: "Caching with Rails", publisher: "Ruby on Rails Guides", url: "https://guides.rubyonrails.org/v8.1/caching_with_rails.html", accessed: "2026-11-20", version: "Rails 8.1", note: "フラグメントやキャッシュストアの使用法。" },
+    { title: "Key eviction", publisher: "Redis Documentation", url: "https://redis.io/docs/latest/develop/reference/eviction/", accessed: "2026-11-27", version: "Redis 8", note: "maxmemory と削除方針の関係。デモと同じ redis:8 イメージで既定値を確認した。" },
+    { title: "RedisCacheStore", publisher: "Rails API", url: "https://api.rubyonrails.org/v8.1/classes/ActiveSupport/Cache/RedisCacheStore.html", accessed: "2026-11-27", version: "Rails 8.1", note: "キャッシュ用 Redis をキューと分けること、接続に失敗したときの読み書き。" },
   ],
 }
 

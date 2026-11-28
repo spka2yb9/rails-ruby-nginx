@@ -16,7 +16,7 @@ const CPUMA = 'https://github.com/seuros/capistrano-puma/blob/v8.1.0'
 const CSIDEKIQ = 'https://github.com/seuros/capistrano-sidekiq/blob/v3.2.0'
 const RAILS = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 30-1 配備先のディレクトリ ---------- */
+/* ---------- 図 45-1 配備先のディレクトリ ---------- */
 function ReleaseLayoutFigure() {
   const shared = ['config/master.key', 'log/', 'storage/', 'tmp/pids/ など', 'public/assets/', 'public/system/']
   return (
@@ -66,7 +66,7 @@ function ReleaseLayoutFigure() {
   )
 }
 
-/* ---------- 図 30-2 配備の段階とフック ---------- */
+/* ---------- 図 45-2 配備の段階とフック ---------- */
 const flowRows: { stage: string; core: string[]; plugin: string[]; accent?: boolean }[] = [
   { stage: 'ステージの読み込み後', core: ['（本体の処理はない）'], plugin: ['rbenv:validate・rbenv:map_bins', 'bundler:map_bins・set_rails_env'] },
   { stage: 'starting', core: ['deploy:check（git:check、shared の作成、', 'linked_files の確認）、前回の REVISION の読み取り'], plugin: ['after: sidekiq:quiet（TSTP）'] },
@@ -117,7 +117,7 @@ function DeployFlowFigure() {
   )
 }
 
-/* ---------- 図 30-3 失敗と切り戻しの状態 ---------- */
+/* ---------- 図 45-3 失敗と切り戻しの状態 ---------- */
 function RollbackFigure() {
   const panels = [
     { x: 20, title: '公開の前に失敗（migrate など）', to: 'old', fresh: 'releases/ に残る', notes: ['current は前のリリースのまま', '失敗したリリースは releases/ に残る', 'revisions.log に記録されない'] },
@@ -159,7 +159,7 @@ function RollbackFigure() {
   )
 }
 
-/* ---------- 図 30-4 ALB の配下で1台ずつ再起動する ---------- */
+/* ---------- 図 45-4 ALB の配下で1台ずつ再起動する ---------- */
 function RollingFigure() {
   const steps = [['① ALB から外す', 'ドレインを待つ'], ['② Puma を', '起動し直す'], ['③ /up が', '200 を返すか確認'], ['④ ALB に戻す', '正常の判定を待つ']]
   const lane = (y: number, name: string) => (
@@ -1263,6 +1263,16 @@ set :puma_phased_restart, true   # 配備のたびに phased restart を使う
             <Ref n={15} />。
           </p>
           <p>
+            <code>systemctl restart</code> は Puma を止めてから起動し直す操作です。ソケットアクティベーション（systemd が待ち受けのソケットを開いておき、起動した Puma に渡す構成）がなければ、Puma が止まった時点で待ち受けが閉じます。新しい Puma が Rails を読み込み終えて待ち受けを始めるまで、Nginx からの接続は拒否され、Nginx は利用者に 502 Bad Gateway を返します
+            <Ref n={32} />。Nginx 1.30.6 と Puma 8.0.2 のコンテナで確かめました。Rails の読み込みの代わりに起動時に4秒待つ Rack アプリを使い、Nginx 経由で 0.25 秒ごとに要求を送りながら Puma を止めて起動し直すと、止めてから新しい Puma が待ち受けを始めるまでの約4秒に送った 17 件が 502 になりました。このとき Nginx のエラーログに残ったのは <code>connect() failed (111: Connection refused)</code> です。
+          </p>
+          <p>
+            502 を避ける方法は2つあります。1つは <code>puma_phased_restart</code> を有効にして phased restart を使う方法です。旧ワーカーが要求を受けている間に、新しいワーカーを1つずつ起動します。ワーカー2つのクラスタ（<code>preload_app! false</code>）に同じ要求を送りながら SIGUSR1 を送ると、44 件すべてが 200 で、どれも 0.01 秒以内に返りました。
+            もう1つは systemd のソケット（<code>puma.socket</code>）を使う方法です。capistrano3-puma では <code>set :puma_enable_socket_service, true</code> にすると（既定は false）、<code>puma:install</code> がソケットのユニットも書き出します
+            <Ref n={15} />。待ち受けは systemd が開いたままにするので、<code>systemctl restart</code> の間に届いた接続はカーネルの待ち行列で待ち、新しい Puma が起動してから処理されます
+            <Ref n={32} />。systemd の代わりに Ruby のプロセスに待ち受けを持たせ、Puma に同じ方法（環境変数 <code>LISTEN_FDS</code>）で渡して試すと、502 は出ませんでした。起動中に届いた要求は最長 4.52 秒待ってから 200 になりました。起動にかかる時間は、Nginx が応答を待つ <code>proxy_read_timeout</code>（既定 60 秒）より短くしておきます。再起動の方式の違いは<ChapterLink n={23} section="puma-commands" />にあります。
+          </p>
+          <p>
             phased restart を使えるのは、<code>preload_app!</code> を無効にし、<code>prune_bundler</code> を設定した、ワーカーが2つ以上のクラスタの構成です。Puma 本体を更新するときや Ruby を上げるときは <code>restart</code> を使います。どちらの場合も、Puma が起動しただけでは、アプリケーションが正しく応答するかは分からないので、応答の確認は自作のタスクで加えます。
           </p>
           <h3>自作のタスクで systemctl を呼ぶ</h3>
@@ -1531,7 +1541,7 @@ bundle exec cap production deploy:rollback
           </p>
           <h3>--dry-run で確かめられること</h3>
           <p>
-            <code>--dry-run</code> は SSHKit のバックエンドを Printer に切り替え、コマンドを表示するだけで配備先には接続しません。段階の順序やフックの並びは確かめられますが、<code>test</code> は常に true を、<code>capture</code> は空の文字列を返すので、その結果で分岐する処理は実際の配備とは別の分岐に進みます
+            <code>--dry-run</code> を指定すると、SSHKit の遠隔実行を担当するバックエンドが Printer に変わります。Printer は接続せずにコマンドを表示し、正常に表示できた <code>test</code> には true、<code>capture</code> には空文字列を返します。その値で分岐するタスクは実際の配備と異なる経路を通ることがあります。タスクを定義した Ruby コード自体は動くため、SSHKit を経由しないファイル操作などはタスクごとに確認します
             <Ref n={10} />
             <Ref n={11} />。
           </p>
@@ -1947,7 +1957,7 @@ dev rolled back to release 20261120093900
     { title: 'lib/capistrano/tasks/bundler.cap・hooks.cap', publisher: 'capistrano/bundler（GitHub）', url: `${BUNDLER}/lib/capistrano/tasks/bundler.cap`, accessed: '2026-11-20', version: 'capistrano-bundler 2.2.0', note: 'bundler:config と bundler:install、bundle_path などの既定値、bundle_version による bundle config set、フックの位置。' },
     { title: 'lib/capistrano/tasks/assets.rake・migrations.rake', publisher: 'capistrano/rails（GitHub）', url: `${CRAILS}/lib/capistrano/tasks/assets.rake`, accessed: '2026-11-20', version: 'capistrano-rails 1.7.0', note: 'アセットの作成とマニフェストの退避・復元、public/assets の追加、keep_assets、migration_role と primary、conditionally_migrate。' },
     { title: 'lib/capistrano/tasks/rbenv.rake・README', publisher: 'capistrano/rbenv（GitHub）', url: `${RBENV}/lib/capistrano/tasks/rbenv.rake`, accessed: '2026-11-20', version: 'capistrano-rbenv 2.2.0', note: 'rbenv:validate と rbenv:map_bins、rbenv_type・rbenv_ruby・rbenv_map_bins、.ruby-version を使う場合。' },
-    { title: 'capistrano3-puma: README・lib/capistrano/puma・tasks/systemd.rake・templates/puma.service.erb', publisher: 'seuros/capistrano-puma（GitHub）', url: `${CPUMA}/lib/capistrano/tasks/systemd.rake`, accessed: '2026-11-20', version: 'capistrano3-puma 8.1.0', note: 'install_plugin、puma:install とユーザー単位のユニット、smart_restart・reload・restart、published の後のフック、load_hooks、ユニットの ExecStart・ExecReload・Type=notify。' },
+    { title: 'capistrano3-puma: README・lib/capistrano/puma・tasks/systemd.rake・templates/puma.service.erb', publisher: 'seuros/capistrano-puma（GitHub）', url: `${CPUMA}/lib/capistrano/tasks/systemd.rake`, accessed: '2026-11-28', version: 'capistrano3-puma 8.1.0', note: 'install_plugin、puma:install とユーザー単位のユニット、smart_restart・reload・restart、published の後のフック、load_hooks、ユニットの ExecStart・ExecReload・Type=notify、puma_enable_socket_service（既定 false）と templates/puma.socket.erb。' },
     { title: 'capistrano-sidekiq: README・tasks/sidekiq.rake・tasks/systemd.rake', publisher: 'seuros/capistrano-sidekiq（GitHub）', url: `${CSIDEKIQ}/lib/capistrano/tasks/sidekiq.rake`, accessed: '2026-11-20', version: 'capistrano-sidekiq 3.2.0', note: 'quiet・stop・start・restart のフックと TSTP、worker ロール、systemd での操作。' },
     { title: 'Deployment', publisher: 'sidekiq/sidekiq Wiki', url: 'https://github.com/sidekiq/sidekiq/wiki/Deployment', accessed: '2026-11-20', note: 'TSTP を配備の早い段階で送ること、TERM と -t の既定値25秒、終わらなかったジョブを Redis に戻すこと。' },
     { title: 'railties/lib/rails/commands/credentials/USAGE', publisher: 'rails/rails（GitHub）', url: `${RAILS}/railties/lib/rails/commands/credentials/USAGE`, accessed: '2026-11-20', version: 'Rails 8.1.4.1', note: 'master.key をコミットしないこと、RAILS_MASTER_KEY の優先、環境別の credentials と鍵のパス。' },
@@ -1964,6 +1974,7 @@ dev rolled back to release 20261120093900
     { title: 'Solid Cache', publisher: 'rails/solid_cache', url: 'https://github.com/rails/solid_cache', accessed: '2026-11-20', note: 'DB をキャッシュストアに使う構成。' },
     { title: 'Solid Cable', publisher: 'rails/solid_cable', url: 'https://github.com/rails/solid_cable', accessed: '2026-11-20', note: 'DB による Action Cable の配信。' },
     { title: 'kamal rollback', publisher: 'Kamal Documentation', url: 'https://kamal-deploy.org/docs/commands/rollback/', accessed: '2026-11-20', version: 'Kamal 2', note: '以前のアプリのイメージへ戻す方法。' },
+    { title: 'Puma: docs/systemd.md（Socket Activation）', publisher: 'puma/puma（GitHub）', url: 'https://github.com/puma/puma/blob/v8.0.2/docs/systemd.md', accessed: '2026-11-28', version: 'Puma 8.0.2', note: 'ソケットアクティベーションなしの systemctl restart では新しい Puma の起動中に待ち受けのソケットが閉じること、puma.socket があれば待ち受けを開いたまま新しい Puma に渡すこと。502 と待ち時間は nginx 1.30.6 と Puma 8.0.2 のコンテナで実測。' },
   ],
 }
 

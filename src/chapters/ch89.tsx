@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 70-1 決済の処理の構成と、時間が見えない箇所 ---------- */
+/* ---------- 図 87-1 決済の処理の構成と、時間が見えない箇所 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="70-1"
+      id="87-1"
       w={780}
       h={410}
       label="ブラウザーが POST /orders/6/checkout を送ると、CheckoutsController#create が注文を読み、PaymentGateway で決済代行の API を呼び、注文を更新する。PaymentGateway は Faraday の json・retry・net_http を順に通り、タイムアウトの1.0秒を超えると retry が1回やり直す。決済代行の API は6回に1回、応答に1.5秒かかる。コントローラーは log/production.log に自由な文の2行を書く。問題は4つ。Completed の行には ActiveRecord と Views の時間しか出ず残りの約1秒の内訳がない、やり直しがログに出ない、自由な文に金額・時間・回数がない、何件が遅いかは行を数えないとわからない"
@@ -52,7 +53,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 70-2 request_id でつながるログ ---------- */
+/* ---------- 図 87-2 request_id でつながるログ ---------- */
 const reqFill = { a: 'box', b: 'box2', c: 'box3', d: 'box4', e: 'box5' } as const
 const reqId = { a: '971f8d99', b: 'd8bffe7b', c: '09e22bef', d: '932f4580', e: 'f4de6736' } as const
 type ReqKey = keyof typeof reqId
@@ -81,7 +82,7 @@ function RequestIdFigure() {
   const rowY = (i: number) => 52 + i * 24
   return (
     <Svg
-      id="70-2"
+      id="87-2"
       w={780}
       h={436}
       label="左は本番の設定で書かれたログの14行を、書かれた順に並べたもの。5件の決済の要求が同時に進むので、Started の行、決済を開始しますの行、決済が完了しましたの行が入り混じる。行の先頭には要求ごとの request_id が付いていて、色で区別している。右は request_id ごとに並べ直したもので、注文 A0001 の要求は Started、開始、完了、Completed 287ms の4行、注文 A0002 の要求は同じ4行で Completed 263ms になる。11行目の決済が完了しましたは、request_id がなければ A0001 から A0005 のどれの行か決められない"
@@ -140,7 +141,7 @@ function RequestIdFigure() {
   )
 }
 
-/* ---------- 図 70-4 Rails の計測の仕組み ---------- */
+/* ---------- 図 87-4 Rails の計測の仕組み ---------- */
 function InstrumentFigure() {
   const cols = [
     { x: 20, w: 170 },
@@ -151,7 +152,7 @@ function InstrumentFigure() {
   const cx = (i: number) => cols[i].x + cols[i].w / 2
   return (
     <Svg
-      id="70-4"
+      id="87-4"
       w={780}
       h={500}
       label="Rails の部品、Faraday の instrumentation、アプリのコードが ActiveSupport::Notifications の instrument でイベントを発行する。購読するのは4つ。LogSubscriber は人が読む文のログを log/production.log に書く。StructuredEventSubscriber は Rails 8.1 で入った仕組みで、イベントを Rails.event の出来事に変える。Rails.event には、アプリのコードが notify で直接送る出来事と、EventContext ミドルウェアが set_context で入れる request_id も入る。Rails.event の購読者 JsonEventLog は、出来事を1行の JSON にして log/events.log に書く。Tracer は start と finish で入れ子を記録して log/traces.log に書く。メトリクスの購読は Metrics に数を足し、GET /metrics で Prometheus の形式で返す"
@@ -194,7 +195,7 @@ function InstrumentFigure() {
   )
 }
 
-/* ---------- 図 70-5 遅かった要求のトレース ---------- */
+/* ---------- 図 87-5 遅かった要求のトレース ---------- */
 const spans: { name: string; depth: number; start: number; dur: number; note: string; danger?: boolean; fill?: 'box' | 'box4' | 'box5' }[] = [
   { name: 'process_action.action_controller', depth: 0, start: 0, dur: 1081.0, note: '1081.0ms' },
   { name: 'sql.active_record', depth: 1, start: 2.0, dur: 2.8, note: 'SELECT 2.8ms', fill: 'box4' },
@@ -212,7 +213,7 @@ function TraceFigure() {
   const rowY = (i: number) => 74 + i * 30
   return (
     <Svg
-      id="70-5"
+      id="87-5"
       w={780}
       h={350}
       label="注文 A0008 の決済の要求（1081ms）のスパンを、開始の時刻の順に横棒で並べた。process_action が全体で1081.0ms、その下に SELECT が2.8ms、charge.checkout が1064.3ms。charge.checkout の下に決済代行への要求が2つあり、1つ目は Faraday::TimeoutError で1007.2ms、約50ms 待ってから送った2つ目は200で2.4ms。そのあと UPDATE が0.9ms、その中の BEGIN が0.4ms、COMMIT が8.3ms。時間のほとんどは、1つ目の要求がタイムアウトするまで待った時間だった"
@@ -238,7 +239,8 @@ function TraceFigure() {
               {s.name}
             </T>
             <rect x={bx} y={rowY(i) - 9} width={bw} height={18} rx={2} fill={`var(--fig-${s.fill ?? 'box'})`} stroke={s.danger ? 'var(--fig-danger)' : 'var(--fig-line)'} strokeWidth={s.danger ? 2 : 1} />
-            <T x={wide ? bx + bw - 6 : i === 1 ? bx + bw + 6 : bx - 6} y={rowY(i)} fs={10} anchor={wide || i !== 1 ? 'end' : 'start'} tone={s.danger ? 'danger' : undefined}>
+            {/* 棒の左に置く文字は、1000ms の目盛りの線より左で終える */}
+            <T x={wide ? bx + bw - 6 : i === 1 ? bx + bw + 6 : Math.min(bx - 6, x0 + 1000 * k - 5)} y={rowY(i)} fs={10} anchor={wide || i !== 1 ? 'end' : 'start'} tone={s.danger ? 'danger' : undefined}>
               {s.note}
             </T>
           </g>
@@ -251,7 +253,7 @@ function TraceFigure() {
   )
 }
 
-/* ---------- 図 70-6 直す前と後で、同じように遅い要求について見えるもの ---------- */
+/* ---------- 図 87-6 直す前と後で、同じように遅い要求について見えるもの ---------- */
 const compareRows = [
   ['30件のうち何件が1秒を超えたか', 'Completed の行を全部読んで数える', '/metrics：le="1.0" が26、+Inf が30 → 4件'],
   ['遅い要求の中で何が起きたか', '「決済が完了しました」の1行だけ', 'events.log：決済代行への要求が2件'],
@@ -264,7 +266,7 @@ function BeforeAfterFigure() {
   const bar = (ms: number) => ms * k
   return (
     <Svg
-      id="70-6"
+      id="87-6"
       w={780}
       h={350}
       label="上の横棒は、直す前のログで見える注文 A0006 の要求の1095ms の内訳。ActiveRecord が27.9ms、Views が0.1ms で、残りの約1067ms には内訳がない。下の横棒は、直したあとのトレースで見える注文 A0008 の要求の1081ms の内訳。SELECT のあと、決済代行への1回目の要求がタイムアウトするまでの1007ms、待つ50ms、2回目の要求の2.4ms、UPDATE と COMMIT が続く。下の表は3つの問いについて、直す前と直したあとで何を見れば答えられるかを比べたもの。何件が1秒を超えたかは、直す前は Completed の行を全部数え、直したあとは /metrics のヒストグラムで4件とわかる。遅い要求の中で何が起きたかは、直す前は決済が完了しましたの1行だけ、直したあとは events.log の決済代行への要求2件。どこで時間がかかったかは、直す前は ActiveRecord と Views 以外の約1秒、直したあとは traces.log の1回目の要求の1007ms"
@@ -324,11 +326,11 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 70-7 何を、どのシグナルに記録するか ---------- */
+/* ---------- 図 87-7 何を、どのシグナルに記録するか ---------- */
 function OveruseFigure() {
   return (
     <Svg
-      id="70-7"
+      id="87-7"
       w={780}
       h={430}
       label="横軸は値の種類の数（左が少ない、右が多いか上限がない）、縦軸は調べるときの単位（下が全体の数で足りる、上が1件ごとに見たい）。左下は、メトリクスのラベルにする値で、action や result のように種類が少なく、系列の数が増えない。右上は、ログやトレースの項目にする値で、request_id・order_id・payment_id のように1件ずつ検索する。右下は、メトリクスのラベルにしない値で、order_id をラベルにすると30件の決済で /metrics が18行から258行に増えた。左上は、ログの項目にもメトリクスのラベルにもする値で、エラーのクラス名のように、件数はメトリクスで、1件の様子はログで見る。図の下には、カードのトークンやパスワードはどこにも書かないこと、filter_parameters に入れ、JSON の文字列にしてから渡さないこと（文字列にした例では34回残った）を書いている"
@@ -474,11 +476,11 @@ run lambda { |env|
 }
 `}
           />
-          <Figure n="70-1" title="決済の処理の構成と、時間が見えない箇所" caption="実線は呼び出し、破線はログへの書き込み。赤い文字はログから答えられない問いに関係する箇所。">
+          <Figure n="87-1" title="決済の処理の構成と、時間が見えない箇所" caption="実線は呼び出し、破線はログへの書き込み。赤い文字はログから答えられない問いに関係する箇所。">
             <SceneFigure />
           </Figure>
           <p>
-            図 70-1 は1件の決済で通る部品と、ログに残るものを並べたものです。決済代行への要求は Faraday のミドルウェアを順に通り、retry のミドルウェアがタイムアウトのときに要求をやり直します。コントローラーがログに書くのは、自由な文の2行だけです。
+            図 87-1 は1件の決済で通る部品と、ログに残るものを並べたものです。決済代行への要求は Faraday のミドルウェアを順に通り、retry のミドルウェアがタイムアウトのときに要求をやり直します。コントローラーがログに書くのは、自由な文の2行だけです。
           </p>
           <h3>30件の決済を送って、ログを読む</h3>
           <p>
@@ -544,11 +546,11 @@ kill $APP $GW; wait 2>/dev/null || true
           <p>
             5件の要求が同時に進むので、行は入り混じります。各行の先頭の <code>[971f8d99-…]</code> は、Rails が要求ごとに付ける要求の ID（request_id）です。本番の設定ファイルの <code>config.log_tags = [ :request_id ]</code> により、すべての行の先頭に付きます（<ChapterLink n={25} section="request-id" />）<Ref n={7} />。
           </p>
-          <Figure n="70-2" title="request_id でつながるログ" caption="上のログの14行を、request_id ごとに色を分けて並べた。右は request_id で行を分けたもの。">
+          <Figure n="87-2" title="request_id でつながるログ" caption="上のログの14行を、request_id ごとに色を分けて並べた。右は request_id で行を分けたもの。">
             <RequestIdFigure />
           </Figure>
           <p>
-            図 70-2 の左の11行目の「決済が完了しました」には、注文の番号がありません。request_id がなければ、A0001〜A0005 のどの要求の行かは決められません。request_id で分けると、右のように1件の要求の行だけを読めます。遅かった注文 6 の要求の行を、request_id で取り出しました。
+            図 87-2 の左の11行目の「決済が完了しました」には、注文の番号がありません。request_id がなければ、A0001〜A0005 のどの要求の行かは決められません。request_id で分けると、右のように1件の要求の行だけを読めます。遅かった注文 6 の要求の行を、request_id で取り出しました。
           </p>
           <Code
             lang="text"
@@ -619,7 +621,7 @@ kill $APP $GW; wait 2>/dev/null || true
               トレースは1つの要求が通った経路の記録です。トレースは1つ以上の<Term en="span">スパン</Term>からなり、スパンは1つの処理の名前・時刻・属性を持ちます。最初のスパン（ルートスパン）が要求の始まりから終わりまでを表し、その下のスパンが要求の中の各段階を表します<Ref n={1} />。
             </li>
           </ul>
-          <Figure n="70-3" title="ログ・メトリクス・トレースの違い" caption="この章のデモで書く場所と、データの量が増える条件。">
+          <Figure n="87-3" title="ログ・メトリクス・トレースの違い" caption="この章のデモで書く場所と、データの量が増える条件。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -658,7 +660,7 @@ kill $APP $GW; wait 2>/dev/null || true
             </div>
           </Figure>
           <p>
-            図 70-3 のように、3つのシグナルは答えやすい問いが違います。前の節の3つの問いのうち、「何件が遅いか」はメトリクスで、「その要求で何が起きたか」はログで、「どこで時間がかかったか」はトレースで答えます。
+            図 87-3 のように、3つのシグナルは答えやすい問いが違います。前の節の3つの問いのうち、「何件が遅いか」はメトリクスで、「その要求で何が起きたか」はログで、「どこで時間がかかったか」はトレースで答えます。
           </p>
           <p>
             メトリクスで処理時間を数えるときは、平均だけを見ないようにします。SRE の書籍は、平均の遅延が 100ms のサービスでも1%の要求が5秒かかることがあると述べ、処理時間を範囲ごとに数える（ヒストグラムにする）ことを勧めています<Ref n={5} />。この章の場面でも、30件の Completed の行の処理時間の平均は約 330ms ですが、5件は1秒を超えていました。
@@ -962,11 +964,11 @@ end
           <p>
             スタックが空になったとき（ルートスパンの process_action が終わったとき）に、要求の ID をトレースの ID として、スパンをまとめて1行に書きます。スパンの ID は W3C Trace Context の parent-id と同じ8バイトの乱数にしました。
           </p>
-          <Figure n="70-4" title="Rails の計測の仕組み（ActiveSupport::Notifications と Rails.event）" caption="この章で足したのは、EventContext・PaymentGatewayEventSubscriber・JsonEventLog・Tracer・メトリクスの購読と Metrics。ほかは Rails と Faraday にある部品。">
+          <Figure n="87-4" title="Rails の計測の仕組み（ActiveSupport::Notifications と Rails.event）" caption="この章で足したのは、EventContext・PaymentGatewayEventSubscriber・JsonEventLog・Tracer・メトリクスの購読と Metrics。ほかは Rails と Faraday にある部品。">
             <InstrumentFigure />
           </Figure>
           <p>
-            図 70-4 はここまでの部品の関係です。Rails の部品・Faraday・アプリのコードが発行したイベントを、4種類の購読者が受け取ります。Rails が昔から持っている LogSubscriber は人が読む文のログを書き、Rails 8.1 の StructuredEventSubscriber はイベントを Rails.event の出来事に変えます。同じイベントから、ログ・トレース・メトリクスの3つを作っています。
+            図 87-4 はここまでの部品の関係です。Rails の部品・Faraday・アプリのコードが発行したイベントを、4種類の購読者が受け取ります。Rails が昔から持っている LogSubscriber は人が読む文のログを書き、Rails 8.1 の StructuredEventSubscriber はイベントを Rails.event の出来事に変えます。同じイベントから、ログ・トレース・メトリクスの3つを作っています。
           </p>
           <h3>手順6：同じ30件を送り、メトリクス → ログ → トレースの順に調べる</h3>
           <p>同じ script/load.sh で30件を送り、最後に GET /metrics の応答を log/metrics.txt に保存しました。まずメトリクスで、遅い要求が何件あるかを確かめます。</p>
@@ -1020,17 +1022,17 @@ trace_id=8ef612dc-b001-4c0f-8453-df5ee8cc0144
   + 1072.3ms     8.3ms    sql.active_record                  COMMIT
 `}
           />
-          <Figure n="70-5" title="遅かった要求のトレース" caption="上のトレースのスパンを、開始の時刻と長さで横棒にした。赤い枠はタイムアウトした要求。">
+          <Figure n="87-5" title="遅かった要求のトレース" caption="上のトレースのスパンを、開始の時刻と長さで横棒にした。赤い枠はタイムアウトした要求。">
             <TraceFigure />
           </Figure>
           <p>
-            図 70-5 のとおり、1081ms のうち 1007ms は、決済代行への1回目の要求がタイムアウトするまで待った時間でした。その後、retry の interval の 0.05 秒（+1018ms から +1068ms）を待って2回目を送っています。BEGIN が UPDATE のスパンの中にあるのは、Active Record がトランザクションの BEGIN を最初の SQL を送る直前まで遅らせ、UPDATE の sql.active_record のイベントの中で送るからです<Ref n={19} />。
+            図 87-5 のとおり、1081ms のうち 1007ms は、決済代行への1回目の要求がタイムアウトするまで待った時間でした。その後、retry の interval の 0.05 秒（+1018ms から +1068ms）を待って2回目を送っています。BEGIN が UPDATE のスパンの中にあるのは、Active Record がトランザクションの BEGIN を最初の SQL を送る直前まで遅らせ、UPDATE の sql.active_record のイベントの中で送るからです<Ref n={19} />。
           </p>
-          <Figure n="70-6" title="直す前と後で、同じように遅い要求について見えるもの" caption="上の2本の横棒は、直す前の注文 A0006 の要求と、直したあとの注文 A0008 の要求。どちらも決済代行の応答が遅かった要求。">
+          <Figure n="87-6" title="直す前と後で、同じように遅い要求について見えるもの" caption="上の2本の横棒は、直す前の注文 A0006 の要求と、直したあとの注文 A0008 の要求。どちらも決済代行の応答が遅かった要求。">
             <BeforeAfterFigure />
           </Figure>
           <p>
-            図 70-6 は直す前と後で、同じように遅い要求について見えるものを比べたものです。直す前は 1095ms のうち約 1067ms に内訳がありませんでしたが、直したあとは、その時間がタイムアウトまでの待ち時間とやり直しだとわかります。
+            図 87-6 は直す前と後で、同じように遅い要求について見えるものを比べたものです。直す前は 1095ms のうち約 1067ms に内訳がありませんでしたが、直したあとは、その時間がタイムアウトまでの待ち時間とやり直しだとわかります。
           </p>
           <p>
             原因がわかったので、次の判断ができます。
@@ -1209,11 +1211,11 @@ $ grep -o 'tok_[0-9a-f]*' verbose/events.log | wc -l
             </li>
           </ul>
           <h3>判断の目安</h3>
-          <Figure n="70-7" title="何をどのシグナルに記録するか" caption="横軸は値の種類の数、縦軸は調べるときの単位。下の枠はどのシグナルにも書かない値。">
+          <Figure n="87-7" title="何をどのシグナルに記録するか" caption="横軸は値の種類の数、縦軸は調べるときの単位。下の枠はどのシグナルにも書かない値。">
             <OveruseFigure />
           </Figure>
           <p>
-            図 70-7 は記録する値を、値の種類の数と、調べるときの単位で分けたものです。注文の ID は、ログやトレースの項目にすれば1件ずつ検索できますが、メトリクスのラベルにすると、注文の数だけ系列が増えます。同じ値でも、置く場所で役に立つかどうかが変わります。
+            図 87-7 は記録する値を、値の種類の数と、調べるときの単位で分けたものです。注文の ID は、ログやトレースの項目にすれば1件ずつ検索できますが、メトリクスのラベルにすると、注文の数だけ系列が増えます。同じ値でも、置く場所で役に立つかどうかが変わります。
           </p>
           <ul>
             <li>何を記録するかは答えたい問いから決めます。この章の3つの問いには、request_started・payment_gateway.request・checkout.paid・request_completed の4種類の出来事と、2つのメトリクスと、トレースで答えられました。</li>
@@ -1299,6 +1301,29 @@ end
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          何を記録するかは答えたい問いから決めます。この章では「何件が遅いか」をメトリクスのヒストグラムで、「その要求で何が起きたか」を request_id の付いた出来事で、「どこで時間がかかったか」をトレースで答えられるようにしました。SQL の全文や要求の本文は常には出さず、調べている間だけ一部の要求で出します。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、遅かった注文 6 の要求の 1095ms のうち約 1067ms の内訳がログから分からなかった。直した後は、メトリクスで30件のうち4件が1秒を超えてタイムアウトも4回あったと分かり、ログとトレースで、1回目の決済代行への要求がタイムアウトするまでの 1007ms とやり直しが原因だと分かった。</>,
+        basis: <><ChapterLink n={89} section="scene" />、<ChapterLink n={89} section="apply" /></>,
+      },
+      cost: {
+        text: <>何でも記録した版では、出来事のファイルが約2.7倍になり、文字列で渡したカードのトークンが34回残り、注文の ID をラベルにしたメトリクスは 18 行から 258 行に増えた。記録のコードにも誤りが入るので（手順3の error_of）、記録した値が実際と合うかをテストで確かめる必要がある。</>,
+        basis: <><ChapterLink n={89} section="overuse" />、<ChapterLink n={89} section="apply" /></>,
+      },
+      alternative: {
+        text: <>注文の ID はメトリクスのラベルにせず、ログやトレースの項目にして1件ずつ検索する。秘密の値は filter_parameters に名前を入れ、JSON や SQL の文字列ではなく Hash の項目として渡す。トレースはすべての要求ではなく標本を記録する。</>,
+        basis: <ChapterLink n={89} section="overuse" />,
+      },
+      criterion: {
+        text: <>次に同じ問いが出たとき、今のデータで答えられるか。その値の種類の数と、調べるときの単位（1件ずつか、件数の分布か）に合った置き場所か。ログに残すと困る値（カードのトークン）が混ざらないか。</>,
+        basis: <ChapterLink n={89} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

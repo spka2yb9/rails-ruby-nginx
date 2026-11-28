@@ -6,43 +6,43 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 1-4 本番構成と本書の章 ---------- */
+/* ---------- 図 2-4 本番構成と本書の章 ---------- */
 function ArchitectureFigure() {
   return (
     <Svg
-      id="1-4"
+      id="2-4"
       w={620}
       h={566}
-      label="本番構成の模式図。上から順に、ブラウザー、ALB（第28章）、Nginx（第27章）、Puma（第26章）、Rails アプリケーションが並ぶ。Rails アプリケーションの中は Rack ミドルウェア（第6章）、ルーティング（第9章）、コントローラー（第10章）、ActiveRecord（第3部）と ActionView（第20章）の順に処理が進む。ActiveRecord は MySQL に SQL を送る。右側では Rails が Redis にジョブを登録し、Sidekiq（第21章）がそれを取り出して実行し、MySQL にアクセスする"
+      label="本番構成の模式図。上から順に、ブラウザー、ALB（第41章）、Nginx（第40章）、Puma（第39章）、Rails アプリケーションが並ぶ。Rails アプリケーションの中は Rack ミドルウェア（第11章）、ルーティング（第15章）、コントローラー（第16章）、ActiveRecord（第3部）と ActionView（第27章）の順に処理が進む。ActiveRecord は MySQL に SQL を送る。右側では Rails が Redis にジョブを登録し、Sidekiq（第28章）がそれを取り出して実行し、MySQL にアクセスする"
     >
       <Box x={30} y={16} w={380} h={40} lines="ブラウザー（クライアント）" fill="bg" />
       <Arrow x1={220} y1={56} x2={220} y2={80} />
       <T x={230} y={68} fs={12} tone="muted">HTTPS</T>
       <Box x={30} y={80} w={380} h={44} lines={['ALB（ロードバランサー）', 'TLS を終端し、サーバーに振り分ける']} bold subTone="muted" />
-      <T x={400} y={102} fs={12} anchor="end" tone="acc">第28章</T>
+      <T x={400} y={102} fs={12} anchor="end" tone="acc">第41章</T>
       <Arrow x1={220} y1={124} x2={220} y2={148} />
       <T x={230} y={136} fs={12} tone="muted">HTTP</T>
       <Box x={30} y={148} w={380} h={44} lines={['Nginx', '静的ファイルを返し、それ以外を Puma へ転送']} bold subTone="muted" />
-      <T x={400} y={170} fs={12} anchor="end" tone="acc">第27章</T>
+      <T x={400} y={170} fs={12} anchor="end" tone="acc">第40章</T>
       <Arrow x1={220} y1={192} x2={220} y2={216} />
       <T x={230} y={204} fs={12} tone="muted">HTTP</T>
       <Box x={30} y={216} w={380} h={44} lines={['Puma', 'ワーカー（プロセス）× スレッドで実行']} bold subTone="muted" />
-      <T x={400} y={238} fs={12} anchor="end" tone="acc">第26章</T>
+      <T x={400} y={238} fs={12} anchor="end" tone="acc">第39章</T>
       <Arrow x1={220} y1={260} x2={220} y2={284} />
       <T x={230} y={272} fs={12} tone="muted">Rack の呼び出し（call）</T>
 
       <rect x={30} y={284} width={380} height={202} rx={8} fill="var(--fig-bg)" stroke="var(--fig-line)" />
       <T x={46} y={300} bold>Rails アプリケーション</T>
       <T x={400} y={300} fs={12} anchor="end" tone="acc">第2〜4部</T>
-      <Box x={50} y={316} w={340} h={28} lines="Rack ミドルウェア（第6章）" />
+      <Box x={50} y={316} w={340} h={28} lines="Rack ミドルウェア（第11章）" />
       <Arrow x1={220} y1={344} x2={220} y2={358} />
-      <Box x={50} y={358} w={340} h={28} lines="ルーティング（第9章）" />
+      <Box x={50} y={358} w={340} h={28} lines="ルーティング（第15章）" />
       <Arrow x1={220} y1={386} x2={220} y2={400} />
-      <Box x={50} y={400} w={340} h={28} lines="コントローラー（第10章）" />
+      <Box x={50} y={400} w={340} h={28} lines="コントローラー（第16章）" />
       <Arrow x1={132} y1={428} x2={132} y2={442} />
       <Arrow x1={307} y1={428} x2={307} y2={442} />
       <Box x={50} y={442} w={165} h={28} lines="ActiveRecord（第3部）" fs={12} />
-      <Box x={225} y={442} w={165} h={28} lines="ActionView（第20章）" fs={12} />
+      <Box x={225} y={442} w={165} h={28} lines="ActionView（第27章）" fs={12} />
 
       <Arrow x1={132} y1={470} x2={132} y2={510} />
       <T x={140} y={494} fs={12} tone="muted">SQL</T>
@@ -53,18 +53,18 @@ function ArchitectureFigure() {
       <Box x={460} y={316} w={140} h={40} lines="Redis" fill="box4" />
       <Arrow x1={530} y1={356} x2={530} y2={400} />
       <T x={538} y={378} fs={12} tone="muted">取り出し</T>
-      <Box x={460} y={400} w={140} h={48} lines={['Sidekiq', '第21章']} bold subTone="acc" />
+      <Box x={460} y={400} w={140} h={48} lines={['Sidekiq', '第28章']} bold subTone="acc" />
       <Arrow d="M530,448 V530 H217" />
       <T x={540} y={490} fs={12} tone="muted">SQL</T>
     </Svg>
   )
 }
 
-/* ---------- 図 1-5 Rails を構成する gem の依存関係 ---------- */
+/* ---------- 図 2-5 Rails を構成する gem の依存関係 ---------- */
 function GemDependencyFigure() {
   return (
     <Svg
-      id="1-5"
+      id="2-5"
       w={640}
       h={330}
       label="Rails 8.1.4.1 を構成する gem の実行時の依存関係。最上段に railties、actioncable、actionmailer、activestorage がある。railties と actioncable は actionpack に依存する。actionmailer は actionpack、actionview、activejob に依存する。activestorage は actionpack、activerecord、activejob に依存する。中段の actionpack は actionview に、activerecord は activemodel に依存する。最下段の activesupport には全 gem が依存する"
@@ -97,7 +97,7 @@ function GemDependencyFigure() {
   )
 }
 
-/* ---------- 図 1-6 process_action の super の連鎖 ---------- */
+/* ---------- 図 2-6 process_action の super の連鎖 ---------- */
 const processActionChain: [string, string][] = [
   ['ActiveRecord::Railties::ControllerRuntime', 'DB の処理時間の集計をリセット'],
   ['ActionController::ParamsWrapper', 'JSON などのパラメーターをラップ'],
@@ -113,7 +113,7 @@ function ProcessActionChainFigure() {
   const step = 52
   return (
     <Svg
-      id="1-6"
+      id="2-6"
       w={640}
       h={top + step * processActionChain.length - 4}
       label={`ApplicationController#process_action を呼んだときに super でたどられる7つの定義。上から順に ${processActionChain.map(([m, r]) => `${m}（${r}）`).join('、')}`}
@@ -141,11 +141,11 @@ function ProcessActionChainFigure() {
   )
 }
 
-/* ---------- 図 1-7 本書の図の凡例 ---------- */
+/* ---------- 図 2-7 本書の図の凡例 ---------- */
 function LegendFigure() {
   return (
     <Svg
-      id="1-7"
+      id="2-7"
       w={600}
       h={250}
       label="本書の図の凡例。灰色の箱はクラス・プロセス・構成要素、橙の箱はモジュール、青の箱は特異クラス、緑の箱はデータ・外部のサービス、紫の箱は特に注目してほしい要素、破線の箱は省略したものや概念上の要素を表す。実線の矢印は処理や呼び出しの流れ、破線の矢印は参照や所属、太い青の矢印は図の中で注目する経路を表す"
@@ -167,11 +167,11 @@ function LegendFigure() {
   )
 }
 
-/* ---------- 図 1-1 HTTP の要求と応答 ---------- */
+/* ---------- 図 2-1 HTTP の要求と応答 ---------- */
 function HttpFigure() {
   return (
     <Svg
-      id="1-1"
+      id="2-1"
       w={780}
       h={330}
       label="ブラウザー（curl）がサーバーに要求を送り、サーバーが応答を返す。要求の1行目は GET /articles HTTP/1.1 で、メソッド・パス・HTTP のバージョンを並べたもの。続く行は Host・User-Agent・Accept のヘッダー。応答の1行目は状態行の HTTP/1.1 200 OK で、200 がステータスコード。続いて content-type と content-length のヘッダー、空行、HTML の本文が並ぶ"
@@ -213,23 +213,23 @@ function HttpFigure() {
         align="start"
         fill="bg"
       />
-      <T x={470} y={236} fs={11} tone="muted">
+      <T x={454} y={236} fs={11} tone="muted">
         状態行（ステータスコード 200）
       </T>
-      <T x={470} y={262} fs={11} tone="muted">
+      <T x={454} y={262} fs={11} tone="muted">
         ヘッダー
       </T>
-      <T x={470} y={287} fs={11} tone="muted">
+      <T x={454} y={287} fs={11} tone="muted">
         空行
       </T>
-      <T x={470} y={304} fs={11} tone="muted">
+      <T x={454} y={304} fs={11} tone="muted">
         本文（HTML）
       </T>
     </Svg>
   )
 }
 
-/* ---------- 図 1-2 モデルとテーブル ---------- */
+/* ---------- 図 2-2 モデルとテーブル ---------- */
 const tableCols: { name: string; value: string; w: number }[] = [
   { name: 'id', value: '1', w: 40 },
   { name: 'title', value: 'はじめての記事', w: 130 },
@@ -241,7 +241,7 @@ function ModelTableFigure() {
   const x0 = 390
   return (
     <Svg
-      id="1-2"
+      id="2-2"
       w={780}
       h={250}
       label="app/models/article.rb の Article クラスは、クラス名を複数形にした articles テーブルに対応する。テーブルの列は id・title・body・created_at など。Article.create! でテーブルに1行が加わり、その行の値を持つ Article のインスタンスが返る。テーブルの1行が、Article の1つのインスタンスに対応する"
@@ -286,11 +286,11 @@ function ModelTableFigure() {
   )
 }
 
-/* ---------- 図 1-3 1つの要求を処理する順番 ---------- */
+/* ---------- 図 2-3 1つの要求を処理する順番 ---------- */
 function RequestFlowFigure() {
   return (
     <Svg
-      id="1-3"
+      id="2-3"
       w={780}
       h={390}
       label="GET /articles の要求を処理する順番。ブラウザーの要求を Puma が受け取って Rails に渡す。1. ルーティング（config/routes.rb）が articles#index に決める。2. コントローラー ArticlesController#index が Article.order(:id).limit(3) で条件を作り、@articles に入れる。この時点では SQL を実行しない。3. ビュー articles/index.html.erb が記事を1件ずつ表示する。4. そのときモデル Article が SQL を MySQL の articles テーブルに送り、記事を取り出す。5. ステータスコード 200 と HTML の応答がブラウザーに返る"
@@ -445,7 +445,7 @@ const ch01: Chapter = {
     'URL から画面ができるまでに、どのファイルが記事を探し、どのファイルが HTML を作るかを追える',
     'アプリで使っている gem のバージョンを調べ、実際に呼ばれたメソッドの定義を開ける',
   ],
-  prerequisites: [],
+  prerequisites: [94],
   sections: [
     {
       id: 'http',
@@ -453,10 +453,7 @@ const ch01: Chapter = {
       body: (
         <>
           <p>
-            ブラウザーのアドレス欄に URL を入力すると、ブラウザーはその URL が示すサーバーに<Term en="request">要求</Term>を送り、サーバーが返した<Term en="response">応答</Term>
-            を画面に表示します。サーバーはネットワークを通じて届いた要求を受け取って応答を返すプログラムで、そのプログラムが動いているコンピューターもサーバーと呼びます。要求と応答の書き方を決めた規則が{' '}
-            <Term en="Hypertext Transfer Protocol">HTTP</Term>です
-            <Ref n={13} />。要求はリクエスト、応答はレスポンスとも呼び、本書でも両方の呼び方を使います。
+            要求と応答の意味、HTTP メソッドやステータスコードの基礎は <ChapterLink n={94} /> で説明します。ここでは記事一覧の通信記録を読み、ブラウザーに届く HTML を作った Rails のコードを見つけます。
           </p>
           <p>
             この章では、記事一覧を開いたときの通信記録を読みます。例の <code>http://127.0.0.1:3300/articles</code> は、記録に使ったデモアプリの URL です。
@@ -504,9 +501,9 @@ const ch01: Chapter = {
           </p>
           <p>
             応答の1行目の <code>HTTP/1.1 200 OK</code> は状態行で、200 が<Term en="status code">ステータスコード</Term>です。ステータスコードは要求をどう処理したかを表す3桁の数で、200 は要求が成功したことを表します。続くヘッダーの
-            content-type は本文が HTML であること、x-runtime は Rails が応答を作るのにかかった秒数、content-length は本文の長さが 2532 バイトであることを表します。空行の後に本文が続きます（図 1-1）。
+            content-type は本文が HTML であること、x-runtime は Rails が応答を作るのにかかった秒数、content-length は本文の長さが 2532 バイトであることを表します。空行の後に本文が続きます（図 2-1）。
           </p>
-          <Figure n="1-1" title="HTTP の要求と応答" caption="curl -v の出力をもとにした模式図。ヘッダーの一部と本文の中身は省略しています。Puma は要求を受け取って Rails に渡すプログラムで、「1つの要求を処理する順番」の節で説明します。">
+          <Figure n="2-1" title="HTTP の要求と応答" caption="curl -v の出力をもとにした模式図。ヘッダーの一部と本文の中身は省略しています。Puma は要求を受け取って Rails に渡すプログラムで、「1つの要求を処理する順番」の節で説明します。">
             <HttpFigure />
           </Figure>
           <Code
@@ -532,63 +529,9 @@ const ch01: Chapter = {
             <Term en="HyperText Markup Language">HTML</Term>は、ページの内容を <code>&lt;ul&gt;</code>（箇条書き）や <code>&lt;li&gt;</code>（その1項目）のようなタグで区切って書く形式です。ブラウザーは受け取った
             HTML を読んで、箇条書きなどの形で画面に表示します。<code>&lt;!--</code> と <code>--&gt;</code> で囲んだ部分は HTML のコメントで、画面には表示されません。このコメントは開発環境の Rails が書き込んだもので、どのファイルから作った部分かを示しています。「1つの要求を処理する順番」の節で、このファイルの中身を見ます。
           </p>
-          <h3>ステータスコード</h3>
-          <p>存在しないパスを要求すると、ステータスコード 404 が返りました。</p>
-          <Code
-            lang="text"
-            title="curl -i http://127.0.0.1:3300/no_such_page の出力（一部を省略）"
-            code={`
-HTTP/1.1 404 Not Found
-content-type: text/html; charset=UTF-8
-`}
-          />
-          <p>
-            ステータスコードは先頭の数字で大まかな意味が決まっていて、200番台は成功、300番台は別の URL を示すもの、400番台は要求の側の誤り、500番台はサーバーの側のエラーを表します
-            <Ref n={15} />。Rails のアプリケーションでよく見るものを次の表に示します。
-          </p>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ステータスコード</th>
-                  <th>意味</th>
-                  <th>返る場面の例</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>200 OK</td>
-                  <td>要求が成功した</td>
-                  <td>記事の一覧を返した</td>
-                </tr>
-                <tr>
-                  <td>302 Found</td>
-                  <td>別の URL を開き直すよう指示する（リダイレクト）</td>
-                  <td>コメントを保存した後、記事のページに移る</td>
-                </tr>
-                <tr>
-                  <td>404 Not Found</td>
-                  <td>求められたものが見つからない</td>
-                  <td>存在しないパスを要求された</td>
-                </tr>
-                <tr>
-                  <td>422 Unprocessable Content</td>
-                  <td>送られた内容を処理できない</td>
-                  <td>入力に誤りがあり、保存できなかった</td>
-                </tr>
-                <tr>
-                  <td>500 Internal Server Error</td>
-                  <td>サーバーの中でエラーが起きた</td>
-                  <td>アプリケーションのコードでエラーが起きた</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
           <h3>GET と POST</h3>
           <p>
-            メソッドは要求で何をしたいかを表します。よく使うのは GET と POST です。GET はページなどを取り出す要求で、アドレス欄に URL を入力したときやリンクを押したときにブラウザーが送ります。POST
-            はフォームに入力した内容などを要求の本文に入れてサーバーに送り、保存などの処理をさせる要求です
-            <Ref n={15} />。デモのコメントの作成ページ（/articles/1/comments/new）が返す HTML には、次のフォームがあります。
+            記事を読む GET と、コメントの入力内容を送る POST では、Rails が呼ぶアクションが変わります。デモのコメントの作成ページ（/articles/1/comments/new）が返す HTML には、次のフォームがあります。
           </p>
           <Code
             lang="html"
@@ -603,7 +546,7 @@ content-type: text/html; charset=UTF-8
           <p>
             <code>method="post"</code> と <code>action="/articles/1/comments"</code> は、送信ボタンを押したときに POST /articles/1/comments の要求を送ることを表し、入力欄の文字は{' '}
             <code>comment[body]=入力した文字</code> の形で要求の本文に入ります。curl でも <code>--data-urlencode</code> で本文を付けると、POST の要求を送れます。次の例の /probe/strong
-            は、第10章の検証用にデモに用意した URL で、受け取ったタイトルを文字で返します。
+            は、第16章の検証用にデモに用意した URL で、受け取ったタイトルを文字で返します。
           </p>
           <Code
             lang="text"
@@ -819,10 +762,10 @@ $ bin/rails runner 'a = Article.create!(title: "はじめての記事", body: "�
             <code>Article.create!</code> は articles テーブルに行を1つ加え、その行の値を持つ Article のインスタンス（Article というクラスから作った、1件の記事のデータを持つ値。
             <ChapterLink n={2} />
             ）を返しました。<code>Article.count</code> はテーブルの行の数です。Rails はクラス名の Article を複数形にした articles をテーブル名として使い、テーブルの列を調べて、title
-            や body と同じ名前で値を読み書きできるようにします。テーブルの1行は Article の1つのインスタンスとして扱います（図 1-2）
+            や body と同じ名前で値を読み書きできるようにします。テーブルの1行は Article の1つのインスタンスとして扱います（図 2-2）
             <Ref n={18} />。
           </p>
-          <Figure n="1-2" title="モデルとテーブル" caption="rails new で作ったアプリケーションでの実行結果をもとにした模式図。updated_at の列は省略しています。">
+          <Figure n="2-2" title="モデルとテーブル" caption="rails new で作ったアプリケーションでの実行結果をもとにした模式図。updated_at の列は省略しています。">
             <ModelTableFigure />
           </Figure>
           <p>
@@ -1035,13 +978,13 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
             業務でページの表示が遅いと言われたときも、同じ順でログを読みます。Completed の行で Views と ActiveRecord のどちらに時間がかかっているかを見て、SQL の行の数と <code>↳</code>{' '}
             の行から、どのファイルのどの行が SQL を実行させたかを確かめます。
           </p>
-          <Figure n="1-3" title="1つの要求を処理する順番" caption="デモのアプリケーション（開発環境）での GET /articles のログをもとにした模式図。Puma と Rails の間のミドルウェアは省略しています。">
+          <Figure n="2-3" title="1つの要求を処理する順番" caption="デモのアプリケーション（開発環境）での GET /articles のログをもとにした模式図。Puma と Rails の間のミドルウェアは省略しています。">
             <RequestFlowFigure />
           </Figure>
           <p>
             ここまでの分担をまとめると、モデル（Article）がデータベースのデータを扱い、ビュー（index.html.erb）が HTML を作り、コントローラー（ArticlesController）が要求を受けてモデルを使い、結果をビューに渡します。この3つに分ける構成を、それぞれの頭文字を取って{' '}
             <Term en="Model-View-Controller">MVC</Term>と呼びます
-            <Ref n={16} />（図 1-3）。
+            <Ref n={16} />（図 2-3）。
           </p>
           <p>
             それぞれの部品は名前で対応していて、routes.rb の <code>resources :articles</code> は ArticlesController に、ArticlesController の index は app/views/articles/index.html.erb に、Article
@@ -1114,7 +1057,7 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
                 </tr>
                 <tr>
                   <td>ActiveJob</td>
-                  <td>メールの送信のように時間のかかる処理を、応答を返した後に、Rails の Web サーバーとは別に動くプログラムで実行する</td>
+                  <td>メールの送信などをジョブとして登録する。別プロセスで実行する構成では、ワーカーがキューからジョブを取り出す</td>
                   <td>app/jobs</td>
                   <td>
                     <ChapterLink n={18} />
@@ -1127,6 +1070,36 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
                   <td>
                     <ChapterLink n={19} />
                   </td>
+                </tr>
+                <tr>
+                  <td>Action Cable・Action Text</td>
+                  <td>Action Cable は WebSocket で通知を配信する。Action Text は書式付き本文を保存し、添付に Active Storage を使う</td>
+                  <td>app/channels、モデルとフォームの宣言</td>
+                  <td><ChapterLink n={19} section="cable-and-text" /></td>
+                </tr>
+                <tr>
+                  <td>Action Dispatch</td>
+                  <td>Rack から受け取った要求をルーティングし、Cookie や例外応答を扱う</td>
+                  <td>config/routes.rb、ミドルウェアの設定</td>
+                  <td><ChapterLink n={6} section="rails-stack" /></td>
+                </tr>
+                <tr>
+                  <td>Active Model</td>
+                  <td>テーブルに保存しない Ruby のクラスでも、入力値の検証などを使えるようにする。Active Record も利用する</td>
+                  <td>フォーム入力を受け取るクラスなど</td>
+                  <td><ChapterLink n={33} section="model-form-objects" /></td>
+                </tr>
+                <tr>
+                  <td>Active Support</td>
+                  <td>時刻の計算、キャッシュ、計測イベントなどを他のコンポーネントに提供する</td>
+                  <td>アプリの各ファイル</td>
+                  <td><ChapterLink n={5} />、<ChapterLink n={22} /></td>
+                </tr>
+                <tr>
+                  <td>Railties</td>
+                  <td>Rails の起動手順を組み立て、コンポーネントや gem の初期化処理を登録する</td>
+                  <td>config/application.rb、config/initializers</td>
+                  <td><ChapterLink n={7} section="railtie" /></td>
                 </tr>
                 <tr>
                   <td>テスト</td>
@@ -1173,10 +1146,10 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
       body: (
         <>
           <p>
-            図 1-4 では、まず左側の「ブラウザー」から「コントローラー」まで矢印を下にたどってください。先ほどの記事一覧の要求が、本番ではどこを通って自分の書いたコードに届くかが分かります。
+            図 2-4 では、まず左側の「ブラウザー」から「コントローラー」まで矢印を下にたどってください。先ほどの記事一覧の要求が、本番ではどこを通って自分の書いたコードに届くかが分かります。
             続いて「コントローラー」から分かれる2本を見てください。一方で記事を読み、もう一方で画面を作ります。各部品の章番号は、その部品を詳しく調べたいときの参照先です。
           </p>
-          <Figure n="1-4" title="本番構成と本書の章" caption="模式図。サーバーの台数、Puma のワーカー数、DB の構成は省略しています。">
+          <Figure n="2-4" title="本番構成と本書の章" caption="模式図。サーバーの台数、Puma のワーカー数、DB の構成は省略しています。">
             <ArchitectureFigure />
           </Figure>
           <p>図の上から順に、各要素の役割を簡単に説明します。</p>
@@ -1223,7 +1196,7 @@ Completed 200 OK in 7ms (Views: 5.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) 
       body: (
         <>
           <p>
-            Rails は、ルーティング、DB 操作、ビュー、ジョブなどが一緒に動く形で提供されるフルスタックのフレームワークです。「1つの要求を処理する順番」の節の記事の例では、routes.rb・コントローラー・ビュー・モデル・テーブルが、名前の決まりに従うだけで結び付きました（設定より規約）。規約に従うと、開発者は名前の対応を設定に書かずに済み、アプリ固有の判断に集中できます。別の Rails アプリを読むときも、同じ決まりで部品の場所を探せます。<Ref n={23} />
+            Rails は、ルーティング、DB 操作、ビュー、ジョブなどが一緒に動く形で提供されるフルスタックのフレームワークです。「1つの要求を処理する順番」の節の記事の例では、routes.rb・コントローラー・ビュー・モデル・テーブルが、名前の決まりに従うだけで結び付きました（設定より規約）。規約に従うと、開発者は名前の対応を設定に書かずに済み、アプリ固有の判断に集中できます。別の Rails アプリを読むときも、同じ決まりで部品の場所を探せます。<Ref n={23} />Rails の規約と標準の部品（ディレクトリの構成、Active Record、resources のルーティングなど）に沿って書く進め方を、Rails Way と呼ぶことがあります。この考え方は、Rails の作者 DHH が Rails Doctrine にまとめています（<ChapterLink n={31} section="doctrine" />）。
           </p>
           <p>
             規約は変えられます。たとえば、既存の DB のテーブル名が blog_posts で、Article というモデルから読み書きしたいときは、モデルでテーブル名を指定します。
@@ -1252,8 +1225,7 @@ end
               <ChapterLink n={59} />）。
             </li>
             <li>
-              <Term>omakase</Term> は、開発を始められる一式を Rails が選んで提供する考え方です。日本語の「おまかせ」から来た語です。たとえばテストは Minitest（rails new
-              で最初から使えるテスト用のライブラリ）を使って始められます。既存チームのテスト基盤に合わせて RSpec（別のテスト用のライブラリ。本書のデモも使っています）を選ぶなど、置き換える理由が具体的なら部品を替えられます（
+              <Term>omakase</Term> は、開発を始められる一式を Rails が選んで提供する考え方です。日本語の「おまかせ」から来た語です。既存チームのテスト基盤に合わせて RSpec を選ぶなど、必要に応じて構成の一部を替えられます（
               <ChapterLink n={20} />）。
             </li>
             <li>
@@ -1279,8 +1251,8 @@ end
       body: (
         <>
           <p>
-            Gemfile に書く <code>gem "rails"</code> の rails gem 自体には、ほとんどコードがありません。rails gem は Rails を構成する12個の gem に依存していて、それらがまとめてインストールされます
-            <Ref n={10} />。本書で扱う gem と役割を次の表に示します。
+            Gemfile に書く <code>gem "rails"</code> の rails gem 自体には、ほとんどコードがありません。rails gem は bundler と、Rails を構成する12個の gem に依存していて、それらがまとめてインストールされます
+            <Ref n={10} />。Gemfile で指定する依存関係と、Gemfile.lock で固定するバージョンは <ChapterLink n={99} /> で扱います。
           </p>
           <div className="table-wrap">
             <table>
@@ -1300,14 +1272,14 @@ end
                     コア拡張（String や Integer のような Ruby に元からあるクラスにメソッドを足したもの。<code>blank?</code> や時刻の計算など）、<code>ActiveSupport::Concern</code>、<code>ActiveSupport::Callbacks</code>、計測用の通知など、他のすべての gem
                     が使う共通部品
                   </td>
-                  <td>第5章ほか</td>
+                  <td><ChapterLink n={5} /> ほか</td>
                 </tr>
                 <tr>
                   <td>
                     <code>activemodel</code>
                   </td>
                   <td>バリデーション、属性の型変換、変更の追跡など、データベースに依存しないモデルの機能</td>
-                  <td>第15章、第18章</td>
+                  <td><ChapterLink n={11} />、<ChapterLink n={14} /></td>
                 </tr>
                 <tr>
                   <td>
@@ -1323,28 +1295,28 @@ end
                   <td>
                     ミドルウェア・ルーティング・リクエストとレスポンス（<code>ActionDispatch</code>）と、コントローラー（<code>ActionController</code>、<code>AbstractController</code>）
                   </td>
-                  <td>第6章、第9章、第10章</td>
+                  <td><ChapterLink n={6} />、<ChapterLink n={9} />、<ChapterLink n={10} /></td>
                 </tr>
                 <tr>
                   <td>
                     <code>actionview</code>
                   </td>
                   <td>テンプレートの探索と描画、ヘルパー</td>
-                  <td>第20章</td>
+                  <td><ChapterLink n={16} /></td>
                 </tr>
                 <tr>
                   <td>
                     <code>activejob</code>
                   </td>
                   <td>非同期ジョブの共通インターフェース</td>
-                  <td>第21章</td>
+                  <td><ChapterLink n={18} /></td>
                 </tr>
                 <tr>
                   <td>
                     <code>actionmailer</code>、<code>activestorage</code>
                   </td>
                   <td>メール送信、ファイル添付</td>
-                  <td>第22章</td>
+                  <td><ChapterLink n={19} /></td>
                 </tr>
                 <tr>
                   <td>
@@ -1353,13 +1325,18 @@ end
                   <td>
                     <code>Rails::Application</code>、初期化処理、<code>rails</code> コマンド、ジェネレーター。各 gem を1つのアプリケーションにまとめる
                   </td>
-                  <td>第7章</td>
+                  <td><ChapterLink n={7} /></td>
+                </tr>
+                <tr>
+                  <td><code>actioncable</code>、<code>actiontext</code></td>
+                  <td>WebSocket を使った通知の配信、書式付き本文の保存</td>
+                  <td><ChapterLink n={19} section="cable-and-text" /></td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p>
-            残りの <code>actiontext</code>（リッチテキスト）と <code>actionmailbox</code>（メールの受信）は本書の対象外です。
+            <code>actionmailbox</code> は受信したメールを Rails の処理へ振り分ける gem です。
           </p>
           <p>
             gem の名前と、その gem が定義するモジュールの名前は対応しています。activerecord gem は <code>ActiveRecord</code>、actionpack gem は <code>ActionDispatch</code>・<code>ActionController</code>・
@@ -1370,14 +1347,14 @@ end
             のように gem の名前を含むファイルのパスが並びます。gem の名前が actionpack で、ディレクトリが action_dispatch なら、表から、ミドルウェアかルーティングの処理の中だと分かります。
           </p>
           <p>
-            図1-5 は、これらの gem が実行時にどの gem に依存しているかを示したものです。各 gem の gemspec（gem の名前・バージョン・依存する gem を書いたファイル）に書かれた依存関係（開発時だけの依存を除く）から作りました
+            図2-5 は、これらの gem が実行時にどの gem に依存しているかを示したものです。各 gem の gemspec（gem の名前・バージョン・依存する gem を書いたファイル）に書かれた依存関係（開発時だけの依存を除く）から作りました
             <Ref n={10} />
             <Ref n={11} />。
           </p>
           <Figure
-            n="1-5"
+            n="2-5"
             title="Rails 8.1.4.1 を構成する gem の実行時の依存関係"
-            caption="矢印は「依存する側 → 依存される側」。activesupport への矢印と、本書で扱わない actiontext・actionmailbox は省略しています。"
+            caption="矢印は依存する側から依存される側へ向かいます。activesupport への矢印、actiontext、actionmailbox は省略しています。"
           >
             <GemDependencyFigure />
           </Figure>
@@ -1432,7 +1409,7 @@ end
                 </tr>
                 <tr>
                   <th scope="row">6〜7</th>
-                  <td>Rails 6 の新規アプリは Webpacker を利用。Rails 7 の標準構成で importmap と Hotwire が使われ始めた</td>
+                  <td>Rails 6 の新規アプリは Webpacker を利用。Rails 7 の標準構成では importmap を採用</td>
                 </tr>
                 <tr>
                   <th scope="row">8</th>
@@ -1468,8 +1445,7 @@ end
               credentials：API キーやパスワードのような秘密の値を、暗号化したファイルに保存する仕組みです（<ChapterLink n={21} section="secrets" />）。
             </li>
             <li>
-              Webpacker・importmap・Hotwire：どれも JavaScript の扱いに関係します。Webpacker は複数の JavaScript のファイルを1つにまとめるツール（webpack）を Rails から使うための gem です。importmap
-              はファイルをまとめずにブラウザーに読み込ませる方式です。Hotwire はサーバーが返した HTML でページの一部を書き換える仕組みです（<ChapterLink n={16} section="assets" />）。
+              Webpacker は、JavaScript ファイルをまとめる webpack を Rails から使うための gem です。importmap を使うと、ブラウザーがモジュール名に対応する URL から個別にファイルを読み込めます（<ChapterLink n={16} section="assets" />）。
             </li>
             <li>
               ジョブ・キャッシュ・WebSocket を DB で支える構成：これらの処理を、Redis のような別のソフトウェアを使わずに DB のテーブルで動かす gem（Solid Queue・Solid Cache・Solid Cable）を指します（
@@ -1564,9 +1540,7 @@ end
           </p>
           <Callout kind="note" title="本書のデモのアプリケーション">
             <p>
-              各章の実測は、Docker の ruby:4.0 イメージから起動したコンテナ（Docker が作る、ほかのプログラムから分けた実行環境）の中で <code>rails new</code> した Rails 8.1.4.1 のアプリケーション（以下、デモのアプリケーション）で行いました。ActionMailbox・ActionText・Minitest
-              を外して作り、章が進むにつれてモデルや gem を加えています。第2部までは SQLite、第3部からは MySQL 8.4 につなぎ、第4部で Sidekiq・Redis・turbo-rails・ActiveStorage・RSpec を、第5部で本番環境の
-              Puma と Nginx の設定を加えました。各章では、その時点のモデルや設定を示してから実測します。
+              デモは Docker の ruby:4.0 イメージを使った Rails 8.1.4.1 のアプリケーションです。実測には例に応じて SQLite または MySQL 8.4 を使います。ジョブには Sidekiq と Redis、添付には Active Storage、テストには RSpec を追加し、本番構成を扱う章では Puma と Nginx を組み合わせます。
             </p>
           </Callout>
         </>
@@ -1732,9 +1706,9 @@ AbstractController::Base  actionpack-8.1.4.1/lib/abstract_controller/base.rb:220
           />
           <p>
             <code>process_action</code> という1つのメソッド名に対して7つの定義があり、上から順に呼ばれます。各定義は自分の処理をしてから <code>super</code>{' '}
-            を呼び、最後の <code>AbstractController::Base</code> がアクションのメソッド（<code>index</code> や <code>show</code>）を呼び出します。図1-6 は、各定義が何をしているかをソースから読み取って並べたものです。
+            を呼び、最後の <code>AbstractController::Base</code> がアクションのメソッド（<code>index</code> や <code>show</code>）を呼び出します。図2-6 は、各定義が何をしているかをソースから読み取って並べたものです。
           </p>
-          <Figure n="1-6" title="ApplicationController#process_action の super の連鎖" caption="右側の説明は、各定義のソースを読んで要約したものです。">
+          <Figure n="2-6" title="ApplicationController#process_action の super の連鎖" caption="右側の説明は、各定義のソースを読んで要約したものです。">
             <ProcessActionChainFigure />
           </Figure>
           <p>
@@ -1997,7 +1971,7 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
           </ul>
           <h3>図の凡例</h3>
           <p>本書の図は次の凡例に従って描いています。とくに断りがない限り、すべての章で共通です。</p>
-          <Figure n="1-7" title="本書の図の凡例" caption="色だけでなく、箱の中のラベルでも種類が分かるように描いています。">
+          <Figure n="2-7" title="本書の図の凡例" caption="色だけでなく、箱の中のラベルでも種類が分かるように描いています。">
             <LegendFigure />
           </Figure>
           <p>
@@ -2020,10 +1994,10 @@ ActiveRecord::Scoping::ClassMethods#current_scope  activerecord-8.1.4.1/lib/acti
           <li>
             GET /articles は、routes.rb の対応で ArticlesController#index に渡り、index が条件を作り、ビューが記事を表示するときに SQL が実行され、HTML の応答が返ります。この分担を MVC と呼びます。
           </li>
-          <li>ジョブ・メール・ファイル添付・テスト・セキュリティ・キャッシュなどの機能は、第20〜25章で扱います。</li>
+          <li>ジョブは <ChapterLink n={18} />、メールとファイル添付は <ChapterLink n={19} />、テストは <ChapterLink n={20} />、セキュリティは <ChapterLink n={21} />、キャッシュは <ChapterLink n={22} /> で扱います。</li>
           <li>リクエストは ALB → Nginx → Puma → Rails（ミドルウェア → ルーティング → コントローラー → モデル・ビュー）→ MySQL の順に通ります。本書はこの経路全体を扱います。</li>
           <li>
-            rails gem は12個の gem に依存しています。activesupport はすべての gem から使われ、railties は activerecord に依存せず、Railtie を通じて各 gem と結び付きます。
+            rails gem は bundler と、Rails を構成する12個の gem に依存しています。activesupport はすべての gem から使われ、railties は activerecord に依存せず、Railtie を通じて各 gem と結び付きます。
           </li>
           <li>本書の基準は Rails 8.1.4.1、Ruby 4.0.9、Nginx 1.30.6 です。Rails 7.2 との違いは専用の枠で示します。</li>
           <li>

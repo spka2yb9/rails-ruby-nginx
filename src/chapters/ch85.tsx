@@ -1,3 +1,4 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
@@ -5,7 +6,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const PUNDIT = 'https://github.com/varvet/pundit/blob/v2.5.2'
 
-/* ---------- 図 66-1 月次の売上集計の構成と、問題が起きる箇所 ---------- */
+/* ---------- 図 83-1 月次の売上集計の構成と、問題が起きる箇所 ---------- */
 const sceneTables = [
   { name: 'shops', sub: '店' },
   { name: 'orders', sub: '確定した合計' },
@@ -17,7 +18,7 @@ const sceneTables = [
 function SceneFigure() {
   return (
     <Svg
-      id="66-1"
+      id="83-1"
       w={780}
       h={420}
       label="月次の売上集計の構成。MonthlySalesReportJob（毎月1日に前月を集計する）と MonthlyReportsController（店長と本部が見る画面）が、MonthlySalesReport#rows を呼ぶ。rows は注文ごとに Order#recalculate_total! を呼び、このメソッドは現在の価格で合計を計算して orders を UPDATE する。どの処理も DB のユーザー ch85_app で接続し、ch85_app は ch85_development のすべてのテーブルに ALL PRIVILEGES を持つ。テーブルは shops、orders、order_items、products、users。問題は3つ。1つ目は過去の注文の合計が変わること、2つ目は集計に使わない users テーブルも読めること、3つ目は店長にもすべての店の売上を返すこと"
@@ -63,7 +64,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 66-2 価格を改定した後に集計をやり直すと、過去の注文の合計が変わる ---------- */
+/* ---------- 図 83-2 価格を改定した後に集計をやり直すと、過去の注文の合計が変わる ---------- */
 function TimelineFigure() {
   const xs = [95, 290, 485, 680]
   const names = ['本部の担当者', 'MonthlySalesReportJob', 'products（コーヒー豆）', 'orders（注文1）']
@@ -75,7 +76,7 @@ function TimelineFigure() {
   ]
   return (
     <Svg
-      id="66-2"
+      id="83-2"
       w={780}
       h={470}
       label="縦に時間をとり、本部の担当者、MonthlySalesReportJob、products のコーヒー豆の行、orders の注文1の行を列に並べた。10月10日に渋谷店の注文1が、コーヒー豆1,200円を2袋で確定し、total は2,400円になる。11月1日3時の集計は recalculate_total! を呼ぶが、計算しても2,400円なので UPDATE は発行されず、渋谷店の10月の売上は3,200円になる。11月1日10時に本部の担当者がコーヒー豆の価格を1,500円に改定する。11月2日9時に集計をやり直すと、recalculate_total! が注文1の total を3,000円に UPDATE し、渋谷店の10月の売上は3,800円になる。同じ10月の売上が変わり、注文1の合計はお客様が払った2,400円と合わなくなる"
@@ -96,31 +97,31 @@ function TimelineFigure() {
         1,200円 × 2袋で確定
       </T>
       <Arrow x1={290} y1={150} x2={678} y2={150} />
-      <T x={485} y={140} anchor="middle" fs={12} mono>
+      <T x={387} y={140} anchor="middle" fs={12} mono>
         recalculate_total!
       </T>
       <T x={672} y={172} anchor="end" fs={11} tone="muted">
         2,400 のまま。UPDATE なし
       </T>
-      <T x={290} y={186} anchor="middle" fs={12} tone="acc">
+      <T x={298} y={186} fs={12} tone="acc">
         渋谷店の10月：3,200 円
       </T>
       <Arrow x1={95} y1={240} x2={483} y2={240} />
-      <T x={289} y={230} anchor="middle" fs={12}>
+      <T x={192} y={230} anchor="middle" fs={12}>
         価格を 1,500 円に改定
       </T>
       <T x={493} y={262} fs={11} tone="muted">
         price = 1,500
       </T>
       <Arrow x1={290} y1={320} x2={678} y2={320} />
-      <T x={485} y={310} anchor="middle" fs={12} mono>
+      <T x={387} y={310} anchor="middle" fs={12} mono>
         recalculate_total!
       </T>
       <Box x={600} y={334} w={160} h={30} lines="total = 3,000" fs={12} fill="box5" />
       <T x={672} y={382} anchor="end" fs={11} tone="danger">
         UPDATE で書き換わる
       </T>
-      <T x={290} y={356} anchor="middle" fs={12} tone="danger">
+      <T x={298} y={356} fs={12} tone="danger">
         渋谷店の10月：3,800 円
       </T>
       <T x={8} y={430} fs={12} tone="danger">
@@ -133,7 +134,7 @@ function TimelineFigure() {
   )
 }
 
-/* ---------- 図 66-3 利用者・アプリ・DB の3つの層の権限 ---------- */
+/* ---------- 図 83-3 利用者・アプリ・DB の3つの層の権限 ---------- */
 const layerRows: { y: number; head: string[]; items: string[][]; check: string[] }[] = [
   {
     y: 20,
@@ -168,7 +169,7 @@ const layerRows: { y: number; head: string[]; items: string[][]; check: string[]
 function LayersFigure() {
   return (
     <Svg
-      id="66-3"
+      id="83-3"
       w={780}
       h={412}
       label="権限を3つの層に分けた図。利用者の層では、本部の管理者はすべての店、店長は自分の店だけ、そのほかの役割は何も見ない。確かめる所は Pundit の OrderPolicy::Scope。アプリの層では、注文の受付と管理画面は writing のロール、集計のジョブと画面は reading のロールで動く。確かめる所は connected_to の prevent_writes。DB の層では、ch85_app は ALL PRIVILEGES、ch85_reporter は4つのテーブルの SELECT だけを持つ。確かめる所は MySQL の GRANT。店長が集計の画面を開くと、集計の処理は reading のロールで動き、ch85_reporter で接続する"
@@ -200,7 +201,7 @@ function LayersFigure() {
   )
 }
 
-/* ---------- 図 66-4 直す前と後の接続と、同じ操作の結果 ---------- */
+/* ---------- 図 83-4 直す前と後の接続と、同じ操作の結果 ---------- */
 const compareResults: { label: string; before: string; after: string }[] = [
   { label: 'recalculate_total! の UPDATE', before: '実行される（合計が変わる）', after: 'ReadOnlyError（Rails が止める）' },
   { label: 'WITH で始まる UPDATE', before: '実行される', after: 'UPDATE command denied（MySQL）' },
@@ -210,7 +211,7 @@ const compareResults: { label: string; before: string; after: string }[] = [
 function CompareFigure() {
   return (
     <Svg
-      id="66-4"
+      id="83-4"
       w={780}
       h={420}
       label="直す前は、MonthlySalesReportJob が writing のロール、つまりいつもの接続で動き、DB のユーザー ch85_app（ch85_development のすべてに ALL PRIVILEGES）で接続する。recalculate_total! の UPDATE も、WITH で始まる UPDATE も実行され、users テーブルも読める。直した後は、ジョブが connected_to(role: :reading) の中で集計する。Rails の prevent_writes が書き込みと判定した SQL を送らず、接続のユーザー ch85_reporter は4つのテーブルの SELECT だけを持つ。recalculate_total! の UPDATE は Rails の ReadOnlyError、WITH で始まる UPDATE は MySQL の UPDATE command denied、users の SELECT は MySQL の SELECT command denied で止まる"
@@ -239,13 +240,13 @@ function CompareFigure() {
       ))}
       <line x1={390} y1={8} x2={390} y2={390} stroke="var(--fig-line)" strokeDasharray="3 4" />
       <T x={10} y={410} fs={11} tone="muted">
-        下の3段は、それぞれの接続で同じ操作を実行した結果（実際の出力は図 66-6）
+        下の3段は、それぞれの接続で同じ操作を実行した結果（実際の出力は図 83-6）
       </T>
     </Svg>
   )
 }
 
-/* ---------- 図 66-5 SQL が通る2つの確認 ---------- */
+/* ---------- 図 83-5 SQL が通る2つの確認 ---------- */
 const gateRows: { sql: string; stop: 1 | 2 | 3; result: string }[] = [
   { sql: 'update!（recalculate_total!）', stop: 1, result: 'ReadOnlyError' },
   { sql: 'update_all(total: 0)', stop: 1, result: 'ReadOnlyError' },
@@ -259,7 +260,7 @@ function GatesFigure() {
   const ry = (i: number) => 60 + i * 46
   return (
     <Svg
-      id="66-5"
+      id="83-5"
       w={780}
       h={384}
       label="connected_to(role: :reading) の中で送る SQL は、まず Rails の write_query? が先頭の語で書き込みかを判定し、次に MySQL が ch85_reporter の GRANT と照らし合わせる。update!（recalculate_total!）、update_all、execute の UPDATE は1つ目の確認で ReadOnlyError になる。WITH で始まる UPDATE は Rails が読み取りと判定して通し、MySQL がエラー 1143（UPDATE command denied）で拒否する。users の SELECT も Rails は通し、MySQL がエラー 1142（SELECT command denied）で拒否する。集計の orders の SELECT は両方を通って実行される"
@@ -309,7 +310,7 @@ function GatesFigure() {
   )
 }
 
-/* ---------- 図 66-7 利用者ごとの Pundit のスコープと集計の SQL ---------- */
+/* ---------- 図 83-7 利用者ごとの Pundit のスコープと集計の SQL ---------- */
 const scopeRows: { user: string[]; resolve: string; cond: string; result: string[] }[] = [
   { user: ['本部 太郎', 'admin'], resolve: 'scope.all', cond: '（条件を足さない）', result: ['渋谷店', '新宿店'] },
   { user: ['渋谷 花子', 'manager・渋谷店'], resolve: 'scope.where(shop_id: 1)', cond: 'orders.shop_id = 1', result: ['渋谷店'] },
@@ -319,7 +320,7 @@ const scopeRows: { user: string[]; resolve: string; cond: string; result: string
 function ScopeFigure() {
   return (
     <Svg
-      id="66-7"
+      id="83-7"
       w={780}
       h={340}
       label="利用者ごとに OrderPolicy::Scope#resolve が返す Relation と、集計の SQL に加わる条件、結果を並べた。本部 太郎（admin）は scope.all で条件を足さず、渋谷店と新宿店の売上を見る。渋谷 花子（manager、渋谷店）は scope.where(shop_id: 1) で orders.shop_id = 1 が加わり、渋谷店だけを見る。アルバイト（staff）は scope.none で SQL を送らず、何も見ない。MonthlyReportsController#show は connected_to(role: :reading) の中で policy_scope(Order) を集計に渡す"
@@ -372,7 +373,7 @@ const chapter: Chapter = {
     'Pundit のスコープで利用者ごとに集計の対象を絞り、トランザクションを使うテストでは読み取りのロールの権限を確かめられない理由を説明できる',
     '列単位の権限や処理ごとのユーザーのように、権限を細かく分けすぎたときの運用の手間を判断できる',
   ],
-  prerequisites: [21, 41],
+  prerequisites: [21],
   sections: [
     {
       id: 'scene',
@@ -522,11 +523,11 @@ class SessionsController < ApplicationController
 end
 `}
           />
-          <Figure n="66-1" title="月次の売上集計の構成と、問題が起きる箇所" caption="赤い文字は、この節で確かめる3つの問題。">
+          <Figure n="83-1" title="月次の売上集計の構成と、問題が起きる箇所" caption="赤い文字は、この節で確かめる3つの問題。">
             <SceneFigure />
           </Figure>
           <p>
-            図 66-1 のとおり、ジョブも画面もアプリのほかの処理と同じ DB のユーザー ch85_app で接続しています。ch85_app は開発環境の DB（ch85_development）のすべてのテーブルに、すべての権限（ALL PRIVILEGES）を持っています。次の項から、図の赤い文字の3つの問題を順に確かめます。
+            図 83-1 のとおり、ジョブも画面もアプリのほかの処理と同じ DB のユーザー ch85_app で接続しています。ch85_app は開発環境の DB（ch85_development）のすべてのテーブルに、すべての権限（ALL PRIVILEGES）を持っています。次の項から、図の赤い文字の3つの問題を順に確かめます。
           </p>
           <h3>価格を改定した後に集計すると、過去の注文の合計が変わる</h3>
           <p>
@@ -583,9 +584,9 @@ orders.total: [[1, 3000], [2, 800], [3, 1500]]
 `}
           />
           <p>
-            1回目の集計では、計算し直した合計が元の値と同じなので、Active Record は UPDATE を発行しません。変更のない属性は保存しないからです。価格を改定した後の2回目では、コーヒー豆を含む注文1と注文3の total が、新しい価格で書き換わりました。渋谷店の10月の売上は 3,200 円から 3,800 円に変わり、注文1の合計 3,000 円は、お客様が実際に払った 2,400 円と合いません。図 66-2 はこの流れを時間の順に並べたものです。
+            1回目の集計では、計算し直した合計が元の値と同じなので、Active Record は UPDATE を発行しません。変更のない属性は保存しないからです。価格を改定した後の2回目では、コーヒー豆を含む注文1と注文3の total が、新しい価格で書き換わりました。渋谷店の10月の売上は 3,200 円から 3,800 円に変わり、注文1の合計 3,000 円は、お客様が実際に払った 2,400 円と合いません。図 83-2 はこの流れを時間の順に並べたものです。
           </p>
-          <Figure n="66-2" title="価格を改定した後に集計をやり直すと、過去の注文の合計が変わる" caption="11/1 3:00 の集計では何も書き換わらず、価格の改定の後にやり直した集計で total が書き換わる。">
+          <Figure n="83-2" title="価格を改定した後に集計をやり直すと、過去の注文の合計が変わる" caption="11/1 3:00 の集計では何も書き換わらず、価格の改定の後にやり直した集計で total が書き換わる。">
             <TimelineFigure />
           </Figure>
           <p>
@@ -714,9 +715,9 @@ Failures:
           </p>
           <h3>「すべてのプログラムとすべての利用者」と3つの層</h3>
           <p>
-            定義の主語は「すべてのプログラムとすべての利用者」です。Rails のアプリケーションでは利用者の層、アプリの処理の層、DB のユーザーの層の3つで、それぞれ権限を決めます。図 66-3 は場面の3つの問題を層ごとに並べ、それぞれの権限をどこで確かめるかを示したものです。
+            定義の主語は「すべてのプログラムとすべての利用者」です。Rails のアプリケーションでは利用者の層、アプリの処理の層、DB のユーザーの層の3つで、それぞれ権限を決めます。図 83-3 は場面の3つの問題を層ごとに並べ、それぞれの権限をどこで確かめるかを示したものです。
           </p>
-          <Figure n="66-3" title="利用者・アプリ・DB の3つの層の権限" caption="右の点線の箱は、その層の権限を確かめる仕組み。紫の箱はこの章で権限を絞る対象。">
+          <Figure n="83-3" title="利用者・アプリ・DB の3つの層の権限" caption="右の点線の箱は、その層の権限を確かめる仕組み。紫の箱はこの章で権限を絞る対象。">
             <LayersFigure />
           </Figure>
           <p>
@@ -1009,8 +1010,8 @@ orders.total: [[1, 2400], [2, 800], [3, 1200]]
           <p>
             価格を改定した後でも、渋谷店の10月の売上は 3,200 円、新宿店は 1,200 円で、場面の1回目の集計と同じです。orders.total も書き換わっていません。直した集計が読むテーブルは orders と shops の2つで、集計の SQL は1回です。直す前は、注文・明細・商品をすべて読み込んでから Ruby で足し上げ、合計が変わった注文には UPDATE を発行していました。
           </p>
-          <p>図 66-4 は直す前と直した後で、ジョブが使う接続と、同じ操作の結果を比べたものです。</p>
-          <Figure n="66-4" title="直す前と後の接続と、同じ操作の結果" caption="左は直す前（いつもの接続）、右は直した後（読み取りのロール）。下の3段は同じ操作をそれぞれの接続で実行した結果。">
+          <p>図 83-4 は直す前と直した後で、ジョブが使う接続と、同じ操作の結果を比べたものです。</p>
+          <Figure n="83-4" title="直す前と後の接続と、同じ操作の結果" caption="左は直す前（いつもの接続）、右は直した後（読み取りのロール）。下の3段は同じ操作をそれぞれの接続で実行した結果。">
             <CompareFigure />
           </Figure>
           <p>
@@ -1095,15 +1096,15 @@ DB ユーザー: ch85_reporter@172.29.0.0/16
             違いが出る理由は、Rails が SQL の先頭の語だけで書き込みかどうかを判定しているからです。Rails は、先頭（空白・括弧・コメントを除く）が begin・commit・explain・release・rollback・savepoint・select・with のどれかで始まる SQL を読み取りとみなします。MySQL のアダプターはこれに desc・describe・set・show・use・kill を加えています<Ref n={11} /><Ref n={12} />。どれにも当てはまらない SQL は書き込みと判定され、書き込みを止めている間は ReadOnlyError になります<Ref n={13} /><Ref n={14} />。WITH が読み取りの一覧にあるのは、WITH … SELECT が読み取りだからです。しかし MySQL 8.4 では WITH 句を SELECT だけでなく UPDATE と DELETE の先頭にも書けます<Ref n={15} />。そのため WITH … UPDATE は Rails の確認を通り、DB のユーザーの権限だけが止めます。users の SELECT も、SQL としては読み取りなので Rails は止めません。
           </p>
           <p>
-            Rails のソースの while_preventing_writes のコメントにも、このメソッドは読み取り専用のユーザーと同じ保護にはならず、誤った書き込みを防ぐための安全策だと書かれています<Ref n={9} />。Rails のガイドも、prevent_writes は書き込みに見える SQL を送らないだけなので、レプリカの DB も読み取り専用で動かすよう求めています<Ref n={7} />。図 66-5 は、SQL がこの2つの確認を順に通る様子を示したものです。
+            Rails のソースの while_preventing_writes のコメントにも、このメソッドは読み取り専用のユーザーと同じ保護にはならず、誤った書き込みを防ぐための安全策だと書かれています<Ref n={9} />。Rails のガイドも、prevent_writes は書き込みに見える SQL を送らないだけなので、レプリカの DB も読み取り専用で動かすよう求めています<Ref n={7} />。図 83-5 は、SQL がこの2つの確認を順に通る様子を示したものです。
           </p>
-          <Figure n="66-5" title="SQL が通る2つの確認" caption="左の SQL が、どちらの確認で止まるか。一番下の集計の SELECT だけが両方を通って実行される。">
+          <Figure n="83-5" title="SQL が通る2つの確認" caption="左の SQL が、どちらの確認で止まるか。一番下の集計の SELECT だけが両方を通って実行される。">
             <GatesFigure />
           </Figure>
           <p>
-            MySQL のエラーの番号は、テーブルへの権限がないときが 1142（ER_TABLEACCESS_DENIED_ERROR）、列への権限がないときが 1143（ER_COLUMNACCESS_DENIED_ERROR）です<Ref n={16} />。WITH … UPDATE は、更新しようとした列 total への権限がないので 1143 になり、users の SELECT はテーブルへの権限がないので 1142 になりました。エラーの番号は、例外の cause（Mysql2::Error）の error_number で確かめました。図 66-6 は2つの方法の結果を表にまとめたものです。
+            MySQL のエラーの番号は、テーブルへの権限がないときが 1142（ER_TABLEACCESS_DENIED_ERROR）、列への権限がないときが 1143（ER_COLUMNACCESS_DENIED_ERROR）です<Ref n={16} />。WITH … UPDATE は、更新しようとした列 total への権限がないので 1143 になり、users の SELECT はテーブルへの権限がないので 1142 になりました。エラーの番号は、例外の cause（Mysql2::Error）の error_number で確かめました。図 83-6 は2つの方法の結果を表にまとめたものです。
           </p>
-          <Figure n="66-6" title="書き込みを止める2つの方法で、同じ5つの操作を試した結果" caption="script/write_attempts.rb の実行結果を表にした。どちらも価格を 1,500 円に改定した後の状態から実行した。">
+          <Figure n="83-6" title="書き込みを止める2つの方法で、同じ5つの操作を試した結果" caption="script/write_attempts.rb の実行結果を表にした。どちらも価格を 1,500 円に改定した後の状態から実行した。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1276,9 +1277,9 @@ end
 `}
           />
           <p>
-            店長の集計の SQL には <code>orders.shop_id = 1</code> の条件が加わり、自分の店の注文だけを足し上げます。アルバイトの行には SQL が表示されていません。<code>scope.none</code> の Relation は、DB に SQL を送らずに空の結果を返すからです<Ref n={25} />。図 66-7 は利用者ごとのスコープと、集計の SQL に加わる条件をまとめたものです。
+            店長の集計の SQL には <code>orders.shop_id = 1</code> の条件が加わり、自分の店の注文だけを足し上げます。アルバイトの行には SQL が表示されていません。<code>scope.none</code> の Relation は、DB に SQL を送らずに空の結果を返すからです<Ref n={25} />。図 83-7 は利用者ごとのスコープと、集計の SQL に加わる条件をまとめたものです。
           </p>
-          <Figure n="66-7" title="利用者ごとの Pundit のスコープと集計の SQL" caption="店の id は、渋谷店を 1 とした。スコープが返す Relation に、集計の条件（月の範囲・店ごとの集計）が足される。">
+          <Figure n="83-7" title="利用者ごとの Pundit のスコープと集計の SQL" caption="店の id は、渋谷店を 1 とした。スコープが返す Relation に、集計の条件（月の範囲・店ごとの集計）が足される。">
             <ScopeFigure />
           </Figure>
           <h3>手順6：テストで権限を確かめる</h3>
@@ -1496,8 +1497,8 @@ Order.first（SELECT orders.*）: ActiveRecord::StatementInvalid: Mysql2::Error:
             利用者の層でも、細かく分けすぎると同じ問題が起きます。たとえば店長・副店長・アルバイトで見られる列を変えると、スコープと画面の分岐が役割の数だけ増え、役割を足すたびにすべての画面を確かめ直すことになります。Pundit のスコープで店ごとに分けたのは、店長にほかの店の売上を見せないという業務の決まりがあるからです。業務の決まりがない区別まで権限で表すと、テストと確認の手間だけが増えます。将来の役割に備えて権限の種類を先に作っておくことは、YAGNI（<ChapterLink n={58} />）の章で見た、今必要のない複雑さにあたります。
           </p>
           <h3>判断の目安</h3>
-          <p>図 66-8 は DB のユーザーの権限の分け方ごとに、止められることと増える作業を並べたものです。</p>
-          <Figure n="66-8" title="DB のユーザーの権限の分け方と、止められること・増える作業" caption="上から下へ細かくなる。この章の場面では2行目と3行目を組み合わせた。">
+          <p>図 83-8 は DB のユーザーの権限の分け方ごとに、止められることと増える作業を並べたものです。</p>
+          <Figure n="83-8" title="DB のユーザーの権限の分け方と、止められること・増える作業" caption="上から下へ細かくなる。この章の場面では2行目と3行目を組み合わせた。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1629,7 +1630,7 @@ Order.first（SELECT orders.*）: ActiveRecord::StatementInvalid: Mysql2::Error:
               利用者ごとの認可（IDOR の防ぎ方、Pundit の authorize）は<ChapterLink n={21} section="object-authorization" />、SQL インジェクションの対策は<ChapterLink n={21} section="sqli" />、DB のパスワードなど秘密の値の管理は<ChapterLink n={21} section="secrets" />で扱いました。
             </li>
             <li>
-              Pundit のポリシーの書き方とテストは、<ChapterLink n={41} />の<ChapterLink n={41} section="pundit" />と<ChapterLink n={41} section="test" />で扱いました。
+              Pundit のポリシーの実装は <ChapterLink n={41} section="pundit" />、テストは <ChapterLink n={41} section="test" /> で扱います。
             </li>
             <li>
               トランザクションを使うテストの仕組みは<ChapterLink n={20} section="transaction" />で扱いました。読み取りのロールの権限を確かめるテストは、この章のようにトランザクションを使わずに書きます。
@@ -1652,6 +1653,29 @@ Order.first（SELECT orders.*）: ActiveRecord::StatementInvalid: Mysql2::Error:
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          権限の境界はその境界で止めたい被害を1文で言える所に置きます。この章では「集計が注文を書き換えない」「集計の処理から利用者のメールアドレスを読めない」の2つを、4つのテーブルの SELECT だけを持つ DB ユーザーで、店長が自分の店だけを見ることを Pundit のスコープで守りました。止めたい被害を言えない列の単位には、境界を置きません。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、ALL PRIVILEGES の ch85_app で動く集計が価格の改定後に過去の注文の total を書き換え、集計に使わない users も読め、店長はほかの店の売上も見られた。読み取りのロール（ch85_reporter）で動かすと、同じ誤りは ReadOnlyError になり、WITH で始まる UPDATE と users の SELECT は MySQL が拒否した。</>,
+        basis: <><ChapterLink n={85} section="scene" />、<ChapterLink n={85} section="apply" /></>,
+      },
+      cost: {
+        text: <>読み取りだけの DB ユーザー・接続の設定・GRANT の SQL を管理する。トランザクションを使うテストでは読み取りのロールが書き込みの接続を共有するので、DB の権限を確かめるテストはトランザクションを使わずに書き、例ごとにデータを消す必要がある。</>,
+        basis: <ChapterLink n={85} section="apply" />,
+      },
+      alternative: {
+        text: <>書き込みだけを止めるなら while_preventing_writes もあるが、Rails は SQL の先頭の語で判定するので、WITH で始まる UPDATE と users の SELECT は止まらなかった。列ごとに SELECT を許可した例では、Order.first も割引を入れた正しい集計も、権限が足りずに失敗した。</>,
+        basis: <><ChapterLink n={85} section="apply" />、<ChapterLink n={85} section="overuse" /></>,
+      },
+      criterion: {
+        text: <>その境界で止めたい被害（注文の書き換え、メールアドレスの読み取り、ほかの店の売上の表示）を1文で言えるか。列を足すたびや集計を変えるたびに GRANT を直す作業が、止められる被害に見合うか。</>,
+        basis: <ChapterLink n={85} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

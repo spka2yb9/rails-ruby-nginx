@@ -33,6 +33,7 @@ try {
       const html = renderToStaticMarkup(createElement('div', null, sec.body))
       const text = html
         .replace(/<svg[\s\S]*?<\/svg>/g, ' ')
+        .replace(/<button[^>]*data-reference="\d+"[^>]*>\[\d+\]<\/button>/g, '')
         .replace(/<\/?span[^>]*>/g, '') // コード強調の span は語を分断しない
         .replace(/<[^>]+>/g, ' ')
         .replace(/&quot;/g, '"')

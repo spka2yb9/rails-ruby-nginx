@@ -1,10 +1,13 @@
 import type { Chapter } from '../content/types'
+import { chapterNumber } from '../content/label'
 import { withExplanations } from '../explanations/shared'
 import { explanation12 } from '../explanations/database'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { Stepper } from '../sims/Stepper'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
+const figure = (n: number) => `${chapterNumber(12)}-${n}`
 
 /* ---------- 読み込み済みの Relation に where と where! を呼ぶ（番号なし） ---------- */
 function WhereBangFigure() {
@@ -55,11 +58,11 @@ function WhereBangFigure() {
   )
 }
 
-/* ---------- 図 16-3 Relation の値から SQL まで ---------- */
+/* ---------- 図 22-3 Relation の値から SQL まで ---------- */
 function ArelFigure() {
   return (
     <Svg
-      id="16-3"
+      id={figure(3)}
       w={760}
       h={330}
       label="Article.where(status: :published).order(published_at: :desc).limit(3) は、Relation の @values に where、order、limit の値を保存する。build_arel はそれを Arel の構文木に変換する。構文木の根は SelectStatement で、SelectCore の中に FROM と SELECT で取り出す列と WHERE の Equality があり、SelectStatement に ORDER の Descending と Limit がある。Equality の右辺は QueryAttribute で、enum の型により :published が 1 に変換される。MySQL 用の visitor が構文木をたどって SQL の文字列にする"
@@ -112,54 +115,160 @@ function ArelFigure() {
   )
 }
 
-/* ---------- 図 16-4 Relation の組み立てと読み込み ---------- */
-function LifecycleFigure() {
+/* ---------- 図 22-4（段階送り）Relation の組み立てと読み込み ---------- */
+const lifecycleBoxes: { x: number; y: number; lines: string[] }[] = [
+  { x: 20, y: 30, lines: ['組み立て', 'where・order・limit'] },
+  { x: 205, y: 30, lines: ['load', 'to_a → records から'] },
+  { x: 390, y: 30, lines: ['exec_queries'] },
+  { x: 575, y: 30, lines: ['exec_main_query', 'with_connection'] },
+  { x: 575, y: 120, lines: ['select_all', '_query_by_sql から'] },
+  { x: 390, y: 120, lines: ['to_sql_and_binds', 'visitor.compile'] },
+  { x: 205, y: 120, lines: ['select → raw_execute', 'log → MySQL'] },
+  { x: 20, y: 120, lines: ['instantiate_records', '@records に保存'] },
+]
+
+function LifecycleSnapshot({ active }: { active: number }) {
+  const current = active < lifecycleBoxes.length ? lifecycleBoxes[active].lines[0] : '2回目の to_a'
   return (
     <Svg
-      id="16-4"
+      id={`${figure(4)}-${active + 1}`}
       w={760}
-      h={270}
-      label="Article.where(author_id: 3) や limit(2) は、そのたびに Relation を複製して値を追加するだけで、SQL を実行しない。each や to_a などでレコードが必要になると load が呼ばれ、exec_queries が SQL を作って select_all で実行し、結果の行からレコードを作って @records に保存する。読み込み済みの Relation でもう一度 to_a を呼んでも SQL は実行されない。読み込み済みの Relation に where! で条件を追加しようとすると UnmodifiableRelation になる"
+      h={250}
+      label={`Relation を組み立ててから読み込むまでの段の並び。上の段は左から、組み立て、load、exec_queries、exec_main_query。下の段は右から、select_all、to_sql_and_binds、select から log まで、instantiate_records。最後に2回目の to_a が SQL を送らずに @records を返す。いま強調している段は ${current}`}
     >
-      <T x={20} y={20} fs={12} tone="muted">
-        組み立て（SQL は実行しない）
+      <T x={20} y={18} fs={11.5} tone="muted">
+        SQL を送らない
       </T>
-      <Box x={20} y={32} w={150} h={40} lines="Article" mono fs={12} />
-      <Arrow x1={170} y1={52} x2={208} y2={52} />
-      <T x={189} y={42} fs={10.5} mono anchor="middle">
-        where
+      <T x={205} y={18} fs={11.5} tone="muted">
+        読み込み（each・to_a・first など）
       </T>
-      <Box x={210} y={32} w={160} h={40} lines={['Relation', 'where: author_id=3']} mono fs={11} subTone="muted" />
-      <Arrow x1={370} y1={52} x2={408} y2={52} />
-      <T x={389} y={42} fs={10.5} mono anchor="middle">
-        limit
-      </T>
-      <Box x={410} y={32} w={160} h={40} lines={['Relation（複製）', '+ limit: 2']} mono fs={11} subTone="muted" />
-
-      <T x={20} y={110} fs={12} tone="muted">
-        読み込み（each、to_a、first など）
-      </T>
-      <Box x={410} y={122} w={160} h={40} lines="load" mono fs={12} fill="box5" />
-      <Arrow x1={490} y1={72} x2={490} y2={120} />
-      <Arrow x1={570} y1={142} x2={608} y2={142} />
-      <Box x={610} y={112} w={140} h={60} lines={['exec_queries', 'build_arel → SQL', 'select_all']} mono fs={11} subTone="muted" />
-      <Arrow x1={680} y1={172} x2={680} y2={198} />
-      <Box x={560} y={200} w={190} h={52} lines={['行からレコードを作り', '@records に保存（loaded）']} fs={11.5} fill="box4" />
-      <T x={20} y={214} fs={11.5}>
-        2回目の to_a：@records を返すだけ（SQL なし）
-      </T>
-      <T x={20} y={238} fs={11.5} tone="danger">
-        読み込み後の where!：UnmodifiableRelation
-      </T>
+      {lifecycleBoxes.map((b, i) => (
+        <Box key={b.lines[0]} x={b.x} y={b.y} w={165} h={50} lines={b.lines} mono fs={12} bold={i === active} fill={i === active ? 'box5' : 'box'} subTone="muted" />
+      ))}
+      <Arrow x1={185} y1={55} x2={203} y2={55} />
+      <Arrow x1={370} y1={55} x2={388} y2={55} />
+      <Arrow x1={555} y1={55} x2={573} y2={55} />
+      <Arrow x1={657} y1={80} x2={657} y2={118} />
+      <Arrow x1={575} y1={145} x2={557} y2={145} />
+      <Arrow x1={390} y1={145} x2={372} y2={145} />
+      <Arrow x1={205} y1={145} x2={187} y2={145} />
+      <Arrow x1={102} y1={170} x2={102} y2={198} dashed />
+      <Box x={20} y={200} w={350} h={36} lines="2回目の to_a：@records を返す（SQL なし）" fs={12} bold={active === 8} fill={active === 8 ? 'box5' : 'bg'} dashed />
     </Svg>
   )
 }
 
-/* ---------- 図 16-5 Relation からクラスメソッドを呼ぶ ---------- */
+const lifecycleSteps = [
+  {
+    label: '組み立て',
+    detail: (
+      <>
+        <LifecycleSnapshot active={0} />
+        <p>
+          <code>r = Article.where(status: :published).order(published_at: :desc).limit(3)</code> の where・order・limit は Relation を複製して <code>@values</code> に値を足すだけです。デモでは、この時点で{' '}
+          <code>r.loaded?</code> は nil、送られた SQL は0回、<code>r.values.keys</code> は <code>[:where, :order, :limit]</code> でした。
+        </p>
+      </>
+    ),
+  },
+  {
+    label: 'load',
+    detail: (
+      <>
+        <LifecycleSnapshot active={1} />
+        <p>
+          <code>r.to_a</code> は <code>records</code> を通して <code>load</code> を呼びます。<code>loaded?</code> が偽なので、load は <code>exec_queries</code> を呼びます（relation.rb の 1207〜1214行目）。
+        </p>
+      </>
+    ),
+  },
+  {
+    label: 'exec_queries',
+    detail: (
+      <>
+        <LifecycleSnapshot active={2} />
+        <p>
+          load_async で予約した結果（<code>scheduled?</code>）が無いので、<code>exec_main_query</code> を呼んで行を受け取ります。受け取った行からレコードを作る処理は、最後の段で同じ exec_queries が続けて行います。
+        </p>
+      </>
+    ),
+  },
+  {
+    label: 'exec_main_query',
+    detail: (
+      <>
+        <LifecycleSnapshot active={3} />
+        <p>
+          none でも、条件が矛盾した Relation でもなく、eager_load（関連を JOIN でまとめて読む指定）も使っていないので、<code>model.with_connection</code> で接続プールから接続を借り、<code>model._query_by_sql(c, arel)</code> を呼びます。ここで渡す <code>arel</code> は、build_arel が作った構文木です。
+        </p>
+      </>
+    ),
+  },
+  {
+    label: 'select_all',
+    detail: (
+      <>
+        <LifecycleSnapshot active={4} />
+        <p>
+          _query_by_sql は <code>c.select_all(arel, "Article Load", [])</code> を呼びます。select_all は mysql2 用、クエリキャッシュ用（QueryCache）、共通の DatabaseStatements の3つのモジュールが重ねて定義していて、この順に super で進みます。
+        </p>
+      </>
+    ),
+  },
+  {
+    label: 'SQL の文字列',
+    detail: (
+      <>
+        <LifecycleSnapshot active={5} />
+        <p>
+          共通の select_all は <code>to_sql_and_binds</code> を呼び、その中の <code>visitor.compile</code> が構文木を次の文字列にしました。mysql2 はプリペアドステートメントを使わないので、値は文字列に埋め込まれ、binds は空の配列です。
+        </p>
+        <p>
+          <code>{'SELECT `articles`.* FROM `articles` WHERE `articles`.`status` = 1 ORDER BY `articles`.`published_at` DESC LIMIT 3'}</code>
+        </p>
+      </>
+    ),
+  },
+  {
+    label: 'SQL を送る',
+    detail: (
+      <>
+        <LifecycleSnapshot active={6} />
+        <p>
+          select、internal_exec_query、raw_execute を経て、log の中の perform_query が mysql2 で MySQL に SQL を送ります。log は SQL の実行を囲んで sql.active_record を通知し、ログに Article Load の行が出ます。
+        </p>
+      </>
+    ),
+  },
+  {
+    label: 'レコードを作る',
+    detail: (
+      <>
+        <LifecycleSnapshot active={7} />
+        <p>
+          exec_queries に戻り、<code>instantiate_records</code> が <code>_load_from_sql</code> を呼んで、3行から Article のインスタンスを3つ作ります。load がそれを <code>@records</code> に入れ、<code>@loaded</code> を真にします。デモでは <code>r.loaded?</code> が true、送られた SQL は1回でした。
+        </p>
+      </>
+    ),
+  },
+  {
+    label: '2回目の to_a',
+    detail: (
+      <>
+        <LifecycleSnapshot active={8} />
+        <p>
+          同じ r にもう一度 to_a を呼ぶと、<code>loaded?</code> が真なので load は exec_queries を呼ばず、<code>@records</code> の複製を返します。デモでは SQL の回数は1回のままでした。読み込み済みの r に <code>where!(id: 1)</code> を呼ぶと、<code>ActiveRecord::UnmodifiableRelation</code> が発生しました。
+        </p>
+      </>
+    ),
+  },
+]
+
+/* ---------- 図 22-5 Relation からクラスメソッドを呼ぶ ---------- */
 function DelegationFigure() {
   return (
     <Svg
-      id="16-5"
+      id={figure(5)}
       w={760}
       h={230}
       label="Article.published は Relation を返す。その Relation で popular を呼ぶと、Relation には popular が無いので、Article::ActiveRecord_Relation の method_missing が Article クラスに popular があるかを調べ、GeneratedRelationMethods に委譲メソッドを定義する。委譲メソッドは scoping のブロックの中で Article.popular を呼ぶ。scoping の間は Article.where などが今の Relation から始まるので、popular の where は status = 1 の条件に追加される"
@@ -179,7 +288,7 @@ function DelegationFigure() {
   )
 }
 
-/* ---------- 図 16-6 複合索引 (status, published_at) ---------- */
+/* ---------- 図 22-6 複合索引 (status, published_at) ---------- */
 function CompositeIndexFigure() {
   const rows = [
     ['0', 'NULL'],
@@ -192,7 +301,7 @@ function CompositeIndexFigure() {
   ]
   return (
     <Svg
-      id="16-6"
+      id={figure(6)}
       w={760}
       h={300}
       label="索引 index_articles_on_status_and_published_at は、status の順に並び、同じ status の中では published_at の順に並んでいる。WHERE status = 1 ORDER BY published_at DESC LIMIT 10 は、status = 1 の範囲の末尾から逆向きに10件読めばよいので、並べ替えが要らない。EXPLAIN では type が ref、Extra が Backward index scan になった。WHERE published_at 以上の条件だけの場合は、published_at が索引の先頭の列ではないので索引を使えず、type が ALL の全件走査と filesort になった"
@@ -247,7 +356,7 @@ function CompositeIndexFigure() {
   )
 }
 
-/* ---------- 図 16-1 WHERE・ORDER BY・LIMIT ---------- */
+/* ---------- 図 22-1 WHERE・ORDER BY・LIMIT ---------- */
 function WhereOrderLimitFigure() {
   const steps = [
     { x: 20, lines: ['articles', '10004 行', '（すべての行）'], fill: 'box4' as const },
@@ -258,7 +367,7 @@ function WhereOrderLimitFigure() {
   const labels = ['WHERE', 'ORDER BY', 'LIMIT 3']
   return (
     <Svg
-      id="16-1"
+      id={figure(1)}
       w={780}
       h={230}
       label="articles テーブルの10004行から、WHERE author_id = 3 で条件に合う482行を選び、ORDER BY views_count DESC で views_count の大きい順に並べ、LIMIT 3 で先頭の3行を取り出す。結果は id が 5200・5085・4874 の3行。SQL の中では WHERE・ORDER BY・LIMIT の順に書く"
@@ -288,7 +397,7 @@ function WhereOrderLimitFigure() {
   )
 }
 
-/* ---------- 図 16-2 メソッドチェーンと SQL ---------- */
+/* ---------- 図 22-2 メソッドチェーンと SQL ---------- */
 function ChainFigure() {
   const rows = [
     { code: 'Article.where(author_id: 3)', sql: 'WHERE `articles`.`author_id` = 3' },
@@ -297,7 +406,7 @@ function ChainFigure() {
   ]
   return (
     <Svg
-      id="16-2"
+      id={figure(2)}
       w={780}
       h={300}
       label="Article.where(author_id: 3) は WHERE の条件を持つ Relation を返す。それに order を続けると ORDER BY が加わった Relation が、さらに limit を続けると LIMIT 3 が加わった Relation が返る。ここまで SQL は送られない。each や to_a で中身を使うと、ためた条件から1つの SELECT を作って MySQL に1回だけ送り、返ってきた3行から Article のインスタンスを3つ作る"
@@ -408,7 +517,7 @@ mysql> SELECT id, title, author_id, views_count FROM articles
           />
           <p>
             <code>LIMIT 3</code> は並べた結果の先頭から3行だけを返す指定です。SQL の中では WHERE・ORDER BY・LIMIT の順に書き、結果は「条件で行を選び、選んだ行を並べ、先頭から3行を取る」とした場合と同じになります（図
-            16-1）。
+            22-1）。
           </p>
           <p>
             views_count が 996 の記事は2件あり、LIMIT の無い結果では 5085 が先、LIMIT 3 の結果では 5200 が先でした。ORDER BY で指定した列の値が同じ行の順番は決まっておらず、MySQL
@@ -428,7 +537,7 @@ mysql> SELECT COUNT(*) FROM articles WHERE author_id = 3;
 1 row in set (0.01 sec)
 `}
           />
-          <Figure n="16-1" title="WHERE・ORDER BY・LIMIT" caption="この節の実行結果をもとにした模式図。行の数はデモの articles テーブル（10004行）での値。">
+          <Figure n={figure(1)} title="WHERE・ORDER BY・LIMIT" caption="この節の実行結果をもとにした模式図。行の数はデモの articles テーブル（10004行）での値。">
             <WhereOrderLimitFigure />
           </Figure>
         </>
@@ -481,7 +590,7 @@ r1.to_sql     # => "SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\
           <p>
             where・order・limit は、どれも Article::ActiveRecord_Relation のオブジェクトを返しました。このオブジェクトを <Term>Relation</Term> と呼びます。Relation
             は記事の配列ではなく、「articles テーブルから、どの条件で、どの順に、何行を取り出すか」を覚えておくオブジェクトです。<code>to_sql</code> はその Relation から作られる SQL
-            を返すメソッドで、order や limit を続けるたびに、SQL に ORDER BY と LIMIT が加わりました（図 16-2）
+            を返すメソッドで、order や limit を続けるたびに、SQL に ORDER BY と LIMIT が加わりました（図 {figure(2)}）
             <Ref n={14} />。
           </p>
           <p>
@@ -575,7 +684,7 @@ r
             <code>"..."</code> を表示します（<code>relation.rb</code> の <code>pretty_print</code>）
             <Ref n={1} />。コンソールで SQL を送る時点を確かめるときは、<code>to_sql</code> や <code>loaded?</code> を使います。
           </p>
-          <Figure n="16-2" title="メソッドチェーンと SQL" caption="この節の実行結果をもとにした模式図。">
+          <Figure n={figure(2)} title="メソッドチェーンと SQL" caption="この節の実行結果をもとにした模式図。">
             <ChainFigure />
           </Figure>
           <p>
@@ -849,7 +958,7 @@ Equality の右辺: ActiveRecord::Relation::QueryAttribute
   value=:published  value_for_database=1
 `}
           />
-          <Figure n="16-3" title="Relation の値から SQL まで" caption="上の実行結果を図にしたもの。構文木は主な節点だけを描いている。">
+          <Figure n={figure(3)} title="Relation の値から SQL まで" caption="上の実行結果を図にしたもの。構文木は主な節点だけを描いている。">
             <ArelFigure />
           </Figure>
           <p>
@@ -866,6 +975,134 @@ Equality の右辺: ActiveRecord::Relation::QueryAttribute
               <Ref n={4} />。
             </p>
           </Callout>
+          <p>
+            visitor が構文木をたどる入口は、ToSql の <code>compile</code> です。Arel::Visitors::MySQL は ToSql のサブクラスで、compile を定義し直していないので、ToSql の compile が使われます。
+          </p>
+          <Code
+            lang="ruby"
+            title="activerecord/lib/arel/visitors/to_sql.rb（17〜19行目）"
+            href={`${GH}/activerecord/lib/arel/visitors/to_sql.rb#L17-L19`}
+            code={`
+      def compile(node, collector = Arel::Collectors::SQLString.new)
+        accept(node, collector).value
+      end
+`}
+          />
+          <Code
+            lang="ruby"
+            title="activerecord/lib/arel/visitors/visitor.rb（10〜12行目、17〜21行目、27〜42行目）"
+            href={`${GH}/activerecord/lib/arel/visitors/visitor.rb#L10-L42`}
+            code={`
+      def accept(object, collector = nil)
+        visit object, collector
+      end
+
+        def self.dispatch_cache
+          @dispatch_cache ||= Hash.new do |hash, klass|
+            hash[klass] = :"visit_#{(klass.name || "").gsub("::", "_")}"
+          end.compare_by_identity
+        end
+
+        def visit(object, collector = nil)
+          dispatch_method = dispatch[object.class]
+          if collector
+            send dispatch_method, object, collector
+          else
+            send dispatch_method, object
+          end
+        rescue NoMethodError => e
+          raise e if respond_to?(dispatch_method, true)
+          superklass = object.class.ancestors.find { |klass|
+            respond_to?(dispatch[klass], true)
+          }
+          raise(TypeError, "Cannot visit #{object.class}") unless superklass
+          dispatch[object.class] = dispatch[superklass]
+          retry
+        end
+`}
+          />
+          <p>
+            compile は SQL の断片をためるオブジェクト（collector）を accept に渡し、最後に collector がためた文字列（<code>value</code>）を返します。accept は visit を呼ぶだけです。visit は節点のクラス名の <code>::</code> を <code>_</code> に置き換えて、呼ぶメソッドの名前を作ります。Arel::Nodes::Equality なら <code>visit_Arel_Nodes_Equality</code> で、作った名前は dispatch_cache に保存して使い回します。そのクラス用のメソッドが無いときは、先祖のクラスを順に調べ、メソッドが見つかったクラスの名前に置き換えてやり直します（<code>retry</code>）。<Ref n={15} />
+          </p>
+          <Code
+            lang="ruby"
+            title="activerecord/lib/arel/visitors/to_sql.rb（633〜646行目）"
+            href={`${GH}/activerecord/lib/arel/visitors/to_sql.rb#L633-L646`}
+            code={`
+        def visit_Arel_Nodes_Equality(o, collector)
+          right = o.right
+
+          return collector << "1=0" if unboundable?(right)
+
+          collector = visit o.left, collector
+
+          if right.nil?
+            collector << " IS NULL"
+          else
+            collector << " = "
+            visit right, collector
+          end
+        end
+`}
+          />
+          <p>
+            visit_ で始まるメソッドは collector に SQL の断片を足し（<code>collector &lt;&lt; " = "</code>）、子の節点を visit で同じように処理します。<Ref n={16} />Equality では左辺の列を visit してから <code>" = "</code> を足し、右辺の値を visit します（右辺が nil なら <code>" IS NULL"</code> を足す）。
+          </p>
+          <p>デモのアプリケーション（Rails 8.1.4.1・MySQL 8.4）で、上の r を visitor に直接渡しました。</p>
+          <Code
+            lang="ruby"
+            code={`
+Article.with_connection do |c|
+  c.visitor.class               # => Arel::Visitors::MySQL
+  c.visitor.class.superclass    # => Arel::Visitors::ToSql
+  c.prepared_statements         # => false
+  c.visitor.compile(r.arel.ast, c.send(:collector))
+  # => "SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`status\` = 1 ORDER BY \`articles\`.\`published_at\` DESC LIMIT 3"
+end
+`}
+          />
+          <p>
+            <code>collector</code> は接続のアダプターが持つ private メソッドなので、<code>send</code> で呼びました。プリペアドステートメントを使わない mysql2 では、値を SQL に埋め込む collector（Arel::Collectors::SubstituteBinds）を返します。そのため、<code>r.arel.to_sql</code> では <code>?</code> だった位置に 1 と 3 が入りました。
+          </p>
+          <p>
+            compile の間に呼ばれたメソッドのうち、compile・accept と、名前が visit で始まるものを TracePoint（メソッドの呼び出しと戻りを記録する Ruby の機能）で記録すると、次の順でした。字下げは呼び出しの深さで、左はメソッドを定義したクラス（Arel::Visitors:: を省略）です。
+          </p>
+          <Code
+            lang="text"
+            code={`
+ToSql#compile
+  Visitor#accept
+    Visitor#visit
+      MySQL#visit_Arel_Nodes_SelectStatement
+        ToSql#visit_Arel_Nodes_SelectStatement
+          MySQL#visit_Arel_Nodes_SelectCore
+            ToSql#visit_Arel_Nodes_SelectCore
+              Visitor#visit
+                ToSql#visit_Arel_Attributes_Attribute      ← SELECT の列（articles.*）
+              Visitor#visit
+                ToSql#visit_Arel_Nodes_JoinSource          ← FROM
+                  Visitor#visit
+                    ToSql#visit_Arel_Table
+              Visitor#visit
+                ToSql#visit_Arel_Nodes_Equality            ← WHERE
+                  Visitor#visit
+                    ToSql#visit_Arel_Attributes_Attribute
+                  Visitor#visit
+                    ToSql#visit_ActiveModel_Attribute      ← 右辺の値（1）
+          Visitor#visit
+            ToSql#visit_Arel_Nodes_Descending              ← ORDER BY
+              Visitor#visit
+                ToSql#visit_Arel_Attributes_Attribute
+          ToSql#visit_Arel_Nodes_SelectOptions
+            Visitor#visit
+              ToSql#visit_Arel_Nodes_Limit                 ← LIMIT
+                Visitor#visit
+                  ToSql#visit_ActiveModel_Attribute        ← 件数（3）
+`}
+          />
+          <p>
+            MySQL の visit_Arel_Nodes_SelectStatement と visit_Arel_Nodes_SelectCore が先に呼ばれ、super で ToSql の同じ名前のメソッドに進んでいます。図 {figure(3)} の構文木を、列、FROM、WHERE、ORDER BY、LIMIT の順にたどり、SQL の文字列を前から組み立てています。WHERE の右辺の QueryAttribute と LIMIT の値（ActiveModel::Attribute::WithCastValue）には専用のメソッドが無いので、先祖の ActiveModel::Attribute 用の <code>visit_ActiveModel_Attribute</code> が呼ばれました。
+          </p>
         </>
       ),
     },
@@ -925,8 +1162,118 @@ Equality の右辺: ActiveRecord::Relation::QueryAttribute
             上の <code>load</code> に戻ると、完成した記事の配列は <code>@records</code> に入り、<code>@loaded</code> が真になります。<code>r.load</code> の戻り値は最後の行の <code>self</code>、つまり Relation 自身です。
             同じ <code>r</code> にもう一度 <code>to_a</code> を呼ぶと、保存済みの記事を配列で受け取れます。ここで同じ SELECT を再実行する必要はありません。
           </p>
-          <Figure n="16-4" title="Relation の組み立てと読み込み" caption="Rails 8.1.4.1 の relation.rb・query_methods.rb・spawn_methods.rb を読んでまとめた図。">
-            <LifecycleFigure />
+          <p>SQL の文字列を作って DB に送るのは、exec_queries が呼ぶ <code>exec_main_query</code> から先です。</p>
+          <Code
+            lang="ruby"
+            title="activerecord/lib/active_record/relation.rb（1455〜1485行目）"
+            href={`${GH}/activerecord/lib/active_record/relation.rb#L1455-L1485`}
+            code={`
+      def exec_main_query(async: false)
+        if @none
+          if async
+            return FutureResult.wrap([])
+          else
+            return []
+          end
+        end
+
+        skip_query_cache_if_necessary do
+          if where_clause.contradiction?
+            [].freeze
+          elsif eager_loading?
+            model.with_connection do |c|
+              apply_join_dependency do |relation, join_dependency|
+                if relation.null_relation?
+                  [].freeze
+                else
+                  relation = join_dependency.apply_column_aliases(relation)
+                  @_join_dependency = join_dependency
+                  c.select_all(relation.arel, "#{model.name} Eager Load", async: async)
+                end
+              end
+            end
+          else
+            model.with_connection do |c|
+              model._query_by_sql(c, arel, async: async)
+            end
+          end
+        end
+      end
+`}
+          />
+          <p>
+            <code>none</code> を指定した Relation と、条件が矛盾していて行が無いと分かる Relation は、SQL を送らずに空の配列を返します。デモでは <code>Article.none.to_a</code> と <code>Article.where(id: []).to_a</code> のどちらも、SQL は0回でした。eager_load（関連を JOIN でまとめて読む指定）を使う場合を除くと、最後の <code>else</code> に進みます。<code>model.with_connection</code> で接続プールから接続を借り（<ChapterLink n={15} section="pool" />
+            ）、<code>_query_by_sql</code> に <code>arel</code>（build_arel が作った構文木）を渡します。
+          </p>
+          <Code
+            lang="ruby"
+            title="activerecord/lib/active_record/querying.rb（79〜81行目）"
+            href={`${GH}/activerecord/lib/active_record/querying.rb#L79-L81`}
+            code={`
+    def _query_by_sql(connection, sql, binds = [], preparable: nil, async: false, allow_retry: false) # :nodoc:
+      connection.select_all(sanitize_sql(sql), "#{name} Load", binds, preparable: preparable, async: async, allow_retry: allow_retry)
+    end
+`}
+          />
+          <Code
+            lang="ruby"
+            title="activerecord/lib/active_record/connection_adapters/abstract/database_statements.rb（72〜80行目）"
+            href={`${GH}/activerecord/lib/active_record/connection_adapters/abstract/database_statements.rb#L72-L80`}
+            code={`
+      def select_all(arel, name = nil, binds = [], preparable: nil, async: false, allow_retry: false)
+        arel = arel_from_relation(arel)
+        sql, binds, preparable, allow_retry = to_sql_and_binds(arel, binds, preparable, allow_retry)
+
+        select(sql, name, binds,
+          prepare: prepared_statements && preparable,
+          async: async && FutureResult::SelectAll,
+          allow_retry: allow_retry
+        )
+`}
+          />
+          <p>
+            _query_by_sql はログの行に出る名前（<code>"Article Load"</code>）を付けて select_all を呼びます。select_all は 74 行目の <code>to_sql_and_binds</code> で、「Arel の構文木と SQL」の節で見た <code>visitor.compile</code> を呼んで構文木を SQL の文字列にし、76 行目の <code>select</code> で実行します。<Ref n={17} />
+          </p>
+          <p>
+            「Arel の構文木と SQL」の節と同じ r で <code>r.to_a</code> を1回実行し、その間に呼ばれた主なメソッドを TracePoint で記録しました。字下げは呼び出しの深さ、右はメソッドを定義したファイルと行です。
+          </p>
+          <Code
+            lang="text"
+            code={`
+ActiveRecord::Relation#load  relation.rb:1207
+  ActiveRecord::Relation#exec_queries  relation.rb:1431
+    ActiveRecord::Relation#exec_main_query  relation.rb:1455
+      ActiveRecord::ConnectionHandling#with_connection  connection_handling.rb:312
+        ActiveRecord::ConnectionAdapters::ConnectionPool#with_connection  connection_pool.rb:452
+          ActiveRecord::Querying#_query_by_sql  querying.rb:79
+            ActiveRecord::ConnectionAdapters::Mysql2::DatabaseStatements#select_all  database_statements.rb:8
+              ActiveRecord::ConnectionAdapters::QueryCache#select_all  query_cache.rb:263
+                ActiveRecord::ConnectionAdapters::DatabaseStatements#select_all  database_statements.rb:72
+                  ActiveRecord::ConnectionAdapters::DatabaseStatements#to_sql_and_binds  database_statements.rb:17
+                    Arel::Visitors::ToSql#compile  to_sql.rb:17
+                  ActiveRecord::ConnectionAdapters::DatabaseStatements#select  database_statements.rb:698
+                    ActiveRecord::ConnectionAdapters::DatabaseStatements#internal_exec_query  database_statements.rb:554
+                      ActiveRecord::ConnectionAdapters::DatabaseStatements#raw_execute  database_statements.rb:567
+                        ActiveRecord::ConnectionAdapters::AbstractAdapter#log  abstract_adapter.rb:1217
+                          ActiveRecord::ConnectionAdapters::Mysql2::DatabaseStatements#perform_query  database_statements.rb:41
+   [sql.active_record] Article Load: SELECT \`articles\`.* FROM \`articles\` WHERE \`articles\`.\`status\` = 1 ORDER BY \`articles\`.\`published_at\` DESC LIMIT 3
+    ActiveRecord::Relation#instantiate_records  relation.rb:1487
+      ActiveRecord::Querying#_load_from_sql  querying.rb:83
+`}
+          />
+          <p>
+            select_all は3つのモジュールが同じ名前で定義していて、mysql2 用、クエリキャッシュ用（QueryCache）、共通の DatabaseStatements の順に super で進みました。共通の select_all の中で、to_sql_and_binds が ToSql#compile を呼んで SQL の文字列を作り、戻ってから select に進みます。perform_query が mysql2 のドライバーで SQL を MySQL に送り、それを囲む log が終わったところで sql.active_record の通知が出ました（[sql.active_record] の行）。exec_main_query から戻った exec_queries は、instantiate_records で行から Article のインスタンスを作ります。
+          </p>
+          <p>
+            このデモは Rails の要求の外で実行したので、クエリキャッシュは無効でした。要求を処理している間はクエリキャッシュが有効になり、QueryCache の select_all が先に SQL の文字列を作って、同じ SQL の結果が保存されていないかを調べます（「クエリキャッシュ」の節）。1件の要求の中でこの呼び出しがどこから始まるかは、<ChapterLink n={26} section="call-order" /> で確かめられます。
+          </p>
+          <p>ここまでの流れを、段ごとに送って確かめられるようにしたのが図 {figure(4)} です。</p>
+          <Figure
+            n={figure(4)}
+            title="Relation の組み立てと読み込み（段階送り）"
+            caption="Rails 8.1.4.1・MySQL 8.4 で r.to_a を1回実行したときの呼び出しを、8つの段と2回目の to_a にまとめた概念モデル。「次の段階」で1段ずつ進む。実際には with_connection や select_all のように同じ名前のメソッドを複数のモジュールが重ねて定義していて、段の間にほかのメソッドも入る。クエリキャッシュが有効なときは QueryCache の select_all が先に SQL を作って保存済みの結果を探し、見つかれば MySQL に SQL を送らない。"
+          >
+            <Stepper steps={lifecycleSteps} />
           </Figure>
         </>
       ),
@@ -1065,7 +1412,7 @@ Article.published.popular.to_sql
 Article.where(nil).class.ancestors[1]   # => Article::GeneratedRelationMethods
 `}
           />
-          <Figure n="16-5" title="Relation からクラスメソッドを呼ぶ" caption="Rails 8.1.4.1 の relation/delegation.rb を読んでまとめた図。">
+          <Figure n={figure(5)} title="Relation からクラスメソッドを呼ぶ" caption="Rails 8.1.4.1 の relation/delegation.rb を読んでまとめた図。">
             <DelegationFigure />
           </Figure>
           <p>
@@ -1227,9 +1574,7 @@ type=ALL  key=NULL  rows=9838  filtered=33.33  Extra=Using where; Using filesort
 `}
           />
           <p>
-            type・key・rows・filtered・Extra などの列の意味は <ChapterLink n={37} section="explain-rails" /> で扱いました。type の <code>ref</code> は索引の値が一致する行を読むことを、
-            <code>ALL</code> は表全体を走査することを表し、key は使うことにした索引、rows は読む必要があると見積もった行数です
-            <Ref n={7} />。Extra の <code>Using filesort</code> は並べ替えのために追加の処理が要ること、<code>Backward index scan</code> は索引を逆向きに読むことを表します。
+            各列の意味は <ChapterLink n={37} section="explain-rails" /> で確認できます。ここでは、似た条件でもどの索引が選ばれ、別の並べ替え処理が必要になるかを比べます。<Ref n={7} />
           </p>
           <p>
             ① は status = 1 の行だけを索引で読み、同じ status の中では published_at の順に並んでいるので、末尾から逆向きに読むだけで並べ替えが要りません。MySQL のマニュアルも、索引の1列目が定数で ORDER BY
@@ -1237,7 +1582,7 @@ type=ALL  key=NULL  rows=9838  filtered=33.33  Extra=Using where; Using filesort
             <Ref n={8} />。④ は published_at だけを条件にしているので、(status, published_at) の索引を使えず全件走査になりました。複合索引が先頭の列から順に使われる決まりと、その例外は{' '}
             <ChapterLink n={37} section="composite-index" /> で扱いました。③ は title に索引が無いので全件走査です。
           </p>
-          <Figure n="16-6" title="複合索引 (status, published_at)" caption="模式図。索引の並びは単純化している。右の結果はデモのアプリケーション（MySQL 8.4.13）の EXPLAIN による。">
+          <Figure n={figure(6)} title="複合索引 (status, published_at)" caption="模式図。索引の並びは単純化している。右の結果はデモのアプリケーション（MySQL 8.4.13）の EXPLAIN による。">
             <CompositeIndexFigure />
           </Figure>
           <p>
@@ -1298,6 +1643,9 @@ type=ALL  key=NULL  rows=9838  filtered=33.33  Extra=Using where; Using filesort
     { title: 'LIMIT Query Optimization', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/limit-optimization.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'ORDER BY の列の値が同じ行は、どの順で返してもよく、実行計画によって順が変わること。' },
     { title: 'SELECT Statement', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/select.html', accessed: '2026-11-16', version: 'MySQL 8.4', note: 'WHERE・ORDER BY・LIMIT の書き方と、書く順。実行例は MySQL 8.4.13 で実測。' },
     { title: 'Active Record Query Interface', publisher: 'Ruby on Rails Guides', url: 'https://guides.rubyonrails.org/v8.1/active_record_querying.html', accessed: '2026-11-16', version: 'Rails 8.1', note: 'where・order・limit と all が ActiveRecord::Relation を返し、続けてメソッドを呼べること。scope。実行例は Rails 8.1.4.1 で実測。' },
+    { title: 'activerecord/lib/arel/visitors/visitor.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/arel/visitors/visitor.rb#L10-L42`, accessed: '2026-11-27', version: 'Rails 8.1.4.1', note: 'accept と visit。節点のクラス名から visit_ のメソッド名を作り、無ければ先祖のクラスのメソッドを使うこと。' },
+    { title: 'activerecord/lib/arel/visitors/to_sql.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/arel/visitors/to_sql.rb#L17-L19`, accessed: '2026-11-27', version: 'Rails 8.1.4.1', note: 'compile（17〜19行目）と visit_Arel_Nodes_Equality（633〜646行目）。collector に SQL の断片を足していくこと。' },
+    { title: 'activerecord/lib/active_record/connection_adapters/abstract/database_statements.rb', publisher: 'rails/rails（GitHub）', url: `${GH}/activerecord/lib/active_record/connection_adapters/abstract/database_statements.rb#L72-L80`, accessed: '2026-11-27', version: 'Rails 8.1.4.1', note: 'select_all が to_sql_and_binds（17〜51行目）で visitor.compile を呼び、select で実行すること。' },
   ],
 }
 

@@ -5,11 +5,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const GH_TREE = 'https://github.com/rails/rails/tree/v8.1.4.1'
 
-/* ---------- 図 75-1 注文確定のアクションが直接つながっている相手 ---------- */
+/* ---------- 図 92-1 注文確定のアクションが直接つながっている相手 ---------- */
 function DirectDepsFigure() {
   return (
     <Svg
-      id="75-1"
+      id="92-1"
       w={760}
       h={350}
       label="OrdersController の create アクションが、Order モデル（MySQL）、A社の決済 API、OrderMailer（SMTP のメールサーバー）、Time.current（現在時刻）の4つに直接つながっている図。アクションの中には割引の case 文もある。4つともアクションの中で直接指定しているので、テストや切り替えのときに外から差し替えにくい。請求の後の保存や送信で失敗すると、請求だけが残るか、やり直しで二重に請求される"
@@ -51,7 +51,7 @@ function DirectDepsFigure() {
   )
 }
 
-/* ---------- 図 75-4 パターンの章の節と MSDP の項目の対応 ---------- */
+/* ---------- 図 92-4 パターンの章の節と MSDP の項目の対応 ---------- */
 function ChapterLayoutFigure() {
   const rows: [string, string][] = [
     ['題材の場面と、パターンを使わないコードの問題', 'Context、Implementation の「適用前のコード」「問題点」'],
@@ -68,7 +68,7 @@ function ChapterLayoutFigure() {
   const step = 46
   return (
     <Svg
-      id="75-4"
+      id="92-4"
       w={780}
       h={top + rows.length * step + 36}
       label="パターンの章の節を上から順に並べ、それぞれが MSDP のどの項目に当たるかを示した図。題材の場面の節は Context と適用前のコード、パターンの考え方の節は Intent・Context・Forces・Solution・Structure、章ごとに足す節は補助の概念、Rails での実装の節は適用後のコードと直していく順序と実務での使い方、テストの節はテストコード、効果と代償は Consequences、よくある誤用は Anti-pattern、使い分けと採用の判断は Alternatives と Decision Guide に当たる。Language Comparison と TypeScript の実装は扱わない"
@@ -100,7 +100,7 @@ function ChapterLayoutFigure() {
 
 const CATALOG: { cat: string; focus: string; items: [number, string, string][] }[] = [
   {
-    cat: 'A 依存と差し替え',
+    cat: 'A 構造と依存関係',
     focus: '変更のしやすさ・外部への依存の分離・テストのしやすさ',
     items: [
       [40, 'Dependency Injection', '為替レートと現在時刻を外から渡す'],
@@ -110,7 +110,7 @@ const CATALOG: { cat: string; focus: string; items: [number, string, string][] }
     ],
   },
   {
-    cat: 'B 業務の処理の整理',
+    cat: 'B 業務ロジックと状態',
     focus: '複雑さの整理・テストのしやすさ',
     items: [
       [44, 'Use Case / Application Service', 'イベントの参加申し込みの手順を1か所にまとめる'],
@@ -120,7 +120,7 @@ const CATALOG: { cat: string; focus: string; items: [number, string, string][] }
     ],
   },
   {
-    cat: 'C データの整合性',
+    cat: 'C データと整合性',
     focus: '信頼性（データの食い違いを防ぐ）',
     items: [
       [48, 'Unit of Work', '請求書と明細行をまとめて保存する'],
@@ -129,7 +129,7 @@ const CATALOG: { cat: string; focus: string; items: [number, string, string][] }
     ],
   },
   {
-    cat: 'D 非同期と障害への備え',
+    cat: 'D イベントと信頼性',
     focus: '信頼性（障害と再実行）',
     items: [
       [51, 'Domain Events', '会員登録の後の処理を分ける'],
@@ -460,9 +460,9 @@ Failures:
             </table>
           </div>
           <p>
-            図 75-1 は、このアクションが直接つながっている相手を描いたものです。DB、決済サービス、メールサーバー、現在時刻の4つとも、アクションの中で名前を指定して使っています。矢印の横の数字は、アクションがそれぞれを使う順序です。請求が保存より先にあるので、保存や送信で失敗したときに請求だけが残ります。
+            図 92-1 は、このアクションが直接つながっている相手を描いたものです。DB、決済サービス、メールサーバー、現在時刻の4つとも、アクションの中で名前を指定して使っています。矢印の横の数字は、アクションがそれぞれを使う順序です。請求が保存より先にあるので、保存や送信で失敗したときに請求だけが残ります。
           </p>
-          <Figure n="75-1" title="注文確定のアクションが直接つながっている相手" caption="上のコードをもとにした模式図。丸数字はコードのコメントの番号、矢印の横の数字はアクションが相手を使う順序。">
+          <Figure n="92-1" title="注文確定のアクションが直接つながっている相手" caption="上のコードをもとにした模式図。丸数字はコードのコメントの番号、矢印の横の数字はアクションが相手を使う順序。">
             <DirectDepsFigure />
           </Figure>
           <p>
@@ -541,9 +541,9 @@ Failures:
             <li>テストのしやすさ：副作用と依存先を制御して、検証できるようにする</li>
           </ol>
           <p>
-            図 75-2 は、15のパターンを4つのカテゴリに分けた一覧です。MSDP ではパターンに1から15の番号を付けていますが、この部では表示の章番号で示します。章の欄のリンクから、それぞれの章へ移動できます。題材の欄は、その章で動かすコードの場面です。
+            図 92-2 は、15のパターンを4つのカテゴリに分けた一覧です。MSDP ではパターンに1から15の番号を付けていますが、この部では表示の章番号で示します。章の欄のリンクから、それぞれの章へ移動できます。題材の欄は、その章で動かすコードの場面です。
           </p>
-          <Figure n="75-2" title="MSDP の15のパターンと4つのカテゴリ" caption="章の欄を選ぶと、その章へ移動する。最後の行はパターンを組み合わせる章。">
+          <Figure n="92-2" title="MSDP の15のパターンと4つのカテゴリ" caption="章の欄を選ぶと、その章へ移動する。最後の行はパターンを組み合わせる章。">
             <CatalogTable />
           </Figure>
           <h3>パターンを選んだ基準</h3>
@@ -562,7 +562,7 @@ Failures:
             対象は Web アプリケーション、バックエンドのシステム、モジュラーモノリス（1つのアプリケーションを内部でモジュールに分けた構成）、外部 API との連携、非同期処理、DB を使うアプリケーション、分散システム（複数のサーバーやサービスがネットワークで通信して動くシステム）の基本的な信頼性の設計です。マイクロサービスに固有の複雑な設計（サービスをまたぐトランザクションの調整など）と、フロントエンドに固有の状態管理は扱いません。
           </p>
           <p>
-            設計原則（SOLID など）やアーキテクチャのパターン（Clean Architecture、CQRS など）は、独立した章では扱いません。パターンの章の中で、比べる必要があるときに名前と違いを短く示します。DDD・Clean Architecture・Hexagonal Architecture と Rails の書き方の違いは <ChapterLink n={34} section="rails-way-ddd" /> で扱いました。
+            設計原則（SOLID など）やアーキテクチャのパターン（Clean Architecture、CQRS など）は、独立した章では扱いません。パターンの章の中で、比べる必要があるときに名前と違いを短く示します。DDD・Clean Architecture・Hexagonal Architecture と Rails の書き方の違いは <ChapterLink n={34} section="rails-way-ddd" /> で扱いました。レイヤードアーキテクチャと Clean Architecture の詳しい説明は <ChapterLink n={108} />、DDD と Repository の詳しい説明は <ChapterLink n={109} /> にあります。
           </p>
         </>
       ),
@@ -613,9 +613,9 @@ Failures:
       body: (
         <>
           <p>
-            この部の15のパターンは、Rails との関係で3つに分かれます。図 75-3 は、パターンごとに Rails の標準機能とよく使う gem、Rails での扱いをまとめた表です。
+            この部の15のパターンは、Rails との関係で3つに分かれます。図 92-3 は、パターンごとに Rails の標準機能とよく使う gem、Rails での扱いをまとめた表です。
           </p>
-          <Figure n="75-3" title="Rails の標準機能・gem とパターンの対応" caption="Rails 8.1.4.1 のソースと Rails Guides で確かめた。「標準機能を使う」は Rails の機能でパターンの中心部分が済むもの。">
+          <Figure n="92-3" title="Rails の標準機能・gem とパターンの対応" caption="Rails 8.1.4.1 のソースと Rails Guides で確かめた。「標準機能を使う」は Rails の機能でパターンの中心部分が済むもの。">
             <RailsMapTable />
           </Figure>
           <h3>標準機能を使うもの</h3>
@@ -770,9 +770,9 @@ Failures:
           </p>
           <h3>この部の章の節の並び</h3>
           <p>
-            この部のパターンの章（<ChapterLink n={40} />〜<ChapterLink n={54} />）は、11の項目をすべて含めたうえで、Rails のコードを先に見せる順に並べ替えています。最初の節で、パターンを使わずにコントローラーやモデルへ直接書いたコードを動かし、起きる不具合や変更の手間を実行結果で見せます。そのあとでパターンの考え方に進みます。見出しは「Intent（目的）」の形ではなく本書のほかの章と同じく内容を表す言葉にしています。図 75-4 は節の並びと MSDP の項目の対応です。
+            この部のパターンの章（<ChapterLink n={40} />〜<ChapterLink n={54} />）は、11の項目をすべて含めたうえで、Rails のコードを先に見せる順に並べ替えています。最初の節で、パターンを使わずにコントローラーやモデルへ直接書いたコードを動かし、起きる不具合や変更の手間を実行結果で見せます。そのあとでパターンの考え方に進みます。見出しは「Intent（目的）」の形ではなく本書のほかの章と同じく内容を表す言葉にしています。図 92-4 は節の並びと MSDP の項目の対応です。
           </p>
-          <Figure n="75-4" title="パターンの章の節と MSDP の項目の対応" caption="節の見出しは章ごとに内容に合わせて変えている。紫の箱は Rails のコードを動かして結果を示す節。">
+          <Figure n="92-4" title="パターンの章の節と MSDP の項目の対応" caption="節の見出しは章ごとに内容に合わせて変えている。紫の箱は Rails のコードを動かして結果を示す節。">
             <ChapterLayoutFigure />
           </Figure>
           <p>
@@ -780,7 +780,7 @@ Failures:
           </p>
           <h3>図の記法</h3>
           <p>
-            図は本書の凡例（<ChapterLink n={1} section="conventions" /> の図 1-7）に従って描いています。灰色の箱はクラスや構成要素、緑の箱はデータ・外部のサービス・DB、紫の箱は注目してほしい要素、破線の箱は概念上の要素です。この部では、Ruby にインターフェースの構文がないので、「このメソッドに応答する」という取り決めを破線の箱で描くことがあります。実線の矢印は処理や呼び出し、破線の矢印は戻り値や参照です。赤い文字は問題や失敗を表します。
+            図は本書の凡例（<ChapterLink n={1} section="conventions" /> の図 2-7）に従って描いています。灰色の箱はクラスや構成要素、緑の箱はデータ・外部のサービス・DB、紫の箱は注目してほしい要素、破線の箱は概念上の要素です。この部では、Ruby にインターフェースの構文がないので、「このメソッドに応答する」という取り決めを破線の箱で描くことがあります。実線の矢印は処理や呼び出し、破線の矢印は戻り値や参照です。赤い文字は問題や失敗を表します。
           </p>
           <p>
             同時の更新、重複した配信、途中の失敗は、時間を上から下へ、関係するプロセスやサービスを横に並べたタイムラインの図で描きます。再試行の待ち時間はグラフで示します。実際の構成や数値を単純にした図には、説明に「模式図」と書いています。
@@ -920,6 +920,23 @@ docker run --rm -i --network rbdemo -e RAILS_ENV=test -e TZ=UTC \\
           <p>
             2つの DB 接続で同時の更新を再現する章では、RSpec のトランザクションの中でテストを実行する設定（use_transactional_fixtures）を外し、スレッドごとに別の接続を使っています。その書き方は該当する章で説明します。
           </p>
+        </>
+      ),
+    },
+    {
+      id: 'rails-design-context',
+      title: 'Rails のクラスとパターンを対応づける',
+      body: (
+        <>
+          <p>モデル、コントローラー、ジョブは Rails が決める置き場所と役割です。MSDP は、そこで起きる設計上の問題に対する選択肢を示します。同じ Service Object という名前でも、業務の手順をまとめる場合と、外部サービスとの通信に絞る場合とでは役割が異なります。</p>
+          <Figure title="Rails の処理をパターンが補う箇所" caption="申し込みを受け付けて、確定後に通知する場合の一例です。">
+            <ol className="study-flow">
+              <li className="study-card">Controller<br />リクエストを受け付ける。</li>
+              <li className="study-card"><ChapterLink n={44} section="idea">Use Case</ChapterLink><br />Active Record の保存とジョブの投入順を決める。</li>
+              <li className="study-card"><ChapterLink n={42} section="idea">Adapter</ChapterLink><br />ジョブが呼ぶ通知サービスの仕様をアプリ内の取り決めへ変換する。</li>
+            </ol>
+          </Figure>
+          <p>一つのモデルの更新で済む画面なら、別の Use Case や Repository を足す利点は限られます。更新と外部への通知の両方が必要になったら、どの失敗を考慮するかを先に決めます。<ChapterLink n={33} section="msdp-connections" />、<ChapterLink n={109} section="repository" />。</p>
         </>
       ),
     },

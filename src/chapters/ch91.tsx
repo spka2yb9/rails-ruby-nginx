@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 72-1 商品ページの構成と、問題が起きる箇所 ---------- */
+/* ---------- 図 89-1 商品ページの構成と、問題が起きる箇所 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="72-1"
+      id="89-1"
       w={780}
       h={360}
       label="ブラウザーが GET /products/1 を送ると、ProductsController#show は Product.find で MySQL の products テーブルから商品を読み、RecommendationClient#product_ids でおすすめ API（別のチームが運用）からおすすめの商品の id を受け取り、両方をそろえてから表示する。RecommendationClient にはタイムアウトの設定がなく、おすすめ API が応答しないと既定の60秒まで待つ。おすすめ API が応答しないときや 503 を返したときは、例外がそのままコントローラーまで伝わって 500 になり、商品名・価格・カートに入れるボタンも表示されない"
@@ -46,7 +47,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 72-2 おすすめ API が応答しないときの、3つの要求のタイムライン ---------- */
+/* ---------- 図 89-2 おすすめ API が応答しないときの、3つの要求のタイムライン ---------- */
 const tlCols = [
   { x: 110, lines: ['利用者 A', '/products/1'] },
   { x: 235, lines: ['利用者 B', '/products/2'] },
@@ -58,7 +59,7 @@ const tlCols = [
 function TimelineFigure() {
   return (
     <Svg
-      id="72-2"
+      id="89-2"
       w={780}
       h={420}
       label="Puma のスレッドを2つにして、3人の利用者が0.1秒ずつずらして要求を送ったときのタイムライン。0秒に利用者 A が /products/1 を送り、スレッド1がおすすめ API に要求を送って応答を待つ。0.1秒に利用者 B が /products/2 を送り、スレッド2も同じように待つ。0.2秒に利用者 C が、おすすめ API を使わない /cart を送るが、空いているスレッドがないので待たされる。約60秒後、Net::HTTP の読み込みのタイムアウトで2つのスレッドが例外になり、A には60.18秒、B には60.25秒で 500 を返す。空いたスレッドが C の要求を処理し、C には60.26秒で 200 を返す"
@@ -140,11 +141,11 @@ function TimelineFigure() {
   )
 }
 
-/* ---------- 図 72-3 商品ページの部分と、ハードな依存・ソフトな依存 ---------- */
+/* ---------- 図 89-3 商品ページの部分と、ハードな依存・ソフトな依存 ---------- */
 function DependencyFigure() {
   return (
     <Svg
-      id="72-3"
+      id="89-3"
       w={780}
       h={380}
       label="商品ページを、商品名・価格・在庫、カートに入れるボタン、おすすめの3つの部分に分けた。商品名・価格・在庫とカートに入れるボタンは MySQL の products テーブルにハードに依存し、MySQL が失敗したらページもエラーにする（止める）。おすすめはおすすめ API にソフトに依存し、API が失敗したら、前回の結果、人気の商品、または欄を出さないことで代える（続ける）。AWS Well-Architected Framework の REL05-BP01 の考え方を、この章の商品ページに当てはめた"
@@ -191,11 +192,11 @@ function DependencyFigure() {
   )
 }
 
-/* ---------- 図 72-4 タイムアウトと代わりの表示の流れ ---------- */
+/* ---------- 図 89-4 タイムアウトと代わりの表示の流れ ---------- */
 function FlowFigure() {
   return (
     <Svg
-      id="72-4"
+      id="89-4"
       w={780}
       h={460}
       label="Recommendations#for の処理の流れ。RecommendationClient#product_ids は接続に0.3秒、応答に0.5秒まで待つ。成功したら、最後に成功した結果としてキャッシュに1日書き、おすすめを表示する（source は :api）。RecommendationClient::Error なら、Rails.error.report で失敗を報告し、キャッシュに前回の結果があれば前回のおすすめを表示し（:cache）、なければ同じカテゴリの人気の商品を表示する（:popular）。それ以外の例外（NoMethodError や DB のエラー）は捕まえずに 500 にし、アプリの中の誤りを隠さない。人気の商品も0件なら、おすすめの欄を出さない"
@@ -246,11 +247,11 @@ function FlowFigure() {
   )
 }
 
-/* ---------- 図 72-5 直す前と直した後：例外が届く範囲 ---------- */
+/* ---------- 図 89-5 直す前と直した後：例外が届く範囲 ---------- */
 function CompareFigure() {
   return (
     <Svg
-      id="72-5"
+      id="89-5"
       w={780}
       h={420}
       label="直す前は、ProductsController が RecommendationClient を直接呼び、RecommendationClient にはタイムアウトがない。おすすめ API が応答しないと、60秒後の例外がコントローラーまで上がり、商品ページは60.18秒で 500、カートも60.26秒待った。直した後は、ProductsController と RecommendationClient の間に Recommendations を置き、RecommendationClient は接続0.3秒・応答0.5秒で打ち切って RecommendationClient::Error を投げる。例外は Recommendations で止まり、Rails.cache の前回の結果か MySQL の人気の商品で代える。商品ページは0.54秒で 200、カートは0.55秒で 200 になった"
@@ -307,13 +308,13 @@ function CompareFigure() {
         カート：0.55 秒で 200
       </T>
       <T x={10} y={412} fs={11} tone="muted">
-        赤い線は直す前に例外が伝わる道、青い線は直した後の道。時間は図 72-2 と同じ条件で測った
+        赤い線は直す前に例外が伝わる道、青い線は直した後の道。時間は図 89-2 と同じ条件で測った
       </T>
     </Svg>
   )
 }
 
-/* ---------- 図 72-6 Fail Fast と Graceful Degradation の使い分け ---------- */
+/* ---------- 図 89-6 Fail Fast と Graceful Degradation の使い分け ---------- */
 const quadrants = [
   { x: 170, y: 64, lines: ['止める（Fail Fast）', '例外のまま 500 にし、テストと報告で見つける'], fill: 'box' as const },
   { x: 475, y: 64, lines: ['開発とテストでは止める', '本番は報告して続けてもよい（unexpected）'], fill: 'box' as const },
@@ -324,7 +325,7 @@ const quadrants = [
 function JudgeFigure() {
   return (
     <Svg
-      id="72-6"
+      id="89-6"
       w={780}
       h={364}
       label="失敗の原因と機能の位置づけの2つの軸で、止めるか続けるかを決める。原因がアプリの中の誤りやデータの不整合で、なければページの目的を果たせない機能なら、止める（Fail Fast）。原因がアプリの中の誤りで、なくても続けられる機能なら、開発とテストでは止め、本番は報告して続けてもよい（Rails.error.unexpected）。原因が外部のサービスの障害で、なければ目的を果たせない機能（価格・在庫・決済）なら、止めてエラーを示し、古い値で代えない。原因が外部のサービスの障害で、なくても続けられる機能（おすすめ）なら、隔離して続ける（Graceful Degradation）"
@@ -379,7 +380,7 @@ const chapter: Chapter = {
     '何でも rescue する書き方がアプリの中の誤りを隠すことを確かめ、Fail Fast と Graceful Degradation を失敗の原因と機能の位置づけで使い分けられる',
     'Rails.error.handle・Rails.error.unexpected・Rails.cache の失敗時の動きを、Graceful Degradation の道具として使える',
   ],
-  prerequisites: [25, 54],
+  prerequisites: [25],
   sections: [
     {
       id: 'scene',
@@ -488,11 +489,11 @@ end
 </section>
 `}
           />
-          <Figure n="72-1" title="商品ページの構成と、問題が起きる箇所" caption="赤い文字は、この節で確かめる問題。">
+          <Figure n="89-1" title="商品ページの構成と、問題が起きる箇所" caption="赤い文字は、この節で確かめる問題。">
             <SceneFigure />
           </Figure>
           <p>
-            図 72-1 のとおり、コントローラーは商品とおすすめの両方をそろえてから表示します。おすすめ API の呼び出しで例外が起きると、商品の表示に必要なデータはそろっていても、ページ全体が表示されません。
+            図 89-1 のとおり、コントローラーは商品とおすすめの両方をそろえてから表示します。おすすめ API の呼び出しで例外が起きると、商品の表示に必要なデータはそろっていても、ページ全体が表示されません。
           </p>
           <h3>おすすめ API の失敗をテストで再現する</h3>
           <p>
@@ -647,11 +648,11 @@ Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached
           <p>
             商品ページは約60秒待ってから 500 になりました。Faraday にタイムアウトを設定していないので、Net::HTTP の既定の読み込みのタイムアウト（60秒）が使われ、その時間がたって初めて Faraday::TimeoutError になります<Ref n={14} /><Ref n={16} />。もう1つの問題はカートです。カートはおすすめ API を使いませんが、Puma の2つのスレッドが商品ページの処理で待っている間は、処理するスレッドがありません。ログの <code>Started GET "/cart"</code> は 02:17:51 で、利用者 C の要求は約60秒待ってから処理されました。処理そのものは 0ms で終わっています。
           </p>
-          <Figure n="72-2" title="おすすめ API が応答しないときの、3つの要求のタイムライン" caption="縦は時間、列は関係者。途中の約60秒を省いている。">
+          <Figure n="89-2" title="おすすめ API が応答しないときの、3つの要求のタイムライン" caption="縦は時間、列は関係者。途中の約60秒を省いている。">
             <TimelineFigure />
           </Figure>
           <p>
-            図 72-2 はこの3つの要求を時間の順に並べたものです。おすすめ API を待つスレッドが増えるほど、ほかのページを処理できるスレッドが減ります。本番でスレッドの数が多くても、商品ページへの要求が続けば同じことが起きます。さらに、ロードバランサーや Nginx のタイムアウトも既定では60秒前後なので、利用者は Rails の 500 より先に、ロードバランサーの 504 を受け取ることもあります（<ChapterLink n={25} section="timeouts" />）。
+            図 89-2 はこの3つの要求を時間の順に並べたものです。おすすめ API を待つスレッドが増えるほど、ほかのページを処理できるスレッドが減ります。本番でスレッドの数が多くても、商品ページへの要求が続けば同じことが起きます。さらに、ロードバランサーや Nginx のタイムアウトも既定では60秒前後なので、利用者は Rails の 500 より先に、ロードバランサーの 504 を受け取ることもあります（<ChapterLink n={25} section="timeouts" />）。
           </p>
           <h3>このコードの問題</h3>
           <ul>
@@ -700,11 +701,11 @@ Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached
               よくない例として、中心の機能を決めていないこと、依存先が失敗しているときに部品が動くかをテストしていないこと、一部の結果を返せるのに何も返さないことを挙げています<Ref n={1} />。
             </li>
           </ul>
-          <Figure n="72-3" title="商品ページの部分と、ハードな依存・ソフトな依存" caption="REL05-BP01 の考え方を、この章の商品ページに当てはめた模式図。">
+          <Figure n="89-3" title="商品ページの部分と、ハードな依存・ソフトな依存" caption="REL05-BP01 の考え方を、この章の商品ページに当てはめた模式図。">
             <DependencyFigure />
           </Figure>
           <p>
-            図 72-3 はこの章の商品ページを3つの部分に分けたものです。商品名・価格・在庫と「カートに入れる」ボタンは、MySQL の products テーブルにハードに依存します。MySQL が使えなければ、正しい価格も在庫も示せないので、ページをエラーにします。おすすめの欄はおすすめ API にソフトに依存させます。おすすめ API が使えなければ、前回の結果や人気の商品で代えるか、欄を出さずにページを表示します。
+            図 89-3 はこの章の商品ページを3つの部分に分けたものです。商品名・価格・在庫と「カートに入れる」ボタンは、MySQL の products テーブルにハードに依存します。MySQL が使えなければ、正しい価格も在庫も示せないので、ページをエラーにします。おすすめの欄はおすすめ API にソフトに依存させます。おすすめ API が使えなければ、前回の結果や人気の商品で代えるか、欄を出さずにページを表示します。
           </p>
           <h3>Fail Fast との違い</h3>
           <p>
@@ -746,7 +747,7 @@ Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached
           <h3>直す順序</h3>
           <p>次の順に、1つずつテストを通しながら直します。</p>
           <ol>
-            <li>ページの部分ごとに、失敗したら止めるのか続けるのかを決める（図 72-3）。</li>
+            <li>ページの部分ごとに、失敗したら止めるのか続けるのかを決める（図 89-3）。</li>
             <li>おすすめ API の呼び出しにタイムアウトを設定し、失敗を1つの例外のクラスにまとめる。</li>
             <li>おすすめを返すクラスを作り、その例外だけを受け取って、前回の結果か人気の商品で代える。</li>
             <li>失敗をエラーの報告に送り、代わりの表示がどれくらい使われているかを見られるようにする。</li>
@@ -854,11 +855,11 @@ end
               <code>Data.define</code> は値を持つだけの変更できないオブジェクトのクラスを作る Ruby の機能です（Ruby 3.2 から）<Ref n={22} />。結果の値をまとめる用途は <ChapterLink n={46} /> の Value Object と同じです。
             </li>
           </ul>
-          <Figure n="72-4" title="タイムアウトと代わりの表示の流れ" caption="Recommendations#for の処理を上から順に追った模式図。">
+          <Figure n="89-4" title="タイムアウトと代わりの表示の流れ" caption="Recommendations#for の処理を上から順に追った模式図。">
             <FlowFigure />
           </Figure>
           <p>
-            図 72-4 は Recommendations#for の流れです。成功・RecommendationClient::Error・それ以外の例外の3つに分かれます。利用者に見せる結果（色の付いた箱）は3通りあり、どれもページを表示します。右の列の、アプリの中の誤りによる例外だけは、代わりの表示を使わずに 500 にします。
+            図 89-4 は Recommendations#for の流れです。成功・RecommendationClient::Error・それ以外の例外の3つに分かれます。利用者に見せる結果（色の付いた箱）は3通りあり、どれもページを表示します。右の列の、アプリの中の誤りによる例外だけは、代わりの表示を使わずに 500 にします。
           </p>
           <p>コントローラーは Recommendations を呼ぶだけになり、ビューは source を見て見出しを変えます。代わりの商品も0件なら、おすすめの欄そのものを出しません。</p>
           <Code
@@ -1038,15 +1039,15 @@ Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached
           <p>
             商品ページは 0.5 秒のタイムアウトで打ち切り、人気の商品を表示して 200 を返しました。スレッドが 0.5 秒ほどで空くので、カートの要求も 0.55 秒で返っています。
           </p>
-          <Figure n="72-5" title="直す前と直した後：例外が届く範囲" caption="時間は、図 72-2 と同じ条件（Puma のスレッド2つ、応答しない API）で測った値。">
+          <Figure n="89-5" title="直す前と直した後：例外が届く範囲" caption="時間は、図 89-2 と同じ条件（Puma のスレッド2つ、応答しない API）で測った値。">
             <CompareFigure />
           </Figure>
           <p>
-            図 72-5 の左は直す前で、おすすめ API の失敗がコントローラーまで上がり、ページ全体を失敗させました。右は直した後で、失敗は RecommendationClient::Error に変わって Recommendations で止まり、コントローラーには必ず結果が返ります。おすすめ API の障害が影響する範囲が、おすすめの欄の中に限られました。
+            図 89-5 の左は直す前で、おすすめ API の失敗がコントローラーまで上がり、ページ全体を失敗させました。右は直した後で、失敗は RecommendationClient::Error に変わって Recommendations で止まり、コントローラーには必ず結果が返ります。おすすめ API の障害が影響する範囲が、おすすめの欄の中に限られました。
           </p>
           <Callout kind="note" title="障害が長く続くとき">
             <p>
-              直した後も、おすすめ API が止まっている間は、商品ページの要求ごとに 0.5 秒待ちます。障害が長く続き、この待ち時間も避けたいときは、失敗が続いたら一定の時間は呼び出しそのものをやめる Circuit Breaker を組み合わせます。Ruby の stoplight などの gem と、Retry with Backoff との使い分けは <ChapterLink n={54} section="alternatives" /> で扱いました。
+              直した後も、おすすめ API が止まっている間は、商品ページの要求ごとに 0.5 秒待ちます。障害が長く続き、この待ち時間も避けたいときは、失敗が続いたら一定の時間は呼び出しそのものをやめる Circuit Breaker を組み合わせます。Ruby の stoplight などの gem と、Retry with Backoff との使い分けは <ChapterLink n={54} section="alternatives" /> で扱います。
             </p>
           </Callout>
         </>
@@ -1167,11 +1168,11 @@ Failures:
             記事は代わりの手段に頼らない方法として、要求を処理するときにほかのサービスを呼ばずに済むよう、必要なデータを前もって送っておく方法も挙げています<Ref n={4} />。Rails なら、おすすめを定期的なジョブで取得して自分たちの DB に保存し、商品ページはその表を読む形がこれに当たります（定期的なジョブは <ChapterLink n={18} section="recurring-jobs" />）。商品ページから外部の呼び出しがなくなり、代わりの表示の処理も要らなくなります。おすすめが何時間前のものでもよいかどうかで、どちらの形にするかを決めます。
           </p>
           <h3>判断の目安</h3>
-          <Figure n="72-6" title="Fail Fast と Graceful Degradation の使い分け" caption="失敗の原因と、失敗する機能の位置づけの組み合わせごとに、止めるか続けるかを示した。">
+          <Figure n="89-6" title="Fail Fast と Graceful Degradation の使い分け" caption="失敗の原因と、失敗する機能の位置づけの組み合わせごとに、止めるか続けるかを示した。">
             <JudgeFigure />
           </Figure>
           <p>
-            図 72-6 は止めるか続けるかを、失敗の原因と失敗する機能の位置づけの2つで決める図です。この章で続ける形にしたのは、右下の「外部のサービスの障害で、なくても続けられる機能」だけです。ほかの3つの場合は、次のように扱います。
+            図 89-6 は止めるか続けるかを、失敗の原因と失敗する機能の位置づけの2つで決める図です。この章で続ける形にしたのは、右下の「外部のサービスの障害で、なくても続けられる機能」だけです。ほかの3つの場合は、次のように扱います。
           </p>
           <ul>
             <li>
@@ -1280,7 +1281,7 @@ Failures:
           </p>
           <h3>Rails.error.unexpected：開発とテストでは止め、本番では報告して続ける</h3>
           <p>
-            Rails.error.unexpected は、本番では失敗を報告して nil を返し、開発とテストでは例外を投げるメソッドです<Ref n={7} />。どちらの動きにするかは Rails.error.debug_mode で決まり、Rails は <code>config.consider_all_requests_local</code> が true のとき（新しいアプリケーションの開発とテストの環境）に debug_mode を true にします<Ref n={9} />。図 72-6 の右上、つまりなくても続けられる機能で「起きないはずの状態」を見つけたときに使います。
+            Rails.error.unexpected は、本番では失敗を報告して nil を返し、開発とテストでは例外を投げるメソッドです<Ref n={7} />。どちらの動きにするかは Rails.error.debug_mode で決まり、Rails は <code>config.consider_all_requests_local</code> が true のとき（新しいアプリケーションの開発とテストの環境）に debug_mode を true にします<Ref n={9} />。図 89-6 の右上、つまりなくても続けられる機能で「起きないはずの状態」を見つけたときに使います。
           </p>
           <Code
             lang="ruby"
@@ -1381,7 +1382,7 @@ end
           <p>
             ただし、応答しない Redis では3つの操作に 8.02 秒かかりました。fetch はキャッシュにない値を読んでからブロックの値を書くので、Redis への操作は全部で4回です。読み書きのタイムアウトの既定は1秒で、接続に失敗したときは1回だけ再接続するので<Ref n={11} />、1回の操作で約2秒待ちます。<code>reconnect_attempts: 0</code> を指定すると、1回の操作が 1.00 秒になることも確かめました。Rails のガイドは、値を作り直すほうが1秒以上待つより速いことが多いとして、タイムアウトを短めにするよう勧めています<Ref n={11} />。Rails.cache も外部 API と同じ依存先として、1回の要求で何回読むかを数え、タイムアウトを決めます。
           </p>
-          <Figure n="72-7" title="例外を受け取る書き方と、Rails の仕組みの比較" caption="この章で動かした書き方を、受け取る例外・例外のあとの動き・報告で並べた。">
+          <Figure n="89-7" title="例外を受け取る書き方と、Rails の仕組みの比較" caption="この章で動かした書き方を、受け取る例外・例外のあとの動き・報告で並べた。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1441,7 +1442,7 @@ end
             </div>
           </Figure>
           <p>
-            図 72-7 はこの章で動かした書き方を並べたものです。Rails.error.record だけは動かしていませんが、Rails のソースで、報告してから同じ例外を投げ直すことを確かめました<Ref n={8} />。続ける書き方（上から1・3・5・6行目）は、どれも受け取る例外を絞り、報告を残しています。2行目だけが、受け取る範囲が広く、報告もありません。
+            図 89-7 はこの章で動かした書き方を並べたものです。Rails.error.record だけは動かしていませんが、Rails のソースで、報告してから同じ例外を投げ直すことを確かめました<Ref n={8} />。続ける書き方（上から1・3・5・6行目）は、どれも受け取る例外を絞り、報告を残しています。2行目だけが、受け取る範囲が広く、報告もありません。
           </p>
           <h3>受け取らなかった例外は Rails に任せる</h3>
           <p>
@@ -1465,6 +1466,29 @@ end
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          続ける形にするのは、外部のサービスの障害で、なくてもページの目的を果たせる機能だけです。この章ではおすすめ API の呼び出しにタイムアウトを決めて失敗を1つの例外のクラスにまとめ、その例外だけを受け取って前回の結果か人気の商品で代えました。価格・在庫・決済のように、なければ目的を果たせない機能や、アプリの中の誤りは止めます。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、応答しないおすすめ API を約60秒待ってから商品ページが 500 になり、その間 Puma のスレッドを使い続けて、カートのページまで待たされた。直した後は、同じ条件で商品ページは 0.5 秒のタイムアウトで打ち切って人気の商品を表示して 200 を返し、カートの要求も 0.55 秒で返った。</>,
+        basis: <><ChapterLink n={91} section="scene" />、<ChapterLink n={91} section="apply" /></>,
+      },
+      cost: {
+        text: <>代わりの表示はふだん動かないので、タイムアウト・503・形式の違う応答・前回の結果のそれぞれを WebMock でテストする必要がある。おすすめ API が止まっている間は、商品ページの要求ごとに 0.5 秒待つことが残る。</>,
+        basis: <ChapterLink n={91} section="apply" />,
+      },
+      alternative: {
+        text: <>障害が長く続くなら、失敗が続いた間は呼び出しそのものをやめる Circuit Breaker を組み合わせる。何でも rescue した例では、在庫で絞る変更の NoMethodError が空の一覧に置き換わり、テストも通った。代わりの手段がデータベースを直接読むような重い処理だと、障害のときに負荷を増やしてサイト全体を止めることがある。</>,
+        basis: <><ChapterLink n={91} section="apply" />、<ChapterLink n={91} section="overuse" /></>,
+      },
+      criterion: {
+        text: <>失敗の原因はアプリの中の誤りか、外部のサービスの障害か。その機能がなくてもページの目的を果たせるか。受け取る例外のクラスを外部のサービスの失敗に絞れるか、代わりの表示ごとにテストを書けるか、代わりの表示が使われた回数を数えられるか。</>,
+        basis: <ChapterLink n={91} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

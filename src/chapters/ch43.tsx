@@ -4,14 +4,14 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 79-1 包む方式のミドルウェアの実行順序 ---------- */
+/* ---------- 図 96-1 包む方式のミドルウェアの実行順序 ---------- */
 const LAYERS = ['ActionDispatch::RequestId', 'ApiAccessLog', 'MaintenanceMode', 'Rails::Rack::Logger', 'ActionDispatch::ShowExceptions']
 
 function OnionFigure() {
   const step = 26
   return (
     <Svg
-      id="79-1"
+      id="96-1"
       w={780}
       h={360}
       label="リクエストは外側の ActionDispatch::RequestId から順に ApiAccessLog、MaintenanceMode、Rails::Rack::Logger、ActionDispatch::ShowExceptions を通って、ルーティングとコントローラーに届く。コントローラーが返した応答は、逆の順に ShowExceptions、Logger、MaintenanceMode、ApiAccessLog、RequestId を通って外に出る。各ミドルウェアは @app.call を呼ぶ前に行きの処理、戻った後に帰りの処理を行う。外側の段ほど、内側の段で起きたことを見られる"
@@ -33,9 +33,9 @@ function OnionFigure() {
         </g>
       ))}
       <Box x={170} y={156} w={180} h={48} lines={['ルーティングと', 'コントローラー']} fs={12.5} accent />
-      <Arrow d="M 240 8 L 240 154" accent />
+      <Arrow d="M 380 8 L 380 180 L 352 180" accent />
       <Arrow d="M 284 206 L 284 352" dashed />
-      <T x={232} y={16} anchor="end" fs={12} tone="acc">
+      <T x={372} y={16} anchor="end" fs={12} tone="acc">
         リクエスト（行き）
       </T>
       <T x={294} y={346} fs={12}>
@@ -69,7 +69,7 @@ function OnionFigure() {
   )
 }
 
-/* ---------- 図 79-2 認証に失敗して打ち切る流れ ---------- */
+/* ---------- 図 96-2 認証に失敗して打ち切る流れ ---------- */
 function ShortCircuitFigure() {
   const names: string[][] = [
     ['ActionDispatch::', 'RequestId'],
@@ -82,7 +82,7 @@ function ShortCircuitFigure() {
   const x = (i: number) => 10 + i * 128
   return (
     <Svg
-      id="79-2"
+      id="96-2"
       w={780}
       h={240}
       label="Authorization ヘッダーの無い GET /orders は、RequestId、ApiAccessLog、MaintenanceMode、ShowExceptions を通ってコントローラーに届く。before_action の authenticate! が 401 を render するので、index アクションは実行されない。401 の応答は ShowExceptions、MaintenanceMode、ApiAccessLog、RequestId を通って外に出るので、アクセスログに記録され、x-request-id ヘッダーも付く"
@@ -136,7 +136,7 @@ function ShortCircuitFigure() {
   )
 }
 
-/* ---------- 図 79-3 ログと例外処理の順序による違い ---------- */
+/* ---------- 図 96-3 ログと例外処理の順序による違い ---------- */
 function OrderFigure() {
   const col = (x0: number, names: string[], logged: boolean) => (
     <g>
@@ -167,7 +167,7 @@ function OrderFigure() {
   )
   return (
     <Svg
-      id="79-3"
+      id="96-3"
       w={780}
       h={310}
       label="左は ApiAccessLog を ShowExceptions の外側に置いた場合で、コントローラーで起きた例外を ShowExceptions が 500 の応答に変えてから ApiAccessLog に戻るので、status 500 の行が書かれる。右は ApiAccessLog を ShowExceptions の内側に置いた場合で、例外が ApiAccessLog の帰りの処理を通らずに外へ出るので、何も書かれない。どちらも利用者には 500 が返る"
@@ -185,11 +185,11 @@ function OrderFigure() {
   )
 }
 
-/* ---------- 図 79-5 Chain of Responsibility と Middleware Chain ---------- */
+/* ---------- 図 96-5 Chain of Responsibility と Middleware Chain ---------- */
 function CorFigure() {
   return (
     <Svg
-      id="79-5"
+      id="96-5"
       w={780}
       h={260}
       label="Chain of Responsibility では、要求が鎖のようにつながった処理役に順に渡され、処理できる処理役が1つ見つかったところで止まる。Middleware Chain では、通常はすべての段が順に実行され、最後のコントローラーの応答が逆順に戻る。途中の段が打ち切ることもある"
@@ -223,12 +223,12 @@ function CorFigure() {
   )
 }
 
-/* ---------- 図 79-4 Rack のミドルウェアとコントローラーのチェーン ---------- */
+/* ---------- 図 96-4 Rack のミドルウェアとコントローラーのチェーン ---------- */
 function TwoChainsFigure() {
   const mw = ['ActionDispatch::RequestId', 'ApiAccessLog', 'MaintenanceMode', 'Rails::Rack::Logger', 'ActionDispatch::ShowExceptions', 'ルーティング（routes）']
   return (
     <Svg
-      id="79-4"
+      id="96-4"
       w={780}
       h={410}
       label="左は Rack のミドルウェアの並びで、RequestId、ApiAccessLog、MaintenanceMode、Rails::Rack::Logger、ShowExceptions を通ってルーティングに届く。すべてのリクエストに適用され、どのコントローラーかはまだ決まっていない。右はルーティングが選んだコントローラーの中のチェーンで、外側から ActionController::Rescue（rescue_from）、before_action の authenticate!、around_action の use_user_time_zone、アクションの順に入れ子になる。rescue_from で扱わない例外はコントローラーの外に出て、ミドルウェアの ShowExceptions が 500 の応答にする"
@@ -506,23 +506,23 @@ end
             <li>コントローラーの中：認証（before_action）、タイムゾーンの切り替え（around_action）、アプリの例外の応答（rescue_from）。モデルを使う処理と、コントローラーごとに変わる処理はここに置く（controller-chain の節）。</li>
           </ol>
           <h3>構造</h3>
-          <Figure n="79-1" title="包む方式のミドルウェアの実行順序" caption="この章のアプリの並びの模式図。各段は @app.call を呼ぶ前に行きの処理、戻った後に帰りの処理を行う。破線の矢印は、戻ってくる応答を表す。">
+          <Figure n="96-1" title="包む方式のミドルウェアの実行順序" caption="この章のアプリの並びの模式図。各段は @app.call を呼ぶ前に行きの処理、戻った後に帰りの処理を行う。破線の矢印は、戻ってくる応答を表す。">
             <OnionFigure />
           </Figure>
           <p>
-            図 79-1 は包む方式のミドルウェアの実行順序です。リクエストは外側の段から順に内側へ進み、コントローラーが返した応答は、逆の順で外側へ戻ります。外側の段ほど、内側の段で起きたこと（成功、打ち切り、例外から作られた応答）を見ることができます。
+            図 96-1 は包む方式のミドルウェアの実行順序です。リクエストは外側の段から順に内側へ進み、コントローラーが返した応答は、逆の順で外側へ戻ります。外側の段ほど、内側の段で起きたこと（成功、打ち切り、例外から作られた応答）を見ることができます。
           </p>
-          <Figure n="79-2" title="認証に失敗して打ち切る流れ" caption="破線の段は実行されない。">
+          <Figure n="96-2" title="認証に失敗して打ち切る流れ" caption="破線の段は実行されない。">
             <ShortCircuitFigure />
           </Figure>
           <p>
-            図 79-2 はトークンの無いリクエストを打ち切る流れです。コントローラーの before_action が 401 を返すので、アクションは実行されません。401 の応答は外側の段を通って戻るので、ApiAccessLog がログに書き、RequestId が x-request-id ヘッダーを付けます。パターンを使う前のコードでは、この経路でログが抜けていました。
+            図 96-2 はトークンの無いリクエストを打ち切る流れです。コントローラーの before_action が 401 を返すので、アクションは実行されません。401 の応答は外側の段を通って戻るので、ApiAccessLog がログに書き、RequestId が x-request-id ヘッダーを付けます。パターンを使う前のコードでは、この経路でログが抜けていました。
           </p>
-          <Figure n="79-3" title="ログと例外処理の順序による違い" caption="test の節の spec/middleware/stack_order_spec.rb で、両方の並びの結果を確かめている。">
+          <Figure n="96-3" title="ログと例外処理の順序による違い" caption="test の節の spec/middleware/stack_order_spec.rb で、両方の並びの結果を確かめている。">
             <OrderFigure />
           </Figure>
           <p>
-            図 79-3 は順序で結果が変わる例です。コントローラーで例外が起きたとき、ApiAccessLog が ShowExceptions より外側にあれば、ShowExceptions が作った 500 の応答を ApiAccessLog が帰りの処理で受け取って記録します。ApiAccessLog が内側にあると、例外は ApiAccessLog の帰りの処理を通らずに外へ出るので、何も記録されません。どちらの並びでも利用者には 500 が返るので、応答を見るだけではこの違いに気づけません。
+            図 96-3 は順序で結果が変わる例です。コントローラーで例外が起きたとき、ApiAccessLog が ShowExceptions より外側にあれば、ShowExceptions が作った 500 の応答を ApiAccessLog が帰りの処理で受け取って記録します。ApiAccessLog が内側にあると、例外は ApiAccessLog の帰りの処理を通らずに外へ出るので、何も記録されません。どちらの並びでも利用者には 500 が返るので、応答を見るだけではこの違いに気づけません。
           </p>
         </>
       ),
@@ -671,7 +671,7 @@ end
 `}
           />
           <p>
-            <code>insert_after</code> は指定したミドルウェアの直後（内側）に、<code>insert_before</code> は直前（外側）に、<code>use</code> は並びの末尾（最も内側）に追加します<Ref n={7} />（メソッドの一覧は <ChapterLink n={6} section="customize" />）。<code>use</code> で足すと ShowExceptions より内側に入り、図 79-3 の右の並びになります。並びの理由は置いた場所のコメントに書きます。production の環境で <code>bin/rails middleware</code> を実行しました。
+            <code>insert_after</code> は指定したミドルウェアの直後（内側）に、<code>insert_before</code> は直前（外側）に、<code>use</code> は並びの末尾（最も内側）に追加します<Ref n={7} />（メソッドの一覧は <ChapterLink n={6} section="customize" />）。<code>use</code> で足すと ShowExceptions より内側に入り、図 96-3 の右の並びになります。並びの理由は置いた場所のコメントに書きます。production の環境で <code>bin/rails middleware</code> を実行しました。
           </p>
           <Code
             lang="text"
@@ -896,7 +896,7 @@ Completed 401 Unauthorized in 1ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries
 `}
           />
           <p>
-            <code>Filter chain halted</code> は、authenticate! が応答を作ったのでチェーンを止めたことを表します。ミドルウェアが <code>@app.call</code> を呼ばずに応答を返すのと同じ打ち切りで、401 の応答はその後、図 79-2 のように外側のミドルウェアを通って戻ります。
+            <code>Filter chain halted</code> は、authenticate! が応答を作ったのでチェーンを止めたことを表します。ミドルウェアが <code>@app.call</code> を呼ばずに応答を返すのと同じ打ち切りで、401 の応答はその後、図 96-2 のように外側のミドルウェアを通って戻ります。
           </p>
           <h3>around_action で前後を挟む</h3>
           <p>
@@ -932,11 +932,11 @@ Completed 401 Unauthorized in 1ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries
           <p>
             rescue_from に無い例外はコントローラーの外に出て、ミドルウェアの ShowExceptions が 500 などの応答にします。この章では、アプリで意味のある例外（見つからない、パラメーターが無い、検証の失敗）だけを rescue_from で扱い、想定していない例外は ShowExceptions に任せました。すべての例外を rescue_from で 500 にすると、例外がコントローラーの外へ出ないので、例外を記録するミドルウェアやエラーの監視の仕組みに届かなくなることがあります。
           </p>
-          <Figure n="79-4" title="Rack のミドルウェアとコントローラーのチェーン" caption="この章のアプリの2つのチェーンを並べた模式図。右の入れ子は、外側の枠ほど先に実行が始まり、最後に終わることを表す。">
+          <Figure n="96-4" title="Rack のミドルウェアとコントローラーのチェーン" caption="この章のアプリの2つのチェーンを並べた模式図。右の入れ子は、外側の枠ほど先に実行が始まり、最後に終わることを表す。">
             <TwoChainsFigure />
           </Figure>
           <p>
-            図 79-4 は2つのチェーンの関係です。左のミドルウェアはすべてのリクエストに適用され、どのコントローラーが呼ばれるかはまだ決まっていません。右のコントローラーのチェーンは、ルーティングが選んだコントローラーだけに適用され、モデルやパラメーターを使えます。rescue_from で扱わない例外は、破線のようにミドルウェアの ShowExceptions まで戻ります。
+            図 96-4 は2つのチェーンの関係です。左のミドルウェアはすべてのリクエストに適用され、どのコントローラーが呼ばれるかはまだ決まっていません。右のコントローラーのチェーンは、ルーティングが選んだコントローラーだけに適用され、モデルやパラメーターを使えます。rescue_from で扱わない例外は、破線のようにミドルウェアの ShowExceptions まで戻ります。
           </p>
           <h3>どちらに置くか</h3>
           <div className="table-wrap">
@@ -1078,7 +1078,7 @@ end
 `}
           />
           <p>
-            Rack::Builder の <code>use</code> は書いた順に外側から並べます。Rails の本物の ShowExceptions を使い、env の <code>action_dispatch.show_exceptions</code> を本番と同じ <code>:all</code> にして、例外を 500 の応答に変えさせています。どちらの並びも利用者に返るステータスコードは 500 で、違いはログにだけ現れます（図 79-3）。<code>Rack::Builder.new</code> のブロックの中では RSpec の <code>let</code> を呼べないので、ローカル変数に入れてから渡しています。
+            Rack::Builder の <code>use</code> は書いた順に外側から並べます。Rails の本物の ShowExceptions を使い、env の <code>action_dispatch.show_exceptions</code> を本番と同じ <code>:all</code> にして、例外を 500 の応答に変えさせています。どちらの並びも利用者に返るステータスコードは 500 で、違いはログにだけ現れます（図 96-3）。<code>Rack::Builder.new</code> のブロックの中では RSpec の <code>let</code> を呼べないので、ローカル変数に入れてから渡しています。
           </p>
           <h3>並びのテスト</h3>
           <Code
@@ -1274,7 +1274,7 @@ config.middleware.use MaintenanceMode
 `}
           />
           <p>
-            並びの順序に意味があるのに理由を書いておかないと、後から足した人が <code>use</code> で末尾に入れて、図 79-3 の右の並びになります。ApiAccessLog が ShowExceptions の内側に入り、500 の応答がログから消えます。MaintenanceMode も末尾に入り、Rails::Rack::Logger や ShowExceptions などの段を通ってから 503 を返します。順序の理由はコメントに書き、並びのテストで固定します。
+            並びの順序に意味があるのに理由を書いておかないと、後から足した人が <code>use</code> で末尾に入れて、図 96-3 の右の並びになります。ApiAccessLog が ShowExceptions の内側に入り、500 の応答がログから消えます。MaintenanceMode も末尾に入り、Rails::Rack::Logger や ShowExceptions などの段を通ってから 503 を返します。順序の理由はコメントに書き、並びのテストで固定します。
           </p>
           <h3>@app.call を呼び忘れる・2回呼ぶ</h3>
           <Code
@@ -1354,10 +1354,10 @@ end
             </li>
           </ul>
           <h3>ほかのパターンとの違い</h3>
-          <Figure n="79-5" title="Chain of Responsibility と Middleware Chain" caption="模式図。処理役は Chain of Responsibility で要求を受け取って処理するオブジェクト。">
+          <Figure n="96-5" title="Chain of Responsibility と Middleware Chain" caption="模式図。処理役は Chain of Responsibility で要求を受け取って処理するオブジェクト。">
             <CorFigure />
           </Figure>
-          <p>図 79-5 はGoF の Chain of Responsibility と Middleware Chain の動き方の違いです。</p>
+          <p>図 96-5 はGoF の Chain of Responsibility と Middleware Chain の動き方の違いです。</p>
           <ul>
             <li>Chain of Responsibility：要求を処理できる処理役が1つ見つかったところで終わります（idea の節の注記）。画面の操作のイベントを、処理できる部品が見つかるまで順に渡す場面などに向いています。</li>
             <li>
@@ -1458,6 +1458,16 @@ Sidekiq: ReportJob 実行の前 → perform → ReportJob 実行の後
             <li>打ち切った場合と例外が起きた場合に、外側の段で何が起きるかをテストしているか</li>
             <li>コントローラーのコールバックや、Rails・gem の既存の段で書けないか</li>
           </ol>
+        </>
+      ),
+    },
+    {
+      id: 'pattern-choice',
+      title: 'ミドルウェア、コールバック、Adapter の使い分け',
+      body: (
+        <>
+          <p>ユーザーの状態を参照してアクションの実行を許すか判断するなら、コントローラー内のコールバックで扱えます。すべての HTTP 要求と応答に request ID を付ける処理なら、コントローラーへ届く前にも働く Rack ミドルウェアが候補です。</p>
+          <p>外部サービスの応答形式を変換するだけなら <ChapterLink n={42} section="idea">Adapter</ChapterLink> で十分です。前後で実行する共通処理が必要になった場合に、ミドルウェアの順序と、途中で応答を返す条件を決めます。</p>
         </>
       ),
     },

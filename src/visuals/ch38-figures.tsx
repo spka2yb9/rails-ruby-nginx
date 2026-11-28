@@ -1,8 +1,8 @@
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
-/* 第14章（ID 38）トランザクションと同時実行の図 */
+/* 第20章（ID 38）トランザクションと同時実行の図 */
 
-/* ---------- 図 14-1 送金とトランザクション ---------- */
+/* ---------- 図 20-1 送金とトランザクション ---------- */
 export function TransferFigure() {
   type Step = { t: string; fill: 'box' | 'box4' | 'bg' | 'box5'; danger?: boolean }
   const col = (x: number, title: string, steps: Step[], result: string[], tone: 'danger' | 'acc') => (
@@ -21,7 +21,7 @@ export function TransferFigure() {
   )
   return (
     <Svg
-      id="14-1"
+      id="20-1"
       w={760}
       h={340}
       label="口座1から口座2へ1000を送る2つのUPDATE。トランザクションなしでは1つ目のUPDATEがその場で確定し、2つ目の前に失敗すると口座1が9000、口座2が10000になり、1000がどこにも無くなる。BEGINの後で失敗してROLLBACKすると1つ目も取り消され、両方10000に戻る。2つのUPDATEが成功してCOMMITすると、口座1が9000、口座2が11000で確定する。COMMITまでの変更はほかの接続からは見えない"
@@ -68,14 +68,14 @@ export function TransferFigure() {
   )
 }
 
-/* ---------- 図 14-2 同時の送金で更新が消える ---------- */
+/* ---------- 図 20-2 同時の送金で更新が消える ---------- */
 export function LostUpdateFigure() {
   const ev = (x: number, y: number, t: string, sub: string, fill: 'box' | 'box4' = 'box') => (
     <Box x={x} y={y} w={210} h={40} lines={[t, sub]} fs={11.5} fill={fill} subTone="muted" />
   )
   return (
     <Svg
-      id="14-2"
+      id="20-2"
       w={760}
       h={300}
       label="A が 0.03 秒に口座1の残高 10000 を読み、B も 0.10 秒に同じ 10000 を読む。A は 0.34 秒に 10000−1000 の 9000 を書いて COMMIT し、B は 0.41 秒に同じく 9000 を書いて COMMIT する。口座1の残高は 10000、9000、9000 と変わり、2回の送金で 8000 になるはずが 9000 になった"
@@ -110,14 +110,14 @@ export function LostUpdateFigure() {
   )
 }
 
-/* ---------- 図 14-3 S ロックと X ロックの両立 ---------- */
+/* ---------- 図 20-3 S ロックと X ロックの両立 ---------- */
 export function LockMatrixFigure() {
   const cell = (x: number, y: number, t: string, ok: boolean) => (
     <Box x={x} y={y} w={150} h={46} lines={t} fs={12} fill={ok ? 'box4' : 'box5'} rx={0} />
   )
   return (
     <Svg
-      id="14-3"
+      id="20-3"
       w={760}
       h={300}
       label="同じ行について、A が S ロックを持っているとき、B の S ロックの要求はすぐに通り、X ロックの要求は待つ。A が X ロックを持っているときは、B の S ロックの要求も X ロックの要求も待つ。SELECT … FOR SHARE は S ロック、SELECT … FOR UPDATE・UPDATE・DELETE は X ロックを取る。通常の SELECT はロックを取らずに確定済みのバージョンを読む。ロックは COMMIT か ROLLBACK まで持ち続ける"
@@ -173,7 +173,7 @@ export function LockMatrixFigure() {
   )
 }
 
-/* ---------- 図 14-4 分離レベルによる読み直しの違い ---------- */
+/* ---------- 図 20-4 分離レベルによる読み直しの違い ---------- */
 export function IsolationFigure() {
   const rows: [string, string, string][] = [
     ['READ UNCOMMITTED', '5000', 'B の COMMIT 前でも未確定の値を読むことがある'],
@@ -183,7 +183,7 @@ export function IsolationFigure() {
   ]
   return (
     <Svg
-      id="14-4"
+      id="20-4"
       w={760}
       h={326}
       label="A が BEGIN して口座1を読み 10000 を得る。B が口座1を 5000 に UPDATE して COMMIT する。A がもう一度読んだ値は、READ UNCOMMITTED と READ COMMITTED では 5000、REPEATABLE READ では 10000。SERIALIZABLE では A の最初の SELECT が S ロックを取るので、B の UPDATE は A が終わるまで待ち、A の2回目の読み取りは 10000 になる"
@@ -229,11 +229,11 @@ export function IsolationFigure() {
   )
 }
 
-/* ---------- 図 14-5 行のバージョンとスナップショット ---------- */
+/* ---------- 図 20-5 行のバージョンとスナップショット ---------- */
 export function MvccFigure() {
   return (
     <Svg
-      id="14-5"
+      id="20-5"
       w={760}
       h={340}
       label="口座1の行には、初期値 10000 の Version 0 と、B が COMMIT した 5000 の Version 1 がある。A は REPEATABLE READ で、最初の通常の SELECT のときに作ったスナップショットで読むので、B の COMMIT の後でも通常の SELECT は 10000 の Version 0 を読む。FOR SHARE と UPDATE は最新の確定済みの Version 1（5000）を対象にする。A の UPDATE で 5000 から 1000 を引いた未確定の 4000 ができ、その後の A の通常の SELECT は自分の変更である 4000 を読む"
@@ -263,11 +263,11 @@ export function MvccFigure() {
   )
 }
 
-/* ---------- 図 14-6 待ちの循環とロックの順序 ---------- */
+/* ---------- 図 20-6 待ちの循環とロックの順序 ---------- */
 export function DeadlockFigure() {
   return (
     <Svg
-      id="14-6"
+      id="20-6"
       w={760}
       h={300}
       label="左：A は口座1をロックして口座2を待ち、B は口座2をロックして口座1を待つ。待ちの矢印が A から B、B から A へ循環するのでデッドロックになり、InnoDB が一方をロールバックする。右：A も B も口座1、口座2の順にロックすると、B は口座1で A を待つだけで循環はできず、A の COMMIT の後に B が進む"

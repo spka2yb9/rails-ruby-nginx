@@ -1,13 +1,16 @@
+import { useState } from 'react'
 import type { Chapter } from '../content/types'
 import { withExplanations } from '../explanations/shared'
 import { explanation16 } from '../explanations/features'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 import { NestedFormFigure } from '../visuals/rails-figures'
+import { Stepper } from '../sims/Stepper'
+import { FigureChoices } from '../visuals/study-figure'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 20-3 render から出力まで ---------- */
+/* ---------- 図 27-3 render から出力まで ---------- */
 function FlowFigure() {
   const left = [
     { t: 'ArticlesController#show', s: 'アクションの後の暗黙の render', fill: 'box' as const },
@@ -27,7 +30,7 @@ function FlowFigure() {
   const gap = 14
   return (
     <Svg
-      id="20-3"
+      id="27-3"
       w={760}
       h={5 * (bh + gap) + 20}
       label="アクションが終わると、ActionView::Rendering の render_to_body が呼ばれる。view_context でビューのクラスのインスタンスが作られ、コントローラーのインスタンス変数がコピーされる。TemplateRenderer が LookupContext でテンプレートのファイルを探し、Template#render が初回だけテンプレートをコンパイルしてメソッドを定義する。ビューの _run がそのメソッドを呼び、OutputBuffer に出力が足されていく。最後にレイアウトが描画され、yield の位置に本文が入り、レスポンスの本文になる"
@@ -55,7 +58,67 @@ function FlowFigure() {
   )
 }
 
-/* ---------- 図 20-4 ファイル名と探索の条件 ---------- */
+/* ---------- 図 27-4 render から出力までを段階送りで追う（操作できる図） ---------- */
+const RENDER_STAGES = ['render', 'テンプレートの探索', 'コンパイル', '実行', 'レイアウト']
+const RENDER_RUNS = ['1回目の GET /articles', '2回目の GET /articles'] as const
+
+function renderSteps(first: boolean) {
+  return [
+    { label: 'render を呼ぶ', obj: 'ArticlesController#index → render_to_body', result: 'ビューのインスタンスを作り、@articles をコピーする', text: 'index アクションは render を呼ばないので、アクションの後で暗黙の render が呼ばれ、render_to_body に進みます。view_context が ActionView::Base を継承したクラスのインスタンスを作り、view_assigns と assign で @articles をコピーします。' },
+    { label: 'テンプレートを探す', obj: 'LookupContext#find_template', result: 'app/views/articles/index.html.erb', text: '名前 index と接頭辞 articles・application に、formats（html）などの条件を合わせて探します。レイアウトのファイル layouts/application.html.erb は、この後の render_with_layout の最初に探します。' },
+    first
+      ? { label: 'コンパイルする', obj: 'Template#compile!', result: '_app_views_articles_index_html_erb__2311190252445934010_8952 を定義', text: '初めて描画するテンプレートなので、compile! が ERB を Ruby のソースに変換し、module_eval で compiled_method_container のクラスにメソッドを定義します。イベントの記録には !compile_template.action_view が出ました。' }
+      : { label: 'コンパイルを省く', obj: 'Template#compile!', result: '@compiled が true なので、すぐに戻る', text: '2回目の要求では、メソッドは定義済みなので compile! は何もせずに戻ります。イベントの記録にも !compile_template.action_view は出ませんでした。' },
+    { label: '実行する', obj: 'view._run(method_name, …)', result: 'OutputBuffer に HTML を足していき、本文の文字列にする', text: `Template#render が view._run でコンパイル済みのメソッドを呼びます。メソッドは HTML の部分を safe_append= で、<%= %> の部分を append= で OutputBuffer に足します。途中の render @articles はパーシャル _article.html.erb を同じ手順で${first ? '（初回なのでコンパイルしてから）' : ''}3件分描画する呼び出しです。` },
+    { label: 'レイアウトに入れる', obj: 'render_with_layout → layout.render', result: 'yield の位置に本文が入り、レスポンスの本文になる', text: `作った本文を view_flow の :layout に入れてから、layouts/application.html.erb を描画します${first ? '（初回なので、ここでコンパイルします）' : ''}。レイアウトの <%= yield %> が入れておいた本文を取り出し、全体がレスポンスの本文になります。` },
+  ]
+}
+
+function RenderStage({ i, first, obj, result }: { i: number; first: boolean; obj: string; result: string }) {
+  return (
+    <Svg id={`27-4-${i}`} w={760} h={136} label={`${RENDER_STAGES[i]}の段階。対象は ${obj}。結果は ${result}。`}>
+      {RENDER_STAGES.map((s, k) => {
+        const skipped = k === 2 && !first
+        return (
+          <g key={s}>
+            <Box x={10 + k * 150} y={12} w={130} h={44} lines={skipped ? [s, '（省略）'] : s} fs={12.5} bold={k === i} fill={k === i ? 'box5' : k < i ? 'box' : 'bg'} accent={k === i} dashed={skipped} subTone="muted" />
+            {k < 4 && <Arrow x1={140 + k * 150} y1={34} x2={158 + k * 150} y2={34} />}
+          </g>
+        )
+      })}
+      <T x={10} y={86} fs={12} tone="muted">対象</T>
+      <T x={60} y={86} fs={12} mono>{obj}</T>
+      <T x={10} y={114} fs={12} tone="muted">結果</T>
+      <T x={60} y={114} fs={12} mono={result.startsWith('_') || result.startsWith('app/')}>{result}</T>
+    </Svg>
+  )
+}
+
+function RenderStepFigure() {
+  const [run, setRun] = useState(0)
+  const first = run === 0
+  const steps = renderSteps(first).map((s, i) => ({
+    label: s.label,
+    detail: (
+      <>
+        <RenderStage i={i} first={first} obj={s.obj} result={s.result} />
+        <p>{s.text}</p>
+      </>
+    ),
+  }))
+  return (
+    <Figure
+      n="27-4"
+      title="render から出力までの段階（段階送り）"
+      caption="GET /articles の描画を、Rails 8.1.4.1 の rendering.rb・template_renderer.rb・template.rb・base.rb と、「ERB が Ruby のメソッドになるまで」の節のイベントの記録をもとに5つの段階に分けた概念モデルです。実際の処理は入れ子になっていて、レイアウトのファイルはテンプレートを実行する前に探し、パーシャルの探索とコンパイルはテンプレートの実行の途中で行います。"
+    >
+      <FigureChoices label="要求" options={RENDER_RUNS} selected={run} onSelect={setRun} />
+      <Stepper key={run} steps={steps} />
+    </Figure>
+  )
+}
+
+/* ---------- 図 27-5 ファイル名と探索の条件 ---------- */
 function LookupFigure() {
   const parts = [
     { t: 'show', s: 'アクション名', x: 60, w: 90 },
@@ -71,7 +134,7 @@ function LookupFigure() {
   ]
   return (
     <Svg
-      id="20-4"
+      id="27-5"
       w={760}
       h={330}
       label="テンプレートのファイル名 show.html+phone.erb は、アクション名 show、形式 html、派生 phone、ハンドラー erb に分解される。言語（locale）は形式の前に入れられる。探索の条件が formats: [:html] なら show.html.erb、variants: [:phone] を加えると show.html+phone.erb と show.html.erb がこの順に見つかる。formats: [:text] なら show.text.erb、formats: [:json] ならファイルが無く見つからない"
@@ -110,11 +173,11 @@ function LookupFigure() {
   )
 }
 
-/* ---------- 図 20-5 ERB がメソッドになるまで ---------- */
+/* ---------- 図 27-6 ERB がメソッドになるまで ---------- */
 function CompileFigure() {
   return (
     <Svg
-      id="20-5"
+      id="27-6"
       w={760}
       h={300}
       label="テンプレート _article.html.erb の本文は、ERB ハンドラー（Erubi）で Ruby のコードに変換される。HTML の部分は @output_buffer.safe_append=、<%= %> の部分は @output_buffer.append= になる。Template が def でメソッドの定義に包み、ビューのクラスが共有する無名のクラスに module_eval で定義する。2回目以降の描画はこのメソッドを呼ぶだけになる"
@@ -165,11 +228,11 @@ function CompileFigure() {
   )
 }
 
-/* ---------- 図 20-7 開発環境と本番環境のアセット配信 ---------- */
+/* ---------- 図 27-8 開発環境と本番環境のアセット配信 ---------- */
 function AssetFigure() {
   return (
     <Svg
-      id="20-7"
+      id="27-8"
       w={760}
       h={330}
       label="開発環境では、ブラウザーが /assets/application-8b441ae0.css を要求すると、Rails のミドルウェア Propshaft::Server が app/assets などの読み込みパスからファイルを探して返す。本番環境では、デプロイ時に assets:precompile がダイジェスト付きのファイルと .manifest.json を public/assets に書き出す。リクエストは Nginx が public/assets から直接返すか、Nginx を置かない場合は ActionDispatch::Static が返す。どちらの環境でも、ビューのヘルパーはダイジェスト付きの URL を出力する"
@@ -196,7 +259,7 @@ function AssetFigure() {
       <Box x={278} y={150} w={300} h={56} lines={['public/assets/application-8b441ae0.css', 'public/assets/.manifest.json']} mono fs={11} fill="box4" />
       <Box x={20} y={250} w={150} h={44} lines="ブラウザー" fill="bg" />
       <Arrow x1={170} y1={272} x2={226} y2={272} />
-      <Box x={228} y={250} w={160} h={44} lines={['Nginx', '（第27章）']} fs={12.5} fill="box" subTone="muted" />
+      <Box x={228} y={250} w={160} h={44} lines={['Nginx', '（第40章）']} fs={12.5} fill="box" subTone="muted" />
       <Arrow x1={388} y1={262} x2={428} y2={210} />
       <T x={430} y={238} fs={11} tone="muted">
         ファイルを直接返す
@@ -210,14 +273,14 @@ function AssetFigure() {
   )
 }
 
-/* ---------- 図 20-6 フォームの送信から保存まで ---------- */
+/* ---------- 図 27-7 フォームの送信から保存まで ---------- */
 function FormFlowFigure() {
   const B = 100
   const C = 380
   const M = 650
   return (
     <Svg
-      id="20-6"
+      id="27-7"
       w={760}
       h={460}
       label="ブラウザーが GET /articles/new を送ると、new アクションが Article.new でオブジェクトを作り、フォームの HTML を 200 で返す。フォームを送信すると POST /articles が create アクションに届き、Article.new(article_params).save を呼ぶ。保存に成功すると INSERT が実行され、302 で /articles/10009 へのリダイレクトを返し、ブラウザーは GET /articles/10009 を送って記事の画面を 200 で受け取る。検証に失敗すると SQL は実行されず、422 でフォームとエラーを描画し直して返す"
@@ -290,12 +353,12 @@ function FormFlowFigure() {
   )
 }
 
-/* ---------- 図 20-1 レイアウト・テンプレート・パーシャルの組み合わせ ---------- */
+/* ---------- 図 27-1 レイアウト・テンプレート・パーシャルの組み合わせ ---------- */
 function LayoutNestFigure() {
   const li = ['<li id="article_1">0: 変更後のタイトル</li>', '<li id="article_2">1: タイトル2改</li>', '<li id="article_3">2: 記事3</li>']
   return (
     <Svg
-      id="20-1"
+      id="27-1"
       w={780}
       h={340}
       label="左は3つのファイル。layouts/application.html.erb は html・head・body を書き、body の中に yield を置く。articles/index.html.erb は ul の中で render @articles を呼ぶ。articles/_article.html.erb は記事1件分の li を書く。右は GET /articles の応答の HTML。レイアウトの出力の yield の位置に index.html.erb の出力が入り、その ul の中に _article.html.erb の出力が記事の数（3回）だけ入る"
@@ -347,18 +410,18 @@ function LayoutNestFigure() {
   )
 }
 
-/* ---------- 図 20-2 1つの画面を表示するときの要求 ---------- */
+/* ---------- 図 27-2 1つの画面を表示するときの要求 ---------- */
 function PageRequestsFigure() {
   const B = 110
   const S = 600
   const msgs = [
     { y: 196, t: 'GET /assets/application-8b441ae0.css（CSS × 1）' },
-    { y: 232, t: 'GET /assets/turbo.min-9fd88cd5.js など（JavaScript × 7）' },
+    { y: 232, t: 'GET /assets/application-bfcdf840.js など（JavaScript）' },
     { y: 268, t: 'GET /icon.svg・/icon.png（画像 × 2）' },
   ]
   return (
     <Svg
-      id="20-2"
+      id="27-2"
       w={780}
       h={360}
       label="ブラウザーは GET /articles を送り、Rails がテンプレートから作った HTML を受け取る。ブラウザーは HTML を読んで link と script のタグの URL を見つけ、CSS を1つ、JavaScript を7つ、アイコンの画像を2つ、それぞれ別の要求で取得する。サーバーはこれらのファイルをそのまま返す。同じページを2回目に開いたときは、サーバーに要求するのは HTML だけで、CSS・JavaScript・画像はブラウザーのキャッシュから読む"
@@ -731,7 +794,7 @@ end
 `}
           />
           <p>
-            レイアウトの出力の中に index.html.erb の出力が入り、その <code>{'<ul>'}</code> の中にパーシャルの出力が3回入っています（図 20-1）。サーバーのログにも、レイアウトとテンプレートとパーシャルを描画したことが出ます。
+            レイアウトの出力の中に index.html.erb の出力が入り、その <code>{'<ul>'}</code> の中にパーシャルの出力が3回入っています（図 27-1）。サーバーのログにも、レイアウトとテンプレートとパーシャルを描画したことが出ます。
           </p>
           <Code
             lang="text"
@@ -752,7 +815,7 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
             Rendered collection の行が、パーシャルを3回描画したことを示しています。パーシャルには名前を付けてローカル変数を渡すこともできます。<code>{'<%= render "form", article: @article %>'}</code>{' '}
             と書くと、_form.html.erb の中で <code>article</code> という名前で使えます（「フォームから保存まで」の節の例）。
           </p>
-          <Figure n="20-1" title="レイアウト・テンプレート・パーシャルの組み合わせ" caption="デモのアプリケーションの GET /articles の応答（開発環境の注釈のコメント）をもとにした模式図。">
+          <Figure n="27-1" title="レイアウト・テンプレート・パーシャルの組み合わせ" caption="デモのアプリケーションの GET /articles の応答（開発環境の注釈のコメント）をもとにした模式図。">
             <LayoutNestFigure />
           </Figure>
         </>
@@ -774,10 +837,9 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
 <link rel="icon" href="/icon.png" type="image/png">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/application-8b441ae0.css" />
-<script type="importmap" data-turbo-track="reload">{
+<script type="importmap">{
   "imports": {
     "application": "/assets/application-bfcdf840.js",
-    "@hotwired/turbo-rails": "/assets/turbo.min-9fd88cd5.js",
     …
   }
 }</script>
@@ -794,23 +856,20 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
           </p>
           <Code
             lang="text"
-            title="Chrome で /articles を開いたときの要求（Playwright で記録。開いてからの時間・パス・種類・ステータスコード）"
+            title="Chrome で /articles を開いたときの要求（Playwright で記録した出力の抜粋）"
             code={`
  148ms GET /articles                                         document   200 text/html; charset=utf-8
  233ms GET /assets/application-bfcdf840.js                   script     200 text/javascript
  254ms GET /assets/application-8b441ae0.css                  stylesheet 200 text/css
- 260ms GET /assets/stimulus.min-4b1e420e.js                  script     200 text/javascript
- 263ms GET /assets/stimulus-loading-1fc53fe7.js              script     200 text/javascript
  277ms GET /assets/controllers/application-3affb389.js       script     200 text/javascript
  278ms GET /assets/controllers/hello_controller-708796bd.js  script     200 text/javascript
  278ms GET /assets/controllers/index-ee64e1f1.js             script     200 text/javascript
- 278ms GET /assets/turbo.min-9fd88cd5.js                     script     200 text/javascript
  315ms GET /icon.svg                                         other      200 image/svg+xml
  334ms GET /icon.png                                         other      200 image/png
 `}
           />
           <p>
-            1つのページを表示するのに、HTML が1つ、CSS が1つ、JavaScript が7つ、アイコンの画像が2つで、合わせて11の要求が送られました（図 20-2）。テンプレートから作られるのは最初の HTML だけです。/assets/
+            1つのページを表示するのに、HTML が1つ、CSS が1つ、JavaScript が7つ、アイコンの画像が2つで、合わせて11の要求が送られました（図 27-2）。テンプレートから作られるのは最初の HTML だけです。/assets/
             で始まる URL は、app/assets/stylesheets や app/javascript などに置いたファイルを Rails がそのまま返したもので、/icon.png は public ディレクトリのファイルです。ファイル名の{' '}
             <code>-8b441ae0</code> のような部分は、ファイルの内容から計算した値（ダイジェスト）です。
           </p>
@@ -822,8 +881,7 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
 /articles                          status=200 fromDiskCache=false
 /assets/application-8b441ae0.css   status=200 fromDiskCache=true
 /assets/application-bfcdf840.js    status=200 fromDiskCache=true
-/assets/turbo.min-9fd88cd5.js      status=200 fromDiskCache=true
-…（JavaScript のほかの5つも true）
+…（ほかの JavaScript も true）
 /icon.svg                          status=200 fromDiskCache=true
 /icon.png                          status=200 fromDiskCache=true
 `}
@@ -836,7 +894,7 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
             ここまでで、1つの画面は、Rails がテンプレートから HTML を作る処理と、ブラウザーがその HTML に書かれたファイルを取りに来る処理からできていることを見ました。次の節からは前者を詳しく追います。アクションが終わってから、Rails
             がどのテンプレートを選び、ERB をどのように実行して HTML の文字列を作るのかを、Rails のソースコードとともに確かめます。
           </p>
-          <Figure n="20-2" title="1つの画面を表示するときの要求" caption="Chrome（Playwright）で記録したデモのアプリケーションの要求をもとにした模式図。">
+          <Figure n="27-2" title="1つの画面を表示するときの要求" caption="Chrome（Playwright）で記録したデモのアプリケーションの要求をもとにした模式図。">
             <PageRequestsFigure />
           </Figure>
         </>
@@ -920,7 +978,7 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
           <Figure title="コントローラーからビューへのインスタンス変数のコピー" caption="上の view_assigns と assign のコードをもとにした模式図。実線の矢印はコピーの処理、破線の矢印はオブジェクトへの参照を表す。@_action_name のように _protected_ivars に入っている名前はコピーしない。">
             <AssignsFigure />
           </Figure>
-          <p>その先は TemplateRenderer がテンプレートを決め、レイアウトと一緒に描画します（図 20-3）。</p>
+          <p>その先は TemplateRenderer がテンプレートを決め、レイアウトと一緒に描画します（図 27-3）。</p>
           <Code
             lang="ruby"
             title="actionview/lib/action_view/renderer/template_renderer.rb（5〜11行目、58〜84行目から抜粋）"
@@ -954,9 +1012,13 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
             記事のページなら、<code>determine_template</code> で記事用のテンプレートを決めます。レイアウトを使う場合は、そのテンプレートで作った本文を <code>view.view_flow.set(:layout, …)</code> に保存します。
             続く <code>layout.render</code> が共通のレイアウトを描き、レイアウトの <code>yield</code> の位置に保存した本文が入ります。
           </p>
-          <Figure n="20-3" title="render から出力まで" caption="Rails 8.1.4.1 の rendering.rb・template_renderer.rb・template.rb・base.rb を読んでまとめた模式図。">
+          <Figure n="27-3" title="render から出力まで" caption="Rails 8.1.4.1 の rendering.rb・template_renderer.rb・template.rb・base.rb を読んでまとめた模式図。">
             <FlowFigure />
           </Figure>
+          <p>
+            図 27-4 では図 27-3 の流れを5つの段階に分け、<code>/articles</code> を1回目に要求したときと2回目に要求したときを切り替えて順に確かめられます。2回目の要求ではテンプレートのメソッドが定義済みなので、コンパイルの段階はありません。探索とコンパイルの詳しい仕組みは、次の2つの節で扱います。
+          </p>
+          <RenderStepFigure />
         </>
       ),
     },
@@ -973,7 +1035,7 @@ Completed 200 OK in 83ms (Views: 12.7ms | ActiveRecord: 10.1ms (1 query, 0 cache
             lang="text"
             code={`
 {locale: [:en],
- formats: [:html, :text, :js, :css, :ics, :csv, ... , :json, :pdf, :zip, :gzip, :turbo_stream],
+ formats: [:html, :text, :js, :css, :ics, :csv, ... , :json, :pdf, :zip, :gzip, ...],
  variants: [],
  handlers: [:raw, :erb, :html, :builder, :ruby]}
 `}
@@ -1039,14 +1101,14 @@ ActionView::MissingTemplate: Missing template articles/show, application/show wi
 
 Searched in:
   * "/work/demo/app/views"
-  * "/work/gems/gems/turbo-rails-2.0.23/app/views"
+  …
 `}
           />
           <p>
-            Searched in には、アプリケーションの app/views のほかに、ビューを持つ gem（ここでは turbo-rails）のディレクトリも並びます。テンプレートが見つからないときは、このメッセージの formats と Searched in
+            Searched in には、アプリケーションの app/views のほかに、ビューを提供する gem のディレクトリも並びます。テンプレートが見つからないときは、このメッセージの formats と Searched in
             を見れば、どの条件でどこを探したかがわかります。
           </p>
-          <Figure n="20-4" title="ファイル名と探索の条件" caption="Rails 8.1.4.1 のデモアプリケーションでの実測（find_all の結果）。">
+          <Figure n="27-5" title="ファイル名と探索の条件" caption="Rails 8.1.4.1 のデモアプリケーションでの実測（find_all の結果）。">
             <LookupFigure />
           </Figure>
         </>
@@ -1176,9 +1238,9 @@ container=#<Class:0x00007f6249cf7120> superclass=ActionView::Base
 `}
           />
           <p>
-            コンパイルは1回目だけで、2回目は定義済みのメソッドを呼ぶだけです。メソッドは、ActionView::Base を継承した無名のクラス（<code>compiled_method_container</code>）に定義されています（図 20-5）。開発環境では、テンプレートのファイルを変更すると、このクラスごと作り直されて再びコンパイルされます。
+            コンパイルは1回目だけで、2回目は定義済みのメソッドを呼ぶだけです。メソッドは、ActionView::Base を継承した無名のクラス（<code>compiled_method_container</code>）に定義されています（図 27-6）。開発環境では、テンプレートのファイルを変更すると、このクラスごと作り直されて再びコンパイルされます。
           </p>
-          <Figure n="20-5" title="ERB がメソッドになるまで" caption="Rails 8.1.4.1 の erubi.rb・template.rb・base.rb を読み、デモアプリケーションの出力で確かめてまとめた模式図。">
+          <Figure n="27-6" title="ERB がメソッドになるまで" caption="Rails 8.1.4.1 の erubi.rb・template.rb・base.rb を読み、デモアプリケーションの出力で確かめてまとめた模式図。">
             <CompileFigure />
           </Figure>
           <Callout kind="note" title="開発環境の注釈">
@@ -1196,9 +1258,11 @@ container=#<Class:0x00007f6249cf7120> superclass=ActionView::Base
       body: (
         <>
           <p>
-            前節のイベントの順を見ると、index.html.erb の描画（render_template）が終わってから、レイアウトがコンパイル・描画されています。<code>render_with_layout</code>（前述）は、先にテンプレートを描画して結果を{' '}
-            <code>view_flow</code> の :layout に入れ、その後でレイアウトを描画します。レイアウトの <code>{'<%= yield %>'}</code> は、この入れておいた本文を取り出します。テンプレートの中で{' '}
-            <code>content_for(:title)</code> に入れた値をレイアウトの <code>{'<title>'}</code> で使えるのも、テンプレートが先に描画されるからです。
+            Rails はアクションのテンプレート（一覧なら index.html.erb）を先に描画し、その後でレイアウトを描画します。この順番を決めているのは、ActionView の <code>render_with_layout</code>{' '}
+            というメソッドです。このメソッドはテンプレートを描画した結果を <code>view_flow</code> の :layout に入れてから、レイアウトを描画します。<code>view_flow</code>{' '}
+            は描画の途中でできた HTML を名前ごとに入れておくオブジェクトです。レイアウトの <code>{'<%= yield %>'}</code> は、この入れておいた本文を取り出します。テンプレートの中で{' '}
+            <code>content_for(:title)</code> に入れた値をレイアウトの <code>{'<title>'}</code> で使えるのも、テンプレートが先に描画されるからです。<code>render_with_layout</code>{' '}
+            のコードは <ChapterLink n={16} section="flow" /> で、描画のイベントが記録される順は <ChapterLink n={16} section="compile" /> で確かめています。
           </p>
           <p>
             次の図は「レイアウトとパーシャルの書き方」の節のログの行を、出た順に上から並べたものです。右の括弧は Rendering で始まる行から Rendered で始まる行までのイベントの範囲を表します。Rendering layout
@@ -1236,7 +1300,7 @@ container=#<Class:0x00007f6249cf7120> superclass=ActionView::Base
 `}
           />
           <p>
-            テンプレートの探索は最初の要素で1回だけ行い、残りの要素では同じ Template の <code>render</code> を呼びます。イベントも render_collection の1件（count=3）にまとまります。各要素で{' '}
+            テンプレートの探索は最初の要素で1回だけ行い、残りの要素では同じ Template の <code>render</code> を呼びます。ログでも、3件分の描画が Rendered collection of articles/_article.html.erb [3 times] の1行にまとまります。各要素で{' '}
             <code>{'<%= render partial: "article", locals: { article: a } %>'}</code> と書くと、要素の数だけパーシャルの描画の処理が繰り返されます。
           </p>
           <p>
@@ -1311,7 +1375,8 @@ container=#<Class:0x00007f6249cf7120> superclass=ActionView::Base
 `}
           />
           <p>
-            <code>klass</code> は前節の <code>compiled_method_container</code> にあたる無名のクラスで、その子クラスにルーティングの URL ヘルパーとコントローラーのヘルパーのモジュールを include
+            <code>klass</code> は ActionView::Base を継承した無名のクラスです。Rails は ERB のテンプレートを初めて描画するときに Ruby のメソッドへ変換し、このクラスに定義します（変換の仕組みは{' '}
+            <ChapterLink n={16} section="compile" />）。<code>build_view_context_class</code> は、<code>klass</code> の子クラスを作り、そこにルーティングの URL ヘルパーとコントローラーのヘルパーのモジュールを include
             します。ArticlesController のビューのクラスの祖先を先頭から6つ表示しました。
           </p>
           <Code
@@ -1351,7 +1416,7 @@ resources :articles, only: [:index, :show, :new, :create, :edit, :update]
 
 class Article < ApplicationRecord
   validates :title, presence: true
-  # …（第15章のモデルの定義はそのまま）
+  # …（第21章のモデルの定義はそのまま）
 end
 `}
           />
@@ -1429,9 +1494,9 @@ end
           />
           <p>
             <code>resources</code> の <code>new</code>・<code>create</code>・<code>edit</code>・<code>update</code> は、それぞれ GET /articles/new、POST /articles、GET
-            /articles/:id/edit、PATCH /articles/:id へのルートを作ります。作成画面を開いてから保存するまでの流れは、図 20-6 のとおりです。
+            /articles/:id/edit、PATCH /articles/:id へのルートを作ります。作成画面を開いてから保存するまでの流れは、図 27-7 のとおりです。
           </p>
-          <Figure n="20-6" title="フォームの送信から保存まで" caption="デモのアプリケーション（development）で、作成画面を開き、空のタイトルと正しいタイトルで送信した結果をまとめた図。">
+          <Figure n="27-7" title="フォームの送信から保存まで" caption="デモのアプリケーション（development）で、作成画面を開き、空のタイトルと正しいタイトルで送信した結果をまとめた図。">
             <FormFlowFigure />
           </Figure>
           <h3>form_with が作る HTML</h3>
@@ -1534,7 +1599,7 @@ flash[:notice] => "記事を作成しました"
               <Ref n={13} />。CSS でこのクラスに色を付ければ、エラーの項目を目立たせられます。
             </li>
             <li>
-              ステータスコードを 422 にするのは、送信が失敗したことをブラウザーに伝えるためです。Rails の既定で入っている Turbo（リンクやフォームの送信を JavaScript で処理するライブラリ）は、フォームの送信に 200 の応答が返ると画面を書き換えません。Rails ガイドには <code>:unprocessable_entity</code> と書いた例もありますが、Rails 8.1.4.1 はどちらも 422
+              ステータスコードを 422 にすると、フォームの内容を処理できなかったことが応答から分かります。Rails 8.1.4.1 は <code>:unprocessable_content</code> と <code>:unprocessable_entity</code> をどちらも 422
               に変換します（<code>response.rb</code> の 51〜59 行目）
               <Ref n={14} />。
             </li>
@@ -1692,7 +1757,7 @@ raw                         <script>alert(1)</script>
 stylesheet_link_tag :app    <link rel="stylesheet" href="/assets/application-8b441ae0.css" />
 middleware: ["ActionDispatch::Static", "Propshaft::Server", "Propshaft::QuietAssets"]
 load_path: ["app/assets/images", "app/assets/stylesheets", "app/javascript", "vendor/javascript",
-            "stimulus-rails-1.3.4/app/assets/javascripts", "turbo-rails-2.0.23/app/assets/javascripts", ...]
+            ...]
 GET /assets/application-8b441ae0.css => 200 {"content-type" => "text/css; charset=utf-8",
   "cache-control" => "public, max-age=31536000, immutable", "etag" => "\\"8b441ae0\\""} 491B
 古いダイジェスト => 404
@@ -1708,7 +1773,7 @@ GET /assets/application-8b441ae0.css => 200 {"content-type" => "text/css; charse
             code={`
 $ RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 bin/rails assets:precompile
 $ ls public/assets
-application-8b441ae0.css  application-bfcdf840.js  controllers  turbo.min-9fd88cd5.js  stimulus.min-4b1e420e.js ...
+application-8b441ae0.css  application-bfcdf840.js  controllers  ...
 $ head -c 120 public/assets/.manifest.json
 {"application.css":{"digested_path":"application-8b441ae0.css","integrity":null},"controllers/index.js":...
 `}
@@ -1718,28 +1783,23 @@ $ head -c 120 public/assets/.manifest.json
             が直接返すように設定するのが一般的です（<ChapterLink n={24} />
             ）。Nginx を置かない場合は、Rails の ActionDispatch::Static が public のファイルを返します。
           </p>
-          <Figure n="20-7" title="開発環境と本番環境のアセット配信" caption="propshaft 1.3.2 の server.rb・assembly.rb・railtie.rb と、デモアプリケーションでの実測をもとにした模式図。">
+          <Figure n="27-8" title="開発環境と本番環境のアセット配信" caption="propshaft 1.3.2 の server.rb・assembly.rb・railtie.rb と、デモアプリケーションでの実測をもとにした模式図。">
             <AssetFigure />
           </Figure>
           <p>
             JavaScript については、デモでは import maps を使いました。<code>javascript_importmap_tags</code> は、論理名とダイジェスト付きの URL の対応表を HTML に埋め込みます。ブラウザーは{' '}
-            <code>import "@hotwired/turbo-rails"</code> をこの表で URL に置き換えて読み込むので、Node.js での結合（バンドル）が要りません
+            <code>import "application"</code> をこの表で URL に置き換えて読み込めます
             <Ref n={7} />。
           </p>
           <Code
             lang="html"
             code={`
-<script type="importmap" data-turbo-track="reload">{
+<script type="importmap">{
   "imports": {
-    "application": "/assets/application-bfcdf840.js",
-    "@hotwired/turbo-rails": "/assets/turbo.min-9fd88cd5.js",
-    "@hotwired/stimulus": "/assets/stimulus.min-4b1e420e.js",
-    ...
+    "application": "/assets/application-bfcdf840.js"
   }
 }</script>
 <link rel="modulepreload" href="/assets/application-bfcdf840.js">
-<link rel="modulepreload" href="/assets/turbo.min-9fd88cd5.js">
-...
 <script type="module">import "application"</script>
 `}
           />

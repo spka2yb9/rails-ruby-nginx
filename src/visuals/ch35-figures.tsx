@@ -1,8 +1,8 @@
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
-/* 第11章（ID 35）SQL で表を読み書きする の図 */
+/* 第17章（ID 35）SQL で表を読み書きする の図 */
 
-/* ---------- 図 11-1 users テーブルの行・列・主キー ---------- */
+/* ---------- 図 17-1 users テーブルの行・列・主キー ---------- */
 export function UsersTableFigure() {
   const cols = [
     { name: 'id', w: 50 },
@@ -23,7 +23,7 @@ export function UsersTableFigure() {
   const rowY = (j: number) => 80 + j * 28
   return (
     <Svg
-      id="11-1"
+      id="17-1"
       w={780}
       h={300}
       label="サンプル DB の users テーブルを表にした図。列は id・name・email・age・department_id で、1行が1人の利用者を表す。id は主キーで、行を1つに特定する番号が入り、同じ値も NULL も入らない。Hana の行の department_id は NULL で、値が無いことを表す。department_id は departments テーブルの id を指す外部キーである"
@@ -77,11 +77,11 @@ export function UsersTableFigure() {
   )
 }
 
-/* ---------- 図 11-2 サンプル DB の4つのテーブル ---------- */
+/* ---------- 図 17-2 サンプル DB の4つのテーブル ---------- */
 export function SampleDbFigure() {
   return (
     <Svg
-      id="11-2"
+      id="17-2"
       w={780}
       h={340}
       label="サンプル DB の4つのテーブル。departments（3行）は id と name、users（8行）は id・name・email・age・department_id・created_at、orders（6行）は id・user_id・amount・status・created_at、accounts（3行）は id・user_id・balance を持ち、balance には 0 以上という CHECK 制約がある。users の department_id は departments の id を指し、NULL を入れてよい。orders と accounts の user_id は users の id を指し、NOT NULL である"
@@ -146,11 +146,11 @@ export function SampleDbFigure() {
   )
 }
 
-/* ---------- 図 11-3 Active Record のメソッドから SQL を送り、結果を受け取る ---------- */
+/* ---------- 図 17-3 Active Record のメソッドから SQL を送り、結果を受け取る ---------- */
 export function ArFlowFigure() {
   return (
     <Svg
-      id="11-3"
+      id="17-3"
       w={780}
       h={215}
       label="Ruby のコード User.where(age: 20..).order(age: :desc).pluck(:name) を実行すると、Active Record が SQL を組み立てて MySQL に送る。MySQL は users テーブルから条件に合う行を探して結果の行を返し、Active Record はそれを Ruby の値（ここでは名前の配列）にして返す。組み立てる SQL は to_sql で、送らずに確かめられる"
@@ -178,7 +178,7 @@ export function ArFlowFigure() {
   )
 }
 
-/* ---------- 図 11-4 書く順と処理の順 ---------- */
+/* ---------- 図 17-4 書く順と処理の順 ---------- */
 export function ClauseOrderFigure() {
   const top = ['SELECT name, age', 'FROM users', 'WHERE age >= 20', 'ORDER BY age DESC, id']
   const bottom = [
@@ -192,7 +192,7 @@ export function ClauseOrderFigure() {
   const to = [2, 0, 1, 3]
   return (
     <Svg
-      id="11-4"
+      id="17-4"
       w={780}
       h={250}
       label="上の段は SQL を書く順で、SELECT name, age、FROM users、WHERE age >= 20、ORDER BY age DESC, id の順に並ぶ。下の段は結果を説明するための処理の順で、FROM で users の8行を読み、WHERE で age が 20 以上の6行を残し、SELECT で name と age の2列にし、ORDER BY で年齢の大きい順に並べる。上の段と下の段の同じ句を破線で結んでいる"
@@ -222,11 +222,11 @@ export function ClauseOrderFigure() {
   )
 }
 
-/* ---------- 図 11-5 バリデーションと DB の制約 ---------- */
+/* ---------- 図 17-5 バリデーションと DB の制約 ---------- */
 export function TwoChecksFigure() {
   return (
     <Svg
-      id="11-5"
+      id="17-5"
       w={780}
       h={280}
       label="create! や save を呼ぶと、まず Rails のプロセスの中でバリデーションが値を検査し、失敗すると SQL を送らずに RecordInvalid の例外か false になる。通ると INSERT や UPDATE を MySQL に送り、MySQL が NOT NULL・外部キー・CHECK・一意の索引を検査する。違反すると NotNullViolation や InvalidForeignKey などの例外になってロールバックされ、通ると COMMIT で保存される。save(validate: false)・insert_all・update_all はバリデーションを通らずに SQL を送る"
@@ -253,11 +253,11 @@ export function TwoChecksFigure() {
   )
 }
 
-/* ---------- 図 11-6 モデルを通すメソッドと SQL を直接送るメソッド ---------- */
+/* ---------- 図 17-6 モデルを通すメソッドと SQL を直接送るメソッド ---------- */
 export function TwoPathsFigure() {
   return (
     <Svg
-      id="11-6"
+      id="17-6"
       w={780}
       h={256}
       label="update!・destroy・destroy_all はモデルを通すメソッドで、SELECT で行を読み込み、コールバック（update! はバリデーションも）を実行してから、1行ずつ UPDATE や DELETE を送る。update_all・delete・delete_all は SQL を直接送るメソッドで、行を読まず、バリデーションもコールバックも実行せずに、UPDATE や DELETE を1回だけ送る"

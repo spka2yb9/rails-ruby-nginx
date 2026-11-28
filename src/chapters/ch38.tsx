@@ -101,10 +101,10 @@ mysql> SELECT id, balance FROM accounts WHERE id IN (1, 2);
 `}
           />
           <p>
-            トランザクションの中の SELECT には自分の UPDATE の結果（9000 と 11000）が見え、ROLLBACK の後は2つとも取り消されて 10000 に戻りました。図 14-1
+            トランザクションの中の SELECT には自分の UPDATE の結果（9000 と 11000）が見え、ROLLBACK の後は2つとも取り消されて 10000 に戻りました。図 20-1
             はトランザクションを使わない場合と、ROLLBACK・COMMIT で終える場合の結果を並べたものです。1000 がどこにも無い状態が残るのは、左の列だけです。
           </p>
-          <Figure n="14-1" title="送金とトランザクション" caption="上の実行結果と、自動コミットの動作をまとめた図。">
+          <Figure n="20-1" title="送金とトランザクション" caption="上の実行結果と、自動コミットの動作をまとめた図。">
             <TransferFigure />
           </Figure>
           <p>
@@ -225,10 +225,10 @@ b = thread("B", 0.1) { transfer(1, 2, 1000) } # 0.1 秒遅れて始める
           </p>
           <p>
             A も B も、相手が保存する前に口座1の残高 10000 を読みました。<code>update!</code> は Ruby で計算した 9000 をそのまま書くので、B は A の書き込みを同じ 9000 で上書きしました（図
-            14-2）。2回の送金はどちらも成功したのに、口座1は 8000 ではなく 9000 です。同じ行を読んで書き戻す処理が重なり、先の更新が失われる現象を<Term en="lost update">更新の消失</Term>
+            20-2）。2回の送金はどちらも成功したのに、口座1は 8000 ではなく 9000 です。同じ行を読んで書き戻す処理が重なり、先の更新が失われる現象を<Term en="lost update">更新の消失</Term>
             と呼びます。
           </p>
-          <Figure n="14-2" title="同時の送金で更新が消える" caption="上の実行結果を、口座1について図にしたもの。">
+          <Figure n="20-2" title="同時の送金で更新が消える" caption="上の実行結果を、口座1について図にしたもの。">
             <LostUpdateFigure />
           </Figure>
           <p>
@@ -533,9 +533,9 @@ SELECT balance FROM accounts WHERE id = 1;
           />
           <p>
             FOR SHARE・FOR UPDATE を付けた SELECT を<Term en="locking read">ロック読み取り</Term>と呼び、BEGIN で始めたトランザクションの中で使います。自動コミットのままでは文が終わるとトランザクションも終わり、ロックはすぐに手放されます
-            <Ref n={6} />。図 14-3 は、A の持つロック（左の列）と B が要求するロック（上の行）の組み合わせごとに、B が待つかどうかをまとめたものです。
+            <Ref n={6} />。図 20-3 は、A の持つロック（左の列）と B が要求するロック（上の行）の組み合わせごとに、B が待つかどうかをまとめたものです。
           </p>
-          <Figure n="14-3" title="S ロックと X ロックの両立" caption="MySQL 8.4 のマニュアル（InnoDB Locking・Locking Reads）をもとにまとめた図。">
+          <Figure n="20-3" title="S ロックと X ロックの両立" caption="MySQL 8.4 のマニュアル（InnoDB Locking・Locking Reads）をもとにまとめた図。">
             <LockMatrixFigure />
           </Figure>
 
@@ -686,7 +686,7 @@ b = thread("B", 0.1) { transfer_locked(1, 2, 1000) }
             </table>
           </div>
           <p>
-            ロックなしの実行（図 14-2）では B は 0.10 秒に 10000 を読みましたが、ここでは同じ読み取りが A の COMMIT の後まで待たされています。<code>lock</code> を付けても、検索が{' '}
+            ロックなしの実行（図 20-2）では B は 0.10 秒に 10000 を読みましたが、ここでは同じ読み取りが A の COMMIT の後まで待たされています。<code>lock</code> を付けても、検索が{' '}
             <code>transaction</code> のブロックの外にあると A は読んだ直後にロックを手放すので、B を待たせられません（この節の注意点）。
           </p>
           <p>S ロックで読むには、<code>lock("FOR SHARE")</code> のように句を文字列で渡します。シミュレーターの「Shared Lock」と同じ手順で実行しました。</p>
@@ -1040,8 +1040,8 @@ SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
               の後は 10000 に戻ります。
             </li>
           </ul>
-          <p>図 14-4 は4つのレベルの結果をまとめたものです。左が操作の順序、右が A の2回目の値です。</p>
-          <Figure n="14-4" title="分離レベルによる読み直しの違い" caption="シミュレーターと、後に示す MySQL 8.4.13 での実測の結果をまとめた図。">
+          <p>図 20-4 は4つのレベルの結果をまとめたものです。左が操作の順序、右が A の2回目の値です。</p>
+          <Figure n="20-4" title="分離レベルによる読み直しの違い" caption="シミュレーターと、後に示す MySQL 8.4.13 での実測の結果をまとめた図。">
             <IsolationFigure />
           </Figure>
 
@@ -1375,10 +1375,10 @@ end
 `}
           />
           <p>
-            FOR SHARE で 5000 を読んだ直後でも、通常の SELECT は 10000 を返しました。UPDATE は最新の 5000 から 1000 を引き、その後の通常の SELECT は自分の変更の 4000 を返しました。図 14-5
+            FOR SHARE で 5000 を読んだ直後でも、通常の SELECT は 10000 を返しました。UPDATE は最新の 5000 から 1000 を引き、その後の通常の SELECT は自分の変更の 4000 を返しました。図 20-5
             は口座1のバージョンと、A の3種類の読み取りがどれを対象にしたかを表したものです。
           </p>
-          <Figure n="14-5" title="行のバージョンとスナップショット" caption="上の実行結果をもとにした模式図。InnoDB の read view と undo ログの実際の構造は省略している。">
+          <Figure n="20-5" title="行のバージョンとスナップショット" caption="上の実行結果をもとにした模式図。InnoDB の read view と undo ログの実際の構造は省略している。">
             <MvccFigure />
           </Figure>
           <p>
@@ -1478,9 +1478,7 @@ UPDATE accounts SET balance = 9000 WHERE id = 2;   -- B のロックを待つ
             <li>B の ROLLBACK を押すと、B の未確定の変更とロックが手放され、A の UPDATE が自動で再開します。A の COMMIT で、両方の行に「Version 1 · balance = 9000」ができます。</li>
           </ol>
           <p>
-            次に「Simulator初期化」を押し、A と B の両方で BEGIN してから、どちらも口座1から更新します。A で <code>UPDATE accounts SET balance = 9000 WHERE id = 1;</code> を、B で{' '}
-            <code>UPDATE accounts SET balance = 8000 WHERE id = 1;</code> を実行すると、B は WAITING になりますが、矢印は「B waits for A」だけで循環しません。A で{' '}
-            <code>UPDATE accounts SET balance = 9000 WHERE id = 2;</code> を実行して COMMIT すると、B の UPDATE が再開します。
+            次に「同じ順番でロックを取る」を選び、「初期化して開始」を押します。A と B はどちらも口座1、口座2の順に更新します。4ステップ目では B が口座1のロックを待ち、矢印は B から A へ向かいます。6ステップ目で A がコミットすると、待っていた B の更新が自動で再開します。最後まで進めると両方のトランザクションが確定します。順番をそろえてもロック待ちは残りますが、A と B の間に待ちの循環は生じません。
           </p>
 
           <h3>なぜそうなるか</h3>
@@ -1882,10 +1880,10 @@ b = thread("B", 0.1) { transfer_ordered(2, 1, 500) }
 `}
           />
           <p>
-            B は口座1の FOR UPDATE で A の COMMIT まで待ちましたが（260.7ms）、デッドロックにはならず、2つの送金がどちらも反映されました。図 14-6 は逆の順と同じ順でロックした場合の待ちの関係を比べたもので、矢印の向きはシミュレーターの
+            B は口座1の FOR UPDATE で A の COMMIT まで待ちましたが（260.7ms）、デッドロックにはならず、2つの送金がどちらも反映されました。図 20-6 は逆の順と同じ順でロックした場合の待ちの関係を比べたもので、矢印の向きはシミュレーターの
             Wait-for Graph と同じです。
           </p>
-          <Figure n="14-6" title="待ちの循環とロックの順序" caption="上の2つの実行結果をもとにした図。">
+          <Figure n="20-6" title="待ちの循環とロックの順序" caption="上の2つの実行結果をもとにした図。">
             <DeadlockFigure />
           </Figure>
 

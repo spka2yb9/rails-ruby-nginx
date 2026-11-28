@@ -6,11 +6,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 15-3 レコードの状態と、状態を変えるメソッド ---------- */
+/* ---------- 図 21-3 レコードの状態と、状態を変えるメソッド ---------- */
 function RecordStateFigure() {
   return (
     <Svg
-      id="15-3"
+      id="21-3"
       w={760}
       h={330}
       label="Article.new で作ったレコードは保存前の状態で、SQL は実行されない。save または save! で INSERT が実行されて保存済みになる。find・find_by・where で読み込んだレコードも保存済みである。保存済みのレコードは update で UPDATE が実行され、destroy で DELETE が実行されて削除済みになり、凍結される。検証に失敗した save は SQL を実行せずに false を返し、save! は例外を投げ、レコードは保存前のまま残る"
@@ -63,11 +63,11 @@ function RecordStateFigure() {
   )
 }
 
-/* ---------- 図 15-4 クラス側とインスタンス側が持つもの ---------- */
+/* ---------- 図 21-4 クラス側とインスタンス側が持つもの ---------- */
 function ClassInstanceFigure() {
   return (
     <Svg
-      id="15-4"
+      id="21-4"
       w={760}
       h={300}
       label="Article クラスは、テーブルの列の情報 columns_hash、属性ごとの型 attribute_types、既定値の集合 _default_attributes を持ち、祖先には属性メソッドを定義したモジュール Article::GeneratedAttributeMethods がある。Article のインスタンスは、属性の集合 @attributes と、@new_record などの状態を持つ。データベースから読み込んだレコードの @attributes は LazyAttributeSet で、行の値をそのまま持ち、読まれたときに型変換する"
@@ -110,11 +110,11 @@ function ClassInstanceFigure() {
   )
 }
 
-/* ---------- 図 15-5 行から値を読むまで ---------- */
+/* ---------- 図 21-5 行から値を読むまで ---------- */
 function LazyFigure() {
   return (
     <Svg
-      id="15-5"
+      id="21-5"
       w={760}
       h={250}
       label="SELECT の結果の1行は、列名と値のハッシュとして返る。instantiate_instance_of は、そのハッシュと型の一覧から LazyAttributeSet を作り、allocate したインスタンスに init_with_attributes で渡す。このときは型変換をしない。a.published を読むと、LazyAttributeSet が行の値 1 を Boolean 型の deserialize で true に変換し、結果を保存して返す。2回目からは保存した値を返す"
@@ -133,11 +133,11 @@ function LazyFigure() {
   )
 }
 
-/* ---------- 図 15-6 3つの値と変換 ---------- */
+/* ---------- 図 21-6 3つの値と変換 ---------- */
 function ThreeValuesFigure() {
   return (
     <Svg
-      id="15-6"
+      id="21-6"
       w={760}
       h={250}
       label="属性は3種類の値を持つ。value_before_type_cast は、データベースから来た値か、代入された値そのもの。value は Ruby で扱う値で、データベースからの値は deserialize、代入された値は cast で作られる。value_for_database は保存するときの値で、value を serialize して作られる。例として、published 列はデータベースでは 1、Ruby では true、保存するときは 1 になる"
@@ -165,11 +165,11 @@ function ThreeValuesFigure() {
   )
 }
 
-/* ---------- 図 15-7 代入と変更の検出 ---------- */
+/* ---------- 図 21-7 代入と変更の検出 ---------- */
 function DirtyFigure() {
   return (
     <Svg
-      id="15-7"
+      id="21-7"
       w={760}
       h={240}
       label="データベースから読み込んだ title の属性は FromDatabase で、値は記事1。a.title に新しい値を代入すると、FromUser の属性が新しく作られ、元の FromDatabase の属性を original_attribute として持つ。changed? は、代入による変更か、読んだ値をその場で書き換えた変更があれば真になる。save に成功すると changes_applied が呼ばれ、現在の値を元の値とする新しい属性に置き換わる"
@@ -197,7 +197,7 @@ function DirtyFigure() {
   )
 }
 
-/* ---------- 図 15-1 articles テーブルの行と列 ---------- */
+/* ---------- 図 21-1 articles テーブルの行と列 ---------- */
 function TableFigure() {
   const cols = [
     { name: 'id', type: 'bigint', w: 70 },
@@ -213,7 +213,7 @@ function TableFigure() {
   const xs = cols.reduce<number[]>((acc, _c, i) => [...acc, i === 0 ? 20 : acc[i - 1] + cols[i - 1].w], [])
   return (
     <Svg
-      id="15-1"
+      id="21-1"
       w={780}
       h={290}
       label="articles テーブルを表にした図。横の並びが行で、1行が1件の記事を表す。縦の並びが列で、id・title・published・views_count などの列ごとに、bigint・varchar(255)・tinyint(1)・int のような型が決まっている。id の列は主キーで、行を1つに特定する番号が入り、同じ値も NULL も入らない。published の 1 と 0 は、Rails では true と false として扱われる"
@@ -260,11 +260,11 @@ function TableFigure() {
   )
 }
 
-/* ---------- 図 15-2 マイグレーション・テーブル・モデル ---------- */
+/* ---------- 図 21-2 マイグレーション・テーブル・モデル ---------- */
 function ModelFigure() {
   return (
     <Svg
-      id="15-2"
+      id="21-2"
       w={780}
       h={290}
       label="マイグレーションのファイルに create_table :articles を書き、bin/rails db:migrate を実行すると、Rails が MySQL に CREATE TABLE を送って articles テーブルができ、実行したバージョンが schema_migrations に記録される。モデルの Article クラスで Article.first を呼ぶと、Rails が SELECT … LIMIT 1 を送り、返ってきた1行の値から Article のインスタンスを作る。インスタンスの title や published は列の値を返し、published は 1 から true に変換されている"
@@ -463,7 +463,7 @@ mysql> SELECT id, title, published, views_count, created_at FROM articles LIMIT 
 `}
           />
           <p>
-            1行が1件の記事で、id・title などの列が記事の項目です（図 15-1）。テーブル・行・列・主キーとは何かは、<ChapterLink n={35} section="database" />
+            1行が1件の記事で、id・title などの列が記事の項目です（図 21-1）。テーブル・行・列・主キーとは何かは、<ChapterLink n={35} section="database" />
             で扱いました。デモの articles テーブルには約1万行あります。1件目と2件目のタイトルは、この本のほかの節の実験で書き換えたものです。
           </p>
           <p>列ごとに、入れられる値の種類（型）が決まっています。DESCRIBE で articles テーブルの列と型を表示しました。</p>
@@ -527,7 +527,7 @@ ERROR 1364 (HY000): Field 'created_at' doesn't have a default value
             ）があることを表します
             <Ref n={19} />。
           </p>
-          <Figure n="15-1" title="articles テーブルの行と列" caption="上の SELECT と DESCRIBE の結果をもとにした模式図。列は一部だけを描いている。">
+          <Figure n="21-1" title="articles テーブルの行と列" caption="上の SELECT と DESCRIBE の結果をもとにした模式図。列は一部だけを描いている。">
             <TableFigure />
           </Figure>
         </>
@@ -706,6 +706,7 @@ end
             Rails が決めます
             <Ref n={13} />。
           </p>
+          <p>Ruby のオブジェクトとリレーショナルデータベースの行を対応させる仕組みを ORM（Object–Relational Mapping）と呼びます。たとえば <code>Article.find(1)</code> では Active Record が検索の SQL を生成し、取得した行から <code>Article</code> のオブジェクトを作ります。関連の読み込みや複数行の集計でどんな SQL が生じるかはログで確かめます。重複や参照できない ID を防ぐ制約は、モデルの検証に加えてデータベースにも設定します。<Ref n={13} /></p>
           <p>
             デモのアプリケーションで Article のメソッドを呼び、送られた SQL を確かめました。<code>bin/rails runner</code>（アプリケーションを読み込んだ状態で Ruby のスクリプトを実行するコマンド）でスクリプトを実行し、ActiveRecord
             がログに書く SQL を画面に表示しています。
@@ -744,9 +745,9 @@ b.published              # => false
           </p>
           <p>
             MySQL では published の値は 1 と 0 でしたが、Article のインスタンスでは true と false になっています。Rails は列の型に合わせて、データベースの値を Ruby
-            の値に変換します（「列の型と型変換」の節）。ここまでのマイグレーション・テーブル・モデルの関係を図 15-2 にまとめます。
+            の値に変換します（「列の型と型変換」の節）。ここまでのマイグレーション・テーブル・モデルの関係を図 21-2 にまとめます。
           </p>
-          <Figure n="15-2" title="マイグレーション・テーブル・モデル" caption="この節と前の節の実行結果をもとにした模式図。">
+          <Figure n="21-2" title="マイグレーション・テーブル・モデル" caption="この節と前の節の実行結果をもとにした模式図。">
             <ModelFigure />
           </Figure>
           <p>
@@ -898,8 +899,8 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
             の添付ファイル（<ChapterLink n={19} />）を調べる SELECT も実行されましたが、上では省略しています。<code>destroy</code> はコールバック（保存や削除の前後に実行するように登録しておく処理。<ChapterLink n={14} />）を実行してから削除します。コールバックを実行しない{' '}
             <code>delete</code> との違いは<ChapterLink n={14} section="skip" />で扱います。
           </p>
-          <p>ここまでの結果をまとめると、図 15-3 と次の表のようになります。</p>
-          <Figure n="15-3" title="レコードの状態と、状態を変えるメソッド" caption="この節の実行結果をまとめた模式図。破線は、検証に失敗して状態が変わらない場合を表す。">
+          <p>ここまでの結果をまとめると、図 21-3 と次の表のようになります。</p>
+          <Figure n="21-3" title="レコードの状態と、状態を変えるメソッド" caption="この節の実行結果をまとめた模式図。破線は、検証に失敗して状態が変わらない場合を表す。">
             <RecordStateFigure />
           </Figure>
           <div className="table-wrap">
@@ -992,9 +993,7 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
           <ul>
             <li>
               利用者の入力を保存するコントローラーでは、検証に失敗するのは想定内です。<code>save</code> や <code>update</code> の戻り値で分岐し、入力画面にエラーを表示します（
-              <ChapterLink n={16} section="form">
-                第20章の「フォームから保存まで」
-              </ChapterLink>
+              <ChapterLink n={16} section="form" />
               ）。
             </li>
             <li>
@@ -1050,7 +1049,7 @@ a.update(title: "x")    # FrozenError: can't modify frozen attributes
             ）、新しいレコードの初期値（<code>_default_attributes</code>）を持ち、祖先（メソッドを探すときに Ruby が順にたどるクラスとモジュールの並び。<ChapterLink n={2} section="method-lookup" />）には <code>title</code> などのメソッドを定義したモジュールがあります。インスタンスは、属性の値の集合（<Term en="attribute set">AttributeSet</Term>）である{' '}
             <code>@attributes</code> と、保存済みかどうかなどの状態を持ちます。
           </p>
-          <Figure n="15-4" title="クラス側とインスタンス側が持つもの" caption="模式図。Rails 8.1.4.1 の model_schema.rb・attributes.rb・core.rb を読んでまとめた。">
+          <Figure n="21-4" title="クラス側とインスタンス側が持つもの" caption="模式図。Rails 8.1.4.1 の model_schema.rb・attributes.rb・core.rb を読んでまとめた。">
             <ClassInstanceFigure />
           </Figure>
           <p>この章では、これらがいつ、どのように作られるかを順に見ていきます。</p>
@@ -1225,7 +1224,7 @@ Article.method_defined?(:title)   # => true
             id が 3 の記事で <code>article.published</code> を初めて読むと、<code>name</code> は列名の <code>"published"</code>、<code>value</code> は DB から届いた 0 です。
             <code>type.deserialize(value)</code> が 0 を Ruby の <code>false</code> に変え、<code>@casted_values</code> に記録します。もう一度同じ記事の published を読むと、その値を取り出せます。まだ読んでいない列の変換は後に残ります。<Ref n={5} />
           </p>
-          <Figure n="15-5" title="行から値を読むまで" caption="Rails 8.1.4.1 の persistence.rb・core.rb・attribute_set/builder.rb を読んでまとめた図。">
+          <Figure n="21-5" title="行から値を読むまで" caption="Rails 8.1.4.1 の persistence.rb・core.rb・attribute_set/builder.rb を読んでまとめた図。">
             <LazyFigure />
           </Figure>
         </>
@@ -1276,7 +1275,7 @@ Article.ancestors.index(m.owner)  # => 3
           />
           <p>
             属性メソッドは Article クラス自身ではなく、祖先に入った <code>Article::GeneratedAttributeMethods</code> モジュールに定義されます（<ChapterLink n={2} section="rails-ancestors" />
-            の図 2-6 では添字 2 でしたが、第3部の Article には enum を定義したので、enum のメソッドを入れる無名のモジュールが添字 1 に入り、1つずれています）。そのため、モデルで <code>def title</code>{' '}
+            の図 4-6 では添字 2 でしたが、第3部の Article には enum を定義したので、enum のメソッドを入れる無名のモジュールが添字 1 に入り、1つずれています）。そのため、モデルで <code>def title</code>{' '}
             を書いて上書きし、その中で <code>super</code> を呼ぶと、生成されたメソッドに処理を渡せます（<ChapterLink n={3} />）。関連のメソッドを入れる GeneratedAssociationMethods
             と同じ考え方です（<ChapterLink n={5} />）。
           </p>
@@ -1362,7 +1361,7 @@ Article.ancestors.index(m.owner)  # => 3
             で Ruby の値になり、保存するときは <code>serialize</code> で戻します
             <Ref n={5} />。
           </p>
-          <Figure n="15-6" title="3つの値と変換" caption="模式図。ActiveModel::Attribute の FromDatabase は deserialize、FromUser は cast を使う（attribute.rb の 181〜208 行目）。">
+          <Figure n="21-6" title="3つの値と変換" caption="模式図。ActiveModel::Attribute の FromDatabase は deserialize、FromUser は cast を使う（attribute.rb の 181〜208 行目）。">
             <ThreeValuesFigure />
           </Figure>
           <p>デモのアプリケーションで、読み込んだレコードの値と、代入したときの変換を調べました。</p>
@@ -1506,7 +1505,7 @@ status      = "unknown"           -> ArgumentError: 'unknown' is not a valid sta
             <code>changed_in_place?</code> で比べて検出します
             <Ref n={5} />。
           </p>
-          <Figure n="15-7" title="代入と変更の検出" caption="模式図。save に成功すると changes_applied が呼ばれ、forgetting_assignment で現在の値を元の値とする属性に置き換わる。">
+          <Figure n="21-7" title="代入と変更の検出" caption="模式図。save に成功すると changes_applied が呼ばれ、forgetting_assignment で現在の値を元の値とする属性に置き換わる。">
             <DirtyFigure />
           </Figure>
           <p>デモのアプリケーションで、変更から保存までを確かめました。</p>

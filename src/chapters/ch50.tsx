@@ -4,7 +4,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 86-1 書き込み用のモデルと参照用のモデル ---------- */
+/* ---------- 図 103-1 書き込み用のモデルと参照用のモデル ---------- */
 function ModelsFigure() {
   const sources = ['orders', 'order_items', 'products', 'categories', 'reviews']
   const views: { y: number; lines: string[]; fill: 'box5' | 'box4' }[] = [
@@ -19,7 +19,7 @@ function ModelsFigure() {
   ]
   return (
     <Svg
-      id="86-1"
+      id="103-1"
       w={760}
       h={360}
       label="左は書き込み用のモデルで、正規化した orders、order_items、products、categories、reviews の表。右は参照用のモデルで、日付とカテゴリごとの売上を持つ daily_sales、1商品1行の product_searches、外部の検索エンジンの索引。daily_sales は orders・order_items・products を集計して作り、product_searches は products・categories・reviews を結合して作り、検索エンジンには products などの変更を送る。ダッシュボードと商品検索は右の表だけを読み、右の表はいつでも左の表から作り直せる"
@@ -52,7 +52,7 @@ function ModelsFigure() {
   )
 }
 
-/* ---------- 図 86-2 参照用のモデルを更新する方式 ---------- */
+/* ---------- 図 103-2 参照用のモデルを更新する方式 ---------- */
 const methodRows: { name: string[]; main: boolean; trigger: string[]; action: string[]; fresh: string[] }[] = [
   { name: ['全体を作り直す'], main: true, trigger: ['定期実行', '（毎晩など）'], action: ['RebuildDailySalesJob', '全期間を INSERT … SELECT'], fresh: ['作り直す間隔と、作り直しに', 'かかる時間の分だけ古い'] },
   { name: ['変わった部分だけ', '作り直す'], main: true, trigger: ['注文・レビューの COMMIT', '（after_commit）'], action: ['その日・その商品の行を', 'ジョブで作り直す'], fresh: ['ジョブが終わるまで古い', ''] },
@@ -65,7 +65,7 @@ function RefreshMethodsFigure() {
   const step = 70
   return (
     <Svg
-      id="86-2"
+      id="103-2"
       w={780}
       h={top + methodRows.length * step + 6}
       label={`参照用のモデルを更新する4つの方式。${methodRows.map((r) => `${r.name.join('')}：きっかけは${r.trigger.join('')}、${r.action.join('')}。データの新しさは${r.fresh.join('')}`).join('。')}`}
@@ -103,12 +103,12 @@ function RefreshMethodsFigure() {
   )
 }
 
-/* ---------- 図 86-3 定期的に作り直す方式でのデータの鮮度 ---------- */
+/* ---------- 図 103-3 定期的に作り直す方式でのデータの鮮度 ---------- */
 function StalenessFigure() {
   const x = (h: number) => 60 + (h - 9) * 300
   return (
     <Svg
-      id="86-3"
+      id="103-3"
       w={720}
       h={250}
       label="RebuildDailySalesJob が 9 時と 10 時に売上を作り直す。9 時 10 分に注文が入っても、9 時 20 分にダッシュボードを開くと 9 時時点のデータが表示され、その注文は含まれない。10 時に作り直すと含まれる。画面には 9:00 時点と表示する"
@@ -139,7 +139,7 @@ function StalenessFigure() {
   )
 }
 
-/* ---------- 図 86-5 日本時間の日付の求め方 ---------- */
+/* ---------- 図 103-5 日本時間の日付の求め方 ---------- */
 const tzRows: { expr: string; result: string[]; note: string; bad?: boolean }[] = [
   { expr: 'DATE(ordered_at)', result: ['2026-11-12'], note: 'UTC の日付。1日前になる', bad: true },
   { expr: "DATE(CONVERT_TZ(ordered_at, '+00:00', '+09:00'))", result: ['2026-11-13'], note: '時差で指定。表がなくても動く' },
@@ -153,7 +153,7 @@ function TimeZoneFigure() {
   const bottom = top + tzRows.length * step + 8
   return (
     <Svg
-      id="86-5"
+      id="103-5"
       w={780}
       h={bottom + 76}
       label={`日本時間の 2026-11-13 08:30 に入った注文は、orders.ordered_at に UTC の 2026-11-12 23:30:00 として保存される。${tzRows.map((r) => `${r.expr} は ${r.result.join('、')}。${r.note}`).join('。')}。日本時間の 11月13日 の注文を絞るときは、ordered_at が 2026-11-12 15:00:00 以上 2026-11-13 15:00:00 未満という UTC の範囲で比べ、インデックスを使えるようにする`}
@@ -200,7 +200,7 @@ function TimeZoneFigure() {
   )
 }
 
-/* ---------- 図 86-4 作り直しの INSERT … SELECT と注文の取り消し ---------- */
+/* ---------- 図 103-4 作り直しの INSERT … SELECT と注文の取り消し ---------- */
 function LockTimelineFigure() {
   const ty = (t: number) => 74 + t * 20
   const panels = [
@@ -209,7 +209,7 @@ function LockTimelineFigure() {
   ]
   return (
     <Svg
-      id="86-4"
+      id="103-4"
       w={780}
       h={ty(11) + 36}
       label="左は REPEATABLE READ で作り直した場合。作り直しのジョブが 0 秒に INSERT … SELECT を始め、1 秒に別の接続が注文 1000 を取り消そうとすると、その UPDATE は作り直しが 10.69 秒に COMMIT するまで待ち、10.71 秒に終わった。右は READ COMMITTED で作り直した場合。同じ UPDATE は 1.02 秒に終わり、作り直しは 7.80 秒に COMMIT した"
@@ -407,7 +407,7 @@ end
 `}
           />
           <p>
-            30日分で 0.3〜0.8 秒、月次のレポートのように1年分を集計すると 5〜7 秒かかりました。時間がどこにかかっているかを、MySQL の <code>EXPLAIN ANALYZE</code> で調べます。EXPLAIN ANALYZE は SQL を実際に実行し、実行計画の各段階で読んだ行数とかかった時間を表示します<Ref n={13} />（実行計画の読み方は<ChapterLink n={37} section="explain-rails" />の「MySQL の EXPLAIN と Relation#explain」）。
+            30日分で 0.3〜0.8 秒、月次のレポートのように1年分を集計すると 5〜7 秒かかりました。時間がどこにかかっているかを、MySQL の <code>EXPLAIN ANALYZE</code> で調べます。EXPLAIN ANALYZE は SQL を実際に実行し、実行計画の各段階で読んだ行数とかかった時間を表示します<Ref n={13} />（実行計画の読み方は<ChapterLink n={37} section="explain-rails" />）。
           </p>
           <Code
             lang="text"
@@ -555,20 +555,20 @@ CSV:
               </tbody>
             </table>
           </div>
-          <Figure n="86-1" title="書き込み用のモデルと参照用のモデル" caption="この章の Rails の実装の構成をまとめた模式図。破線の矢印は、左の表（破線の枠）から右のデータを作ることを表す。矢印の上の文字は、使う表と作り方。">
+          <Figure n="103-1" title="書き込み用のモデルと参照用のモデル" caption="この章の Rails の実装の構成をまとめた模式図。破線の矢印は、左の表（破線の枠）から右のデータを作ることを表す。矢印の上の文字は、使う表と作り方。">
             <ModelsFigure />
           </Figure>
           <p>
-            図 86-1 の左が書き込み用のモデル、右が参照用のモデルです。ダッシュボードと商品検索は右の表だけを読みます。正しいデータは左の表にあり、右のデータはいつでも左の表から作り直せます。検索エンジンの索引は外部のサービスにありますが、商品の情報から作り直せる点は同じです。
+            図 103-1 の左が書き込み用のモデル、右が参照用のモデルです。ダッシュボードと商品検索は右の表だけを読みます。正しいデータは左の表にあり、右のデータはいつでも左の表から作り直せます。検索エンジンの索引は外部のサービスにありますが、商品の情報から作り直せる点は同じです。
           </p>
           <h3>解決方法：更新の方式を選ぶ</h3>
           <p>
             参照用のモデルをいつ、どう更新するかには、4つの方式があります。Azure の説明も、全体を作り直すか変更を差分として反映するか、作り直しの間に読み取りを止めるかを決める必要があるとしています<Ref n={1} />。
           </p>
-          <Figure n="86-2" title="参照用のモデルを更新する方式" caption="MSDP の第11章の比較をもとに、この章の Rails のクラスに置き換えた図。上の2行（色を付けた行）が、この章で実装する方式。">
+          <Figure n="103-2" title="参照用のモデルを更新する方式" caption="MSDP の第11章の比較をもとに、この章の Rails のクラスに置き換えた図。上の2行（色を付けた行）が、この章で実装する方式。">
             <RefreshMethodsFigure />
           </Figure>
-          <p>図 86-2 は4つの方式を、更新のきっかけ・更新する処理・データの新しさで比べたものです。</p>
+          <p>図 103-2 は4つの方式を、更新のきっかけ・更新する処理・データの新しさで比べたものです。</p>
           <ul>
             <li>
               全体を作り直す：元の表から全体を集計し直します。PostgreSQL のマテリアライズドビューでは <code>REFRESH MATERIALIZED VIEW</code> がこれに当たり、中身を全部入れ替えます<Ref n={4} />。この章の <code>RebuildDailySalesJob</code> を引数なしで動かすと、注文のある全期間を作り直します。
@@ -594,13 +594,13 @@ CSV:
           </p>
           <h3>構造</h3>
           <p>
-            書き込み用のモデル、参照用のモデル、更新の処理の関係は図 86-1 のとおりです。ここでは、時間の経過に沿って、参照用のモデルのデータがどう古くなるかを見ます。
+            書き込み用のモデル、参照用のモデル、更新の処理の関係は図 103-1 のとおりです。ここでは、時間の経過に沿って、参照用のモデルのデータがどう古くなるかを見ます。
           </p>
-          <Figure n="86-3" title="定期的に作り直す方式でのデータの鮮度" caption="1時間ごとに作り直す場合の模式図。">
+          <Figure n="103-3" title="定期的に作り直す方式でのデータの鮮度" caption="1時間ごとに作り直す場合の模式図。">
             <StalenessFigure />
           </Figure>
           <p>
-            図 86-3 は売上を1時間ごとに作り直す場合のデータの古さを示したものです。9時に作り直した後に入った注文は、次に作り直す10時まで画面に出ません。画面に「9:00 時点」と表示しておけば、利用者は数値がいつのものかを知ることができます。データは最大で、作り直す間隔と作り直しにかかる時間を足した分だけ古くなります。
+            図 103-3 は売上を1時間ごとに作り直す場合のデータの古さを示したものです。9時に作り直した後に入った注文は、次に作り直す10時まで画面に出ません。画面に「9:00 時点」と表示しておけば、利用者は数値がいつのものかを知ることができます。データは最大で、作り直す間隔と作り直しにかかる時間を足した分だけ古くなります。
           </p>
         </>
       ),
@@ -653,7 +653,7 @@ CSV:
             </table>
           </div>
           <p>
-            InnoDB の SELECT は既定ではロックを取らない一貫性読み取り（スナップショットを読む方式）で行われ、ほかのセッションが同じ表を同時に変更できます<Ref n={9} />。そのため、ダッシュボードが <code>daily_sales</code> を読む SELECT は、作り直しの途中の行ではなく、COMMIT 済みの行を読みます（MVCC の仕組みは<ChapterLink n={38} section="mvcc" />の「MVCC：行のバージョンとスナップショット」）。
+            InnoDB の SELECT は既定ではロックを取らない一貫性読み取り（スナップショットを読む方式）で行われ、ほかのセッションが同じ表を同時に変更できます<Ref n={9} />。そのため、ダッシュボードが <code>daily_sales</code> を読む SELECT は、作り直しの途中の行ではなく、COMMIT 済みの行を読みます（MVCC の仕組みは<ChapterLink n={38} section="mvcc" />）。
           </p>
           <h3>INSERT … SELECT … ON DUPLICATE KEY UPDATE</h3>
           <p>
@@ -705,11 +705,11 @@ ON DUPLICATE KEY UPDATE revenue = totals.revenue, order_count = totals.order_cou
  7.80s 作り直し COMMIT
 `}
           />
-          <Figure n="86-4" title="作り直しの INSERT … SELECT と、同時に送った注文の取り消し" caption="上の実行結果のうち、作り直しと注文の取り消しを、接続ごとの列に並べた図。上から下へ時間が進む。">
+          <Figure n="103-4" title="作り直しの INSERT … SELECT と、同時に送った注文の取り消し" caption="上の実行結果のうち、作り直しと注文の取り消しを、接続ごとの列に並べた図。上から下へ時間が進む。">
             <LockTimelineFigure />
           </Figure>
           <p>
-            図 86-4 の左のとおり、REPEATABLE READ では、注文の取り消しが作り直しの COMMIT まで約 9.7 秒待たされました。管理画面で注文を取り消す操作や、決済の結果を反映するジョブが、集計のジョブのせいで止まることになります。READ COMMITTED にすると、取り消しはすぐに終わりました。新しい注文の INSERT は、この実行ではどちらの分離レベルでも待ちませんでした。分離レベルの違いは<ChapterLink n={38} section="isolation" />の「Isolation Level：ほかのトランザクションの変更の見え方」で、Rails での指定方法は<ChapterLink n={15} section="isolation" />の「分離レベルの指定」で扱いました。
+            図 103-4 の左のとおり、REPEATABLE READ では、注文の取り消しが作り直しの COMMIT まで約 9.7 秒待たされました。管理画面で注文を取り消す操作や、決済の結果を反映するジョブが、集計のジョブのせいで止まることになります。READ COMMITTED にすると、取り消しはすぐに終わりました。新しい注文の INSERT は、この実行ではどちらの分離レベルでも待ちませんでした。分離レベルの違いは<ChapterLink n={38} section="isolation" />で、Rails での指定方法は<ChapterLink n={15} section="isolation" />で扱いました。
           </p>
           <p>
             READ COMMITTED で作り直しても、集計の SELECT は1つの文なので、文を始めた時点の COMMIT 済みのデータを読みます。この章の <code>DailySale.rebuild</code> は、作り直しのトランザクションに READ COMMITTED を指定します。もう1つの方法は、集計の結果を普通の SELECT で Ruby に読み込んでから <code>upsert_all</code> で書き込むことで、SELECT は一貫性読み取りなのでロックを取りません。この章の <code>ProductSearch.refresh</code> はこちらの方法です。
@@ -755,11 +755,11 @@ TIMESTAMP('2026-11-12 23:30:00') + INTERVAL 9 HOUR      => 2026-11-13 08:30:00
           <p>
             名前で指定した式は、タイムゾーンの表がない MySQL ではエラーにならずに NULL を返しました。手元の Docker では表が読み込まれていて動いても、本番のサーバーで表が空なら、集計の日付がすべて NULL になります。この章では、表の有無に左右されない時差の形（<code>'+00:00', '+09:00'</code>）を使います。夏時間のある地域の日付を求める場合は名前で指定する必要があるので、本番でもタイムゾーンの表を読み込み、タイムゾーンの規則の変更に合わせて更新します<Ref n={10} />。
           </p>
-          <Figure n="86-5" title="日本時間の日付の求め方" caption="上の実行結果をまとめた図。下の枠は、日付で注文を絞るときの条件。">
+          <Figure n="103-5" title="日本時間の日付の求め方" caption="上の実行結果をまとめた図。下の枠は、日付で注文を絞るときの条件。">
             <TimeZoneFigure />
           </Figure>
           <p>
-            図 86-5 の下の枠のとおり、日付で注文を絞る WHERE には関数を使わず、日本時間の日付の範囲を UTC の日時の範囲に直して比べます。Rails の <code>Date#in_time_zone</code> は <code>config.time_zone</code>（この章のアプリは Tokyo）の 0 時を返し、SQL では UTC に直されるので、<code>where(ordered_at: from.in_time_zone...(to + 1).in_time_zone)</code> と書けます。<code>WHERE DATE(CONVERT_TZ(ordered_at, …)) = '2026-11-13'</code> のように列に関数を使うと、<code>ordered_at</code> のインデックスを使えません（<ChapterLink n={37} section="index-not-used" />の「インデックスが使われない条件を EXPLAIN で確かめる」）。
+            図 103-5 の下の枠のとおり、日付で注文を絞る WHERE には関数を使わず、日本時間の日付の範囲を UTC の日時の範囲に直して比べます。Rails の <code>Date#in_time_zone</code> は <code>config.time_zone</code>（この章のアプリは Tokyo）の 0 時を返し、SQL では UTC に直されるので、<code>where(ordered_at: from.in_time_zone...(to + 1).in_time_zone)</code> と書けます。<code>WHERE DATE(CONVERT_TZ(ordered_at, …)) = '2026-11-13'</code> のように列に関数を使うと、<code>ordered_at</code> のインデックスを使えません（<ChapterLink n={37} section="index-not-used" />）。
           </p>
         </>
       ),
@@ -957,7 +957,7 @@ end
           <p>このジョブを、2つの方式で使います。</p>
           <ul>
             <li>
-              全体を作り直す：引数なしの <code>RebuildDailySalesJob.perform_later</code> を、毎晩など決まった時刻に積みます。Sidekiq の定期実行（Periodic Jobs）は有料版の Sidekiq Enterprise の機能なので<Ref n={30} />、無料版の Sidekiq では cron や sidekiq-cron などの gem を使います。Solid Queue なら config/recurring.yml に書けます（<ChapterLink n={18} section="recurring-jobs" />の「定期実行と、実行予定の監視」）。下の「変わった日だけ」の方式でジョブが失われたり、コールバックを通らない更新があったりしても、ここで元の表に合わせ直されます。
+              全体を作り直す：引数なしの <code>RebuildDailySalesJob.perform_later</code> を、毎晩など決まった時刻に積みます。Sidekiq の定期実行（Periodic Jobs）は有料版の Sidekiq Enterprise の機能なので<Ref n={30} />、無料版の Sidekiq では cron や sidekiq-cron などの gem を使います。Solid Queue なら config/recurring.yml に書けます（<ChapterLink n={18} section="recurring-jobs" />）。下の「変わった日だけ」の方式でジョブが失われたり、コールバックを通らない更新があったりしても、ここで元の表に合わせ直されます。
             </li>
             <li>変わった日だけ作り直す：注文を確定・取り消し・変更したときに、その注文の日付だけを作り直すジョブを積みます。</li>
           </ul>
@@ -986,7 +986,7 @@ end
 `}
           />
           <p>
-            <code>after_commit</code> は、注文を保存したトランザクションが COMMIT した後に呼ばれます（<ChapterLink n={14} section="after-commit" />の「after_save と after_commit」）。COMMIT の前にジョブを積むと、ワーカーが COMMIT 前の注文を読めずに古い集計を作ることがあるので、コミットの後に積みます（<ChapterLink n={18} section="transaction" />の「トランザクションと投入の時刻」）。<code>ordered_at</code> は日本時間の TimeWithZone なので、<code>to_date</code> で日本時間の日付になります。Active Job は Date を引数に渡せます<Ref n={21} />。
+            <code>after_commit</code> は、注文を保存したトランザクションが COMMIT した後に呼ばれます（<ChapterLink n={14} section="after-commit" />）。COMMIT の前にジョブを積むと、ワーカーが COMMIT 前の注文を読めずに古い集計を作ることがあるので、コミットの後に積みます（<ChapterLink n={18} section="transaction" />）。<code>ordered_at</code> は日本時間の TimeWithZone なので、<code>to_date</code> で日本時間の日付になります。Active Job は Date を引数に渡せます<Ref n={21} />。
           </p>
           <p>
             このジョブは何回実行しても同じ結果になります（冪等）。今回の注文の分を足すのではなく、その日の行を元の表から作り直すからです。Sidekiq の再試行で2回動いても、同じ日のジョブが重なっても、売上は二重になりません。ただし、注文のたびに1日分（この章のデータでは約 2,900 行の明細）を集計し直すので、注文の多い店では無駄が増えます。その場合は、数分ごとに「今日と昨日」を作り直す定期実行のジョブに替える方法もあります。開発環境の 547,500 件のデータでは、全期間の作り直しに約6秒、1日分に約 0.05 秒かかりました（下の「速さを比べる」）。
@@ -1318,7 +1318,7 @@ end
             最初の例は、日本時間の 0 時の前後と、UTC では前の日になる 08:59 の注文で、日付の境界を確かめています。3つ目の例は、取り消した注文を含むデータで、作り直した表と <code>source_totals</code> の結果を比べています。5つ目の例は <code>travel_to</code>（<code>ActiveSupport::Testing::TimeHelpers</code> のメソッドで、テストの間だけ現在の時刻を固定する。この章のアプリでは rails_helper.rb で include している）で作り直しの時刻を固定し、2回目の作り直しで 11月12日の行が変わらないことと、<code>as_of</code> が古い方の時刻を返すことを確かめています。
           </p>
           <p>
-            これらの例は RSpec の既定どおり、例ごとに1つのトランザクションの中で実行し、最後にロールバックします（<ChapterLink n={20} section="transaction" />の「トランザクションによる巻き戻し」）。Rails 8.1.4.1 は、このテスト用のトランザクションの中で <code>transaction(isolation: …)</code> が呼ばれた場合、分離レベルの名前が正しいかを確かめたうえで、指定を無視します<Ref n={17} />。そのため、rebuild の結果はテストで確かめられますが、READ COMMITTED でロックを取らないことは確かめられません。ロックの違いは、<ChapterLink n={50} section="mysql-summary">「MySQL で集計表を作り直す」の節</ChapterLink>のように別々の接続で確かめます。
+            これらの例は RSpec の既定どおり、例ごとに1つのトランザクションの中で実行し、最後にロールバックします（<ChapterLink n={20} section="transaction" />）。Rails 8.1.4.1 は、このテスト用のトランザクションの中で <code>transaction(isolation: …)</code> が呼ばれた場合、分離レベルの名前が正しいかを確かめたうえで、指定を無視します<Ref n={17} />。そのため、rebuild の結果はテストで確かめられますが、READ COMMITTED でロックを取らないことは確かめられません。ロックの違いは、<ChapterLink n={50} section="mysql-summary">「MySQL で集計表を作り直す」の節</ChapterLink>のように別々の接続で確かめます。
           </p>
           <Callout kind="v72">
             <p>
@@ -1365,7 +1365,7 @@ end
 `}
           />
           <p>
-            テストの環境では Active Job の :test アダプターを使うので、ジョブは実行されずに記録だけされます。<code>have_enqueued_job</code> は積まれたジョブのクラスと引数を、<code>perform_enqueued_jobs</code> はブロックの中で積まれたジョブをその場で実行します（<ChapterLink n={20} section="jobs-mail" />の「ジョブとメールのテスト」）。<code>after_commit</code> は、テスト用のトランザクションの中でも、<code>create!</code> のトランザクションが終わった時点で呼ばれます。
+            テストの環境では Active Job の :test アダプターを使うので、ジョブは実行されずに記録だけされます。<code>have_enqueued_job</code> は積まれたジョブのクラスと引数を、<code>perform_enqueued_jobs</code> はブロックの中で積まれたジョブをその場で実行します（<ChapterLink n={20} section="jobs-mail" />）。<code>after_commit</code> は、テスト用のトランザクションの中でも、<code>create!</code> のトランザクションが終わった時点で呼ばれます。
           </p>
           <Code
             lang="ruby"
@@ -1564,7 +1564,7 @@ end
 `}
           />
           <p>
-            足すジョブは2回目で売上が倍になり、作り直すジョブは何回動いても同じでした。Sidekiq は、ジョブが例外で終わったときや、ワーカーのプロセスが止まったときにジョブを再実行するので（<ChapterLink n={18} section="idempotency" />の「再試行や停止に備える冪等性」）、足す処理は二重に数えることがあります。
+            足すジョブは2回目で売上が倍になり、作り直すジョブは何回動いても同じでした。Sidekiq は、ジョブが例外で終わったときや、ワーカーのプロセスが止まったときにジョブを再実行するので（<ChapterLink n={18} section="idempotency" />）、足す処理は二重に数えることがあります。
           </p>
           <p>
             足す方式で最新の値を保ちたいなら、注文を保存するトランザクションの中で足します。注文の保存が失敗すれば加算も取り消され、加算が失敗すれば注文も保存されません。それでも差分の加算は、不具合や手作業の修正でずれることがあるので、全体を作り直す処理も用意します。コミットの後に別の処理で反映するなら、作り直す方式にするか、イベントを確実に届ける仕組み（<ChapterLink n={53} section="idea" />）と、受け取る側で同じイベントの重複を捨てる仕組み（<ChapterLink n={52} section="idea" />）を組み合わせます。
@@ -1590,7 +1590,7 @@ end
               件数だけなら counter_cache：<code>belongs_to :product, counter_cache: true</code> とし、<code>products</code> に <code>reviews_count</code> 列を用意すると、Rails はレビューの作成と削除のたびに件数の列を1つずつ増減します<Ref n={22} />。書き込みと同時に更新する方式の、最も簡単な例です。ただし <code>insert_all</code> などコールバックを通らない書き込みでは更新されず、ずれた件数は <code>reset_counters</code> で直します<Ref n={22} />。平均や、複数の表を結合した値は扱えません。
             </li>
             <li>
-              同じ結果を短い時間だけ使い回すなら Rails.cache：<code>Rails.cache.fetch(["daily_sales", from, to], expires_in: 1.hour) {'{'} … {'}'}</code> のように集計の結果をキャッシュに保存すると、2回目以降の表示は速くなります（<ChapterLink n={22} section="rails-cache" />の「Rails.cache とキャッシュストア」）。ただし、キャッシュが切れた後の最初の表示は元の表を集計するので遅く、期間や条件の組み合わせごとに別のキーになります。条件で絞り込んで並べ替える商品検索のように、条件の組み合わせが多い画面には向きません。
+              同じ結果を短い時間だけ使い回すなら Rails.cache：<code>Rails.cache.fetch(["daily_sales", from, to], expires_in: 1.hour) {'{'} … {'}'}</code> のように集計の結果をキャッシュに保存すると、2回目以降の表示は速くなります（<ChapterLink n={22} section="rails-cache" />）。ただし、キャッシュが切れた後の最初の表示は元の表を集計するので遅く、期間や条件の組み合わせごとに別のキーになります。条件で絞り込んで並べ替える商品検索のように、条件の組み合わせが多い画面には向きません。
             </li>
           </ul>
           <h3>PostgreSQL ならマテリアライズドビューを使える</h3>

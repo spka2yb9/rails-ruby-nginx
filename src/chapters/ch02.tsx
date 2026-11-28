@@ -6,11 +6,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 2-3 オブジェクトとクラスが持つもの ---------- */
+/* ---------- 図 4-3 オブジェクトとクラスが持つもの ---------- */
 function ObjectStructureFigure() {
   return (
     <Svg
-      id="2-3"
+      id="4-3"
       w={600}
       h={230}
       label="2つのオブジェクト a と b は、それぞれ自分のインスタンス変数 @title を持ち、自分のクラス Article への参照を持つ。メソッド initialize と title は、オブジェクトではなく Article クラスが持っている"
@@ -38,11 +38,11 @@ function ObjectStructureFigure() {
   )
 }
 
-/* ---------- 図 2-4 class と superclass の関係 ---------- */
+/* ---------- 図 4-4 class と superclass の関係 ---------- */
 function ClassRelationFigure() {
   return (
     <Svg
-      id="2-4"
+      id="4-4"
       w={690}
       h={220}
       label="a の class は Article。Article の superclass は Object、Object の superclass は BasicObject、BasicObject の superclass は nil。Article 自身もオブジェクトで、その class は Class。Class の superclass は Module、Module の superclass は Object"
@@ -86,7 +86,7 @@ function ClassRelationFigure() {
   )
 }
 
-/* ---------- 図 2-5 メソッド探索の順序 ---------- */
+/* ---------- 図 4-5 メソッド探索の順序 ---------- */
 const lookupRows: { name: string; module?: boolean; toS: string; frozen: string }[] = [
   { name: 'Report', toS: '×', frozen: '×' },
   { name: 'Document', toS: '実行', frozen: '×' },
@@ -100,7 +100,7 @@ function LookupFigure() {
   const step = 56
   return (
     <Svg
-      id="2-5"
+      id="4-5"
       w={600}
       h={top + step * lookupRows.length + 30}
       label="r.to_s と r.frozen? のメソッド探索。r のクラス Report から始めて、Document、Object、Kernel、BasicObject の順に探す。to_s は Document で見つかって実行される。frozen? は Report、Document、Object には無く、Kernel で見つかって実行される"
@@ -138,7 +138,7 @@ function LookupFigure() {
   )
 }
 
-/* ---------- 図 2-6 Article.ancestors の構成 ---------- */
+/* ---------- 図 4-6 Article.ancestors の構成 ---------- */
 const ancestorRows: { idx: string; label: string; kind: 'box' | 'box2'; dashed?: boolean }[] = [
   { idx: '0', label: 'Article', kind: 'box' },
   { idx: '1', label: 'Article::GeneratedAssociationMethods', kind: 'box2' },
@@ -158,7 +158,7 @@ function AncestorsFigure() {
   const step = 40
   return (
     <Svg
-      id="2-6"
+      id="4-6"
       w={600}
       h={top + step * ancestorRows.length}
       label={`Article.ancestors の78個の要素を上から順にまとめた図。${ancestorRows.map((r) => `${r.idx}番目 ${r.label}`).join('、')}`}
@@ -178,7 +178,7 @@ function AncestorsFigure() {
   )
 }
 
-/* ---------- 図 2-1 メソッドの呼び出しの各部分 ---------- */
+/* ---------- 図 4-1 メソッドの呼び出しの各部分 ---------- */
 function MethodCallFigure() {
   const row = (y: number, recv: string, name: string, args: string, ret: string, retNote: string, recvNote: string) => (
     <g>
@@ -215,7 +215,7 @@ function MethodCallFigure() {
   )
   return (
     <Svg
-      id="2-1"
+      id="4-1"
       w={700}
       h={200}
       label={'メソッドの呼び出しの各部分。"rails".center(11, "-") では、レシーバが "rails"、メソッド名が center、引数が 11 と "-" で、実行すると戻り値の "---rails---" が返る。Article.order(:id) では、レシーバが Article クラス、メソッド名が order、引数が :id で、戻り値は SQL の条件を持ったオブジェクト'}
@@ -226,11 +226,11 @@ function MethodCallFigure() {
   )
 }
 
-/* ---------- 図 2-2 クラスの本体で呼ぶメソッド ---------- */
+/* ---------- 図 4-2 クラスの本体で呼ぶメソッド ---------- */
 function ClassBodyFigure() {
   return (
     <Svg
-      id="2-2"
+      id="4-2"
       w={760}
       h={290}
       label={'クラスの本体は、定義を読み込むときに上から順に実行される。Note の本体の label "メモ帳" はクラスメソッド label を呼び、その場で文字を表示する。attr_reader :title は Note に title メソッドを追加し、def initialize は initialize を定義する。Ch02Article の本体の has_many :comments は、comments メソッドを追加する'}
@@ -477,9 +477,9 @@ const ch02: Chapter = {
           <p>
             <code>.</code> の前に書いたオブジェクトを<Term en="receiver">レシーバ</Term>、括弧の中に書いてメソッドに渡す値を<Term en="argument">引数</Term>と呼びます。
             <code>"rails".center(11, "-")</code> では、レシーバが <code>"rails"</code>、メソッド名が center、引数が 11 と <code>"-"</code> で、全体が11文字になるように前後を - で埋めます。メソッドが処理を終えて返す値を
-            <Term en="return value">戻り値</Term>と呼び、この例の戻り値は <code>"---rails---"</code> です（図 2-1）。引数を渡さないときは、upcase や length のように括弧を省略して書くのがふつうです。
+            <Term en="return value">戻り値</Term>と呼び、この例の戻り値は <code>"---rails---"</code> です（図 4-1）。引数を渡さないときは、upcase や length のように括弧を省略して書くのがふつうです。
           </p>
-          <Figure n="2-1" title="メソッドの呼び出しの各部分" caption="上は Ruby だけの例、下は第1章で見た Rails のコードの一部。">
+          <Figure n="4-1" title="メソッドの呼び出しの各部分" caption="上は Ruby だけの例、下は第2章で見た Rails のコードの一部。">
             <MethodCallFigure />
           </Figure>
           <p>
@@ -760,7 +760,7 @@ ArticlesController.method(:before_action).owner
 `}
           />
           <p>
-            has_many を呼んだ後に、comments メソッドができました（図 2-2）。has_many は関連するコメントを取り出す comments などのメソッドを、Ch02Article::GeneratedAssociationMethods
+            has_many を呼んだ後に、comments メソッドができました（図 4-2）。has_many は関連するコメントを取り出す comments などのメソッドを、Ch02Article::GeneratedAssociationMethods
             というモジュール（メソッドをまとめて定義し、クラスに組み込んで使うもの。<ChapterLink n={3} />）に定義します
             <Ref n={17} />。<code>Ch02Article.instance_method(:comments).owner</code> の結果が、このモジュールの名前です（<code>instance_method</code>{' '}
             は、クラスからインスタンスメソッドを表すオブジェクトを取り出すメソッドです）。comments は Ch02Article のインスタンスで呼べますが、定義されている場所は Ch02Article
@@ -772,7 +772,7 @@ ArticlesController.method(:before_action).owner
             というモジュールに定義されていることが分かります。このように、クラスの本体で呼んで、そのクラスにメソッドや設定を加えるクラスメソッドを、クラスマクロと呼びます（<ChapterLink n={5} section="class-macro" />
             ）。
           </p>
-          <Figure n="2-2" title="クラスの本体で呼ぶメソッド" caption="class_body.rb と bin/rails runner の実行結果をもとにした模式図。">
+          <Figure n="4-2" title="クラスの本体で呼ぶメソッド" caption="class_body.rb と bin/rails runner の実行結果をもとにした模式図。">
             <ClassBodyFigure />
           </Figure>
           <p>
@@ -1020,16 +1020,12 @@ collect_options(:comments, dependent: :destroy)  # => [:comments, {dependent: :d
             で書いてメソッドに渡す処理を<Term en="block">ブロック</Term>と呼びます。<code>map</code> は、要素を1つずつブロックに渡し、ブロックの結果を集めた配列を返すメソッドです。<code>|article|</code>{' '}
             はブロックが受け取る引数で、ここには要素の Article のインスタンスが1つずつ入ります（<ChapterLink n={4} section="block-basics" />
             ）。呼び出しの <code>&amp;</code> は、後ろに書いたものをブロックとして渡す記号です。シンボルからブロックを作る手順は、
-            <ChapterLink n={4} section="block-to-proc">
-              第4章の「ブロックと Proc を受け渡す」
-            </ChapterLink>
+            <ChapterLink n={4} section="block-to-proc" />
             で説明します。
           </p>
           <p>
             <code>-&gt; {'{'} ... {'}'}</code> は、<code>lambda {'{'} ... {'}'}</code> と同じく lambda（処理を保存しておき、後で <code>call</code> で実行できるオブジェクト）を作る書き方です（
-            <ChapterLink n={4} section="proc-lambda">
-              第4章の「Proc と lambda の違い」
-            </ChapterLink>
+            <ChapterLink n={4} section="proc-lambda" />
             ）。<code>scope</code> は、検索の条件に名前を付けて、<code>Article.recent</code> のようにクラスメソッドとして呼べるようにするメソッドです。<code>scope</code> に lambda を渡すのは、<code>Article.recent</code> を呼ぶたびに <code>order(...)</code> を実行させるためです。lambda にしないで{' '}
             <code>order(...)</code> を直接書くと、クラスを読み込んだときに1回だけ実行されてしまいます。Rails 8.1.4.1 の <code>scope</code> は、呼び出せない値（<code>call</code>{' '}
             を持たない値）を渡されると例外を投げます
@@ -1196,7 +1192,7 @@ a.method(:title).owner           # => Article
               メソッド <code>title</code> はオブジェクトではなく <code>Article</code> クラスが持っています。<code>a.method(:title).owner</code> が <code>Article</code> を返すのはこのためです。
             </li>
           </ul>
-          <Figure n="2-3" title="オブジェクトとクラスが持つもの" caption="模式図。オブジェクトは自分のインスタンス変数とクラスへの参照を持ち、メソッドはクラス側にある。">
+          <Figure n="4-3" title="オブジェクトとクラスが持つもの" caption="模式図。オブジェクトは自分のインスタンス変数とクラスへの参照を持ち、メソッドはクラス側にある。">
             <ObjectStructureFigure />
           </Figure>
           <p>
@@ -1251,10 +1247,10 @@ Class.class          # => Class
             </li>
           </ul>
           <p>
-            図 2-4 は、この2種類の関係を矢印で描き分けたものです。左上の <code>a</code> から右へたどると、a の class が Article で、Article の superclass が Object、その superclass が
+            図 4-4 は、この2種類の関係を矢印で描き分けたものです。左上の <code>a</code> から右へたどると、a の class が Article で、Article の superclass が Object、その superclass が
             BasicObject です。Article から下へたどると、Article の class が Class で、Class の superclass が Module、その superclass が Object です。
           </p>
-          <Figure n="2-4" title="class と superclass の関係" caption="横向きの矢印が superclass、Article から下向きの矢印が class。Class 自身の class も Class だが、図では省略している。">
+          <Figure n="4-4" title="class と superclass の関係" caption="横向きの矢印が superclass、Article から下向きの矢印が class。Class 自身の class も Class だが、図では省略している。">
             <ClassRelationFigure />
           </Figure>
           <p>
@@ -1496,10 +1492,10 @@ r.method(:frozen?).owner  # => Kernel
             のどこに入るかは<ChapterLink n={3} />で説明します。
           </p>
           <p>
-            図 2-5 は、<code>r.to_s</code> と <code>r.frozen?</code> の探索を、ancestors の順に上から並べたものです。to_s は Report に無く、次の Document で見つかります。<code>frozen?</code>{' '}
+            図 4-5 は、<code>r.to_s</code> と <code>r.frozen?</code> の探索を、ancestors の順に上から並べたものです。to_s は Report に無く、次の Document で見つかります。<code>frozen?</code>{' '}
             はオブジェクトが変更を禁止されているかどうかを返すメソッドで、Report・Document・Object には無く、Kernel で見つかります。コードの最後の2行の owner の値が、それぞれの見つかった場所です。
           </p>
-          <Figure n="2-5" title="メソッド探索の順序" caption="r.to_s は Document で見つかり、r.frozen? は Kernel で見つかる。">
+          <Figure n="4-5" title="メソッド探索の順序" caption="r.to_s は Document で見つかり、r.frozen? は Kernel で見つかる。">
             <LookupFigure />
           </Figure>
           <p>
@@ -1856,13 +1852,13 @@ a.last(6)
             Article のメソッド探索では、78個のクラスとモジュールを順にたどります。<code>Article</code> の superclass は <code>ApplicationRecord</code>、その superclass は{' '}
             <code>ActiveRecord::Base</code>、その superclass は <code>Object</code>、さらにその superclass は <code>BasicObject</code> です。クラスはこの5つで、残りの73個はすべてモジュールです。
           </p>
-          <Figure n="2-6" title="Article.ancestors の構成" caption="Rails 8.1.4.1 で has_many :comments を持つ Article の場合。左の数字は配列の添字。7〜71番目は個別の名前を省略している。">
+          <Figure n="4-6" title="Article.ancestors の構成" caption="Rails 8.1.4.1 で has_many :comments を持つ Article の場合。左の数字は配列の添字。7〜71番目は個別の名前を省略している。">
             <AncestorsFigure />
           </Figure>
-          <p>図2-6 から、次のことが読み取れます。</p>
+          <p>図4-6 から、次のことが読み取れます。</p>
           <ul>
             <li>
-              Article の直後に <code>Article::GeneratedAssociationMethods</code> があります。第1章で見たとおり、<code>comments</code> メソッドはこのモジュールに定義されています。モデルで{' '}
+              Article の直後に <code>Article::GeneratedAssociationMethods</code> があります。第2章で見たとおり、<code>comments</code> メソッドはこのモジュールに定義されています。モデルで{' '}
               <code>def comments</code> を書くとこのメソッドより先に見つかるので上書きでき、中で <code>super</code> を呼べば元の <code>comments</code> を実行できます。
             </li>
             <li>

@@ -8,11 +8,11 @@ import { JobRetryFigure } from '../visuals/rails-figures'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const SQ = 'https://github.com/sidekiq/sidekiq/blob/v8.1.7'
 
-/* ---------- 図 21-3 投入から実行まで ---------- */
+/* ---------- 図 28-3 投入から実行まで ---------- */
 function PipelineFigure() {
   return (
     <Svg
-      id="21-3"
+      id="28-3"
       w={780}
       h={340}
       label="Rails のプロセスで perform_later を呼ぶと、ActiveJob がジョブを JSON の Hash に変換し、Sidekiq のアダプターが Sidekiq::ActiveJob::Wrapper のジョブとして Redis のリスト queue:default に LPUSH する。待ち時間を指定したジョブは ZSET の schedule に入る。Sidekiq のプロセスでは、5つのスレッドがそれぞれ BRPOP でリストからジョブを取り出し、Wrapper の perform が ActiveJob::Base.execute を呼び、Rails の Executor の中でジョブの perform が実行される。スケジュールのポーラーは schedule と retry の ZSET から時刻の来たジョブをリストに戻す。失敗したジョブは retry に入り、再試行を使い切ると dead に入る"
@@ -70,11 +70,11 @@ function PipelineFigure() {
   )
 }
 
-/* ---------- 図 21-4 再試行の状態遷移 ---------- */
+/* ---------- 図 28-4 再試行の状態遷移 ---------- */
 function RetryFigure() {
   return (
     <Svg
-      id="21-4"
+      id="28-4"
       w={780}
       h={300}
       label="ジョブはキューから取り出されて実行される。成功すれば終わる。retry_on を指定した例外なら、ActiveJob がジョブを schedule に入れ直し、executions が attempts に達するまで繰り返す。retry_on の回数を使い切った例外や、retry_on の無い例外は Sidekiq に伝わり、Sidekiq が retry に入れる。retry からは (回数の4乗 + 15 秒 + 揺らぎ) の後にキューに戻る。Sidekiq の再試行の回数（既定 25 回、約3週間）を使い切ると dead に入り、6か月後に消える。discard_on を指定した例外は、その場でジョブを捨てる"
@@ -112,7 +112,7 @@ function RetryFigure() {
   )
 }
 
-/* ---------- 図 21-1 perform_now と perform_later ---------- */
+/* ---------- 図 28-1 perform_now と perform_later ---------- */
 function SyncAsyncFigure() {
   const x0 = 150
   const sx = 220 // 1 秒あたりの幅
@@ -126,7 +126,7 @@ function SyncAsyncFigure() {
   )
   return (
     <Svg
-      id="21-1"
+      id="28-1"
       w={780}
       h={300}
       label="perform_now では、Rails のプロセスがその場で perform を実行し、2秒待ってから戻る。要求の処理の中で呼べば、応答もその分遅れる。perform_later では、Rails のプロセスはジョブを Redis のキューに入れて約0.01〜0.05秒で戻り、別のプロセスの Sidekiq がキューから取り出して perform を約2秒かけて実行する"
@@ -178,11 +178,11 @@ function SyncAsyncFigure() {
   )
 }
 
-/* ---------- 図 21-2 キューとワーカー ---------- */
+/* ---------- 図 28-2 キューとワーカー ---------- */
 function QueueWorkerFigure() {
   return (
     <Svg
-      id="21-2"
+      id="28-2"
       w={780}
       h={330}
       label="左は1つのプロセスの中のキュー（Thread::Queue）。受付のメインスレッドが仕事を入れ、ワーカーのスレッドが取り出して実行する。プロセスが終わるとキューの中身も消え、ほかのプロセスからは仕事を入れられない。右はプロセスの外の Redis に置いたキュー。Puma のワーカーや bin/rails runner の別々のプロセスが LPUSH でリスト queue:default に入れ、Sidekiq のプロセスのスレッドが BRPOP で取り出して実行する"
@@ -417,14 +417,14 @@ perform_later: 0.014 秒  job_id=08dd7d1e-ef5b-4bb6-8386-c9da7b29ca66
           />
           <p>
             perform_now はジョブの perform をその場で実行するので、2秒待ってから戻りました。コントローラーのアクションの中で呼べば、応答もその分だけ遅れます。perform_later はジョブをキューに入れて 0.05
-            秒以内に戻りました。perform は、Sidekiq という別のプロセスが後で実行します（図 21-1）。呼び出した処理が終わるのを待ってから次へ進む方式を同期、終わるのを待たずに先へ進む方式を
+            秒以内に戻りました。perform は、Sidekiq という別のプロセスが後で実行します（図 28-1）。呼び出した処理が終わるのを待ってから次へ進む方式を同期、終わるのを待たずに先へ進む方式を
             <Term en="asynchronous">非同期</Term>と呼びます。Rails のガイドは時間のかかる仕事を要求と応答のやり取りの外に出し、要求への応答を速く保つことを、バックグラウンドのジョブの目的としています
             <Ref n={2} />。
           </p>
           <p>
             非同期にすると、応答を返した時点では、メールはまだ送られていません。送信に失敗しても、利用者への応答はすでに成功として返っています。失敗したジョブをやり直す仕組みは「再試行と Dead」の節で扱います。
           </p>
-          <Figure n="21-1" title="perform_now と perform_later" caption="デモでの実測（bin/rails runner と Sidekiq のログの時刻）をもとにした模式図。">
+          <Figure n="28-1" title="perform_now と perform_later" caption="デモでの実測（bin/rails runner と Sidekiq のログの時刻）をもとにした模式図。">
             <SyncAsyncFigure />
           </Figure>
         </>
@@ -528,9 +528,9 @@ $ redis-cli RPOP demo18
           />
           <p>
             BRPOP は、別のプロセスが LPUSH するまで戻らず、値が入るとすぐに受け取りました。Sidekiq のワーカーはこの BRPOP で Redis のリストからジョブを取り出します。Puma のどのワーカーが入れたジョブも同じ
-            Redis のリストに並び、Sidekiq のプロセスが取り出して実行します（図 21-2）。
+            Redis のリストに並び、Sidekiq のプロセスが取り出して実行します（図 28-2）。
           </p>
-          <Figure n="21-2" title="キューとワーカー" caption="queue_worker.rb の実行結果と、redis-cli での実測をもとにした模式図。">
+          <Figure n="28-2" title="キューとワーカー" caption="queue_worker.rb の実行結果と、redis-cli での実測をもとにした模式図。">
             <QueueWorkerFigure />
           </Figure>
         </>
@@ -642,13 +642,13 @@ end
             がジョブごとに数えている実行の回数で、「再試行と Dead」の節で使います。
           </p>
           <p>
-            <code>ArticleNoteJob.perform_later(article, note: "メモ", tags: [:urgent])</code> を呼ぶと、Rails のプロセスでは引数を JSON に変換して Redis に入れるところまでを行い、すぐに戻ります。実行は別のプロセス（Sidekiq）が受け持ちます（図 21-3）。
+            <code>ArticleNoteJob.perform_later(article, note: "メモ", tags: [:urgent])</code> を呼ぶと、Rails のプロセスでは引数を JSON に変換して Redis に入れるところまでを行い、すぐに戻ります。実行は別のプロセス（Sidekiq）が受け持ちます（図 28-3）。
           </p>
           <p>
-            図 21-3 は左から右へ読みます。左の枠が投入する側の Rails のプロセス、中央が Redis、右の枠が実行する側の Sidekiq のプロセスです。左の枠の job.serialize は次の「引数のシリアライズと GlobalID」の節で扱います。アダプターと
+            図 28-3 は左から右へ読みます。左の枠が投入する側の Rails のプロセス、中央が Redis、右の枠が実行する側の Sidekiq のプロセスです。左の枠の job.serialize は次の「引数のシリアライズと GlobalID」の節で扱います。アダプターと
             Wrapper、中央の queue:default と schedule、右の枠の Processor とポーラーは「Sidekiq の構成と Redis の中身」の節で、retry と dead は「再試行と Dead」の節で扱います。
           </p>
-          <Figure n="21-3" title="投入から実行まで" caption="Sidekiq 8.1.7 の fetch.rb・processor.rb・scheduled.rb・job_retry.rb と、デモでの Redis の中身をもとにした模式図。">
+          <Figure n="28-3" title="投入から実行まで" caption="Sidekiq 8.1.7 の fetch.rb・processor.rb・scheduled.rb・job_retry.rb と、デモでの Redis の中身をもとにした模式図。">
             <PipelineFigure />
           </Figure>
         </>
@@ -935,9 +935,9 @@ FlakyJob retry=1 retry_count=1 error=RuntimeError: FlakyJob の失敗 n=1 入っ
           />
           <p>
             RetryOnJob は ActiveJob の再試行で3回実行された後、Sidekiq の retry に入りました。ActiveJob の再試行は Hash の <code>executions</code> に回数を持ち、Sidekiq の再試行は{' '}
-            <code>retry_count</code> に回数を持ちます。retry_on の回数を使い切った後も Sidekiq の再試行（既定 25 回、約3週間）が続くので、両方を使うと、実行の回数と期間がその分だけ増えます。どちらで回数を管理するかを決めておきます（図 21-4）。FlakyJob は、最初の失敗から約22秒後に再試行され、もう一度失敗して dead に入りました。
+            <code>retry_count</code> に回数を持ちます。retry_on の回数を使い切った後も Sidekiq の再試行（既定 25 回、約3週間）が続くので、両方を使うと、実行の回数と期間がその分だけ増えます。どちらで回数を管理するかを決めておきます（図 28-4）。FlakyJob は、最初の失敗から約22秒後に再試行され、もう一度失敗して dead に入りました。
           </p>
-          <Figure n="21-4" title="再試行の状態遷移" caption="activejob 8.1.4.1 の exceptions.rb と sidekiq 8.1.7 の job_retry.rb を読み、デモのログで確かめてまとめた模式図。">
+          <Figure n="28-4" title="再試行の状態遷移" caption="activejob 8.1.4.1 の exceptions.rb と sidekiq 8.1.7 の job_retry.rb を読み、デモのログで確かめてまとめた模式図。">
             <RetryFigure />
           </Figure>
         </>
@@ -990,7 +990,7 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
                 </tr>
                 <tr>
                   <td>テスト</td>
-                  <td>have_enqueued_job などの ActiveJob のマッチャー（第23章）</td>
+                  <td>have_enqueued_job などの Active Job のマッチャー（<ChapterLink n={20} section="jobs-mail" />）</td>
                   <td>Sidekiq::Testing（fake・inline）</td>
                 </tr>
                 <tr>
@@ -1088,7 +1088,7 @@ PlainJob.perform_async(article, {})               # ArgumentError: Job arguments
       body: (
         <>
           <p>
-            途中まで処理したジョブが再試行されると、同じ操作がもう一度実行される場合があります。操作を繰り返しても1回実行したときと同じ結果になる性質を、冪等性と呼びます。Sidekiq では、ワーカーを停止したときにも再実行が起こり得ます。デモでは20秒かかるジョブの実行中に Sidekiq を停止（TERM、タイムアウト5秒）し、再び起動しました。
+            Sidekiq はワーカーが停止すると、途中まで処理したジョブを再実行することがあります。操作を繰り返しても1回実行したときと同じ結果になる設計は <ChapterLink n={52} /> で扱います。デモでは20秒かかるジョブの実行中に Sidekiq を停止（TERM、タイムアウト5秒）し、再び起動しました。
           </p>
           <Code
             lang="text"

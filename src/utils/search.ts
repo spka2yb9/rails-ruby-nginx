@@ -1,5 +1,5 @@
 export interface IndexEntry {
-  chapter: number | 'linux'
+  chapter: number | 'linux' | 'course' | 'map'
   chapterTitle: string
   sectionId: string
   sectionTitle: string

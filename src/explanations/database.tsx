@@ -49,9 +49,11 @@ Article.new.persisted?   # => false`} />
     </>,
     instantiate: cite => <>
       <p>
-        Rails が MySQL から受け取る SELECT の結果は、最初は列の名前と値の組です。ActiveRecord の接続の select_all で SQL を送ると、その形のまま受け取れます。
+        <code>with_connection</code> で借りた接続の <code>select_all</code> は、検索結果を列名と値の組として返します。
       </p>
-      <Code lang="ruby" title="bin/rails runner で実行" code={`rows = ActiveRecord::Base.connection.select_all("SELECT id, title, published FROM articles WHERE id = 3")
+      <Code lang="ruby" title="bin/rails runner で実行" code={`rows = ActiveRecord::Base.with_connection do |connection|
+  connection.select_all("SELECT id, title, published FROM articles WHERE id = 3")
+end
 rows.class   # => ActiveRecord::Result
 rows.to_a    # => [{"id" => 3, "title" => "記事3", "published" => 0}]`} />
       <p>

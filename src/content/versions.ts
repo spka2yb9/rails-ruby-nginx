@@ -10,8 +10,7 @@ export const VERSIONS = {
     { name: 'debug', version: '1.11.1', note: 'Rails の標準 Gemfile に含まれるデバッガ' },
     { name: 'Nginx', version: '1.30.6（stable）', note: 'mainline は 1.31.8' },
     { name: 'MySQL', version: '8.4.13', note: '第3部以降の実測に使用（Docker の mysql:8.4、接続は mysql2 0.5.7）' },
-    { name: 'Sidekiq', version: '8.1.7', note: '第21章の実測に使用（Redis 8.10.3）' },
-    { name: 'turbo-rails', version: '2.0.23', note: 'デモアプリで使用' },
-    { name: 'rspec-rails', version: '8.1.0', note: '第23章の実測に使用（rspec-core 3.13.7）' },
+    { name: 'Sidekiq', version: '8.1.7', note: '第28章の実測に使用（Redis 8.10.3）' },
+    { name: 'rspec-rails', version: '8.1.0', note: '第31章の実測に使用（rspec-core 3.13.7）' },
   ],
 }

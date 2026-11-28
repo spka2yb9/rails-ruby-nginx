@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 51-1 会員の情報を使う3つのモジュール ---------- */
+/* ---------- 図 68-1 会員の情報を使う3つのモジュール ---------- */
 const sceneMods: { x: number; w: number; title: string; cls: string; reads: string[] }[] = [
   { x: 10, w: 250, title: '請求（請求チーム）', cls: 'Billing::MonthlyInvoicer', reads: ['where(status: 0)', 'where.not(plan_code: nil)', 'member.plan_code', 'member.send(:contact_email)'] },
   { x: 270, w: 240, title: 'メール（請求チーム）', cls: 'BillingMailer', reads: ['member.plan_code', 'member.billing_email', 'member.email', 'member.name'] },
@@ -14,7 +15,7 @@ const sceneMods: { x: number; w: number; title: string; cls: string; reads: stri
 function SceneFigure() {
   return (
     <Svg
-      id="51-1"
+      id="68-1"
       w={780}
       h={420}
       label="会員のサービスのコードは、会員・請求・メール・集計のモジュールに分かれている。請求の Billing::MonthlyInvoicer は、Member に where(status: 0) と where.not(plan_code: nil) で問い合わせ、member.plan_code を読み、member.send(:contact_email) で会員の private メソッドを呼ぶ。メールの BillingMailer は、member の plan_code・billing_email・email・name を読む。集計の Reports::PlanSummary は、members テーブルを SQL で直接読み、plan_code と status を使う。メールと集計は config/initializers/plans.rb の共有の定数 PLAN_NAMES も使う。会員のモジュールには Member クラスと members テーブルがある"
@@ -56,7 +57,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 51-2 列の名前を変えたときに壊れる範囲 ---------- */
+/* ---------- 図 68-2 列の名前を変えたときに壊れる範囲 ---------- */
 function RippleFigure() {
   const broken: [string, string, string][] = [
     ['請求', 'Billing::MonthlyInvoicer', "StatementInvalid: Unknown column 'members.plan_code'"],
@@ -65,7 +66,7 @@ function RippleFigure() {
   ]
   return (
     <Svg
-      id="51-2"
+      id="68-2"
       w={780}
       h={330}
       label="会員チームが members の plan_code 列を plan に名前を変え、member.rb の検証、動作確認用の会員を作るスクリプト、member_spec を直した。会員チームのテストは通る。しかし、請求の Billing::MonthlyInvoicer は Unknown column 'members.plan_code' の StatementInvalid、メールの BillingMailer は undefined method 'plan_code' の NoMethodError、集計の Reports::PlanSummary は Unknown column 'plan_code' の StatementInvalid で止まった。plan_code が残った行は app と spec の6ファイルに13行あり、RSpec は5件中3件が失敗した"
@@ -104,7 +105,7 @@ function RippleFigure() {
   )
 }
 
-/* ---------- 図 51-4 結合の段階（Myers 1975） ---------- */
+/* ---------- 図 68-4 結合の段階（Myers 1975） ---------- */
 const couplings: { name: string; en: string; def: string[]; ex: string[]; here: string; worst?: boolean; best?: boolean }[] = [
   { name: '内容結合', en: 'content', def: ['相手のモジュールの内部の要素を', '直接参照する・書き換える'], ex: ['member.send(:contact_email)', 'instance_variable_get・クラスを開いて上書き'], here: '請求', worst: true },
   { name: '共通結合', en: 'common', def: ['大域の共有のデータ構造を', '複数のモジュールが参照する'], ex: ['members テーブルを SQL で直接読む', 'グローバル変数・Current の属性'], here: '集計' },
@@ -119,7 +120,7 @@ function CouplingLevelsFigure() {
   const rowH = 52
   return (
     <Svg
-      id="51-4"
+      id="68-4"
       w={780}
       h={top + couplings.length * rowH + 50}
       label={`Myers が1975年の本で示した結合の6つの段階を、結合が強い順に並べた表。${couplings.map((c) => `${c.name}（${c.en}）：${c.def.join('')}。Rails の例は${c.ex.join('、')}。この章の場面では${c.here}`).join('。')}`}
@@ -153,7 +154,7 @@ function CouplingLevelsFigure() {
   )
 }
 
-/* ---------- 図 51-3 共通の環境から生まれる経路の数 ---------- */
+/* ---------- 図 68-3 共通の環境から生まれる経路の数 ---------- */
 function CommonEnvFigure() {
   const mods: [string, number, number][] = [
     ['会員', 30, 60],
@@ -163,7 +164,7 @@ function CommonEnvFigure() {
   ]
   return (
     <Svg
-      id="51-3"
+      id="68-3"
       w={780}
       h={320}
       label="直す前は、会員・請求・メール・集計の4つのモジュールが、members の5つの列を列の名前で直接使っている。1974年の論文の式 N × M × (M − 1) に、共有する要素の数 N = 5、モジュールの数 M = 4 を当てはめると、変更や誤りが伝わる経路は 5 × 4 × 3 = 60。直した後は、列を名前で使うのは会員だけで、請求と集計は会員が公開した名前を使い、メールは会員を使わない。M = 1 なので経路は 0"
@@ -214,11 +215,11 @@ function CommonEnvFigure() {
   )
 }
 
-/* ---------- 図 51-6 直す前と後：数えた依存のグラフ ---------- */
+/* ---------- 図 68-6 直す前と後：数えた依存のグラフ ---------- */
 function GraphFigure() {
   return (
     <Svg
-      id="51-6"
+      id="68-6"
       w={780}
       h={360}
       label="Prism で数えた依存のグラフ。直す前：請求からメールへ定数1、請求から会員へ定数1・列3・private 1、メールから会員へ列4、メールから共有の定数へ定数1、集計から共有の定数へ定数1、集計から会員へ文字列6。会員の内部への参照は合計14。直した後：請求からメールへ定数1、請求から会員へ定数1・公開6、集計から会員へ定数1・公開1。メールから会員への依存は無くなり、会員の内部への参照は0"
@@ -302,13 +303,13 @@ function GraphFigure() {
   )
 }
 
-/* ---------- 図 51-5 会員が公開する名前と、隠す内部 ---------- */
+/* ---------- 図 68-5 会員が公開する名前と、隠す内部 ---------- */
 function InterfaceFigure() {
   const pub = ['scope billable', 'self.billing_profiles', 'self.count_by_plan_name', '#billing_profile', 'BillingProfile（Data）', '  member_id・addressee・invoice_email', '  plan・plan_name']
   const hidden = ['members の列', '  name・email・billing_email', '  plan_code・status', 'status の数値（0・1・2）', 'private contact_email', 'PLAN_NAMES のキー（"basic" など）']
   return (
     <Svg
-      id="51-5"
+      id="68-5"
       w={780}
       h={360}
       label="会員のモジュールが公開する名前は、スコープ billable、クラスメソッド billing_profiles と count_by_plan_name、インスタンスメソッド billing_profile、Data で作った BillingProfile とその項目 member_id・addressee・invoice_email・plan・plan_name。隠す内部は、members の列 name・email・billing_email・plan_code・status、status の数値、private の contact_email、PLAN_NAMES のキー。請求は billing_profiles と BillingProfile の項目を、集計は count_by_plan_name を使う。列の名前を変えるときに直すのは、会員の枠の中だけ"
@@ -350,7 +351,7 @@ function InterfaceFigure() {
   )
 }
 
-/* ---------- 図 51-7 結合を下げる手間をかけるかの判断 ---------- */
+/* ---------- 図 68-7 結合を下げる手間をかけるかの判断 ---------- */
 function DecisionFigure() {
   const qx = [160, 465]
   const qy = [40, 196]
@@ -364,7 +365,7 @@ function DecisionFigure() {
   ]
   return (
     <Svg
-      id="51-7"
+      id="68-7"
       w={780}
       h={420}
       label="横の軸は依存する側の数、縦の軸は相手の内部が変わる頻度。依存する側が多く、内部がよく変わるものは、公開する名前を決めて内部を隠す（この章の Member）。依存する側が少なく、内部がよく変わるものは、同じモジュールにまとめる。依存する側が多く、内部があまり変わらないもの（Rails、標準ライブラリ、安定した値オブジェクト）は、そのまま参照してよい。依存する側が少なく、内部があまり変わらないものは、仕組みを足さずに直接使ってよい。下の2つの区画に通知や中間の層を足すのはやりすぎ。どの区画でも、呼び出しをハッシュの通知に替えて依存を見えなくするのは避ける"
@@ -579,9 +580,9 @@ PLAN_NAMES = { "basic" => "ベーシック", "premium" => "プレミアム" }.fr
 `}
           />
           <p>
-            図 51-1 はこの4つのモジュールと、会員の何を使っているかです。赤い字の箇所は、会員以外のモジュールが会員の内部（列の名前、private メソッド、テーブル）を直接使っている所です。
+            図 68-1 はこの4つのモジュールと、会員の何を使っているかです。赤い字の箇所は、会員以外のモジュールが会員の内部（列の名前、private メソッド、テーブル）を直接使っている所です。
           </p>
-          <Figure n="51-1" title="会員の情報を使う3つのモジュール" caption="模式図。各モジュールの中の赤い字は、そのモジュールのコードに実際に書かれている参照。">
+          <Figure n="68-1" title="会員の情報を使う3つのモジュール" caption="模式図。各モジュールの中の赤い字は、そのモジュールのコードに実際に書かれている参照。">
             <SceneFigure />
           </Figure>
           <h3>月次の処理を動かす</h3>
@@ -665,9 +666,9 @@ end
 `}
           />
           <p>
-            RSpec では3つの spec が、本体のコードに届く前の準備（会員を <code>plan_code:</code> で作る所）で失敗しています。ほかのチームのテストも会員の列の名前に依存していました。<code>grep -rn plan_code app spec</code> で数えると、plan_code が残っている行は app に3ファイル6行、spec に3ファイル7行で、どれも会員チーム以外のファイルです。図 51-2 は、列の名前の変更がどこまで伝わったかを表しています。
+            RSpec では3つの spec が、本体のコードに届く前の準備（会員を <code>plan_code:</code> で作る所）で失敗しています。ほかのチームのテストも会員の列の名前に依存していました。<code>grep -rn plan_code app spec</code> で数えると、plan_code が残っている行は app に3ファイル6行、spec に3ファイル7行で、どれも会員チーム以外のファイルです。図 68-2 は、列の名前の変更がどこまで伝わったかを表しています。
           </p>
-          <Figure n="51-2" title="列の名前を変えたときに壊れる範囲" caption="エラーの文は実行結果から抜き出した。">
+          <Figure n="68-2" title="列の名前を変えたときに壊れる範囲" caption="エラーの文は実行結果から抜き出した。">
             <RippleFigure />
           </Figure>
           <h3>モジュールの間の参照を数える</h3>
@@ -789,7 +790,7 @@ members の列: name, email, billing_email, plan_code, status
                   <th scope="row">やり取りする情報の種類</th>
                   <td>データ</td>
                   <td>制御、さらに混成（あるモジュールが別のモジュールのコードを書き換える）</td>
-                  <td>この章の場面はデータのやり取りだけ。制御の例は図 51-4</td>
+                  <td>この章の場面はデータのやり取りだけ。制御の例は図 68-4</td>
                 </tr>
               </tbody>
             </table>
@@ -805,9 +806,9 @@ members の列: name, email, billing_email, plan_code, status
             論文はこの影響を数にしています。M 個のモジュールが N 個の要素を持つ共通の環境を共有すると、変更や誤りが伝わる経路は N × M × (M − 1) 本になります。論文の例では、3つのモジュールが25個の変数を共有するだけで150本です<Ref n={1} />。Yourdon と Constantine の本は、共通の環境にデータベースの領域も含めています<Ref n={2} />。
           </p>
           <p>
-            この式を場面に当てはめます。members の5つの列（name、email、billing_email、plan_code、status）を列の名前で直接使っているモジュールは、会員・請求・メール・集計の4つでした。N = 5、M = 4 とすると、経路は 5 × 4 × 3 = 60 本です。図 51-3 は直す前と直した後の経路を比べたものです。
+            この式を場面に当てはめます。members の5つの列（name、email、billing_email、plan_code、status）を列の名前で直接使っているモジュールは、会員・請求・メール・集計の4つでした。N = 5、M = 4 とすると、経路は 5 × 4 × 3 = 60 本です。図 68-3 は直す前と直した後の経路を比べたものです。
           </p>
-          <Figure n="51-3" title="共通の環境から生まれる経路の数" caption="式は1974年の論文による。N と M は、この章の Prism のスクリプトで数えた値から決めた。">
+          <Figure n="68-3" title="共通の環境から生まれる経路の数" caption="式は1974年の論文による。N と M は、この章の Prism のスクリプトで数えた値から決めた。">
             <CommonEnvFigure />
           </Figure>
           <p>
@@ -815,9 +816,9 @@ members の列: name, email, billing_email, plan_code, status
           </p>
           <h3>Myers の6つの段階</h3>
           <p>
-            1974年の論文は要因を挙げましたが、結合の段階に名前は付けていません。いま広く使われている6つの名前は、Myers が1975年の本『Reliable Software Through Composite Design』で示したものです。Myers は結合を、弱い（よい）ものから順に、データ結合、スタンプ結合、制御結合、外部結合、共通結合、内容結合と並べています<Ref n={3} />。図 51-4 は6つの段階を強い順に並べ、Rails のコードの例と、この章の場面のどこに当たるかを加えたものです。
+            1974年の論文は要因を挙げましたが、結合の段階に名前は付けていません。いま広く使われている6つの名前は、Myers が1975年の本『Reliable Software Through Composite Design』で示したものです。Myers は結合を、弱い（よい）ものから順に、データ結合、スタンプ結合、制御結合、外部結合、共通結合、内容結合と並べています<Ref n={3} />。図 68-4 は6つの段階を強い順に並べ、Rails のコードの例と、この章の場面のどこに当たるかを加えたものです。
           </p>
-          <Figure n="51-4" title="結合の段階" caption="定義は Myers 1975 の第4章を要約した。Rails の例はこの章で考えたもの。">
+          <Figure n="68-4" title="結合の段階" caption="定義は Myers 1975 の第4章を要約した。Rails の例はこの章で考えたもの。">
             <CouplingLevelsFigure />
           </Figure>
           <ul>
@@ -955,8 +956,8 @@ end
             <li>項目を、使う側が今必要とするものに絞る。請求に必要な5つだけを持たせ、「いつか使うかもしれない」列は入れません。</li>
             <li>公開した名前を変えるときは、ほかのチームと手順を決める。公開した名前はほかのチームとの約束になるので、変えるときは古い名前をしばらく残す方法（<ChapterLink n={92} />）を使います。</li>
           </ul>
-          <p>図 51-5 は、会員のモジュールが公開する名前と、隠す内部を分けたものです。</p>
-          <Figure n="51-5" title="会員が公開する名前と、隠す内部" caption="公開する名前は、Prism のスクリプトが member.rb から集めた一覧と同じ。">
+          <p>図 68-5 は、会員のモジュールが公開する名前と、隠す内部を分けたものです。</p>
+          <Figure n="68-5" title="会員が公開する名前と、隠す内部" caption="公開する名前は、Prism のスクリプトが member.rb から集めた一覧と同じ。">
             <InterfaceFigure />
           </Figure>
           <h3>請求とメール</h3>
@@ -1086,9 +1087,9 @@ members の列: name, email, billing_email, plan_code, status
 `}
           />
           <p>
-            会員の内部への参照は14か所から0か所になりました。依存が無くなったわけではなく、請求は会員が公開した名前を6か所、集計は1か所で使っています。依存の数を0にするのではなく、依存する先を、会員チームが変えないと約束した名前に移したということです。共有の定数は会員のモジュールに移ったので、「共有の定数」のモジュールは無くなりました。図 51-6 は直す前と後の依存のグラフを比べたものです。
+            会員の内部への参照は14か所から0か所になりました。依存が無くなったわけではなく、請求は会員が公開した名前を6か所、集計は1か所で使っています。依存の数を0にするのではなく、依存する先を、会員チームが変えないと約束した名前に移したということです。共有の定数は会員のモジュールに移ったので、「共有の定数」のモジュールは無くなりました。図 68-6 は直す前と後の依存のグラフを比べたものです。
           </p>
-          <Figure n="51-6" title="直す前と後：数えた依存のグラフ" caption="辺の数字は script/deps.rb の実行結果。太い辺は会員の内部への参照を含む。">
+          <Figure n="68-6" title="直す前と後：数えた依存のグラフ" caption="辺の数字は script/deps.rb の実行結果。太い辺は会員の内部への参照を含む。">
             <GraphFigure />
           </Figure>
           <h3>もう一度、列の名前を変える</h3>
@@ -1210,9 +1211,9 @@ members の列: name, email, billing_email, plan, status
           </p>
           <h3>判断の目安</h3>
           <p>
-            疎結合のための手間（公開する名前を決める、値のクラスを作る、呼び出し側を置き換える）は、どの依存にもかける必要はありません。この章では依存する側の数と、相手の内部が変わる頻度の2つで判断します。図 51-7 は2つの組み合わせと、それぞれの扱い方です。
+            疎結合のための手間（公開する名前を決める、値のクラスを作る、呼び出し側を置き換える）は、どの依存にもかける必要はありません。この章では依存する側の数と、相手の内部が変わる頻度の2つで判断します。図 68-7 は2つの組み合わせと、それぞれの扱い方です。
           </p>
-          <Figure n="51-7" title="結合を下げる手間をかけるかの判断" caption="2つの軸はこの章で定めた目安。">
+          <Figure n="68-7" title="結合を下げる手間をかけるかの判断" caption="2つの軸はこの章で定めた目安。">
             <DecisionFigure />
           </Figure>
           <div className="table-wrap">
@@ -1309,6 +1310,29 @@ members の列: name, email, billing_email, plan, status
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          疎結合は依存をなくすことではなく、依存する先を、相手のチームが変えないと約束した名前に移すことです。この章では、請求・メール・集計が会員の列や private メソッドを直接読むのをやめ、会員が公開する名前だけを使うようにしました。依存する側が少ない所や、相手の内部が安定している所には、そのための仕組みを足しません。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、会員の列の名前を1つ変えただけで請求・メール・集計が止まり、ほかのチームの spec が3件失敗した。会員の内部への参照は14か所から0か所になり、同じ列の名前の変更は会員のファイルだけで済んで、請求・メール・集計のファイルは1行も変えなかった。</>,
+        basis: <><ChapterLink n={70} section="scene" />、<ChapterLink n={70} section="apply" /></>,
+      },
+      cost: {
+        text: <>会員チームが公開する名前（billable、BillingProfile、count_by_plan_name）を決め、使う側が必要とする値に変換して返す必要がある。公開した名前は会員チームが変えないと約束するので、変えるときはほかのチームと時期を合わせる。</>,
+        basis: <ChapterLink n={70} section="apply" />,
+      },
+      alternative: {
+        text: <>同じアプリの中なら、会員のモデルの公開メソッドで必要な値を返す形で足りる。呼び出しを属性のハッシュの通知に置き換えた例では、数えられる依存は0になったが、列の名前を変えると請求の側のプランが例外を出さずに nil になった。列を1対1で写すだけの中間の層も、依存の中身は変わらない。</>,
+        basis: <ChapterLink n={70} section="overuse" />,
+      },
+      criterion: {
+        text: <>依存する側の数と、相手の内部が変わる頻度を比べる。ほかのチームのコードに列の名前・status の数値・send(:private_method) が出てくるなら直す。同じチームの小さなクラスの間なら、直接呼ぶ形のままにする。</>,
+        basis: <ChapterLink n={70} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

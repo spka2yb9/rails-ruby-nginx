@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 50-1 予約の期間を扱うクラスと、それぞれの境界の扱い ---------- */
+/* ---------- 図 67-1 予約の期間を扱うクラスと、それぞれの境界の扱い ---------- */
 const sceneCols: { screen: string; cls: string; method: string; rule: [string, string]; bad?: boolean }[] = [
   { screen: 'キャンペーンの告知', cls: 'Campaign', method: '#days', rule: ['差 + 1', '（両端の日を含む）'] },
   { screen: '予約の一覧・メール', cls: 'ReservationsHelper', method: '#stay_label', rule: ['差 + 1', '（3泊と表示）'], bad: true },
@@ -17,7 +18,7 @@ const sceneCols: { screen: string; cls: string; method: string; rule: [string, s
 function SceneFigure() {
   return (
     <Svg
-      id="50-1"
+      id="67-1"
       w={780}
       h={318}
       label="宿の予約システムで、宿泊の期間を扱う処理が6か所にある。キャンペーンの告知の Campaign#days は日付の差に1を足して両端の日を含める。予約の一覧と確認メールの ReservationsHelper#stay_label も DateUtils.days_between で差に1を足すため、2泊を3泊と表示する。空室カレンダーの ReservationsHelper#booked_on? は両端の日を含めて比べる。空室検索の AvailabilitySearch は出る日を含めずに比べる。予約の保存の Reservation の検証は両端の日を含めて比べる。請求書の InvoiceBuilder は日付の差を泊数にする。Campaign と stay_label は DateUtils.days_between を呼び、残りの4つは reservations テーブルの check_in と check_out を読む。期間の規則は6行・4ファイルに、3通りの解釈で書かれている"
@@ -58,7 +59,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 50-2 同じ予約を、5つの処理がどう数えるか ---------- */
+/* ---------- 図 67-2 同じ予約を、5つの処理がどう数えるか ---------- */
 const days = [19, 20, 21, 22, 23, 24, 25]
 const readings: { code: string; result: string; nights: number[]; bad?: boolean }[] = [
   { code: 'Reservation の検証（<= と >=）', result: '11/22 で鈴木と重なる → 保存できない', nights: [20, 21, 22], bad: true },
@@ -73,7 +74,7 @@ function BoundaryFigure() {
   const cw = 68
   return (
     <Svg
-      id="50-2"
+      id="67-2"
       w={780}
       h={400}
       label="11月19日から25日までの夜を横に並べた図。佐藤の予約は11/20にチェックインし11/22にチェックアウトするので、泊まる夜は11/20と11/21の2つ。鈴木の新しい予約は11/22と11/23の夜。5つの処理が佐藤の予約をどの夜まで使うと数えるかを比べると、Reservation の検証、booked_on?、stay_label は11/22の夜まで含めて数え、保存できない、11/22がふさがる、3泊と表示するという誤りになる。AvailabilitySearch と InvoiceBuilder は11/20と11/21の夜だけを数え、11/22から空室、2泊の請求という正しい結果になる"
@@ -122,7 +123,7 @@ function BoundaryFigure() {
   )
 }
 
-/* ---------- 図 50-3 凝集の段階 ---------- */
+/* ---------- 図 67-3 凝集の段階 ---------- */
 const levels: { name: string; en: string; rel: string[]; ex: string[]; strong?: boolean; weak?: boolean; added?: boolean }[] = [
   { name: '機能的', en: 'functional', rel: ['すべての要素が', '1つの機能のために働く'], ex: ['StayPeriod#overlaps?', '2つの期間が重なるかを答える'], strong: true },
   { name: '逐次的', en: 'sequential', rel: ['ある要素の出力が', '次の要素の入力になる'], ex: ['予約の CSV の行を読み、検証し、', '予約を作る取り込みの処理'] },
@@ -138,7 +139,7 @@ function LevelsFigure() {
   const top = 40
   return (
     <Svg
-      id="50-3"
+      id="67-3"
       w={780}
       h={top + levels.length * rowH + 50}
       label={`凝集の段階を強い順に並べた表。${levels.map((l) => `${l.name}（${l.en}）：${l.rel.join('')}。Rails の例は${l.ex.join('')}`).join('。')}。手順的は1974年の論文には無く、1978年の Yourdon と Constantine の本で加わった段階。1974年の論文は、機能的がほかよりずっと強く、偶然的と論理的がほかよりずっと弱いと述べている`}
@@ -170,7 +171,7 @@ function LevelsFigure() {
   )
 }
 
-/* ---------- 図 50-4 utils モジュールと、期間のクラスのまとまり方 ---------- */
+/* ---------- 図 67-4 utils モジュールと、期間のクラスのまとまり方 ---------- */
 function UtilsFigure() {
   const utilMethods: [string, string, string][] = [
     ['days_between', 'Campaign', 'キャンペーンの数え方'],
@@ -181,7 +182,7 @@ function UtilsFigure() {
   const stayMethods = ['nights', 'overlaps?(other)', 'stays_on?(date)', 'initialize（検証）']
   return (
     <Svg
-      id="50-4"
+      id="67-4"
       w={780}
       h={330}
       label="左は DateUtils。days_between は Campaign がキャンペーンの数え方のために使い、ReservationsHelper も泊数の計算に流用している。format_md は ReservationsHelper が画面の表記のために、weekend? は料金の計算が週末の割増の規則のために、fiscal_year は月次の集計が会計の年度のために使う。4つのメソッドは同じデータを使わず、呼び出し側も変える理由も別々。右は StayPeriod。nights、overlaps?、stays_on?、initialize の検証の4つが、どれも nights_range（check_in 以上 check_out 未満）という同じ規則を使う。宿泊の期間の規則が変わるときは、このクラスだけを直す"
@@ -237,7 +238,7 @@ function UtilsFigure() {
   )
 }
 
-/* ---------- 図 50-5 直す前と後：期間の規則を書いている場所 ---------- */
+/* ---------- 図 67-5 直す前と後：期間の規則を書いている場所 ---------- */
 function BeforeAfterFigure() {
   const before: [string, string, boolean][] = [
     ['models/reservation.rb', '2行（<= と >=、出る日 <= 入る日）', true],
@@ -247,7 +248,7 @@ function BeforeAfterFigure() {
   ]
   return (
     <Svg
-      id="50-5"
+      id="67-5"
       w={780}
       h={360}
       label="直す前は、期間の規則を書いた行が4つのファイルに6行あった。reservation.rb に2行（両端を含む重なりと、出る日が入る日以前かの検証）、availability_search.rb に1行（出る日を含まない重なり）、reservations_helper.rb に2行（差に1を足す泊数と、両端を含むカレンダーの判定）、invoice_builder.rb に1行（差）。解釈は3通り。直した後は、StayPeriod に5行、Reservation.overlapping の SQL に1行で、解釈は1通り。AvailabilitySearch は Reservation.overlapping を、ReservationsHelper と InvoiceBuilder と Reservation の検証は StayPeriod を使う。overlaps? と overlapping は、同じ6件の境界の例を流すテストで一致を確かめる"
@@ -289,7 +290,7 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 50-6 集める・分けるの判断 ---------- */
+/* ---------- 図 67-6 集める・分けるの判断 ---------- */
 function DecisionFigure() {
   const qx = [150, 460]
   const qy = [40, 196]
@@ -303,7 +304,7 @@ function DecisionFigure() {
   ]
   return (
     <Svg
-      id="50-6"
+      id="67-6"
       w={780}
       h={420}
       label="横の軸は、同じ規則（知識）を使うか。縦の軸は、変える理由が同じか。同じ規則を使い、変える理由も同じものは1つのクラスに集める（StayPeriod の nights・overlaps?・stays_on?）。同じ規則を使うが変える理由が違うものは、規則だけを集めて処理は使う側に置く（請求額、キャンセル料、カレンダーの表示は period を受け取って使う）。規則は違うが一緒に変わるものは同じ名前空間など近くに置く。規則も変える理由も違うものは分ける（DateUtils の days_between と format_md）。右上を1メソッドずつのクラスに分けるのが分けすぎ、右下を StayPeriod に入れるのが集めすぎ"
@@ -563,9 +564,9 @@ end
 `}
           />
           <p>
-            図 50-1 は期間を扱う処理と、それぞれの境界の扱いです。同じ「宿泊の期間」について、6つの処理が3通りの解釈で書かれています。赤い枠の3つが、チェックアウトの日の夜まで含めてしまう誤った解釈です。
+            図 67-1 は期間を扱う処理と、それぞれの境界の扱いです。同じ「宿泊の期間」について、6つの処理が3通りの解釈で書かれています。赤い枠の3つが、チェックアウトの日の夜まで含めてしまう誤った解釈です。
           </p>
-          <Figure n="50-1" title="予約の期間を扱うクラスと、それぞれの境界の扱い" caption="模式図。ReservationsHelper の2つのメソッドは別々の列に分けて描いた。">
+          <Figure n="67-1" title="予約の期間を扱うクラスと、それぞれの境界の扱い" caption="模式図。ReservationsHelper の2つのメソッドは別々の列に分けて描いた。">
             <SceneFigure />
           </Figure>
           <h3>スクリプトで動かした結果</h3>
@@ -603,9 +604,9 @@ puts "⑤ 11/22〜11/24 の予約の保存: #{second.save} #{second.errors.full_
 `}
           />
           <p>
-            一覧とメールには「3泊」と出ますが、請求書は2泊分です。空室検索は 11/22〜11/24 で「離れ 桜」を空室として返しますが、カレンダーは 11/22 をふさがっていると表示し、予約の保存は重なりのエラーで失敗します。客から見ると、検索で選んだ部屋が予約できず、確認メールと請求書で泊数が違います。図 50-2 は、5つの処理が佐藤の予約をどの夜まで使うと数えているかを並べたものです。
+            一覧とメールには「3泊」と出ますが、請求書は2泊分です。空室検索は 11/22〜11/24 で「離れ 桜」を空室として返しますが、カレンダーは 11/22 をふさがっていると表示し、予約の保存は重なりのエラーで失敗します。客から見ると、検索で選んだ部屋が予約できず、確認メールと請求書で泊数が違います。図 67-2 は、5つの処理が佐藤の予約をどの夜まで使うと数えているかを並べたものです。
           </p>
-          <Figure n="50-2" title="同じ予約を、5つの処理がどう数えるか" caption="上の2行が実際の予約。下の5行の「含めた」は、11/22 の夜まで予約で使うと数えたことを表す。">
+          <Figure n="67-2" title="同じ予約を、5つの処理がどう数えるか" caption="上の2行が実際の予約。下の5行の「含めた」は、11/22 の夜まで予約で使うと数えたことを表す。">
             <BoundaryFigure />
           </Figure>
           <h3>1か所を直すと、別の機能が壊れる</h3>
@@ -707,9 +708,9 @@ app/helpers/reservations_helper.rb:10:    room.reservations.any? { |r| r.check_i
             論文は、この尺度は等間隔ではなく、機能的はほかのすべてよりずっと強く、最初の2つ（偶然的と論理的）はほかのすべてよりずっと弱い、と述べています<Ref n={1} />。また、モジュールの凝集は、その中で機能的でない要素の組が1つあるごとに下がるとしています<Ref n={1} />。
           </p>
           <p>
-            1978年に Yourdon と Constantine が出版した本『Structured Design』は、時間的と通信的の間に手順的（procedural）を加えて7つの段階にしました<Ref n={2} />。手順的は、要素が実行の順番でつながっているが、扱うデータは別々の状態です。この本は、最初の3つ（偶然的・論理的・時間的）は一般に受け入れにくく、最後の3つ（通信的・逐次的・機能的）は一般に受け入れられる水準だと述べています<Ref n={2} />。図 50-3 は7つの段階と、Rails のコードでの例です。
+            1978年に Yourdon と Constantine が出版した本『Structured Design』は、時間的と通信的の間に手順的（procedural）を加えて7つの段階にしました<Ref n={2} />。手順的は、要素が実行の順番でつながっているが、扱うデータは別々の状態です。この本は、最初の3つ（偶然的・論理的・時間的）は一般に受け入れにくく、最後の3つ（通信的・逐次的・機能的）は一般に受け入れられる水準だと述べています<Ref n={2} />。図 67-3 は7つの段階と、Rails のコードでの例です。
           </p>
-          <Figure n="50-3" title="凝集の段階" caption="段階の名前と並びは1974年の論文と1978年の本による。Rails の例はこの章で考えたもの。">
+          <Figure n="67-3" title="凝集の段階" caption="段階の名前と並びは1974年の論文と1978年の本による。Rails の例はこの章で考えたもの。">
             <LevelsFigure />
           </Figure>
           <p>
@@ -747,7 +748,7 @@ app/helpers/reservations_helper.rb:10:    room.reservations.any? { |r| r.check_i
                   <td>動詞が2つ。表示と判定が同じ予約を使うので通信的</td>
                 </tr>
                 <tr>
-                  <th scope="row">夜間のジョブ（図 50-3 の手順的の例）</th>
+                  <th scope="row">夜間のジョブ（図 67-3 の手順的の例）</th>
                   <td>最初に集計し、次に古いログを消し、最後に通知を送る</td>
                   <td>時間を表す語がある。逐次的か時間的（データが別々なら手順的）</td>
                 </tr>
@@ -782,9 +783,9 @@ app/helpers/reservations_helper.rb:10:    room.reservations.any? { |r| r.check_i
             論文は偶然的凝集が生じる場面の1つとして、ほかのモジュールに重複していたコードを1か所にまとめたときを挙げています。まとめたモジュールを、元の呼び出し側の1つの都合で直すと、ほかの呼び出し側で使えなくなる、という例も示しています<Ref n={1} />。場面の節で days_between の <code>+ 1</code> を消したときに起きたことは、この例と同じです。
           </p>
           <p>
-            図 50-4 は DateUtils と、この後で作る StayPeriod のまとまり方を比べたものです。DateUtils の4つのメソッドは同じデータを使わず、呼び出し側も変える理由も別々です。StayPeriod の4つの処理は、どれも同じ規則（nights_range）を使います。
+            図 67-4 は DateUtils と、この後で作る StayPeriod のまとまり方を比べたものです。DateUtils の4つのメソッドは同じデータを使わず、呼び出し側も変える理由も別々です。StayPeriod の4つの処理は、どれも同じ規則（nights_range）を使います。
           </p>
-          <Figure n="50-4" title="utils モジュールと、期間のクラスのまとまり方" caption="左の呼び出し側のうち、料金の計算と月次の集計はこの章のアプリには無い。DateUtils の使われ方の例として描いた。">
+          <Figure n="67-4" title="utils モジュールと、期間のクラスのまとまり方" caption="左の呼び出し側のうち、料金の計算と月次の集計はこの章のアプリには無い。DateUtils の使われ方の例として描いた。">
             <UtilsFigure />
           </Figure>
           <h3>似た原則との違い</h3>
@@ -1103,9 +1104,9 @@ app/models/stay_period.rb:22:  def stays_on?(date) = nights_range.cover?(date)
 `}
           />
           <p>
-            行の数は6行のままですが、ファイルは4つから2つになり、解釈は1通りになりました。図 50-5 は直す前と後で規則を書いている場所を比べたものです。日帰りの利用を受け付けるなど境界の扱いを変えるときに読むのは、StayPeriod と overlapping のスコープ、それと境界の例の表です。
+            行の数は6行のままですが、ファイルは4つから2つになり、解釈は1通りになりました。図 67-5 は直す前と後で規則を書いている場所を比べたものです。日帰りの利用を受け付けるなど境界の扱いを変えるときに読むのは、StayPeriod と overlapping のスコープ、それと境界の例の表です。
           </p>
-          <Figure n="50-5" title="直す前と後：期間の規則を書いている場所" caption="行数は grep の結果から数えた。実線の矢印は呼び出し、破線の矢印は境界の例の表を使うテスト。">
+          <Figure n="67-5" title="直す前と後：期間の規則を書いている場所" caption="行数は grep の結果から数えた。実線の矢印は呼び出し、破線の矢印は境界の例の表を使うテスト。">
             <BeforeAfterFigure />
           </Figure>
         </>
@@ -1209,8 +1210,8 @@ end
             <li>同じ規則（知識）に頼っているか。同じ列を読むかではなく、「チェックアウトの日の夜は含まない」のような同じ判断を使うかを見ます。</li>
             <li>変える理由が同じか。誰の、どんな要求で変わるかを考えます。</li>
           </ul>
-          <p>図 50-6 は2つの問いの答えの組み合わせと、それぞれの置き方です。</p>
-          <Figure n="50-6" title="集める・分けるの判断" caption="2つの軸はこの章で定めた目安。右上を分けると分けすぎ、右下を集めると集めすぎになる。">
+          <p>図 67-6 は2つの問いの答えの組み合わせと、それぞれの置き方です。</p>
+          <Figure n="67-6" title="集める・分けるの判断" caption="2つの軸はこの章で定めた目安。右上を分けると分けすぎ、右下を集めると集めすぎになる。">
             <DecisionFigure />
           </Figure>
           <div className="table-wrap">
@@ -1291,8 +1292,8 @@ end
             </p>
           </Callout>
           <h3>Rails のコードを置く場所と凝集</h3>
-          <p>図 50-7 は、Rails で処理を置く主な場所と、それぞれで凝集が下がりやすい使い方をまとめたものです。</p>
-          <Figure n="50-7" title="Rails でコードを置く場所と凝集" caption="「まとまりの単位」は、その場所に置くものを決める基準。">
+          <p>図 67-7 は、Rails で処理を置く主な場所と、それぞれで凝集が下がりやすい使い方をまとめたものです。</p>
+          <Figure n="67-7" title="Rails でコードを置く場所と凝集" caption="「まとまりの単位」は、その場所に置くものを決める基準。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1362,6 +1363,29 @@ end
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          1つのクラスに集めるのは、同じ規則に頼り、同じ理由で変わる処理です。この章では「チェックアウトの日の夜は泊まらない」という境界の規則を StayPeriod に集めました。同じ check_in・check_out の列を使っていても、料金やキャンセル料のように変える理由が違う処理は StayPeriod に入れません。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は、DateUtils の + 1 を消すとキャンペーンのテストが落ち、一覧と請求書で泊数が違い、検索で空室と出た部屋を保存できなかった。直した後は、規則のあるファイルが4つから2つに、解釈が3通りから1通りになり、アプリのテスト23件がすべて通った。</>,
+        basis: <><ChapterLink n={69} section="scene" />、<ChapterLink n={69} section="apply" /></>,
+      },
+      cost: {
+        text: <>規則が書かれている行の数は6行のままで、Ruby の StayPeriod と SQL の overlapping のスコープの2か所に境界の規則が残る。2つが一致することは、同じ境界の例の表を両方に流すテストで確かめる必要がある。</>,
+        basis: <ChapterLink n={69} section="apply" />,
+      },
+      alternative: {
+        text: <>計算ごとに1メソッドのクラスに分けると、後から足した OccupancyChecker が終わりを含む範囲で 11/22 の夜を泊まっていると判定し、規則が再び4つのファイルに散らばった。料金やキャンセル料は、StayPeriod を受け取って使う側のクラスに置く。</>,
+        basis: <ChapterLink n={69} section="overuse" />,
+      },
+      criterion: {
+        text: <>同じ列を読むかではなく、同じ判断（チェックアウトの日の夜は含まない）を使うか。誰の、どんな要求で変わるか。クラスのテストに、そのクラスの規則と関係のない準備（DB・I18n・現在時刻）が要るなら集めすぎを疑う。</>,
+        basis: <ChapterLink n={69} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

@@ -1,10 +1,11 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 54-1 処理の手順ごとに分けたコードと、業者を知っている場所 ---------- */
+/* ---------- 図 71-1 処理の手順ごとに分けたコードと、業者を知っている場所 ---------- */
 const sceneSteps = [
   { x: 10, name: '購入手続き', cls: 'Cart', know: ['選ぶ規則', '送料の表'], result: ['送料 800円を表示', '（注文は 1,300円）'], bad: true },
   { x: 165, name: '注文の作成', cls: 'Order', know: ['選ぶ規則', '送料の表', '業者のコード'], result: ['ここだけ直した', '（正しく選ぶ）'], bad: false },
@@ -16,7 +17,7 @@ const sceneSteps = [
 function SceneFigure() {
   return (
     <Svg
-      id="54-1"
+      id="71-1"
       w={780}
       h={392}
       label={`注文の処理を、購入手続き（Cart）、注文の作成（Order）、出荷指示（ShipmentCsv）、発送のお知らせ（OrdersHelper とメール）、お届け予定日（DeliveryEstimate）の5つの手順に分けている。${sceneSteps.map((s) => `${s.name}は${s.know.join('・')}を知っている`).join('。')}。Order が orders テーブルの carrier 列に業者のコードを保存し、出荷指示・お知らせ・予定日はその値を読んで分岐する。沖縄県あてをゆうパックにするために Order だけを直すと、購入手続きは 800円を表示し、出荷指示は KeyError になり、お知らせの業者名と追跡 URL は空になり、予定日は3日ではなく2日後になる`}
@@ -61,7 +62,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 54-2 KWIC インデックスの2つの分割 ---------- */
+/* ---------- 図 71-2 KWIC インデックスの2つの分割 ---------- */
 const kwicNames = ['入力', '循環シフト', '整列', '出力']
 const kwicSecrets = ['入力の形式', 'シフトの持ち方', '並べる時期と方法', '出力の書式']
 
@@ -70,7 +71,7 @@ function KwicFigure() {
   const rightX = [404, 494, 584, 674]
   return (
     <Svg
-      id="54-2"
+      id="71-2"
       w={780}
       h={352}
       label="Parnas の論文の KWIC インデックスの2つの分割。分割1は処理の手順ごとに、入力・循環シフト・整列・出力に分け、主制御が順に呼ぶ。4つのモジュールは、1語に4文字を詰めた行・行の索引・シフトの索引というメモリー上の表を読み書きして受け渡すので、表の形式を変えると4つすべてを直す。分割2は、行の格納・入力・循環シフト・整列・出力に分ける。行の格納はメモリー上の格納の形式を隠し、CHAR・SETCHAR・WORDS という関数だけを見せる。入力は入力の形式を、循環シフトはシフトの持ち方を、整列は並べる時期と方法を、出力は出力の書式を隠す。格納の形式を変えても、直すのは行の格納だけになる"
@@ -123,7 +124,7 @@ function KwicFigure() {
   )
 }
 
-/* ---------- 図 54-4 Shipping が隠す判断と公開する操作 ---------- */
+/* ---------- 図 71-4 Shipping が隠す判断と公開する操作 ---------- */
 const callers = [
   { y: 44, lines: ['Cart', '購入手続きの送料'] },
   { y: 104, lines: ['Order', '業者の保存と合計'] },
@@ -134,7 +135,7 @@ const callers = [
 function ModuleFigure() {
   return (
     <Svg
-      id="54-4"
+      id="71-4"
       w={780}
       h={362}
       label="呼び出し側の Cart、Order、OrdersHelper とメール、ShipmentCsv は、module Shipping の公開する操作 Shipping.quote(parcel) と Shipping.carrier(code) だけを呼ぶ。2つの操作は Carrier を返し、Carrier は name、fee、note、tracking_url(number)、arrival_on(shipped_on)、warehouse_code、保存するためだけの code に答える。Shipping の中に隠す判断は、契約している業者の一覧（CARRIERS、private_constant）、業者を選ぶ規則（条件と順番）、業者ごとの送料と日数、追跡 URL の形式、倉庫に渡すコード、届き方の注意。呼び出し側は code で分岐しない"
@@ -189,7 +190,7 @@ function ModuleFigure() {
   )
 }
 
-/* ---------- 図 54-5 変わりうる判断ごとに直すファイル（直す前と後） ---------- */
+/* ---------- 図 71-5 変わりうる判断ごとに直すファイル（直す前と後） ---------- */
 const matrixCols = ['Cart', 'Order', 'Helper', 'メール', 'CSV', '予定日']
 const matrixRows: { label: string; before: number[]; count: string }[] = [
   { label: '業者を足す・やめる', before: [1, 1, 1, 0, 1, 1], count: '5 → 1' },
@@ -206,7 +207,7 @@ function MatrixFigure() {
   const rowY = (i: number) => 64 + i * 36
   return (
     <Svg
-      id="54-5"
+      id="71-5"
       w={780}
       h={360}
       label={`変わりうる判断ごとに、直すファイルを直す前と直した後で比べた表。${matrixRows.map((r) => `${r.label}：直す前は ${r.before.map((v, i) => (v ? matrixCols[i] : '')).filter(Boolean).join('・')}、直した後は shipping.rb（${r.count}）`).join('。')}`}
@@ -245,7 +246,7 @@ function MatrixFigure() {
   )
 }
 
-/* ---------- 図 54-6 分けすぎた ShippingGateway ---------- */
+/* ---------- 図 71-6 分けすぎた ShippingGateway ---------- */
 const gatewayParts = [
   { x: 270, y: 148, lines: ['Rules', '選ぶ規則（4つの lambda）'] },
   { x: 440, y: 148, lines: ['FeeTable', '送料の表'] },
@@ -258,7 +259,7 @@ const gatewayParts = [
 function OverSplitFigure() {
   return (
     <Svg
-      id="54-6"
+      id="71-6"
       w={780}
       h={336}
       label="左は、この章で作った Shipping。shipping.rb の1ファイル37行に、業者の一覧・選ぶ規則・業者ごとの値をまとめて持ち、ゆうパックを足すときに直すのは1ファイル。右は、分けすぎた ShippingGateway。shipping_gateway.rb が quote と、業者を private にした Quote を持ち、shipping_gateway ディレクトリの Rules（選ぶ規則）、FeeTable（送料の表）、DeliveryDays（日数の表）、CarrierNames（業者名の表）、TrackingUrlBuilder（追跡 URL の表）、WarehouseCodeMapper（倉庫のコードの表）の6ファイルに分かれている。ゆうパックを足すと6ファイルすべてを直す"
@@ -295,11 +296,11 @@ function OverSplitFigure() {
   )
 }
 
-/* ---------- 図 54-7 隠すかどうかの判断 ---------- */
+/* ---------- 図 71-7 隠すかどうかの判断 ---------- */
 function JudgeFigure() {
   return (
     <Svg
-      id="54-7"
+      id="71-7"
       w={760}
       h={412}
       label="横軸はその判断が変わる見込み、縦軸はその判断を知っている場所の数。変わる見込みが高く知っている場所が多いもの（配送業者の選び方と業者ごとの違い、決済代行や外部 API の応答の形式、倉庫や取引先と交わすファイルの形式）は1つのモジュールに隠す。変わる見込みが高く知っている場所が1か所のもの（1つの画面だけで使う表示の書式）は、今の場所に置いて名前を付けておき、知っている場所が増えたら隠す。変わる見込みが低く多くの場所が使うもの（Rails の規約と Active Record の属性、Date・Time・I18n などの安定した API）は隠さずに直接使う。変わる見込みが低く1か所でしか使わないものは何もしない"
@@ -549,13 +550,13 @@ end
 `}
           />
           <p>
-            RSpec のテストは、3社それぞれの業者の選択と送料、購入手続きの送料の目安、CSV の業者コード、メールの業者名と追跡 URL を確かめています。この時点で <code>bundle exec rspec</code> の結果は 7 examples, 0 failures です。図 54-1 は5つの手順と、それぞれが知っている業者の判断を並べたものです。
+            RSpec のテストは、3社それぞれの業者の選択と送料、購入手続きの送料の目安、CSV の業者コード、メールの業者名と追跡 URL を確かめています。この時点で <code>bundle exec rspec</code> の結果は 7 examples, 0 failures です。図 71-1 は5つの手順と、それぞれが知っている業者の判断を並べたものです。
           </p>
-          <Figure n="54-1" title="処理の手順ごとに分けたコードと、業者を知っている場所" caption="下段は、次の項で order.rb だけを直して沖縄県あてに注文したときの結果。赤は不具合、青は正しく動いた箇所。">
+          <Figure n="71-1" title="処理の手順ごとに分けたコードと、業者を知っている場所" caption="下段は、次の項で order.rb だけを直して沖縄県あてに注文したときの結果。赤は不具合、青は正しく動いた箇所。">
             <SceneFigure />
           </Figure>
           <p>
-            図 54-1 の上段は、購入手続きから予定日までの処理の順番です。中段の点線の箱は、各手順のコードに書かれている業者の知識です。業者のコードは5つのうち4つの手順が知っていて、選ぶ規則と送料の表は Cart と Order の2か所にあります。
+            図 71-1 の上段は、購入手続きから予定日までの処理の順番です。中段の点線の箱は、各手順のコードに書かれている業者の知識です。業者のコードは5つのうち4つの手順が知っていて、選ぶ規則と送料の表は Cart と Order の2か所にあります。
           </p>
           <h3>沖縄県あての荷物をゆうパックに替える</h3>
           <p>
@@ -703,11 +704,11 @@ app/views/shipping_mailer/shipped.text.erb
               分割2：行の格納・入力・循環シフト・整列・出力・主制御の6つです。行の格納のモジュールは、<code>CHAR(r,w,c)</code>（r 行目の w 番目の単語の c 文字目を返す）や <code>SETCHAR</code>、<code>WORDS</code> といった関数を持ち、行をどうメモリーに置くかはこのモジュールだけが知っています。循環シフトのモジュールも、すべてのシフトを持っているかのように <code>CSCHAR</code> という関数で文字を返し、シフトを索引で持つか実際に書き出すかを外に見せません。整列のモジュールは <code>ALPH</code> と <code>ITH</code>（i 番目のシフトの番号を返す）だけを見せます。
             </li>
           </ul>
-          <Figure n="54-2" title="KWIC インデックスの2つの分割（Parnas, 1972）" caption="論文の説明をもとにした模式図。分割2では、整列と出力は循環シフトの関数も呼ぶが、図では省いた。">
+          <Figure n="71-2" title="KWIC インデックスの2つの分割（Parnas, 1972）" caption="論文の説明をもとにした模式図。分割2では、整列と出力は循環シフトの関数も呼ぶが、図では省いた。">
             <KwicFigure />
           </Figure>
           <p>
-            図 54-2 の左が分割1、右が分割2です。分割1の4つのモジュールはメモリー上の表（下の緑の箱）を読み書きして処理の結果を受け渡します。分割2のモジュールは関数を呼び合い、メモリー上の形式は行の格納（下の紫の箱）だけが知っています。
+            図 71-2 の左が分割1、右が分割2です。分割1の4つのモジュールはメモリー上の表（下の緑の箱）を読み書きして処理の結果を受け渡します。分割2のモジュールは関数を呼び合い、メモリー上の形式は行の格納（下の紫の箱）だけが知っています。
           </p>
           <p>
             Parnas は分割1の基準を「処理の大きな手順を1つのモジュールにする」ことだとし、フローチャートを書いて分ける方法だと説明しています。分割2は「information hiding」を基準にしたもので、各モジュールは次のように特徴づけられると述べています<Ref n={1} />。
@@ -782,9 +783,9 @@ order.carrier # => "yu_packet"
             書き換えは例外で止まりました。一方、<code>order.carrier</code> は "yu_packet" という内部の表現をそのまま返し、ヘルパー・メール・CSV・予定日はその値を見て分岐しています。カプセル化は「状態を誰がどう変えてよいか」を制限しますが、「どの判断を誰が知っていてよいか」は決めません。読み取り用のメソッドが内部の表現をそのまま返していれば、状態を守っていても判断は外に漏れます。
           </p>
           <p>
-            反対に、次の節で作る Shipping モジュールは、書き換えられる状態を持ちません。凍結した業者の表と、業者を選ぶメソッドがあるだけです。守る状態がなくても、「どの業者をどの条件で選ぶか」という判断は隠せます。図 54-3 は、2つの原則を観点ごとに比べたものです。
+            反対に、次の節で作る Shipping モジュールは、書き換えられる状態を持ちません。凍結した業者の表と、業者を選ぶメソッドがあるだけです。守る状態がなくても、「どの業者をどの条件で選ぶか」という判断は隠せます。図 71-3 は、2つの原則を観点ごとに比べたものです。
           </p>
-          <Figure n="54-3" title="Encapsulation と Information Hiding の違い" caption="カプセル化の定義は依頼文と Encapsulation の章の内容、情報隠蔽の定義は Parnas の論文による。">
+          <Figure n="71-3" title="Encapsulation と Information Hiding の違い" caption="カプセル化の説明は前の章、情報隠蔽の説明は Parnas の論文に基づきます。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -888,11 +889,11 @@ order.carrier # => "yu_packet"
           <p>
             1つ目を <code>Shipping.quote(parcel)</code>、2つ目を <code>Shipping.carrier(code)</code> とします。どちらも業者を表す Carrier を返し、呼び出し側は Carrier の項目を読むだけにします。Carrier は業者のコード（code）も持ちますが、これは注文に保存するためだけに使い、呼び出し側でコードによる分岐は書きません。
           </p>
-          <Figure n="54-4" title="Shipping が隠す判断と、公開する操作" caption="紫の箱が Shipping の中に隠す判断。呼び出し側からの実線の矢印は、公開する操作の呼び出し。">
+          <Figure n="71-4" title="Shipping が隠す判断と、公開する操作" caption="紫の箱が Shipping の中に隠す判断。呼び出し側からの実線の矢印は、公開する操作の呼び出し。">
             <ModuleFigure />
           </Figure>
           <p>
-            図 54-4 の右の紫の箱が、Shipping の中に隠す判断です。左の呼び出し側は、真ん中の公開する操作だけを呼びます。業者の一覧と選ぶ規則が変わっても、真ん中の操作の形は変わりません。
+            図 71-4 の右の紫の箱が、Shipping の中に隠す判断です。左の呼び出し側は、真ん中の公開する操作だけを呼びます。業者の一覧と選ぶ規則が変わっても、真ん中の操作の形は変わりません。
           </p>
           <h3>Shipping モジュールを作る</h3>
           <p>まず、今の3社のままで Shipping を作ります。</p>
@@ -1183,12 +1184,12 @@ Files stage1/app/models/order.rb and stage1c/app/models/order.rb differ
 Files stage1/app/models/shipment_csv.rb and stage1c/app/models/shipment_csv.rb differ
 `}
           />
-          <p>図 54-5 は、変わりうる判断ごとに、直すファイルを直す前と直した後で比べたものです。Parnas が論文で5つの変更について2つの分割を比べたのと同じ方法です。</p>
-          <Figure n="54-5" title="変わりうる判断ごとに直すファイル（直す前と後）" caption="「業者を足す・やめる」の行は、実際に直したファイル（diff -rq の結果）。ほかの行は、コードを読んで数えた。">
+          <p>図 71-5 は、変わりうる判断ごとに、直すファイルを直す前と直した後で比べたものです。Parnas が論文で5つの変更について2つの分割を比べたのと同じ方法です。</p>
+          <Figure n="71-5" title="変わりうる判断ごとに直すファイル（直す前と後）" caption="「業者を足す・やめる」の行は、実際に直したファイル（diff -rq の結果）。ほかの行は、コードを読んで数えた。">
             <MatrixFigure />
           </Figure>
           <p>
-            図 54-5 の1行目では、業者を足すときに直すファイルが5つから1つになっています。2行目と3行目の規則と送料は、2か所から1か所になり、画面と請求の食い違いが起きなくなりました。4行目より下は、直す前も1ファイルでしたが、どのファイルを直せばよいかを探す必要がなくなりました。業者に関する変更は、どれも shipping.rb を開けば済みます。
+            図 71-5 の1行目では、業者を足すときに直すファイルが5つから1つになっています。2行目と3行目の規則と送料は、2か所から1か所になり、画面と請求の食い違いが起きなくなりました。4行目より下は、直す前も1ファイルでしたが、どのファイルを直せばよいかを探す必要がなくなりました。業者に関する変更は、どれも shipping.rb を開けば済みます。
           </p>
           <h3>テストも隠した判断に触れない</h3>
           <p>
@@ -1317,11 +1318,11 @@ app/models/shipping_gateway/warehouse_code_mapper.rb
   57 total
 `}
           />
-          <Figure n="54-6" title="分けすぎた ShippingGateway" caption="赤い丸は、ゆうパックを足すときに直したファイル。">
+          <Figure n="71-6" title="分けすぎた ShippingGateway" caption="赤い丸は、ゆうパックを足すときに直したファイル。">
             <OverSplitFigure />
           </Figure>
           <p>
-            図 54-6 のとおり、ゆうパックを足すために6つのファイルを直しました。直す前のコードの5ファイルと同じ程度です。表の形は整いましたが、「どの業者と契約しているか」という1つの判断が、6つの表のキーに分かれて書かれています。送料だけを変える変更なら FeeTable だけで済みますが、この EC サイトで多い変更は業者の追加と入れ替えで、そのたびに6つの表を同じように直します。
+            図 71-6 のとおり、ゆうパックを足すために6つのファイルを直しました。直す前のコードの5ファイルと同じ程度です。表の形は整いましたが、「どの業者と契約しているか」という1つの判断が、6つの表のキーに分かれて書かれています。送料だけを変える変更なら FeeTable だけで済みますが、この EC サイトで多い変更は業者の追加と入れ替えで、そのたびに6つの表を同じように直します。
           </p>
           <p>
             Parnas の「1つの判断」は、データの種類ごとの判断ではなく、変わるときに一緒に変わる判断のまとまりとして読むと、この問題を避けられます。送料の表と日数の表は種類が違いますが、業者を足すときにはどちらも変わるので、同じモジュールに置きます。
@@ -1361,18 +1362,18 @@ NoMethodError: private method 'carrier' called for an instance of ShippingGatewa
           </p>
           <h3>変わらない判断まで隠す</h3>
           <p>
-            変わる見込みの低いものまでモジュールの裏に置くと、読む場所と書く場所が増えます。Rails のアプリでよく見かけるのは、Active Record のモデルを Repository のクラスで覆い、コントローラーやサービスから <code>where</code> や関連を使わせない設計です。DB を替える予定がないアプリでは、Repository に検索のメソッドを足し続けることになり、Active Record のスコープや <code>includes</code> も使いにくくなります。Repository が役に立つ条件は、<ChapterLink n={44} section="repository" />で扱いました。
+            変わる見込みの低いものまでモジュールの裏に置くと、読む場所と書く場所が増えます。Rails のアプリでよく見かけるのは、Active Record のモデルを Repository のクラスで覆い、コントローラーやサービスから <code>where</code> や関連を使わせない設計です。DB を替える予定がないアプリでは、Repository に検索のメソッドを足し続けることになり、Active Record のスコープや <code>includes</code> も使いにくくなります。Repository が役に立つ条件は、<ChapterLink n={44} section="repository" />で扱います。
           </p>
           <p>
             Rails Doctrine の「No one paradigm」は、Active Record が DB とのやり取りと業務のロジックを1つのクラスに混ぜていることを、Web アプリを作る実際的な方法として認めています<Ref n={2} />。Rails のアプリで情報隠蔽を当てはめる対象は、アプリが決めた業務の判断と、外部のサービスの事情です。Rails の機能は直接使います。
           </p>
           <h3>判断の目安</h3>
-          <p>隠すかどうかは、その判断が変わる見込みと、その判断を知っている場所の数の2つで決めます。図 54-7 は、2つの軸で4つに分けたものです。</p>
-          <Figure n="54-7" title="隠すかどうかの判断" caption="模式図。右上に入るものから優先して隠す。">
+          <p>隠すかどうかは、その判断が変わる見込みと、その判断を知っている場所の数の2つで決めます。図 71-7 は、2つの軸で4つに分けたものです。</p>
+          <Figure n="71-7" title="隠すかどうかの判断" caption="模式図。右上に入るものから優先して隠す。">
             <JudgeFigure />
           </Figure>
           <p>
-            図 54-7 の右上は、変わる見込みが高く、多くの場所が知っている判断です。最初の場面の配送業者がこれにあたり、1つのモジュールに隠すと効果が大きくなります。右下は、変わる見込みは高いものの、まだ1か所でしか使っていない判断です。今の場所に置いてメソッドや定数として名前を付けておき、2か所目で使うときにモジュールにまとめます。左上の Rails の規約や Ruby の標準の API は、多くの場所で使いますが、アプリの都合では変わらないので、隠さずに直接使います。
+            図 71-7 の右上は、変わる見込みが高く、多くの場所が知っている判断です。最初の場面の配送業者がこれにあたり、1つのモジュールに隠すと効果が大きくなります。右下は、変わる見込みは高いものの、まだ1か所でしか使っていない判断です。今の場所に置いてメソッドや定数として名前を付けておき、2か所目で使うときにモジュールにまとめます。左上の Rails の規約や Ruby の標準の API は、多くの場所で使いますが、アプリの都合では変わらないので、隠さずに直接使います。
           </p>
           <p>迷ったときは、次の順に確かめます。</p>
           <ol>
@@ -1392,9 +1393,9 @@ NoMethodError: private method 'carrier' called for an instance of ShippingGatewa
         <>
           <h3>Rails の標準機能が隠している判断</h3>
           <p>
-            Rails の標準機能にも、変わりやすい判断を設定の1か所に集め、アプリのコードから隠しているものがあります。図 54-8 は、その主なものです。
+            Rails の標準機能にも、変わりやすい判断を設定の1か所に集め、アプリのコードから隠しているものがあります。図 71-8 は、その主なものです。
           </p>
-          <Figure n="54-8" title="Rails の標準機能が隠している判断" caption="切り替える場所は Rails 8.1 の設定。呼び出し側のコードは、切り替えても変わらない。">
+          <Figure n="71-8" title="Rails の標準機能が隠している判断" caption="切り替える場所は Rails 8.1 の設定。呼び出し側のコードは、切り替えても変わらない。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1537,6 +1538,29 @@ NameError: private constant Shipping::CARRIERS referenced
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          隠すのは、変わる見込みが高く、多くの場所が知っている設計の判断です。この章では「どの業者と契約し、どの条件で選ぶか」を Shipping に集め、quote と carrier だけを公開しました。送料や業者名のように利用者に見せる仕様は、公開した操作が返す値として外に出します。
+        </>
+      ),
+      benefit: {
+        text: <>直す前は業者を1社足すと5つのファイルを直し、直し漏れは nil・空の文字列・KeyError・誤った日付として現れた。直した後は、沖縄県あてのゆうパックを足す変更が shipping.rb とそのテストの中で済み、既存のテストは直さずに例を1行足すだけだった。</>,
+        basis: <><ChapterLink n={73} section="scene" />、<ChapterLink n={73} section="apply" /></>,
+      },
+      cost: {
+        text: <>呼び出し側は公開した操作が返す値しか使えないので、画面やログに選んだ理由を出したくなったら公開する値を足す変更が要る。契約をやめた業者も過去の注文が参照するので表から消せず、新しい注文で選ばれない扱いを Shipping の中で決める必要がある。</>,
+        basis: <ChapterLink n={73} section="apply" />,
+      },
+      alternative: {
+        text: <>まだ1か所でしか使っていない判断は、今の場所でメソッドや定数として名前を付けておき、2か所目で使うときにモジュールに移す。送料・日数・業者名などをデータの種類ごとに6つのモジュールに分けた例では、ゆうパックを足すために6つのファイルを直すことになった。</>,
+        basis: <ChapterLink n={73} section="overuse" />,
+      },
+      criterion: {
+        text: <>その判断は契約・取引先・外部のサービスのようなアプリの外の事情で変わるか。その判断を知っているファイルはいくつあるか。一緒に変わる判断を同じモジュールに置けるか。隠した後、呼び出し側やテストが send や const_get で中身を取り出す必要がないか。</>,
+        basis: <ChapterLink n={73} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

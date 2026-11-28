@@ -6,11 +6,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 7-1 起動から要求の受け付けまで ---------- */
+/* ---------- 図 13-1 起動から要求の受け付けまで ---------- */
 function BootTimelineFigure() {
   return (
     <Svg
-      id="7-1"
+      id="13-1"
       w={780}
       h={240}
       label="bin/rails server を実行すると、起動時に1回だけ、config/boot.rb で Bundler を準備し（0.12 秒、読み込み済みのファイル228個）、config/application.rb で gem を読み込み（0.36 秒、1282個）、initialize! で設定と初期化処理を実行する（0.43 秒、1447個）。その後 Puma が要求を待ち、要求が届くたびに Rails を呼ぶ。この部分は要求ごとに繰り返す"
@@ -49,7 +49,7 @@ function BootTimelineFigure() {
   )
 }
 
-/* ---------- 図 7-2 Gemfile から require まで ---------- */
+/* ---------- 図 13-2 Gemfile から require まで ---------- */
 function BundlerFigure() {
   const steps = [
     { y: 14, lines: ['Gemfile', 'gem "rails"・gem "puma" など 16 個'], fill: 'box4' as const },
@@ -60,7 +60,7 @@ function BundlerFigure() {
   const labels = ['bundle install（依存する gem を含めてバージョンを決める）', 'bundler/setup・bundle exec', 'require "rack"']
   return (
     <Svg
-      id="7-2"
+      id="13-2"
       w={780}
       h={346}
       label="Gemfile にはアプリケーションが使う gem を書く。bundle install が依存する gem も含めてバージョンを決め、Gemfile.lock に書く。デモでは90個。bundler/setup または bundle exec は、Gemfile.lock の gem の lib ディレクトリを $LOAD_PATH に加える。require rack は $LOAD_PATH から rack.rb を探して実行する。Gemfile.lock に無い gem は $LOAD_PATH に入らないので、require すると LoadError になる"
@@ -103,7 +103,7 @@ function BundlerFigure() {
   )
 }
 
-/* ---------- 図 7-3 環境ごとに使われる設定ファイル ---------- */
+/* ---------- 図 13-3 環境ごとに使われる設定ファイル ---------- */
 function EnvFilesFigure() {
   const envs = [
     { name: 'development', file: 'development.rb', values: ['enable_reloading: true', 'eager_load: false'] },
@@ -113,7 +113,7 @@ function EnvFilesFigure() {
   const cx = (i: number) => 150 + i * 210
   return (
     <Svg
-      id="7-3"
+      id="13-3"
       w={780}
       h={316}
       label="config/application.rb と config/initializers のファイルは、development、test、production のどの環境でも読み込まれる。config/environments の中では、RAILS_ENV などで選んだ環境の名前のファイルだけが読み込まれ、application.rb の設定より優先される。デモでは、development は enable_reloading が true で eager_load が false、test はどちらも false、production は enable_reloading が false で eager_load が true"
@@ -153,7 +153,7 @@ function EnvFilesFigure() {
   )
 }
 
-/* ---------- 図 7-4 起動時のファイルの読み込み順 ---------- */
+/* ---------- 図 13-4 起動時のファイルの読み込み順 ---------- */
 function BootFilesFigure() {
   const steps: { file: string; what: string; fill?: 'box' | 'box4' | 'box5' }[] = [
     { file: 'config.ru', what: 'Puma が Rack::Builder で評価する', fill: 'box4' },
@@ -171,7 +171,7 @@ function BootFilesFigure() {
   const gap = 8
   return (
     <Svg
-      id="7-4"
+      id="13-4"
       w={760}
       h={top + steps.length * (rowH + gap) + 20}
       label="Puma が config.ru を評価すると、config/environment.rb、config/application.rb、config/boot.rb の順に require される。boot.rb で Bundler と Bootsnap を準備した後、application.rb に戻り、各フレームワークの Railtie を require し、Bundler.require で gem を読み込み、Application クラスを定義する。environment.rb に戻って Rails.application.initialize! を実行し、最後に config.ru の run で Rails.application を Rack アプリとして登録する。bin/rails server の場合は、先に config/boot.rb と config/application.rb を読み込んでから config.ru を評価する"
@@ -204,11 +204,11 @@ function BootFilesFigure() {
   )
 }
 
-/* ---------- 図 7-5 Railtie・Engine・Application ---------- */
+/* ---------- 図 13-5 Railtie・Engine・Application ---------- */
 function RailtieFigure() {
   return (
     <Svg
-      id="7-5"
+      id="13-5"
       w={760}
       h={330}
       label="Rails::Railtie を Rails::Engine が継承し、Rails::Engine を Rails::Application が継承する。アプリケーションの Demo::Application は Rails::Application を継承する。Railtie を直接継承するものとして ActiveRecord::Railtie、ActionController::Railtie、ActiveJob::Railtie などがある。Engine を継承するものとして ActiveStorage::Engine、ActionCable::Engine、ActionView::Railtie がある。それぞれのクラスはインスタンスを1つだけ持ち、すべてのインスタンスの config は同じ設定の保存場所を共有する"
@@ -267,7 +267,7 @@ function RailtieFigure() {
   )
 }
 
-/* ---------- 図 7-6 initialize! で実行される初期化処理 ---------- */
+/* ---------- 図 13-6 initialize! で実行される初期化処理 ---------- */
 function InitTimelineFigure() {
   const phases: { from: number; to: number; title: string; items: string[]; fill: 'box' | 'box2' | 'box4' | 'box5' }[] = [
     { from: 0, to: 13, title: '環境別の設定', items: ['deprecator の登録', 'load_environment_config', '→ config/environments/'], fill: 'box4' },
@@ -282,7 +282,7 @@ function InitTimelineFigure() {
   const bw = 184
   return (
     <Svg
-      id="7-6"
+      id="13-6"
       w={800}
       h={260}
       label="デモのアプリケーションでは initialize! が184個の初期化処理を実行した。0番から13番は環境別の設定で、load_environment_config が config/environments の設定ファイルを読み込む。14番から41番は Bootstrap で、ロガーやキャッシュ、読み込みパスを設定し、bootstrap_hook で終わる。42番から169番は各 Railtie と Engine の初期化処理で、136番目にアプリケーションの load_config_initializers が config/initializers のファイルを読み込む。170番から183番は Finisher で、ミドルウェアの組み立て、eager_load!、after_initialize を実行する finisher_hook などがある"
@@ -324,11 +324,11 @@ function InitTimelineFigure() {
   )
 }
 
-/* ---------- 図 7-7 on_load のブロックが実行される時点 ---------- */
+/* ---------- 図 13-7 on_load のブロックが実行される時点 ---------- */
 function OnLoadFigure() {
   return (
     <Svg
-      id="7-7"
+      id="13-7"
       w={760}
       h={270}
       label="development と production で、on_load(:active_record) のブロックが実行される時点を比べた図。どちらも config/initializers の中で on_load によりブロックを登録する。development では initialize! と after_initialize が終わった後、アプリのコードが Article を初めて参照したときに ActiveRecord::Base が読み込まれ、その最後の run_load_hooks でブロックが実行される。production では initialize! の途中の eager_load! で ActiveRecord::Base が読み込まれるため、ブロックは after_initialize より前に実行される"
@@ -696,10 +696,10 @@ report("initialize!（初期化）")
           <p>
             config/boot.rb では、Bundler という gem が、使う gem の一覧を確かめて読み込みの準備をします。config/application.rb では、Rails 本体と Gemfile に書いた gem
             のファイルを読み込みます。読み込んだファイルが約1000個増えた、いちばん大きな段階です。<code>Rails.application.initialize!</code>{' '}
-            は読み込んだ機能を設定に沿って準備するメソッドで、環境ごとの設定ファイルや初期化ファイルもここで読み込まれます（図 7-1）。<code>bin/rails server</code>{' '}
+            は読み込んだ機能を設定に沿って準備するメソッドで、環境ごとの設定ファイルや初期化ファイルもここで読み込まれます（図 13-1）。<code>bin/rails server</code>{' '}
             はこの3つの段階の後に Puma を起動して要求を待ちます。次の節では、最初の2つの段階に関わる gem と Bundler を見ます。
           </p>
-          <Figure n="7-1" title="起動から要求の受け付けまで" caption="上の2つの実行結果をもとにした図。秒と個数は開発環境での実測値。">
+          <Figure n="13-1" title="起動から要求の受け付けまで" caption="上の2つの実行結果をもとにした図。秒と個数は開発環境での実測値。">
             <BootTimelineFigure />
           </Figure>
         </>
@@ -711,8 +711,7 @@ report("initialize!（初期化）")
       body: (
         <>
           <p>
-            gem は Ruby のライブラリを名前とバージョンを付けて配布する形式です。gem のプログラムは gem のディレクトリの中の lib ディレクトリに置かれます
-            <Ref n={15} />。デモの環境では、Rack の 3.2.8 は <code>/work/gems/gems/rack-3.2.8</code> にインストールされています。
+            Rails は起動時に、Gemfile.lock で選んだ gem を読み込めるようにします。デモで使う Rack 3.2.8 の場所は <code>/work/gems/gems/rack-3.2.8</code> です。Gemfile の指定と Gemfile.lock の管理は <ChapterLink n={99} /> で扱います。
           </p>
           <p>
             Ruby のプログラムからライブラリを使うには <code>require</code> を呼びます。<code>require "rack"</code> は読み込みパス（<code>$LOAD_PATH</code>
@@ -774,8 +773,7 @@ gem "puma", ">= 5.0"
 `}
           />
           <p>
-            <code>bundle install</code> を実行すると、Bundler は Gemfile の gem と、それらが依存する gem のバージョンを決めて、Gemfile.lock に書き込みます。<code>~&gt; 8.1.4</code>{' '}
-            のような書き方は、使ってよいバージョンの範囲の指定です。
+            Bundler は Gemfile の条件を満たすバージョンを選び、Gemfile.lock に記録します。字下げを見ると、どの gem が別の gem を必要とするかが分かります。
           </p>
           <Code
             lang="text"
@@ -818,12 +816,12 @@ You can add csv to your Gemfile or gemspec to fix this error.
 `}
           />
           <p>
-            このように Bundler は、使える gem を Gemfile.lock に書かれた gem とバージョンに限ります（図 7-2）。Gemfile.lock を Git などで共有しておけば、開発者の手元でも本番のサーバーでも同じバージョンの gem が使われます。Rails
+            このように Bundler は、使える gem を Gemfile.lock に書かれた gem とバージョンに限ります（図 13-2）。Gemfile.lock を Git などで共有しておけば、開発者の手元でも本番のサーバーでも同じバージョンの gem が使われます。Rails
             では、config/boot.rb の <code>require "bundler/setup"</code> がこの準備をし、config/application.rb の <code>Bundler.require(*Rails.groups)</code> が Gemfile の gem
             をまとめて <code>require</code> します
             <Ref n={16} />。そのため、アプリケーションのコードに <code>require "sidekiq"</code> のように書かなくても、Gemfile に書いた gem のクラスを使えます。どのファイルがどの順に読み込まれるかは「起動時に読み込まれるファイル」の節で見ます。
           </p>
-          <Figure n="7-2" title="Gemfile から require まで" caption="デモのアプリケーション（Bundler 4.0.20）での数をもとにした図。">
+          <Figure n="13-2" title="Gemfile から require まで" caption="デモのアプリケーション（Bundler 4.0.20）での数をもとにした図。">
             <BundlerFigure />
           </Figure>
         </>
@@ -953,9 +951,9 @@ Rails.application.configure do
           />
           <p>
             「bin/rails server を実行したときに起きること」の節の basics07.rb は、test と production で runner を実行したときにも <code>[basics07] … （環境: test）</code>、
-            <code>（環境: production）</code> と表示され、どの環境でも実行されることを確かめられました（図 7-3）。
+            <code>（環境: production）</code> と表示され、どの環境でも実行されることを確かめられました（図 13-3）。
           </p>
-          <Figure n="7-3" title="環境ごとに使われる設定ファイル" caption="デモのアプリケーション（Rails 8.1.4.1）での値。test の eager_load は、環境変数 CI があると true になる。">
+          <Figure n="13-3" title="環境ごとに使われる設定ファイル" caption="デモのアプリケーション（Rails 8.1.4.1）での値。test の eager_load は、環境変数 CI があると true になる。">
             <EnvFilesFigure />
           </Figure>
           <p>
@@ -970,13 +968,13 @@ Rails.application.configure do
       body: (
         <>
           <p>
-            本番環境で <code>bundle exec puma -C config/puma.rb</code> のように Puma を直接起動すると、Puma は設定ファイルを読んだ後に <code>config.ru</code> を評価（Ruby のコードとして実行）します（<ChapterLink n={6} />
-            ）。そこから Rails のファイルが図 7-4 の順に読み込まれます。
+            このように Puma を直接起動すると、Puma は設定ファイルを読んだ後に <code>config.ru</code> を評価（Ruby のコードとして実行）します（<ChapterLink n={6} />
+            ）。そこから Rails のファイルが図 13-4 の順に読み込まれます。
           </p>
-          <Figure n="7-4" title="起動時のファイルの読み込み順" caption="Rails 8.1.4.1 の rails new が生成するファイルに沿った順。1と9は Puma が評価する config.ru の中、8が初期化処理の本体。">
+          <Figure n="13-4" title="起動時のファイルの読み込み順" caption="Rails 8.1.4.1 の rails new が生成するファイルに沿った順。1と9は Puma が評価する config.ru の中、8が初期化処理の本体。">
             <BootFilesFigure />
           </Figure>
-          <p>生成されるファイルの中身は次のとおりです（コメントを除く）。図 7-4 の番号と見比べながら、config.ru から順に読みます。</p>
+          <p>生成されるファイルの中身は次のとおりです（コメントを除く）。図 13-4 の番号と見比べながら、config.ru から順に読みます。</p>
           <Code
             lang="ruby"
             title="config.ru"
@@ -1036,7 +1034,7 @@ end
           <p>
             <code>require_relative</code> は、その行を書いたファイルの場所を起点にした相対パスでファイルを読み込むメソッドです。<code>require</code>{' '}
             と同じく、読み込み済みのファイルはもう一度実行しません
-            <Ref n={14} />。config.ru の1行目が environment.rb を、environment.rb の1行目が application.rb を、application.rb の1行目が boot.rb を読み込みます。3つのファイルは1行目で次のファイルを読み込み、その読み込みが終わってから2行目に進みます。そのため、2行目以降が実行される順は boot.rb、application.rb、environment.rb、config.ru です。図 7-4 の4番から9番がこの順に当たります。
+            <Ref n={14} />。config.ru の1行目が environment.rb を、environment.rb の1行目が application.rb を、application.rb の1行目が boot.rb を読み込みます。3つのファイルは1行目で次のファイルを読み込み、その読み込みが終わってから2行目に進みます。そのため、2行目以降が実行される順は boot.rb、application.rb、environment.rb、config.ru です。図 13-4 の4番から9番がこの順に当たります。
           </p>
           <p>
             boot.rb の1行目は、環境変数 BUNDLE_GEMFILE が設定されていないときに、アプリケーションの Gemfile の絶対パスを入れます（<code>||=</code> は、左辺が nil か false のときだけ代入する書き方です）。Bundler は、この環境変数に書かれたパスの Gemfile を使います。
@@ -1045,7 +1043,7 @@ end
             <code>bundler/setup</code> は Gemfile.lock に書かれたバージョンの gem だけが <code>require</code> できるように読み込みパス（<code>$LOAD_PATH</code>）を設定し、<code>bootsnap/setup</code>{' '}
             はファイルの検索結果やコンパイル結果をキャッシュ（一度求めた結果を保存して、次から使い回すこと）して起動を速くします。rails new の既定の application.rb には <code>require "rails/all"</code> と書かれ、ActiveRecord・ActiveStorage・ActionController・ActionView・ActionMailer・ActiveJob・ActionCable
             などの Railtie や Engine を定義するファイルを順に <code>require</code> します
-            <Ref n={2} />。Railtie と Engine は、フレームワークや gem が起動時の処理と設定を Rails に登録するためのクラスで、次の節で説明します。デモのアプリケーションは ActionMailbox・ActionText・Minitest を外して作ったので（<ChapterLink n={1} section="versions" />
+            <Ref n={2} />。Railtie と Engine は、フレームワークや gem が起動時の処理と設定を Rails に登録するためのクラスで、次の節で説明します。デモのアプリケーションは Rails のフレームワークの一部を外して作ったので（<ChapterLink n={1} section="versions" />
             ）、使うフレームワークのファイルを1つずつ <code>require</code> しています。<code>Bundler.require(*Rails.groups)</code> は、Gemfile のうち default グループと現在の環境のグループの gem を <code>require</code> します。sidekiq のような gem
             が自分の Railtie を定義するのはこの時点です。
           </p>
@@ -1080,7 +1078,7 @@ gem "rubocop", require: false   # Bundler.require では require されない
           <p>
             <code>bin/rails server</code> で起動した場合は、まず <code>bin/rails</code> が <code>config/boot.rb</code> を読み込み、サーバーのコマンドが Rackup::Server（rackup gem の、Rack アプリケーションを Web サーバーで起動するクラス）のサブクラスである{' '}
             <code>Rails::Server</code> を作り、<code>config/application.rb</code> を <code>require</code> してからサーバーを起動します。サーバーが <code>config.ru</code>{' '}
-            を評価した後の流れは図 7-4 の2番以降と同じです
+            を評価した後の流れは図 13-4 の2番以降と同じです
             <Ref n={1} />。
           </p>
         </>
@@ -1144,7 +1142,7 @@ end
             の初期化メソッドをアプリケーションのコードから呼ぶ行は要りません。config/initializers のファイルに書いた場合にこの例で反映されない理由は、「設定ファイルが読まれる時点」の節で説明します。Engine の例として、Rails ガイドは認証の機能を提供する Devise を挙げています。Engine は gem の中に app/controllers や app/views
             を持てるので、gem の中のコントローラーやビューを、アプリケーションのものと同じように使えます。
           </p>
-          <Figure n="7-5" title="Railtie・Engine・Application のクラス階層" caption="デモのアプリケーション（rails/all のうち ActionMailbox・ActionText などを除いたものと propshaft を読み込む構成）で読み込まれた Railtie の一部。ActionView::Railtie は名前に反して Engine のサブクラスである。">
+          <Figure n="13-5" title="Railtie・Engine・Application のクラス階層" caption="デモのアプリケーション（rails/all のうち ActionMailbox・ActionText などを除いたものと propshaft を読み込む構成）で読み込まれた Railtie の一部。ActionView::Railtie は名前に反して Engine のサブクラスである。">
             <RailtieFigure />
           </Figure>
           <p>
@@ -1567,7 +1565,7 @@ list.size # => 184
 `}
           />
           <p>
-            1行目の <code>tsort_each.to_a</code> は、並べ替えた後の初期化処理を配列にします。コメントの番号はこの配列の添字（0 から始まる位置）で、小さいほど先に実行されます。図 7-6
+            1行目の <code>tsort_each.to_a</code> は、並べ替えた後の初期化処理を配列にします。コメントの番号はこの配列の添字（0 から始まる位置）で、小さいほど先に実行されます。図 13-6
             は、この184個を上の帯に左から右へ並べ、4つの区間に分けたものです。下の4つの箱が各区間の主な処理で、帯の 136 の位置の矢印が、config/initializers のファイルを読み込む{' '}
             <code>load_config_initializers</code> です。
           </p>
@@ -1575,7 +1573,7 @@ list.size # => 184
             自分のアプリケーションでは、<code>bin/rails initializers</code> で同じ順の一覧を表示できます。1行が「初期化処理を持つクラス.初期化処理の名前」の形で、実行される順に並びます。gem
             の初期化処理の行が、アプリケーションのクラスの <code>load_config_initializers</code> の行より上にあれば、その処理は config/initializers のファイルより前に実行されます。
           </p>
-          <Figure n="7-6" title="initialize! で実行される初期化処理" caption="デモのアプリケーション（Rails 8.1.4.1）で tsort_each の順に並べた184個を、4つの区間に分けた図。区間の名前は本書によるもの。番号は読み込む gem によって変わる。">
+          <Figure n="13-6" title="initialize! で実行される初期化処理" caption="デモのアプリケーション（Rails 8.1.4.1）で tsort_each の順に並べた184個を、4つの区間に分けた図。区間の名前は本書によるもの。番号は読み込む gem によって変わる。">
             <InitTimelineFigure />
           </Figure>
           <Callout kind="v72">
@@ -1875,7 +1873,7 @@ Rails.application.config.after_initialize { puts "[after_initialize] AR::Base lo
 [script] after Article.first
 `}
           />
-          <Figure n="7-7" title="on_load のブロックが実行される時点" caption="上の実行結果を図にしたもの。development では最初にモデルを参照したとき、production では初期化中の一括読み込みのときに ActiveRecord::Base が読み込まれる。">
+          <Figure n="13-7" title="on_load のブロックが実行される時点" caption="上の実行結果を図にしたもの。development では最初にモデルを参照したとき、production では初期化中の一括読み込みのときに ActiveRecord::Base が読み込まれる。">
             <OnLoadFigure />
           </Figure>
           <p>
@@ -1913,7 +1911,7 @@ Rails.application.config.active_record.table_name_prefix = "app_"
           <p>
             次の図は、zz1_touch.rb がある場合（上の段）と無い場合（下の段）を、左から時間の順に並べたものです。中央の枠が 136 番の load_config_initializers です。set_configs のブロックは、上の段では枠の中で zz2_conf.rb より前に、下の段では枠の後に実行されます。
           </p>
-          <Figure title="ActiveRecord::Base を先に参照した場合の table_name_prefix" caption="上の実験の結果を図にしたもの。config/initializers のファイルは辞書順に読み込まれる。zz1_touch.rb が無い場合に ActiveRecord::Base が読み込まれる時点は、図 7-7 のとおり環境によって変わる。">
+          <Figure title="ActiveRecord::Base を先に参照した場合の table_name_prefix" caption="上の実験の結果を図にしたもの。config/initializers のファイルは辞書順に読み込まれる。zz1_touch.rb が無い場合に ActiveRecord::Base が読み込まれる時点は、図 13-7 のとおり環境によって変わる。">
             <EarlyTouchFigure />
           </Figure>
           <p>
@@ -2001,7 +1999,7 @@ Rails.application.config.active_record.table_name_prefix = "app_"
             <li>Puma のクラスタモード（アプリケーションのプロセスを複数動かす設定）で親プロセスが読み込んでから fork（実行中のプロセスを複製して子プロセスを作ること）すると、読み込んだコードのメモリーを子プロセスと共有できる（<ChapterLink n={23} />）。</li>
           </ul>
           <p>
-            2つ目の利点はエラーの調査で使います。手元の development では起動できるのに、production や CI（図 7-3 のとおり、環境変数 CI があると test でも eager_load が true になります）でだけ起動時に例外が出ることがあります。そのときは、一括読み込みで初めて読み込まれたファイルが原因かを疑います。例外のバックトレースに <code>railties/lib/rails/application/finisher.rb</code>{' '}
+            2つ目の利点はエラーの調査で使います。手元の development では起動できるのに、production や CI（図 13-3 のとおり、環境変数 CI があると test でも eager_load が true になります）でだけ起動時に例外が出ることがあります。そのときは、一括読み込みで初めて読み込まれたファイルが原因かを疑います。例外のバックトレースに <code>railties/lib/rails/application/finisher.rb</code>{' '}
             の 79 行目前後（上の引用の <code>eager_load!</code> のブロックの中）が含まれていれば、この初期化処理の中で起きた例外です。
           </p>
           <p>

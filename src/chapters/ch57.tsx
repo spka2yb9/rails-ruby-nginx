@@ -1,14 +1,15 @@
+import { principleSection } from './principle-judgment'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
 import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 38-1 クーポンのルールエンジンの構成 ---------- */
+/* ---------- 図 55-1 クーポンのルールエンジンの構成 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="38-1"
+      id="55-1"
       w={780}
       h={470}
       label="カートの画面ではクーポンのコードを複数入力できる。CheckoutPricing がコードから coupons テーブルの行を読み、RuleEngine::Evaluator に渡す。Evaluator は priority の小さい順にルールを評価し、stop のルールを適用したら止める。Rule は Condition で条件を調べ、満たせば Actions の割引を適用する。Condition は Operators で比べ、Actions は Facts の割引と送料を書き換える。coupons テーブルの rules 列には JSON で、OFF500（priority 10・stop あり・3,000円以上で500円引き）、FREESHIP（priority 10・stop あり・2,000円以上で送料無料）、SALE10（priority 5・stop なし・5,000円以上で10%引き）が入っている。SALE10 が先に評価され、stop がないので OFF500 も適用され、割引が二重にかかる"
@@ -19,7 +20,7 @@ function SceneFigure() {
       <Arrow x1={130} y1={138} x2={130} y2={188} />
 
       <rect x={10} y={166} width={490} height={292} rx={8} fill="none" stroke="var(--fig-line)" strokeDasharray="5 4" />
-      <T x={22} y={180} fs={11} tone="muted">
+      <T x={490} y={180} fs={11} tone="muted" anchor="end">
         app/services/rule_engine/（6ファイル）
       </T>
       <Box x={20} y={194} w={220} h={62} lines={['RuleEngine::Evaluator', 'priority の小さい順に評価し、', 'stop のルールで止める']} fs={12} fill="box5" subTone="danger" />
@@ -63,7 +64,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 38-2 ルールを評価する流れ ---------- */
+/* ---------- 図 55-2 ルールを評価する流れ ---------- */
 function EvaluationFigure() {
   const cols: { head: string; sort: string; steps: { lines: string[]; dashed?: boolean; danger?: boolean }[]; result: string[]; danger: boolean }[] = [
     {
@@ -89,7 +90,7 @@ function EvaluationFigure() {
   ]
   return (
     <Svg
-      id="38-2"
+      id="55-2"
       w={760}
       h={400}
       label="小計8,000円・送料600円のカートに OFF500 と SALE10 を入力したときの評価の流れ。SALE10 の priority が 5 のときは SALE10、OFF500 の順に並ぶ。SALE10 は条件を満たして800円引き、stop がないので次へ進み、OFF500 も条件を満たして500円引きを加え、stop で止まる。割引は1,300円で二重になり、支払いは7,300円。priority が 20 のときは OFF500、SALE10 の順に並び、OFF500 の500円引きの後に stop で止まり、SALE10 は評価しない。割引は500円、支払いは8,100円。コードもカートも入力も同じで、違うのは JSON の priority の値だけ"
@@ -123,7 +124,7 @@ function EvaluationFigure() {
   )
 }
 
-/* ---------- 図 38-3 割引の額に答えるために読む範囲 ---------- */
+/* ---------- 図 55-3 割引の額に答えるために読む範囲 ---------- */
 function ReadingScopeFigure() {
   const before: { file: string; why: string; kind?: 'data' | 'rule' }[] = [
     { file: 'checkout_pricing.rb', why: 'コードを複数受け取る' },
@@ -144,7 +145,7 @@ function ReadingScopeFigure() {
   const rowH = 34
   return (
     <Svg
-      id="38-3"
+      id="55-3"
       w={780}
       h={430}
       label={`「OFF500 と SALE10 を両方入力したら割引はいくらか」に答えるために読む範囲。適用前は ${before.map((b) => `${b.file}（${b.why}）`).join('、')} を読む。7つのファイルと JSON の3行と並べ替えの規則が必要。適用後は ${after.map((b) => `${b.file}（${b.why}）`).join('、')} を読む。2つのファイルと列の値だけで答えられ、そもそも2つのコードは受け取らない`}
@@ -197,11 +198,11 @@ function ReadingScopeFigure() {
   )
 }
 
-/* ---------- 図 38-5 直す前と後の構造 ---------- */
+/* ---------- 図 55-5 直す前と後の構造 ---------- */
 function BeforeAfterFigure() {
   return (
     <Svg
-      id="38-5"
+      id="55-5"
       w={780}
       h={360}
       label="適用前は、CheckoutPricing がコードの配列を受け取り、RuleEngine の6つのファイル（Evaluator・Rule・Condition・Operators・Facts・Actions）が priority で並べ替えて stop で止めながら評価し、coupons.rules の JSON（priority・stop・conditions・actions）を読む。1注文に1枚かどうかは priority と stop の値の組み合わせで決まる。適用後は、CheckoutPricing がコードを1つ受け取り、Coupon#quote が最低金額に届かなければ割引なしとし、case kind で3種類を計算し、知らない種類なら ArgumentError を投げる。coupons テーブルは kind・value・min_subtotal の列を持ち、保存時に検証する。2枚目のコードを受け取る引数がないので、割引は必ず1つ以下になる"
@@ -259,7 +260,7 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 38-6 複雑さを数えた結果 ---------- */
+/* ---------- 図 55-6 複雑さを数えた結果 ---------- */
 const metrics: { label: string; sub: string; before: number; after: number }[] = [
   { label: '読むファイル', sub: 'Ruby のファイル', before: 9, after: 4 },
   { label: '行数', sub: '空行とコメントを除く', before: 128, after: 28 },
@@ -274,7 +275,7 @@ function MetricsFigure() {
   const rowH = 56
   return (
     <Svg
-      id="38-6"
+      id="55-6"
       w={760}
       h={390}
       label={`script/complexity.rb などで数えた、適用前と適用後の比較。${metrics.map((m) => `${m.label}（${m.sub}）は適用前 ${m.before}、適用後 ${m.after}`).join('。')}。分岐の数はほとんど変わらず、違いは読むファイルとクラスの数、行数、結果を左右するデータの項目に出る`}
@@ -324,13 +325,13 @@ function MetricsFigure() {
   )
 }
 
-/* ---------- 図 38-7 当てはめすぎの判断 ---------- */
+/* ---------- 図 55-7 当てはめすぎの判断 ---------- */
 function JudgeFigure() {
   const ox = 110
   const oy = 360
   return (
     <Svg
-      id="38-7"
+      id="55-7"
       w={780}
       h={440}
       label="横軸は割引の種類と条件の数（左が少ない、右が多い）、縦軸は誰がどのくらいの頻度で変えるか（下が開発者がリリースのときに変える、上が運営担当が毎週変える）。左下は列と case 文で、この章の適用後のコードと3種類のクーポンの場面がここに入る。右下は種類ごとのクラスに分ける（Strategy / Policy）で、7種類と5つの条件に育った GrownCoupon はここに移す時期。左上は金額・率・最低金額・期間などの値だけを管理画面で変える。右上は範囲を絞ったルールの仕組みで、ルールの数を制限し、テストと評価の記録を用意する。最初のルールエンジンは3種類しかないのに右上の道具を選んでいた"
@@ -689,9 +690,9 @@ Cart = Data.define(:subtotal, :shipping_fee)
 `}
           />
           <p>
-            図 38-1 はここまでのクラスとテーブルの関係です。カートの画面から CheckoutPricing、Evaluator、Rule、Condition へと処理が進み、割引は Actions が Facts を書き換えて積み上げます。クーポンごとの priority と stop の値は、右側の coupons テーブルの JSON にあります。
+            図 55-1 はここまでのクラスとテーブルの関係です。カートの画面から CheckoutPricing、Evaluator、Rule、Condition へと処理が進み、割引は Actions が Facts を書き換えて積み上げます。クーポンごとの priority と stop の値は、右側の coupons テーブルの JSON にあります。
           </p>
-          <Figure n="38-1" title="クーポンのルールエンジンの構成" caption="破線の枠は app/services/rule_engine/ の6つのファイル。破線の矢印はテーブルを読むことを表す。赤い文字は問題が起きる箇所。">
+          <Figure n="55-1" title="クーポンのルールエンジンの構成" caption="破線の枠は app/services/rule_engine/ の6つのファイル。破線の矢印はテーブルを読むことを表す。赤い文字は問題が起きる箇所。">
             <SceneFigure />
           </Figure>
           <h3>運営担当が SALE10 を登録した</h3>
@@ -794,9 +795,9 @@ SALE10 の priority=20: 適用 ["OFF500"] 割引 500円 支払い 8100円
 `}
           />
           <p>
-            コードもカートも入力も同じなのに、SALE10 の priority の値で支払いが 7,300円にも 8,100円にもなりました。priority が 5 のときは SALE10 が先に評価されます。SALE10 には stop がないので評価が続き、OFF500 の割引も加わります。20 のときは OFF500 が先に評価され、OFF500 の stop で評価が止まります。図 38-2 はこの2つの場合の評価の流れを並べたものです。
+            コードもカートも入力も同じなのに、SALE10 の priority の値で支払いが 7,300円にも 8,100円にもなりました。priority が 5 のときは SALE10 が先に評価されます。SALE10 には stop がないので評価が続き、OFF500 の割引も加わります。20 のときは OFF500 が先に評価され、OFF500 の stop で評価が止まります。図 55-2 はこの2つの場合の評価の流れを並べたものです。
           </p>
-          <Figure n="38-2" title="ルールを評価する流れ（priority が 5 のときと 20 のとき）" caption="小計 8,000円・送料 600円のカートに OFF500 と SALE10 を入力した場合。破線の箱は評価されないルール。">
+          <Figure n="55-2" title="ルールを評価する流れ（priority が 5 のときと 20 のとき）" caption="小計 8,000円・送料 600円のカートに OFF500 と SALE10 を入力した場合。破線の箱は評価されないルール。">
             <EvaluationFigure />
           </Figure>
           <p>
@@ -863,14 +864,14 @@ SALE10 の priority=20: 適用 ["OFF500"] 割引 500円 支払い 8100円
           </p>
           <h3>理解するために読む範囲</h3>
           <p>
-            コードの単純さは、ある問いに答えるために読む範囲の広さで比べられます。図 38-3 は、「OFF500 と SALE10 を両方入力したら、割引はいくらか」に答えるために読む範囲を、ルールエンジンと、次の節で書く case 文とで比べたものです。ルールエンジンでは7つのファイルに加えて、JSON の値と、コードに書かれていない並べ替えの規則まで読む必要があります。
+            コードの単純さは、ある問いに答えるために読む範囲の広さで比べられます。図 55-3 は、「OFF500 と SALE10 を両方入力したら、割引はいくらか」に答えるために読む範囲を、ルールエンジンと、次の節で書く case 文とで比べたものです。ルールエンジンでは7つのファイルに加えて、JSON の値と、コードに書かれていない並べ替えの規則まで読む必要があります。
           </p>
-          <Figure n="38-3" title="割引の額に答えるために読む範囲" caption="緑の箱はデータ、破線の箱はコードに書かれていない規則。">
+          <Figure n="55-3" title="割引の額に答えるために読む範囲" caption="緑の箱はデータ、破線の箱はコードに書かれていない規則。">
             <ReadingScopeFigure />
           </Figure>
           <h3>似た原則との違い</h3>
-          <p>KISS は、ほかの原則と同じ場面で使われることがよくあります。図 38-4 は、それぞれの原則が何を問うかを、この章のクーポンの例で比べたものです。</p>
-          <Figure n="38-4" title="KISS と似た原則の違い" caption="どの原則も判断の基準で、互いに対立することがある。">
+          <p>KISS は、ほかの原則と同じ場面で使われることがよくあります。図 55-4 は、それぞれの原則が何を問うかを、この章のクーポンの例で比べたものです。</p>
+          <Figure n="55-4" title="KISS と似た原則の違い" caption="どの原則も判断の基準で、互いに対立することがある。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1100,7 +1101,7 @@ end
           />
           <ul>
             <li>
-              <code>enum :kind, {'{ … }'}, validate: true</code> は、kind 列が取る値を3つに決めます。値を文字列にしているので、DB の列を見ても種類がわかります。validate: true を付けると、知らない値を代入したときに例外を投げる代わりに、保存の前のバリデーションで誤りにします<Ref n={8} />。
+              <code>enum :kind, {'{ … }'}, validate: true</code> は、kind 列が取る値を3つに決めます。値を文字列にしているので、DB の列を見ても種類がわかります。validate: true を付けると、一覧にない値も代入でき、valid? や通常の保存時のバリデーションで誤りになります。指定を省くと、nil や空文字などを除き、未定義の値を代入した時点で ArgumentError になります<Ref n={8} />。
             </li>
             <li>金額と率は1以上、率は100以下、最低金額は0以上と決め、管理画面で誤った値を保存できないようにします。</li>
             <li>quote は最低金額に届かなければ割引なしを返し、届いていれば種類ごとの式で計算します。定額引きは小計を超えて引かないように <code>[value, cart.subtotal].min</code> とします。</li>
@@ -1257,9 +1258,9 @@ end
           </p>
           <h3>直す前と後の比較</h3>
           <p>
-            図 38-5 は直す前と後の構造を比べたものです。適用前は「1注文に1枚」がデータの組み合わせで決まっていました。適用後は CheckoutPricing の引数が1つなので、2枚目のコードを受け取る場所がありません。種類ごとの計算は Coupon#quote の case 文の1行ずつに書かれていて、1つの種類の変更が別の種類の結果を変えることはありません。
+            図 55-5 は直す前と後の構造を比べたものです。適用前は「1注文に1枚」がデータの組み合わせで決まっていました。適用後は CheckoutPricing の引数が1つなので、2枚目のコードを受け取る場所がありません。種類ごとの計算は Coupon#quote の case 文の1行ずつに書かれていて、1つの種類の変更が別の種類の結果を変えることはありません。
           </p>
-          <Figure n="38-5" title="直す前と後の構造" caption="実線の矢印は呼び出し、破線の矢印はテーブルを読むことを表す。">
+          <Figure n="55-5" title="直す前と後の構造" caption="実線の矢印は呼び出し、破線の矢印はテーブルを読むことを表す。">
             <BeforeAfterFigure />
           </Figure>
           <h3>複雑さを数える</h3>
@@ -1335,9 +1336,9 @@ app/models/cart.rb                          1 行  分岐  0
 `}
           />
           <p>
-            図 38-6 はこの結果に「結果を左右するデータの項目」を加えて並べたものです。データの項目は、適用前は JSON の priority・stop・fact・op・value（条件）・type・value（割引）の7つ、適用後は kind・value・min_subtotal の3つです。
+            図 55-6 はこの結果に「結果を左右するデータの項目」を加えて並べたものです。データの項目は、適用前は JSON の priority・stop・fact・op・value（条件）・type・value（割引）の7つ、適用後は kind・value・min_subtotal の3つです。
           </p>
-          <Figure n="38-6" title="複雑さを数えた結果（適用前と適用後）" caption="読むファイル・行数・分岐・クラスとモジュールは script/complexity.rb で数えた。データの項目は JSON のキーとテーブルの列を数えた。">
+          <Figure n="55-6" title="複雑さを数えた結果（適用前と適用後）" caption="読むファイル・行数・分岐・クラスとモジュールは script/complexity.rb で数えた。データの項目は JSON のキーとテーブルの列を数えた。">
             <MetricsFigure />
           </Figure>
           <p>
@@ -1499,9 +1500,9 @@ script/overuse/grown_coupon.rb             32 行  分岐 19
           </p>
           <h3>判断の目安</h3>
           <p>
-            図 38-7 は割引の種類と条件の数を横軸に、誰がどのくらいの頻度で変えるかを縦軸にとって、向いている作り方を4つに分けたものです。この章の場面は左下で、列と case 文が向いています。最初のルールエンジンは3種類しかないのに、右上で使う道具を選んでいました。運営担当が毎週ルールを足す必要が実際に生じたときでも、Fowler の勧めのとおり、ルールの数を制限し、範囲を絞った仕組みから始めます<Ref n={1} />。
+            図 55-7 は割引の種類と条件の数を横軸に、誰がどのくらいの頻度で変えるかを縦軸にとって、向いている作り方を4つに分けたものです。この章の場面は左下で、列と case 文が向いています。最初のルールエンジンは3種類しかないのに、右上で使う道具を選んでいました。運営担当が毎週ルールを足す必要が実際に生じたときでも、Fowler の勧めのとおり、ルールの数を制限し、範囲を絞った仕組みから始めます<Ref n={1} />。
           </p>
-          <Figure n="38-7" title="当てはめすぎの判断：種類の数と、変える人・頻度" caption="模式図。境目の数は決まっていないので、チームで決める。破線の箱は、導入するならテストと評価の記録を一緒に用意することを表す。">
+          <Figure n="55-7" title="当てはめすぎの判断：種類の数と、変える人・頻度" caption="模式図。境目の数は決まっていないので、チームで決める。破線の箱は、導入するならテストと評価の記録を一緒に用意することを表す。">
             <JudgeFigure />
           </Figure>
           <p>図の位置を決めるときは、次の問いを順に確かめます。</p>
@@ -1532,7 +1533,7 @@ script/overuse/grown_coupon.rb             32 行  分岐 19
           </ul>
           <Callout kind="v72">
             <p>
-              enum の validate オプションは Rails 7.1 で追加されたので<Ref n={10} />、Rails 7.2 でも同じように書けます。Rails 7.0 以前では、知らない値を代入すると ArgumentError になります。Data.define は Ruby 3.2 で追加されたクラスで<Ref n={14} />、Rails 7.2 が動く Ruby 3.1<Ref n={17} /> では使えません。Ruby 3.1 では、<code>Struct.new(:discount, :shipping_fee, keyword_init: true)</code> や通常のクラスで代わりに書きます。script/complexity.rb が使う Prism は、Ruby 3.3 から標準で入っています<Ref n={15} />。
+              enum の validate オプションは Rails 7.1 で追加されたので<Ref n={10} />、Rails 7.2 でも同じように書けます。Rails 7.0 では validate を選べず、空でない未定義の値を代入すると ArgumentError になります。Data.define は Ruby 3.2 で追加されたクラスで<Ref n={14} />、Rails 7.2 が動く Ruby 3.1<Ref n={17} /> では使えません。Ruby 3.1 では、<code>Struct.new(:discount, :shipping_fee, keyword_init: true)</code> や通常のクラスで代わりに書きます。script/complexity.rb が使う Prism は、Ruby 3.3 から標準で入っています<Ref n={15} />。
             </p>
           </Callout>
           <h3>Rails Doctrine と KISS</h3>
@@ -1580,6 +1581,29 @@ script/overuse/grown_coupon.rb             32 行  分岐 19
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          割引の種類が3つで、計算の種類を足すのが開発者のリリースのときだけなら、列と case 文で足ります。業務の決まりから来る検証は単純にするためでも省きません。種類ごとに使う列や計算が分かれてきたら、種類ごとのクラスに分けることを検討します。
+        </>
+      ),
+      benefit: {
+        text: <>ルールエンジンを列と case 文に置き換えると、行数が 128 から 28 に、クラスとモジュールが 14 から 4 に、結果を左右するデータの項目が7つから3つに減った。CheckoutPricing の引数が1つになり、2枚目のクーポンを受け取る場所がなくなった。</>,
+        basis: <ChapterLink n={57} section="apply" />,
+      },
+      cost: {
+        text: <>運営担当が JSON の条件を書き換えて割引を作ることはできなくなる。種類が7つ、共通の条件が5つに増えても case 文に足し続けた例では、quote の分岐が 19 になり、一部の種類でしか使わない列が4つ増えた。</>,
+        basis: <ChapterLink n={57} section="overuse" />,
+      },
+      alternative: {
+        text: <>種類ごとに使う値や計算が違ってきたら、種類ごとのクラス（Strategy・Policy）に分ける。値だけを変えるなら、金額・率・最低金額・期間を管理画面で変えられるようにする。運営担当が毎週ルールを足す必要が実際に生じたときは、ルールの数を制限した仕組みから始める。</>,
+        basis: <ChapterLink n={57} section="overuse" />,
+      },
+      criterion: {
+        text: <>今ある種類と条件の数、変えるのは誰か、1つの変更で開くファイルとテストの数を確かめる。分岐の数は 8 から 6 でほとんど変わらなかったので、1つの数字では比べない。率の上限のような検証を省いた例では、支払いがマイナスの 3,400円になった。</>,
+        basis: <ChapterLink n={57} section="apply" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

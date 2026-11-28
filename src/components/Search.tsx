@@ -3,6 +3,8 @@ import { search, type Hit, type IndexEntry } from '../utils/search'
 import { hrefFor } from '../utils/route'
 import { labelFor } from '../content/label'
 import { linuxGroups, linuxHref } from '../content/linux'
+import { courses, courseHref } from '../content/courses'
+import { mapHref, systemFlows } from '../content/system-map'
 
 const exercises: IndexEntry[] = linuxGroups.flatMap((group) => group.cases.map((c) => ({
   chapter: 'linux' as const,
@@ -13,8 +15,21 @@ const exercises: IndexEntry[] = linuxGroups.flatMap((group) => group.cases.map((
 })))
 
 function resultHref(entry: IndexEntry) {
+  if (entry.chapter === 'course') return courseHref(entry.sectionId)
+  if (entry.chapter === 'map') return mapHref(entry.sectionId)
   return entry.chapter === 'linux' ? linuxHref(entry.sectionId) : hrefFor(entry.chapter, entry.sectionId)
 }
+
+const guides: IndexEntry[] = [
+  ...courses.map((course): IndexEntry => ({
+    chapter: 'course', chapterTitle: '学習コース', sectionId: course.id, sectionTitle: course.title,
+    text: [course.purpose, course.audience, course.prerequisites, course.outcome, ...course.steps.map((step) => step.reason)].join(' '),
+  })),
+  ...systemFlows.map((flow): IndexEntry => ({
+    chapter: 'map', chapterTitle: 'システム全体図', sectionId: flow.id, sectionTitle: flow.title,
+    text: flow.steps.map(([, explanation]) => explanation).join(' '),
+  })),
+]
 
 export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [q, setQ] = useState('')
@@ -27,7 +42,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
 
   // 検索索引は大きいので、初めて開いたときに読み込む
   useEffect(() => {
-    if (open && !index) import('../content/search-index.json').then((m) => setIndex([...exercises, ...m.default]))
+    if (open && !index) import('../content/search-index.json').then((m) => setIndex([...guides, ...exercises, ...m.default]))
   }, [open, index])
 
   useEffect(() => {
@@ -69,7 +84,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
     <div className="search-backdrop" onClick={onClose}>
       <div className="search-dialog" role="dialog" aria-modal="true" aria-labelledby={`${id}-label`} onClick={(e) => e.stopPropagation()} onKeyDown={onKey}>
         <label id={`${id}-label`} htmlFor={`${id}-input`} className="search-label">
-          本文・演習名・コマンドを検索
+          本文・コース・全体図・演習を検索
         </label>
         <input
           id={`${id}-input`}
@@ -89,7 +104,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
             <li key={`${h.entry.chapter}-${h.entry.sectionId}`} role="option" aria-selected={i === active} className={i === active ? 'active' : ''}>
               <a href={resultHref(h.entry)} onClick={(e) => { e.preventDefault(); go(h) }} onMouseEnter={() => setActive(i)}>
                 <span className="search-where">
-                  {h.entry.chapter === 'linux' ? '第6部' : labelFor(h.entry.chapter)} {h.entry.chapterTitle} › {h.entry.sectionTitle}
+                  {h.entry.chapter === 'linux' ? '第6部 ' : typeof h.entry.chapter === 'number' ? labelFor(h.entry.chapter) + ' ' : ''}{h.entry.chapterTitle} › {h.entry.sectionTitle}
                 </span>
                 <span className="search-excerpt">{h.excerpt}</span>
               </a>

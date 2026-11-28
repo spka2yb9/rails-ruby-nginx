@@ -5,7 +5,7 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const AASM_GH = 'https://github.com/aasm/aasm/blob/v6.0.0'
 
-/* ---------- 図 83-1 4つのフラグの組み合わせと、意味のある5つの状態 ---------- */
+/* ---------- 図 100-1 4つのフラグの組み合わせと、意味のある5つの状態 ---------- */
 function FlagsFigure() {
   // [submitted, approved, rejected, paid, 表している状態, 種類]
   type Kind = 'ok' | 'bad' | 'seen'
@@ -32,7 +32,7 @@ function FlagsFigure() {
   const rh = 21
   return (
     <Svg
-      id="83-1"
+      id="100-1"
       w={760}
       h={top + rows.length * rh + 16}
       label={`4つの真偽値の列 submitted・approved・rejected・paid の組み合わせ16通りと、それが表す状態。${rows
@@ -68,12 +68,12 @@ function FlagsFigure() {
   )
 }
 
-/* ---------- 図 83-2 経費申請の状態遷移図 ---------- */
+/* ---------- 図 100-2 経費申請の状態遷移図 ---------- */
 function StateDiagramFigure() {
   const h = 44
   return (
     <Svg
-      id="83-2"
+      id="100-2"
       w={760}
       h={340}
       label="経費申請の状態遷移図。最初の状態は draft。draft で submit を受けると、金額が0円より大きければ submitted に移り、承認者に通知する。submitted で withdraw を受けると draft に戻る。submitted で approve を受けると、承認者が申請者と違えば approved に移り、申請者に通知する。submitted で reject を受けると、差し戻しの理由が空でなければ rejected に移り、申請者に通知する。rejected で revise を受けると draft に戻る。approved で pay を受けると paid に移る。paid は最終の状態で、どのイベントも受け付けない"
@@ -143,7 +143,7 @@ function StateDiagramFigure() {
   )
 }
 
-/* ---------- 図 83-3 状態 × イベントの遷移表 ---------- */
+/* ---------- 図 100-3 状態 × イベントの遷移表 ---------- */
 function TransitionTableFigure() {
   const events = ['submit', 'withdraw', 'approve', 'reject', 'revise', 'pay']
   const rows: [string, ([string, string] | null)[]][] = [
@@ -159,7 +159,7 @@ function TransitionTableFigure() {
   const top = 30
   return (
     <Svg
-      id="83-3"
+      id="100-3"
       w={760}
       h={top + rows.length * rh + 30}
       label="行は状態、列はイベントの遷移表。draft は submit で submitted へ（金額が0円より大きいとき）。submitted は withdraw で draft へ、approve で approved へ（承認者が申請者以外のとき）、reject で rejected へ（理由があるとき）。approved は pay で paid へ。rejected は revise で draft へ。それ以外の組み合わせと paid の行はすべて受け付けない。30マスのうち遷移するのは6マス"
@@ -198,11 +198,11 @@ function TransitionTableFigure() {
   )
 }
 
-/* ---------- 図 83-4 遷移の処理と、呼び出す側の役割 ---------- */
+/* ---------- 図 100-4 遷移の処理と、呼び出す側の役割 ---------- */
 function StructureFigure() {
   return (
     <Svg
-      id="83-4"
+      id="100-4"
       w={760}
       h={400}
       label="ExpenseReportsController#fire（呼び出す側）が申請を読み込み、ExpenseReport#fire! にイベントを渡す。fire! は ExpenseWorkflow.transition を呼び、次の状態・書き換える列・effects を受け取る。transition は遷移表 TRANSITIONS を参照する純粋な処理で、DB にも通知にも触れない。fire! は WHERE status = 元の状態 の条件付き UPDATE で保存し、MySQL の CHECK 制約が状態ごとの列を検査する。fire! は effects をコントローラーに返し、コントローラーが ExpenseNotifier でメールのジョブを投入する。画面のボタンは available_events で遷移表から作る"
@@ -267,11 +267,11 @@ function StructureFigure() {
   )
 }
 
-/* ---------- 図 83-5 GoF の State と、遷移表・遷移の処理の比較 ---------- */
+/* ---------- 図 100-5 GoF の State と、遷移表・遷移の処理の比較 ---------- */
 function StateVsTableFigure() {
   return (
     <Svg
-      id="83-5"
+      id="100-5"
       w={780}
       h={340}
       label="左は GoF の State。ExpenseReport が現在の状態のオブジェクトを持ち、approve などの操作を状態のオブジェクトに任せる。状態のインターフェース ReportState を DraftState、SubmittedState、ApprovedState などのクラスが実装し、各クラスがその状態で受け付ける操作と次の状態を決める。遷移の規則は状態の数だけのクラスに分かれる。右はこの章の方法。ExpenseReport は status の列を持つデータで、イベントも Data で表す。遷移の規則は ExpenseWorkflow の1つの遷移表と1つの transition にまとまり、transition は次の状態と書き換える列を返す"
@@ -451,11 +451,11 @@ submit                                  => 200 ○ − − −
           <p>
             3では、差し戻された申請をもう一度申請しても rejected が true のまま残りました。この行が「差し戻されたまま」なのか「再申請された」のかは、フラグからは区別できません。承認者の一覧は <code>approved: false</code> だけを条件にしているので再申請を表示しますが、申請者の一覧は <code>rejected: false</code> も条件にしているので表示しません。4では0円の申請も通りました。
           </p>
-          <Figure n="83-1" title="4つのフラグの組み合わせと、意味のある5つの状態" caption="○は true、−は false。色の付いた5行が業務として意味のある状態。灰色の行は出発点のコードで実際に作れた不正な組み合わせ。">
+          <Figure n="100-1" title="4つのフラグの組み合わせと、意味のある5つの状態" caption="○は true、−は false。色の付いた5行が業務として意味のある状態。灰色の行は出発点のコードで実際に作れた不正な組み合わせ。">
             <FlagsFigure />
           </Figure>
           <p>
-            図 83-1 は4つのフラグの組み合わせをすべて並べたものです。組み合わせは2の4乗で16通りありますが、業務として意味のある状態は5つだけです。残りの11通りは「申請されずに承認済み」のような業務上ありえない状態ですが、フラグで表している限り、コードはこれらを作れてしまいます。
+            図 100-1 は4つのフラグの組み合わせをすべて並べたものです。組み合わせは2の4乗で16通りありますが、業務として意味のある状態は5つだけです。残りの11通りは「申請されずに承認済み」のような業務上ありえない状態ですが、フラグで表している限り、コードはこれらを作れてしまいます。
           </p>
           <h3>問題点の整理</h3>
           <ul>
@@ -573,24 +573,24 @@ submit                                  => 200 ○ − − −
           </p>
           <h3>状態遷移図</h3>
           <Figure
-            n="83-2"
+            n="100-2"
             title="経費申請の状態遷移図"
             caption="角の丸い箱は状態、矢印は遷移を表す（凡例の「呼び出し」の矢印とは意味が違う）。矢印のラベルは UML の書き方にならい「イベント [ガード条件] / 遷移に伴う処理」の順に書いた。黒丸からの矢印は最初の状態を、二重の枠は最終の状態を表す。"
           >
             <StateDiagramFigure />
           </Figure>
           <p>
-            図 83-2 で、draft から申請（submit）、承認（approve）、精算（pay）と進むのが通常の流れです。申請中の申請は、申請者が取り下げる（withdraw）と下書きに戻り、承認者が差し戻す（reject）と差し戻しの状態になります。差し戻された申請は直すために下書きに戻します（revise）。paid は最終の状態で、どのイベントも受け付けません。
+            図 100-2 で、draft から申請（submit）、承認（approve）、精算（pay）と進むのが通常の流れです。申請中の申請は、申請者が取り下げる（withdraw）と下書きに戻り、承認者が差し戻す（reject）と差し戻しの状態になります。差し戻された申請は直すために下書きに戻します（revise）。paid は最終の状態で、どのイベントも受け付けません。
           </p>
           <h3>遷移表</h3>
           <p>
             状態遷移図には、受け付けない組み合わせが描かれません。「承認済みの申請を差し戻せるか」は、矢印がないことから読み取るしかありません。そこで、状態を行、イベントを列にした<Term en="transition table">遷移表</Term>を作り、5つの状態と6つのイベントの30通りの組み合わせのすべてについて、受け付けるかどうかと遷移先を決めます。
           </p>
-          <Figure n="83-3" title="状態 × イベントの遷移表" caption="30マスのうち、遷移するのは色の付いた6マスだけである。">
+          <Figure n="100-3" title="状態 × イベントの遷移表" caption="30マスのうち、遷移するのは色の付いた6マスだけである。">
             <TransitionTableFigure />
           </Figure>
           <p>
-            図 83-3 の × のマスは、「受け付けない」と決めたマスです。出発点のコードでは、承認済みの申請を差し戻せるかを誰も決めないまま「差し戻せる」になっていました。遷移表を作ると、受け付けないことも明示的に決めたことになり、業務の担当者と1マスずつ確かめられます。
+            図 100-3 の × のマスは、「受け付けない」と決めたマスです。出発点のコードでは、承認済みの申請を差し戻せるかを誰も決めないまま「差し戻せる」になっていました。遷移表を作ると、受け付けないことも明示的に決めたことになり、業務の担当者と1マスずつ確かめられます。
           </p>
           <h3>遷移表とガード条件の違い</h3>
           <p>
@@ -608,10 +608,10 @@ submit                                  => 200 ○ − − −
             申請すると承認者に、承認や差し戻しをすると申請者に通知します。この通知を遷移の処理の中で送ると、遷移の規則のテストに通知の代役が必要になり、保存に失敗したのに通知だけが送られることも起きます。Functional Core, Imperative Shell（<ChapterLink n={45} section="idea" />）では、判断を行う部分を外部に触れない処理にして結果をデータで返し、外部とのやり取りは外側で行いました。この章でも同じ分け方をします。遷移の処理は次の状態と effects を返すだけで、呼び出す側が保存した後に effects を実行します。保存と通知を確実に両方行う方法は Transactional Outbox（<ChapterLink n={53} section="idea" />）で扱います。
           </p>
           <h3>構造</h3>
-          <Figure n="83-4" title="遷移の処理と、呼び出す側の役割" caption="点線の枠の中が状態機械で、DB にも通知にも触れない。実線の矢印は呼び出し、破線の矢印は戻り値と参照を表す。">
+          <Figure n="100-4" title="遷移の処理と、呼び出す側の役割" caption="点線の枠の中が状態機械で、DB にも通知にも触れない。実線の矢印は呼び出し、破線の矢印は戻り値と参照を表す。">
             <StructureFigure />
           </Figure>
-          <p>図 83-4 の呼び出す側の処理の順序は次のとおりです。</p>
+          <p>図 100-4 の呼び出す側の処理の順序は次のとおりです。</p>
           <ol>
             <li>コントローラーが DB から申請を読み込み、イベントを作って <code>fire!</code> に渡す。</li>
             <li><code>fire!</code> は <code>ExpenseWorkflow.transition</code> を呼び、遷移表とガード条件で判断した結果（次の状態・書き換える列・effects）を受け取る。遷移できなければ例外になり、何も保存せず、何も通知しない。</li>
@@ -963,11 +963,11 @@ submit（0円）                             => 409 {"error":"金額が0円の�
           </p>
           <h3>直していく順序</h3>
           <ol>
-            <li>状態を洗い出します。フラグの組み合わせのうち意味のあるものに名前を付けます（図 83-1）。</li>
+            <li>状態を洗い出します。フラグの組み合わせのうち意味のあるものに名前を付けます（図 100-1）。</li>
             <li>遷移表を作り、すべてのマスの遷移先とガード条件を業務の担当者と確かめます。</li>
             <li>遷移表をテストにします。30マスのテストを先に書きます。</li>
             <li>
-              <code>status</code> 列を加え、既存の行をフラグから変換します。図 83-1 の不正な組み合わせの行は機械的に変換できないので、先に件数を数え、業務の担当者と1件ずつ扱いを決めます。変換したら CHECK 制約を加えます（既存のテーブルに制約を加える手順は<ChapterLink n={27} section="indexes-constraints" />）。
+              <code>status</code> 列を加え、既存の行をフラグから変換します。図 100-1 の不正な組み合わせの行は機械的に変換できないので、先に件数を数え、業務の担当者と1件ずつ扱いを決めます。変換したら CHECK 制約を加えます（既存のテーブルに制約を加える手順は<ChapterLink n={27} section="indexes-constraints" />）。
             </li>
             <li>遷移の処理を作り、各アクションの中身を transition の各 in に移し、通知は effects で返します。</li>
             <li>呼び出す側を <code>fire!</code> に書き換えます。画面ごとの「承認待ち」の where は <code>ExpenseReport.submitted</code> のスコープにそろえます。</li>
@@ -1438,11 +1438,11 @@ in Approve
           <p>
             GoF の『Design Patterns』（1994年刊<Ref n={17} />）は、状態による振る舞いの違いを扱うパターンとして State を挙げ、目的を「オブジェクトの内部の状態が変わったときに、オブジェクトが振る舞いを変えられるようにする。オブジェクトはクラスが変わったかのように見える」と書いています（この文は、GoF から引用している資料で確認しました<Ref n={18} />）。
           </p>
-          <Figure n="83-5" title="GoF の State と、遷移表・遷移の処理の構造" caption="模式図。左の ReportState と状態ごとのクラスの名前は説明のために付けたもので、この章のコードにはない。破線の矢印は、インターフェースの実装と、データの参照を表す。">
+          <Figure n="100-5" title="GoF の State と、遷移表・遷移の処理の構造" caption="模式図。左の ReportState と状態ごとのクラスの名前は説明のために付けたもので、この章のコードにはない。破線の矢印は、インターフェースの実装と、データの参照を表す。">
             <StateVsTableFigure />
           </Figure>
           <p>
-            図 83-5 の左の GoF の State では、状態ごとのクラスが共通のインターフェース（ReportState）を実装し、「この状態で approve を呼ばれたら何をするか」をそれぞれのクラスに書きます。ExpenseReport は今の状態のオブジェクトを持ち、操作を状態のオブジェクトに任せます。右のこの章の方法では、状態は status 列のデータで、規則は1つの遷移表と1つの遷移の処理にまとまります。
+            図 100-5 の左の GoF の State では、状態ごとのクラスが共通のインターフェース（ReportState）を実装し、「この状態で approve を呼ばれたら何をするか」をそれぞれのクラスに書きます。ExpenseReport は今の状態のオブジェクトを持ち、操作を状態のオブジェクトに任せます。右のこの章の方法では、状態は status 列のデータで、規則は1つの遷移表と1つの遷移の処理にまとまります。
           </p>
           <ul>
             <li>GoF の State：遷移の規則は状態ごとのクラスに分かれます。「approve はどの状態で受け付けるか」を知るにはすべてのクラスを読む必要があり、イベントを1つ増やすとすべてのクラスにメソッドを足します。状態によって計算の中身そのものが大きく変わる場合（料金の計算方法が状態で違うなど）に向いています。</li>

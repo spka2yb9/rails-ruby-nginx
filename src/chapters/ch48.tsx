@@ -1,10 +1,13 @@
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
+import { useState } from 'react'
 import { Arrow, Box, Svg, T } from '../components/diagram'
+import { Stepper } from '../sims/Stepper'
+import { FigureChoices } from '../visuals/study-figure'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 84-1 その場で書き込む方式と Unit of Work の比較 ---------- */
+/* ---------- 図 101-1 その場で書き込む方式と Unit of Work の比較 ---------- */
 function ImmediateVsUowFigure() {
   const row = (i: number) => 44 + i * 56
   const left: { op: string[]; res: string[]; state: 'ok' | 'ng' | 'skip' }[] = [
@@ -15,7 +18,7 @@ function ImmediateVsUowFigure() {
   ]
   return (
     <Svg
-      id="84-1"
+      id="101-1"
       w={780}
       h={396}
       label="左は明細を1件ずつ保存するコード。設計の数量の UPDATE と保守の DELETE はそれぞれその場で確定し、研修の追加が検証エラーで失敗すると合計の保存は実行されない。設計 3×2000 だけが残り、合計は 3000 のままで、明細から計算すると 6000 になる。右は Unit of Work。設計の数量の変更、保守の削除の印、研修の追加はメモリー上のオブジェクトを変えるだけで、最後の save! で BEGIN、請求書の UPDATE、明細の DELETE、UPDATE、INSERT、COMMIT を1つのトランザクションで実行する。途中で失敗したら ROLLBACK し、何も残らない"
@@ -67,14 +70,14 @@ function ImmediateVsUowFigure() {
         fill="box4"
         align="start"
       />
-      <T x={410} y={row(6) + 26} fs={12} tone="acc">
+      <T x={410} y={row(5) + 42} fs={12} tone="acc">
         途中で失敗したら ROLLBACK し、何も残らない
       </T>
     </Svg>
   )
 }
 
-/* ---------- 図 84-2 変更の追跡の2つの方法 ---------- */
+/* ---------- 図 101-2 変更の追跡の2つの方法 ---------- */
 function ChangeTrackingFigure() {
   const col = (x: number, title: string, top: string[], mid: string[], label1: string, label2: string, good: string, bad: string, mono: boolean) => (
     <g>
@@ -102,7 +105,7 @@ function ChangeTrackingFigure() {
   )
   return (
     <Svg
-      id="84-2"
+      id="101-2"
       w={780}
       h={346}
       label="変更の追跡の2つの方法。1つ目は明示的に登録する方法で、業務のコードが registerNew・registerDirty・registerDeleted で Unit of Work に知らせ、commit で一覧から SQL を作る。比べる処理はいらないが、知らせ忘れた変更は書き込まれない。2つ目はスナップショットと比べる方法で、読み込んだ時点の値を写しておき、commit で今の値と比べて変わったものだけを書き込む。知らせなくてよいが、読み込んだ数だけ比べる手間が増える。Rails の Active Record は2つ目を1つのオブジェクトの中だけで行い、複数のオブジェクトの一覧は持たない"
@@ -124,11 +127,11 @@ function ChangeTrackingFigure() {
   )
 }
 
-/* ---------- 図 84-3 Identity Map がない場合とある場合 ---------- */
+/* ---------- 図 101-3 Identity Map がない場合とある場合 ---------- */
 function IdentityMapFigure() {
   return (
     <Svg
-      id="84-3"
+      id="101-3"
       w={780}
       h={292}
       label="左は Identity Map がない場合で、Rails の動き。InvoiceLine.find(1) を2回呼ぶと、同じ行から別々のオブジェクト x と y ができる。x で数量を、y で単価を変えて保存すると、別の列なので両方残るが、同じ列なら後の save が勝つ。y は x の変更を知らない。右は Identity Map がある場合。2回目の読み込みでは覚えたオブジェクトを返すので、変更は1つのオブジェクトに集まる"
@@ -182,11 +185,11 @@ function IdentityMapFigure() {
   )
 }
 
-/* ---------- 図 84-4 請求書の集約と保存の範囲 ---------- */
+/* ---------- 図 101-4 請求書の集約と保存の範囲 ---------- */
 function AggregateFigure() {
   return (
     <Svg
-      id="84-4"
+      id="101-4"
       w={780}
       h={352}
       label="請求書の集約と保存の範囲。InvoicesController#update は invoice.update を呼び、請求書（ルート）と明細行（設計、新規の研修、削除の印を付けた保守）を1回の save! で保存する。これが1つの集約で、1つのトランザクションになる。別の請求書は別の集約で、明細を移す move_line_to! だけが2つの集約の save! を1つのトランザクションで囲む。ルートを通らずに明細の update! を直接呼ぶと、その明細だけが確定し、合計とずれる"
@@ -231,6 +234,85 @@ function AggregateFigure() {
         → 合計と明細がずれる
       </T>
     </Svg>
+  )
+}
+
+/* ---------- 図 101-5（段階送り）1回の保存で送る SQL と ROLLBACK ---------- */
+type SaveSnap = { label: string; sql: string; mem: string[]; tx: string[]; db: string[]; text: string; fail?: boolean }
+
+const LOAD: SaveSnap = { label: '読み込み', sql: 'SELECT invoices WHERE id = 1', mem: ['合計 3000', '明細はまだ読んでいない'], tx: ['トランザクションなし'], db: ['合計 3000', '設計 1・保守 1'], text: 'コントローラーが Invoice.find で請求書を読みます。トランザクションはまだ開いていません。' }
+const assign = (q: number): SaveSnap => ({ label: 'BEGIN と代入', sql: 'BEGIN → SELECT invoice_lines WHERE id IN (1, 2)', mem: ['合計 3000', '設計 3・保守 削除の印', `研修 ${q}（新規）`], tx: ['開いている', 'まだ書いていない'], db: ['合計 3000', '設計 1・保守 1'], text: 'update はトランザクションを開いてから lines_attributes を代入します。id のある行はその請求書の明細から探して（IN (1, 2)）値を代入するか削除の印を付け、id のない研修は build で作ります。ここまでの変更はメモリーの上だけです。' })
+
+const SAVE_CASES: { name: string; steps: SaveSnap[] }[] = [
+  {
+    name: '研修の数量が 0（検証で失敗）',
+    steps: [
+      LOAD,
+      assign(0),
+      { label: '検証', sql: '（SQL は送らない）', mem: ['合計 3000', '研修の数量 0 が検証に違反', 'errors にメッセージ'], tx: ['開いている', 'まだ書いていない'], db: ['合計 3000', '設計 1・保守 1'], text: '保存の前の検証で、autosave の子の研修の数量 0 が greater_than: 0 に違反し、save は false を返します。before_save も INSERT・UPDATE・DELETE も実行されません。', fail: true },
+      { label: 'ROLLBACK', sql: 'ROLLBACK', mem: ['合計 3000', '研修の数量 0 が検証に違反'], tx: ['終了（取り消し）'], db: ['合計 3000', '設計 1・保守 1'], text: '書き込みがないまま ROLLBACK し、DB は保存の前と同じです。コントローラーは編集画面を 422 で返し、画面を描くときに明細を読み直します（実行結果の最後の SELECT）。' },
+    ],
+  },
+  {
+    name: '研修の数量が 2（成功）',
+    steps: [
+      LOAD,
+      assign(2),
+      { label: '検証', sql: '（SQL は送らない）', mem: ['合計 3000', '設計 3・保守 削除の印', '研修 2（新規）'], tx: ['開いている', 'まだ書いていない'], db: ['合計 3000', '設計 1・保守 1'], text: '請求書の検証と、autosave の子の明細の検証がすべて通ります。' },
+      { label: '合計の計算', sql: 'SELECT invoice_lines WHERE invoice_id = 1', mem: ['合計 7000', '設計 3・保守 削除の印', '研修 2（新規）'], tx: ['開いている', 'まだ書いていない'], db: ['合計 3000', '設計 1・保守 1'], text: 'before_save の recalculate_total が lines.reject を呼ぶので、請求書の明細をすべて読み込んでから、削除の印のない明細の小計を足して 7000 にします。' },
+      { label: '親の UPDATE', sql: 'UPDATE invoices SET total = 7000', mem: ['合計 7000', '設計 3・保守 削除の印', '研修 2（新規）'], tx: ['合計 7000', '設計 1・保守 1'], db: ['合計 3000', '設計 1・保守 1'], text: '親の UPDATE を先に送ります。この時点でほかの接続から読んでも、合計は 3000 のままです。' },
+      { label: '子の DELETE', sql: 'DELETE invoice_lines WHERE id = 2', mem: ['合計 7000', '設計 3・研修 2'], tx: ['合計 7000', '設計 1'], db: ['合計 3000', '設計 1・保守 1'], text: '親の after_update で子を保存します。削除の印を付けた保守を、ほかの子より先に DELETE します。' },
+      { label: '子の UPDATE', sql: 'UPDATE invoice_lines SET quantity = 3 WHERE id = 1', mem: ['合計 7000', '設計 3・研修 2'], tx: ['合計 7000', '設計 3'], db: ['合計 3000', '設計 1・保守 1'], text: '残りの子を関連の配列の順に保存します。設計は既存の行なので UPDATE です。' },
+      { label: '子の INSERT', sql: 'INSERT invoice_lines（研修 2×500）', mem: ['合計 7000', '設計 3・研修 2'], tx: ['合計 7000', '設計 3・研修 2'], db: ['合計 3000', '設計 1・保守 1'], text: '研修は新しい行なので INSERT です。' },
+      { label: 'COMMIT', sql: 'COMMIT', mem: ['合計 7000', '設計 3・研修 2'], tx: ['終了（確定）'], db: ['合計 7000', '設計 3・研修 2'], text: 'COMMIT した時点で、ほかの接続からも合計 7000 と新しい明細が見えます。コントローラーは 302 を返します。' },
+    ],
+  },
+  {
+    name: '保守の数量が -1（DB の制約で失敗）',
+    steps: [
+      { label: '読み込みと変更', sql: 'SELECT invoices・SELECT invoice_lines', mem: ['合計 3000', '設計 1・保守 -1', '研修 2（新規）'], tx: ['トランザクションなし'], db: ['合計 3000', '設計 1・保守 1'], text: '請求書と明細を読み、研修を build して、保守の数量を -1 にします。保存は検証を飛ばす save!(validate: false) です。' },
+      { label: 'BEGIN と親の UPDATE', sql: 'BEGIN → UPDATE invoices SET total = 2000', mem: ['合計 2000', '設計 1・保守 -1', '研修 2（新規）'], tx: ['合計 2000', '設計 1・保守 1'], db: ['合計 3000', '設計 1・保守 1'], text: '検証を飛ばし、before_save で合計を 2000 にして、親の UPDATE を送ります。' },
+      { label: '子の UPDATE が失敗', sql: 'UPDATE invoice_lines SET quantity = -1 WHERE id = 2', mem: ['合計 2000', '設計 1・保守 -1', '研修 2（新規）'], tx: ['合計 2000', '設計 1・保守 1', '（保守の UPDATE は失敗）'], db: ['合計 3000', '設計 1・保守 1'], text: 'CHECK 制約 invoice_lines_quantity_positive に違反し、MySQL がエラーを返します。Rails は ActiveRecord::CheckViolation を発生させ、研修の INSERT は送りません。', fail: true },
+      { label: 'ROLLBACK', sql: 'ROLLBACK', mem: ['合計 2000', '設計 1・保守 -1', '研修 2（新規）'], tx: ['終了（取り消し）'], db: ['合計 3000', '設計 1・保守 1'], text: '例外でトランザクションのブロックを抜けるので ROLLBACK し、送った請求書の UPDATE も取り消されます。DB の合計は 3000 のままです。メモリー上の請求書は合計 2000 のままなので、表示し直す前に DB から読み直します。' },
+    ],
+  },
+]
+
+function SaveSnapshot({ id, snap }: { id: string; snap: SaveSnap }) {
+  const col = (x: number, title: string, lines: string[], fill: 'box' | 'box4' | 'box5', accent?: boolean) => (
+    <Box x={x} y={44} w={240} h={92} lines={[title, ...lines]} fs={12} bold subTone="muted" fill={fill} accent={accent} />
+  )
+  return (
+    <Svg id={id} w={780} h={146} label={`送った SQL：${snap.sql}。メモリー上のオブジェクト：${snap.mem.join('、')}。トランザクションの中の DB：${snap.tx.join('、')}。ほかの接続から見える DB：${snap.db.join('、')}`}>
+      <T x={20} y={18} fs={11.5} tone="muted">送った SQL</T>
+      <T x={100} y={18} fs={12} mono tone={snap.fail ? 'danger' : undefined} bold>{snap.sql}</T>
+      {col(20, 'メモリー上のオブジェクト', snap.mem, 'box')}
+      {col(270, 'トランザクションの中の DB', snap.tx, 'box5', snap.fail)}
+      {col(520, 'ほかの接続から見える DB', snap.db, 'box4')}
+    </Svg>
+  )
+}
+
+function SaveFlowFigure() {
+  const [kind, setKind] = useState(1)
+  const steps = SAVE_CASES[kind].steps.map((snap, i) => ({
+    label: `${i + 1}. ${snap.label}`,
+    detail: (
+      <>
+        <SaveSnapshot id={`101-5-${kind}-${i}`} snap={snap} />
+        <p>{snap.text}</p>
+      </>
+    ),
+  }))
+  return (
+    <Figure
+      n="101-5"
+      title="1回の保存で送る SQL と ROLLBACK（段階送り）"
+      caption="この節の3つの実行を、SQL を1つ送るごとに並べた概念モデルです。ほかの接続から見える値は、同じ内容の保存で SQL を1つ送るたびにもう1つの接続から読んで確かめました（Rails 8.1.4.1・MySQL 8.4）。実際の BEGIN はトランザクションの中で最初の SQL を送る直前に送られます。検証と合計の計算は SQL を送らない Ruby の処理で、各段階にかかる時間は図に表していません。"
+    >
+      <FigureChoices label="保存の内容" options={SAVE_CASES.map((c) => c.name)} selected={kind} onSelect={setKind} />
+      <Stepper key={kind} steps={steps} />
+    </Figure>
   )
 }
 
@@ -412,31 +494,31 @@ end
             <li>記録：業務のコードがオブジェクトを追加・変更・削除しても、その場では SQL を実行しません。</li>
             <li>commit：記録した変更から INSERT・UPDATE・DELETE を求め、1つのトランザクションで実行します。1つでも失敗したら ROLLBACK し、何も保存しません。変更がなければ、SQL を実行しません。</li>
           </ol>
-          <Figure n="84-1" title="その場で書き込む方式と Unit of Work の比較" caption="左は scene の実行結果、右は rails-impl の節で autosave を使った実行結果を並べた図。">
+          <Figure n="101-1" title="その場で書き込む方式と Unit of Work の比較" caption="左は scene の実行結果、右は rails-impl の節で autosave を使った実行結果を並べた図。">
             <ImmediateVsUowFigure />
           </Figure>
           <p>
-            図 84-1 の左は、前の節のコードが SQL を確定した順番です。上の2つは研修の失敗より前に確定しているので取り消されず、合計の保存は実行されません。右では、3つの操作はメモリー上のオブジェクトを変えるだけで、最後の1回で BEGIN から COMMIT までをまとめて実行します。右の SQL の並びは、この章の Rails の実装（rails-impl の節）が実際に送った順番です。
+            図 101-1 の左は、前の節のコードが SQL を確定した順番です。上の2つは研修の失敗より前に確定しているので取り消されず、合計の保存は実行されません。右では、3つの操作はメモリー上のオブジェクトを変えるだけで、最後の1回で BEGIN から COMMIT までをまとめて実行します。右の SQL の並びは、この章の Rails の実装（rails-impl の節）が実際に送った順番です。
           </p>
           <h3>変更の見つけ方</h3>
           <p>
             Unit of Work が「何が変わったか」を知る方法は2つあります。1つは、オブジェクトを作ったとき、変えたとき、削除するときに、そのことを業務のコードから Unit of Work に知らせる（登録する）方法です。Fowler のカタログの図には、このための <code>registerNew</code>・<code>registerDirty</code>・<code>registerClean</code>・<code>registerDeleted</code> と、<code>commit</code>・<code>rollback</code> の操作が並んでいます<Ref n={1} />。もう1つは、読み込んだ時点の値を写しておき、commit のときに今の値と比べる方法です。写しておいた値を<Term en="snapshot">スナップショット</Term>と呼びます。
           </p>
-          <Figure n="84-2" title="変更の追跡の2つの方法" caption="Fowler の説明と MSDP の Ruby の例をもとにした模式図。下の段は、この章の active-record の節で確かめる Rails の動き。">
+          <Figure n="101-2" title="変更の追跡の2つの方法" caption="Fowler の説明と MSDP の Ruby の例をもとにした模式図。下の段は、この章の active-record の節で確かめる Rails の動き。">
             <ChangeTrackingFigure />
           </Figure>
           <p>
-            図 84-2 の左の方法は、比べる処理がいらない代わりに、知らせ忘れた変更が書き込まれません。右の方法は、業務のコードが知らせなくてよい代わりに、読み込んだオブジェクトが多いほど比べる手間が増えます。下の段のとおり、Rails の Active Record は右の方法を1つのオブジェクトの中だけで行います（active-record の節で実行して確かめます）。
+            図 101-2 の左の方法は、比べる処理がいらない代わりに、知らせ忘れた変更が書き込まれません。右の方法は、業務のコードが知らせなくてよい代わりに、読み込んだオブジェクトが多いほど比べる手間が増えます。下の段のとおり、Rails の Active Record は右の方法を1つのオブジェクトの中だけで行います（active-record の節で実行して確かめます）。
           </p>
           <h3>Identity Map</h3>
           <p>
             同じ行を2回読み込んで別々のオブジェクトを2つ作ると、それぞれに加えた変更のどちらを書き込むべきか決められません。<Term en="Identity Map">Identity Map</Term> は、1つの業務の操作の中で読み込んだオブジェクトを、ID をキーにした表（Map）に覚えておき、2回目からは DB を読まずに同じオブジェクトを返す仕組みです。Fowler は、同じ記録を2つのオブジェクトに読み込むと、両方を更新したときに正しく書き込むのが難しくなること、同じデータを何度も読む無駄も省けることを挙げています<Ref n={2} />。
           </p>
-          <Figure n="84-3" title="Identity Map がない場合とある場合" caption="左は active-record の節の実行結果をもとにした図。InvoiceLine.find(1) を2回呼んで、2つのオブジェクトで別々の列を変えた。">
+          <Figure n="101-3" title="Identity Map がない場合とある場合" caption="左は active-record の節の実行結果をもとにした図。InvoiceLine.find(1) を2回呼んで、2つのオブジェクトで別々の列を変えた。">
             <IdentityMapFigure />
           </Figure>
           <p>
-            図 84-3 の左が Rails の動きです。<code>InvoiceLine.find(1)</code> を2回呼ぶと、同じ行から別々のオブジェクト x と y ができ、y は x の変更を知りません。右のように Identity Map があれば、2回目の読み込みで同じオブジェクトが返り、変更は1つのオブジェクトに集まります。Identity Map を使う範囲は、1つの業務の操作（Web アプリケーションなら1つのリクエスト）の間だけです。アプリケーション全体で共有すると、ほかのリクエストの変更が反映されない古いオブジェクトを返し続けます。
+            図 101-3 の左が Rails の動きです。<code>InvoiceLine.find(1)</code> を2回呼ぶと、同じ行から別々のオブジェクト x と y ができ、y は x の変更を知りません。右のように Identity Map があれば、2回目の読み込みで同じオブジェクトが返り、変更は1つのオブジェクトに集まります。Identity Map を使う範囲は、1つの業務の操作（Web アプリケーションなら1つのリクエスト）の間だけです。アプリケーション全体で共有すると、ほかのリクエストの変更が反映されない古いオブジェクトを返し続けます。
           </p>
           <h3>書き込みの順序</h3>
           <p>
@@ -572,11 +654,11 @@ end
             <li>発行した請求書（<code>issued_at</code> がある請求書）は、明細も含めて変更しない。</li>
             <li>明細の数量は1以上で、単価は0以上（明細の検証を、請求書の保存のときにまとめて行う）。</li>
           </ul>
-          <Figure n="84-4" title="請求書の集約と保存の範囲" caption="rails-impl の節のコードの構成をまとめた模式図。破線の枠が集約で、1回の save! の範囲。">
+          <Figure n="101-4" title="請求書の集約と保存の範囲" caption="rails-impl の節のコードの構成をまとめた模式図。破線の枠が集約で、1回の save! の範囲。">
             <AggregateFigure />
           </Figure>
           <p>
-            図 84-4 の左の枠が請求書の集約です。コントローラーは請求書の <code>update</code> を1回呼び、変更した設計、新しい研修、削除の印を付けた保守を、請求書と一緒に1つのトランザクションで保存します。右の枠は翌月分の請求書で、別の集約です。明細を別の請求書へ移す <code>move_line_to!</code> だけは2つの集約を変えるので、下の段のとおり transaction で2つの <code>save!</code> を囲みます。左下のように、ほかの処理が明細の <code>update!</code> を直接呼ぶと、ルートの規則（合計の計算と発行済みの確認）を通らずに明細だけが確定します。
+            図 101-4 の左の枠が請求書の集約です。コントローラーは請求書の <code>update</code> を1回呼び、変更した設計、新しい研修、削除の印を付けた保守を、請求書と一緒に1つのトランザクションで保存します。右の枠は翌月分の請求書で、別の集約です。明細を別の請求書へ移す <code>move_line_to!</code> だけは2つの集約を変えるので、下の段のとおり transaction で2つの <code>save!</code> を囲みます。左下のように、ほかの処理が明細の <code>update!</code> を直接呼ぶと、ルートの規則（合計の計算と発行済みの確認）を通らずに明細だけが確定します。
           </p>
           <h3>集約の境界の決め方</h3>
           <ul>
@@ -651,7 +733,7 @@ DB: {"quantity" => 4}
 `}
           />
           <p>
-            各オブジェクトは、読み込んだときの値を覚えていて、<code>changes</code> で変わった属性を返します<Ref n={10} />。<code>save!</code> の UPDATE には、変わった列と <code>updated_at</code> だけが入りました。保存する列を変わったものに絞る仕組みを部分更新（partial updates）と呼び、<code>attribute_names_for_partial_updates</code> が変わった列の名前を返します<Ref n={14} />（仕組みは<ChapterLink n={11} section="dirty" />で扱いました）。これは、1つのオブジェクトの中で読み込んだ値と今の値を比べる、図 84-2 の右の方法です。
+            各オブジェクトは、読み込んだときの値を覚えていて、<code>changes</code> で変わった属性を返します<Ref n={10} />。<code>save!</code> の UPDATE には、変わった列と <code>updated_at</code> だけが入りました。保存する列を変わったものに絞る仕組みを部分更新（partial updates）と呼び、<code>attribute_names_for_partial_updates</code> が変わった列の名前を返します<Ref n={14} />（仕組みは<ChapterLink n={11} section="dirty" />で扱いました）。これは、1つのオブジェクトの中で読み込んだ値と今の値を比べる、図 101-2 の右の方法です。
           </p>
           <p>
             部分更新なので、x と y が別の列を変えた場合は両方の変更が残りました。ただし y は x の変更を知らず、<code>y.quantity</code> は 1 のままです。同じ列を変えた場合は、後に保存した y の値 4 が残り、x の 5 は消えました。後の保存が先の変更を消すこの現象と、その防ぎ方は<ChapterLink n={49} section="scene" />で扱います。
@@ -1042,6 +1124,10 @@ end
           <p>
             請求書の UPDATE は送られた後でしたが、明細の UPDATE が CHECK 制約に違反した時点で ROLLBACK され、合計も 3,000 に戻りました。研修の INSERT は送られていません。Rails のトランザクションは SQL をその場で送るので、途中まで実行してから取り消す、という動きになります。
           </p>
+          <p>
+            ここまでの3つの実行を図 101-5 にまとめました。保存の内容を選んで段階を進めると、SQL を1つ送るごとに、メモリー上のオブジェクト、トランザクションの中の DB、ほかの接続から見える DB の値がどう変わるかを確かめられます。
+          </p>
+          <SaveFlowFigure />
           <h3>複数の集約をまとめて保存する</h3>
           <p>
             請求先を間違えた明細を、同じ取引先の翌月分の請求書へ移す操作を考えます。移す元と移す先の2つの集約を変えるので、親の <code>save!</code> 1回では足りません。移す先の請求書が発行済みの場合に、トランザクションなしで2回 <code>save!</code> した結果（A）と、<code>move_line_to!</code> の結果（B）を比べました。

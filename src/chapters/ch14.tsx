@@ -6,11 +6,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 18-1 検証の結果と save ---------- */
+/* ---------- 図 24-1 検証の結果と save ---------- */
 function ValidateFlowFigure() {
   return (
     <Svg
-      id="18-1"
+      id="24-1"
       w={760}
       h={250}
       label="save または save! を呼ぶと、まず valid? で検証する。検証に通れば BEGIN・INSERT・COMMIT を送り、save は true を返す。通らなければ、見つかった問題を errors に記録し、SQL を送らずに、save は false を返し、save! は ActiveRecord::RecordInvalid を投げる"
@@ -39,7 +39,7 @@ function ValidateFlowFigure() {
   )
 }
 
-/* ---------- 図 18-2 コールバックが呼ばれた位置 ---------- */
+/* ---------- 図 24-2 コールバックが呼ばれた位置 ---------- */
 function CallbackFlowFigure() {
   type Step = { t: string; kind: 'cb' | 'sql' | 'val' }
   const row = (y: number, steps: Step[]) =>
@@ -54,7 +54,7 @@ function CallbackFlowFigure() {
     })
   return (
     <Svg
-      id="18-2"
+      id="24-2"
       w={760}
       h={240}
       label="create! では、before_validation の strip_title、検証、BEGIN、INSERT、after_create の log_created、COMMIT の順に実行された。update! では、before_validation の strip_title、検証、BEGIN、UPDATE、COMMIT の順で、after_create は呼ばれなかった"
@@ -101,7 +101,7 @@ function CallbackFlowFigure() {
   )
 }
 
-/* ---------- 図 18-3 save の入れ子 ---------- */
+/* ---------- 図 24-3 save の入れ子 ---------- */
 function NestFigure() {
   const layers = [
     { t: 'Transactions#save', s: 'トランザクションを開始（with_transaction_returning_status）', fill: 'box4' as const },
@@ -112,7 +112,7 @@ function NestFigure() {
   ]
   return (
     <Svg
-      id="18-3"
+      id="24-3"
       w={760}
       h={300}
       label="save は5層の入れ子になっている。一番外側の Transactions#save がトランザクションを開始し、その内側の Validations#save が valid? を実行する。検証に通ると、Callbacks#create_or_update が save のコールバックの中で、Callbacks#_create_record が create のコールバックの中で内側を呼び、一番内側の Persistence#_create_record が INSERT を実行する"
@@ -138,7 +138,7 @@ function NestFigure() {
   )
 }
 
-/* ---------- 図 18-4 create! のコールバックと SQL ---------- */
+/* ---------- 図 24-4 create! のコールバックと SQL ---------- */
 function TimelineFigure() {
   const items: { t: string; sql?: boolean; acc?: boolean }[] = [
     { t: 'before_validation' },
@@ -159,7 +159,7 @@ function TimelineFigure() {
   const rowH = 24
   return (
     <Svg
-      id="18-4"
+      id="24-4"
       w={760}
       h={items.length * rowH + 40}
       label="Article.create! で実際に記録した順。before_validation、after_validation、before_save、around_save の前半、before_create、around_create の前半の後に、BEGIN と INSERT が送られる。その後 around_create の後半、after_create、around_save の後半、after_save が実行され、COMMIT の後に after_commit が実行される。BEGIN はトランザクションの開始時ではなく、最初の SQL を送る直前に送られている"
@@ -192,11 +192,11 @@ function TimelineFigure() {
   )
 }
 
-/* ---------- 図 18-5 一意性の検証の競合 ---------- */
+/* ---------- 図 24-5 一意性の検証の競合 ---------- */
 function RaceFigure() {
   return (
     <Svg
-      id="18-5"
+      id="24-5"
       w={760}
       h={300}
       label="2つのスレッドが同じメールアドレスの著者を作る。T1 と T2 はどちらも SELECT 1 で同じメールアドレスの行が無いことを確かめ、検証に通る。T1 が INSERT して COMMIT する。T2 も INSERT するが、データベースの一意の索引に違反して Duplicate entry のエラーになり、ActiveRecord::RecordNotUnique が発生してロールバックされる"
@@ -226,11 +226,11 @@ function RaceFigure() {
   )
 }
 
-/* ---------- 図 18-6 外側のトランザクションと after_commit ---------- */
+/* ---------- 図 24-6 外側のトランザクションと after_commit ---------- */
 function OuterTxFigure() {
   return (
     <Svg
-      id="18-6"
+      id="24-6"
       w={760}
       h={210}
       label="ActiveRecord::Base.transaction のブロックの中で update! を呼ぶと、update! の after_save はブロックの途中で実行される。after_commit は、ブロックが終わって外側のトランザクションが COMMIT された後に実行される。ブロックの中で例外が起きてロールバックされた場合、after_commit は実行されない"
@@ -441,10 +441,10 @@ b.persisted?             # => true
           </p>
           <p>
             <code>save</code> は保存の前に検証を行い、通らなければ SQL を1つも送らずに false を返します。<code>persisted?</code>（保存済みかどうか）も false のままです。<code>save!</code>{' '}
-            は、同じ場合に ActiveRecord::RecordInvalid の例外を投げます。タイトルを入れ直すと検証に通り、INSERT が送られました（図 18-1）
+            は、同じ場合に ActiveRecord::RecordInvalid の例外を投げます。タイトルを入れ直すと検証に通り、INSERT が送られました（図 24-1）
             <Ref n={5} />。
           </p>
-          <Figure n="18-1" title="検証の結果と save" caption="上の実行結果をまとめた図。">
+          <Figure n="24-1" title="検証の結果と save" caption="上の実行結果をまとめた図。">
             <ValidateFlowFigure />
           </Figure>
           <p>
@@ -547,9 +547,9 @@ a.update!(views_count: 1)
           />
           <p>
             before_validation に登録した strip_title は検証の前に呼ばれ、INSERT の値は空白を除いた「前後に空白」になりました。after_create に登録した log_created は INSERT の後に呼ばれ、MySQL
-            が割り当てた id（10016）を使えています。update! でも strip_title は呼ばれましたが、送られたのは UPDATE で、after_create は呼ばれませんでした（図 18-2）。
+            が割り当てた id（10016）を使えています。update! でも strip_title は呼ばれましたが、送られたのは UPDATE で、after_create は呼ばれませんでした（図 24-2）。
           </p>
-          <Figure n="18-2" title="コールバックが呼ばれた位置" caption="上の実行結果を図にしたもの。">
+          <Figure n="24-2" title="コールバックが呼ばれた位置" caption="上の実行結果を図にしたもの。">
             <CallbackFlowFigure />
           </Figure>
           <p>コールバックの名前は before_（前）か after_（後）と、どの処理の前後かを組み合わせたものです。主なものを挙げます。</p>
@@ -862,8 +862,8 @@ _create_record:
             before_create と after_create の間で送られます。before のコールバックが保存を中断したときは、<code>_run_save_callbacks</code>{' '}
             はブロックを実行せずに false を返します（「保存の中断」の節）。
           </p>
-          <p>ここまでをまとめると図 18-3 のようになります。外側の枠から内側へ、呼ばれる順に並べています。内側の処理が終わると、逆の順に外側へ戻ります。</p>
-          <Figure n="18-3" title="save の入れ子" caption="新規作成の場合。Rails 8.1.4.1 の transactions.rb・validations.rb・callbacks.rb・persistence.rb を読んでまとめた模式図。Timestamp や Dirty などの層は省略している。">
+          <p>ここまでをまとめると図 24-3 のようになります。外側の枠から内側へ、呼ばれる順に並べています。内側の処理が終わると、逆の順に外側へ戻ります。</p>
+          <Figure n="24-3" title="save の入れ子" caption="新規作成の場合。Rails 8.1.4.1 の transactions.rb・validations.rb・callbacks.rb・persistence.rb を読んでまとめた模式図。Timestamp や Dirty などの層は省略している。">
             <NestFigure />
           </Figure>
           <p>この入れ子から、業務のコードで起きる次の動作を説明できます。</p>
@@ -927,7 +927,7 @@ _create_record:
   after_commit
 `}
           />
-          <Figure n="18-4" title="create! のコールバックと SQL" caption="上の実行結果を図にしたもの（Rails 8.1.4.1、MySQL 8.4.13）。">
+          <Figure n="24-4" title="create! のコールバックと SQL" caption="上の実行結果を図にしたもの（Rails 8.1.4.1、MySQL 8.4.13）。">
             <TimelineFigure />
           </Figure>
           <p>この結果から、次のことが分かります。</p>
@@ -939,7 +939,7 @@ _create_record:
             </li>
             <li>after_save は COMMIT の前、つまりトランザクションの中で実行され、after_commit は COMMIT の後に実行されます。</li>
             <li>
-              around_save（前）から around_save（後）までの間に、create のコールバックと INSERT が入っています。図 18-3 で、save のコールバックの層が create
+              around_save（前）から around_save（後）までの間に、create のコールバックと INSERT が入っています。図 24-3 で、save のコールバックの層が create
               のコールバックの層を包んでいるのと同じ並びです。
             </li>
           </ul>
@@ -1085,13 +1085,13 @@ Author.new(name: "x", email: "author1@example.com").valid?   # => false ["Email 
   T2: ROLLBACK
 `}
           />
-          <Figure n="18-5" title="一意性の検証の競合" caption="上の実行結果を図にしたもの。ログはスレッドごとに並べ替えている。">
+          <Figure n="24-5" title="一意性の検証の競合" caption="上の実行結果を図にしたもの。ログはスレッドごとに並べ替えている。">
             <RaceFigure />
           </Figure>
           <p>
             1行目の「結果」は、2つのスレッドの <code>create!</code> の結果です。片方は成功し、もう片方は例外になりました。その下は各スレッドが送った SQL です。T1 も T2 も、BEGIN の次に検証の
-            SELECT を送っています。検証は save のトランザクションの中で実行され（図 18-3）、この SELECT がそのトランザクションの最初の SQL だからです。どちらの SELECT も、相手の INSERT
-            より前に実行されたので0件でした（図 18-5）。
+            SELECT を送っています。検証は save のトランザクションの中で実行され（図 24-3）、この SELECT がそのトランザクションの最初の SQL だからです。どちらの SELECT も、相手の INSERT
+            より前に実行されたので0件でした（図 24-5）。
           </p>
           <p>
             両方のスレッドが検証に通り、2件目の INSERT は authors テーブルの一意の索引（<code>index_authors_on_email</code>）で止められました。Rails ガイドも、uniqueness
@@ -1375,7 +1375,7 @@ end
   after_commit
 `}
           />
-          <Figure n="18-6" title="外側のトランザクションと after_commit" caption="上の実行結果を図にしたもの。">
+          <Figure n="24-6" title="外側のトランザクションと after_commit" caption="上の実行結果を図にしたもの。">
             <OuterTxFigure />
           </Figure>
           <p>

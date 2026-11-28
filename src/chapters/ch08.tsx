@@ -7,11 +7,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const ZW = 'https://github.com/fxn/zeitwerk/blob/v2.8.3'
 
-/* ---------- 図 8-1 require_relative とファイルの実行 ---------- */
+/* ---------- 図 14-1 require_relative とファイルの実行 ---------- */
 function RequireFigure() {
   return (
     <Svg
-      id="8-1"
+      id="14-1"
       w={780}
       h={270}
       label="main.rb の1回目の require_relative greeter は greeter.rb を実行して true を返し、読み込んだファイルの絶対パスを $LOADED_FEATURES に記録する。2回目の require_relative は、$LOADED_FEATURES に記録があるので greeter.rb を実行せず false を返す。greeter.rb を実行すると Greeter クラスが定義されるので、main.rb の3行目で Greeter.new が使える"
@@ -63,11 +63,11 @@ function RequireFigure() {
   )
 }
 
-/* ---------- 図 8-2 定数とクラス ---------- */
+/* ---------- 図 14-2 定数とクラス ---------- */
 function ConstantFigure() {
   return (
     <Svg
-      id="8-2"
+      id="14-2"
       w={780}
       h={260}
       label="トップレベルで定義した定数は Object に属する。LIMIT には 3、Greeter には Greeter クラス、Admin には Admin モジュールが入る。Admin モジュールは自分の定数 Report を持ち、Admin::Report クラスが入る。Greeter や Admin::Report を参照すると、その定数に入ったクラスが返る。定義されていない Article を参照すると NameError になる"
@@ -103,7 +103,7 @@ function ConstantFigure() {
   )
 }
 
-/* ---------- 図 8-3 開発環境と本番環境で読み込む時点 ---------- */
+/* ---------- 図 14-3 開発環境と本番環境で読み込む時点 ---------- */
 function LoadTimingFigure() {
   const lane = (y: number, title: string, items: { t: string[]; fill: 'box' | 'box4' | 'box5' | 'bg' }[]) => (
     <g>
@@ -120,7 +120,7 @@ function LoadTimingFigure() {
   )
   return (
     <Svg
-      id="8-3"
+      id="14-3"
       w={780}
       h={250}
       label="development では、起動したときに app のファイルを1つも読み込まない。要求の処理中に Greeting を初めて参照したときに greeting.rb を読み込む。greeting.rb を書き換えると、次の要求の前に変更を見つけて読み込み直し、新しい内容が返る。production では、起動したときに app の26個のファイルをすべて読み込む。greeting.rb を書き換えても次の要求の応答は変わらず、再起動すると新しい内容になる"
@@ -147,7 +147,7 @@ function LoadTimingFigure() {
   )
 }
 
-/* ---------- 図 8-4 setup 直後の autoload ---------- */
+/* ---------- 図 14-4 setup 直後の autoload ---------- */
 function SetupFigure() {
   const files = [
     { y: 50, t: 'app/models/', bold: true, x: 20 },
@@ -160,7 +160,7 @@ function SetupFigure() {
   ]
   return (
     <Svg
-      id="8-4"
+      id="14-4"
       w={740}
       h={290}
       label="setup を実行した直後の状態。app/models の直下にある article.rb、admin ディレクトリ、shop.rb について、Object に autoload が設定される。Article は app/models/article.rb から読み込む。Admin はディレクトリ app/models/admin から作る。Shop は shop.rb と shop ディレクトリの両方があるので、shop.rb から読み込む明示的な名前空間として扱う。admin/report.rb と shop/item.rb には、この時点ではまだ autoload を設定しない"
@@ -194,7 +194,7 @@ function SetupFigure() {
   )
 }
 
-/* ---------- 図 8-5 Admin::Report を参照したときの流れ ---------- */
+/* ---------- 図 14-5 Admin::Report を参照したときの流れ ---------- */
 function AutoloadSeqFigure() {
   const cols = [
     { x: 90, name: 'アプリのコード' },
@@ -203,7 +203,7 @@ function AutoloadSeqFigure() {
   ]
   return (
     <Svg
-      id="8-5"
+      id="14-5"
       w={760}
       h={400}
       label="アプリのコードが Admin を参照すると、Ruby は Object に設定された autoload を見つけ、ディレクトリのパスで Kernel#require を呼ぶ。Zeitwerk の require はディレクトリだと判断し、Module.new を Admin に設定し、admin ディレクトリの中身に autoload を設定する。次に Admin::Report を参照すると、Ruby は report.rb のパスで require を呼ぶ。Zeitwerk は元の require でファイルを実行し、Admin::Report が定義されたことを確かめる。定義されていなければ Zeitwerk::NameError を投げる"
@@ -248,11 +248,11 @@ function AutoloadSeqFigure() {
   )
 }
 
-/* ---------- 図 8-6 開発環境での再読み込み ---------- */
+/* ---------- 図 14-6 開発環境での再読み込み ---------- */
 function ReloadFigure() {
   return (
     <Svg
-      id="8-6"
+      id="14-6"
       w={760}
       h={360}
       label="development でリクエストが来ると、まず ActionDispatch::Executor が executor の run を実行する。次に ActionDispatch::Reloader が、ファイル監視でファイルが変わったかを確かめる。変わっていれば、Zeitwerk の reload が読み込み済みの定数を remove_const で取り除き、$LOADED_FEATURES からファイルを消してから setup をやり直す。その後 to_prepare のコールバックを実行する。変わっていなければ何もしない。その後、ルーティングとコントローラーが実行され、参照された定数があらためてオートロードされる。応答の body が close されると complete が実行される"
@@ -305,11 +305,11 @@ function ReloadFigure() {
   )
 }
 
-/* ---------- 図 8-7 Executor の run と complete ---------- */
+/* ---------- 図 14-7 Executor の run と complete ---------- */
 function ExecutorFigure() {
   return (
     <Svg
-      id="8-7"
+      id="14-7"
       w={740}
       h={250}
       label="Executor は、アプリケーションのコードを実行する前に run のコールバックを、実行した後に complete のコールバックを呼ぶ。run では実行コンテキストを用意し、ActiveRecord のクエリキャッシュを有効にする。complete では CurrentAttributes を消し、クエリキャッシュを無効にして中身を消し、トランザクション中でなければデータベース接続をプールに返す。開発環境では、オートロードと再読み込みを安全に行うためのロックも加わる"
@@ -576,11 +576,11 @@ false
           <p>
             2回目の <code>require_relative</code> では「greeter.rb を実行しています」が表示されず、<code>false</code> が返りました。Ruby は読み込んだファイルの絶対パスを{' '}
             <code>$LOADED_FEATURES</code> という配列に記録し、記録にあるファイルはもう一度実行しません
-            <Ref n={14} />（図 8-1）。<code>require</code> も同じ働きで、こちらは自分のファイルの場所からではなく、読み込みパス（<code>$LOAD_PATH</code>
+            <Ref n={14} />（図 14-1）。<code>require</code> も同じ働きで、こちらは自分のファイルの場所からではなく、読み込みパス（<code>$LOAD_PATH</code>
             ）に並んだディレクトリから探します。gem のファイルを読み込むときに使い、Bundler がその読み込みパスを準備します（<ChapterLink n={7} section="gems" />
             ）。
           </p>
-          <Figure n="8-1" title="require_relative とファイルの実行" caption="main.rb と greeter.rb の実行結果をもとにした図。">
+          <Figure n="14-1" title="require_relative とファイルの実行" caption="main.rb と greeter.rb の実行結果をもとにした図。">
             <RequireFigure />
           </Figure>
           <p>
@@ -647,9 +647,9 @@ NameError: uninitialized constant Article
             <code>Object.const_get("Greeter")</code> は文字列で指定した名前の定数の値を返します
             <Ref n={16} />。<code>module Admin</code> の中で定義した Report は、Admin に属する定数になり、外からは <code>Admin::Report</code> と書いて参照します。このように、定数をまとめるモジュールを名前空間と呼びます（
             <ChapterLink n={3} section="module-basics" />
-            ）。定義していない <code>Article</code> を参照すると、NameError になりました（図 8-2）。
+            ）。定義していない <code>Article</code> を参照すると、NameError になりました（図 14-2）。
           </p>
-          <Figure n="8-2" title="定数とクラス" caption="constants.rb の実行結果をもとにした模式図。">
+          <Figure n="14-2" title="定数とクラス" caption="constants.rb の実行結果をもとにした模式図。">
             <ConstantFigure />
           </Figure>
           <p>
@@ -762,9 +762,9 @@ production: app/ のファイルのうち読み込み済み 26 個（app/ の .r
             <Ref n={1} />。これを一括読み込み（eager loading）と呼びます。読み込むファイルが増えるので起動には時間がかかりますが、要求の処理中にファイルを読み込むことがなくなります。
           </p>
           <p>
-            本番環境ではリロードも行いません。本番環境のサーバーで greeting.rb を書き換えても、応答は「こんにちは」のままで、サーバーを再起動すると「こんばんは」になりました（図 8-3）。本番環境に新しいコードを反映するには、サーバーを再起動します。
+            本番環境ではリロードも行いません。本番環境のサーバーで greeting.rb を書き換えても、応答は「こんにちは」のままで、サーバーを再起動すると「こんばんは」になりました（図 14-3）。本番環境に新しいコードを反映するには、サーバーを再起動します。
           </p>
-          <Figure n="8-3" title="開発環境と本番環境で読み込む時点" caption="デモのコピー（Rails 8.1.4.1）での実測をもとにした図。">
+          <Figure n="14-3" title="開発環境と本番環境で読み込む時点" caption="デモのコピー（Rails 8.1.4.1）での実測をもとにした図。">
             <LoadTimingFigure />
           </Figure>
           <p>
@@ -1110,10 +1110,10 @@ Zeitwerk@rails.main: autoload set for Shop, to be loaded from app/models/shop.rb
             と書いて起動します。ログは標準出力（ターミナル）に表示されます。NameError を調べるときに、その定数の autoload がどのファイルに設定されたか、または設定されなかったかを、このログで確かめられます。
           </p>
           <p>
-            図 8-4 は、このログの時点で Object に設定されている autoload です。左がファイル、右が autoload で、矢印は「このファイルやディレクトリから、この autoload を設定した」ことを表します。admin/ と shop/
+            図 14-4 は、このログの時点で Object に設定されている autoload です。左がファイル、右が autoload で、矢印は「このファイルやディレクトリから、この autoload を設定した」ことを表します。admin/ と shop/
             の中にある report.rb と item.rb からは矢印が出ていません。
           </p>
-          <Figure n="8-4" title="setup 直後の autoload" caption="上のログを図にしたもの。setup は各オートロードパスの直下だけを調べ、サブディレクトリの中身は親の名前空間が作られたときに調べる。">
+          <Figure n="14-4" title="setup 直後の autoload" caption="上のログを図にしたもの。setup は各オートロードパスの直下だけを調べ、サブディレクトリの中身は親の名前空間が作られたときに調べる。">
             <SetupFigure />
           </Figure>
           <p>
@@ -1196,9 +1196,9 @@ Zeitwerk@rails.main: autoload set for Shop, to be loaded from app/models/shop.rb
             </li>
           </ul>
           <p>
-            図 8-5 は、admin.rb が無い状態で <code>Admin::Report</code> を参照したときの流れです。① で Admin がディレクトリから作られ、② で report.rb が読み込まれます。右の列が、上の <code>require</code> の中で行われる処理です。
+            図 14-5 は、admin.rb が無い状態で <code>Admin::Report</code> を参照したときの流れです。① で Admin がディレクトリから作られ、② で report.rb が読み込まれます。右の列が、上の <code>require</code> の中で行われる処理です。
           </p>
-          <Figure n="8-5" title="Admin::Report を参照したときの流れ" caption="模式図。Admin のためのファイル（admin.rb）が無いので、Admin はディレクトリから作られたモジュールになる。">
+          <Figure n="14-5" title="Admin::Report を参照したときの流れ" caption="模式図。Admin のためのファイル（admin.rb）が無いので、Admin はディレクトリから作られたモジュールになる。">
             <AutoloadSeqFigure />
           </Figure>
           <p>デモのアプリケーションで実際に参照したときのログは次のとおりです。</p>
@@ -1289,7 +1289,7 @@ end
 `}
           />
           <p>
-            図 8-4 で見たとおり、setup の直後には <code>Shop::Item</code> の autoload が設定されていません。Admin のときは Zeitwerk が自分でモジュールを作ったので、作った直後に中身の autoload を設定できました。Shop は shop.rb の{' '}
+            図 14-4 で見たとおり、setup の直後には <code>Shop::Item</code> の autoload が設定されていません。Admin のときは Zeitwerk が自分でモジュールを作ったので、作った直後に中身の autoload を設定できました。Shop は shop.rb の{' '}
             <code>class Shop</code> の行で Ruby が作るので、Zeitwerk は作られた時点を別の方法で知る必要があります。autoload の設定が <code>ITEM_CLASS = Shop::Item</code> の行より遅れると、この行は NameError になります。
           </p>
           <p>
@@ -1480,7 +1480,7 @@ expected file /work/demo/lib/middleware/timing.rb to define constant Middleware:
             でファイルが変わったかを調べます。変わっていれば、初期化処理 <code>set_clear_dependencies_hook</code> が登録した次のコールバック（決まった時点で呼ばれるように登録しておく処理）が実行されます。
           </p>
           <p>
-            図 8-6 の左の列が、リクエストごとに通る順です。「ファイルが変わったか」が上の <code>check</code> で、「はい」のときだけ右の再読み込みに進みます。次に引用するのは、ファイルの監視を用意し、変更があったときの処理を登録している箇所です。
+            図 14-6 の左の列が、リクエストごとに通る順です。「ファイルが変わったか」が上の <code>check</code> で、「はい」のときだけ右の再読み込みに進みます。次に引用するのは、ファイルの監視を用意し、変更があったときの処理を登録している箇所です。
           </p>
           <Code
             lang="ruby"
@@ -1535,9 +1535,9 @@ expected file /work/demo/lib/middleware/timing.rb to define constant Middleware:
             <Ref n={9} />、Zeitwerk の <code>reload</code> は <code>unload</code> と <code>setup</code> を順に実行します。<code>unload</code> は、読み込み済みの定数を{' '}
             <code>remove_const</code>（定数を取り除くメソッド）で取り除き、読み込んだファイルを <code>$LOADED_FEATURES</code> から消します。こうしておくと、次に定数が参照されたときに{' '}
             <code>require</code> がファイルをもう一度実行します（<code>loader.rb</code> の 166〜252 行目）
-            <Ref n={10} />。再読み込みの後には <code>to_prepare</code> のコールバックが実行されます（図 8-6 の 3）。次の節で使います。
+            <Ref n={10} />。再読み込みの後には <code>to_prepare</code> のコールバックが実行されます（図 14-6 の 3）。次の節で使います。
           </p>
-          <Figure n="8-6" title="開発環境での再読み込み" caption="Rails 8.1.4.1 の ActionDispatch::Reloader・ActiveSupport::Reloader・Finisher の set_clear_dependencies_hook を読んでまとめた図。">
+          <Figure n="14-6" title="開発環境での再読み込み" caption="Rails 8.1.4.1 の ActionDispatch::Reloader・ActiveSupport::Reloader・Finisher の set_clear_dependencies_hook を読んでまとめた図。">
             <ReloadFigure />
           </Figure>
           <p>デモのアプリケーションで、ファイルの更新と再読み込みを試しました。</p>
@@ -1700,7 +1700,7 @@ end
           />
           <p>
             <code>to_prepare</code> のブロックは、初期化ファイルを読み込んだ時点では実行されません。実行されるのは、起動時に main のローダーの準備が終わった後（<ChapterLink n={7} section="config-files" />
-            ）と、開発環境で再読み込みが起きるたびです（図 8-6 の 3）。再読み込みで作り直された <code>ApiGateway</code> は article.rb の例と同じく新しいクラスオブジェクトで、前に設定した <code>endpoint</code>{' '}
+            ）と、開発環境で再読み込みが起きるたびです（図 14-6 の 3）。再読み込みで作り直された <code>ApiGateway</code> は article.rb の例と同じく新しいクラスオブジェクトで、前に設定した <code>endpoint</code>{' '}
             の値を持っていません。<code>to_prepare</code> に書いておくと、そのたびに設定し直されます。<code>after_initialize</code> のブロックは起動時に1回だけ実行されるので、必要なデータがあるかの確認のように、再読み込みの後にやり直す必要が無い処理に使います。
           </p>
           <p>
@@ -1788,11 +1788,11 @@ end
             <code>complete!</code> を呼ぶのは、内側の <code>call</code> から戻ったときではありません。サーバーが <code>rack.response_finished</code>（応答を送り終えた後に呼ぶ処理を登録するための env の値。Rack 3 で追加）を提供していれば応答の送信が終わった後、そうでなければ body の <code>close</code> のときです。body をストリーミング（本文を作りながら少しずつ送ること）で書き出している間も、データベース接続などが使える状態を保つためです
             <Ref n={12} />。
           </p>
-          <Figure n="8-7" title="Executor の run と complete" caption="Rails 8.1.4.1 で ActiveSupport・ActiveRecord の Railtie が登録しているコールバックの主なもの。">
+          <Figure n="14-7" title="Executor の run と complete" caption="Rails 8.1.4.1 で ActiveSupport・ActiveRecord の Railtie が登録しているコールバックの主なもの。">
             <ExecutorFigure />
           </Figure>
           <p>
-            Rails 8.1.4.1 で登録されている主なコールバックは次のとおりです。図 8-7 は、左が run、右が complete で、中央のアプリケーションのコードをこの2つが挟むことを表しています。
+            Rails 8.1.4.1 で登録されている主なコールバックは次のとおりです。図 14-7 は、左が run、右が complete で、中央のアプリケーションのコードをこの2つが挟むことを表しています。
           </p>
           <ul>
             <li>

@@ -8,7 +8,7 @@ const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const PUMA = 'https://github.com/puma/puma/blob/v8.0.2'
 const RACK = 'https://github.com/rack/rack/blob/v3.2.8'
 
-/* ---------- 図 6-1 HTTP の要求と応答の形 ---------- */
+/* ---------- 図 11-1 HTTP の要求と応答の形 ---------- */
 function HttpMessageFigure() {
   const part = (x: number, y: number, h: number, label: string) => (
     <T x={x} y={y + h / 2} fs={12} bold>
@@ -17,7 +17,7 @@ function HttpMessageFigure() {
   )
   return (
     <Svg
-      id="6-1"
+      id="11-1"
       w={780}
       h={316}
       label="HTTP の要求と応答は、どちらも1行目、ヘッダー、空行、本文の順に並ぶ。要求の1行目は要求行で、GET /articles/1 HTTP/1.1 のようにメソッド、パス、バージョンを並べる。ヘッダーは Host、User-Agent、Accept。GET の要求には本文が無い。応答の1行目は状態行で、HTTP/1.1 200 OK のようにバージョン、ステータスコード、語句を並べる。ヘッダーは content-type、content-length、set-cookie、x-request-id など。空行の後の本文は HTML。行の区切りは CR LF"
@@ -65,11 +65,11 @@ function HttpMessageFigure() {
   )
 }
 
-/* ---------- 図 6-2 前後に処理を挟んだときの呼び出しの順 ---------- */
+/* ---------- 図 11-2 前後に処理を挟んだときの呼び出しの順 ---------- */
 function WrapOrderFigure() {
   return (
     <Svg
-      id="6-2"
+      id="11-2"
       w={780}
       h={300}
       label="wrapped は Announce A で、A の @app が Announce B、B の @app が app（lambda）を指す。呼ぶ側が A の call を呼ぶと、A は前の表示をしてから B の call を呼び、B は前の表示をしてから app を呼ぶ。app が [200, 本文] を返すと、B が後の表示をして返し、最後に A が後の表示をして呼ぶ側に返す。要求は外側から内側へ、応答は内側から外側へ順に処理される"
@@ -106,11 +106,11 @@ function WrapOrderFigure() {
   )
 }
 
-/* ---------- 図 6-3 Puma と Rack アプリケーションの分担 ---------- */
+/* ---------- 図 11-3 Puma と Rack アプリケーションの分担 ---------- */
 function ServerAppFigure() {
   return (
     <Svg
-      id="6-3"
+      id="11-3"
       w={720}
       h={250}
       label="クライアントからの HTTP リクエストを Puma が受け取り、解析して env というハッシュを作る。Puma は Rails.application の call メソッドに env を渡して呼び出す。Rails.application は status、headers、body の3要素の配列を返す。Puma はそれを HTTP レスポンスとしてクライアントに書き出し、最後に body の close を呼ぶ"
@@ -149,7 +149,7 @@ function ServerAppFigure() {
   )
 }
 
-/* ---------- 図 6-4 ミドルウェアを1つ挟んだときの呼び出し順 ---------- */
+/* ---------- 図 11-4 ミドルウェアを1つ挟んだときの呼び出し順 ---------- */
 function MiddlewareSeqFigure() {
   const cols = [
     { x: 100, name: 'Puma' },
@@ -158,7 +158,7 @@ function MiddlewareSeqFigure() {
   ]
   return (
     <Svg
-      id="6-4"
+      id="11-4"
       w={680}
       h={330}
       label="Puma が Timing の call を呼ぶ。Timing は開始時刻を記録してから、内側のアプリの call を呼ぶ。アプリは status、headers、body を Timing に返す。Timing は経過時間を x-elapsed-ms ヘッダーとして headers に追加し、配列を Puma に返す。前処理は内側を呼ぶ前、後処理は内側から戻った後に行われる"
@@ -195,7 +195,7 @@ function MiddlewareSeqFigure() {
   )
 }
 
-/* ---------- 図 6-5 Rails のミドルウェアスタック（production） ---------- */
+/* ---------- 図 11-5 Rails のミドルウェアスタック（production） ---------- */
 function RailsStackFigure() {
   type Row = { name: string; role: string; dashed?: boolean; endpoint?: boolean }
   const groups: { label: string; rows: Row[] }[] = [
@@ -246,7 +246,7 @@ function RailsStackFigure() {
         { name: 'Rack::TempfileReaper', role: 'アップロードの一時ファイルを消す' },
       ],
     },
-    { label: 'エンドポイント', rows: [{ name: 'ActionDispatch::Routing::RouteSet', role: 'ルーティング（第9章）', endpoint: true }] },
+    { label: 'エンドポイント', rows: [{ name: 'ActionDispatch::Routing::RouteSet', role: 'ルーティング（第15章）', endpoint: true }] },
   ]
   const rowH = 24
   const gap = 4
@@ -266,7 +266,7 @@ function RailsStackFigure() {
   const h = y + 8
   return (
     <Svg
-      id="6-5"
+      id="11-5"
       w={780}
       h={h}
       label="production 環境で bin/rails middleware が表示するミドルウェアを、上から順に役割ごとにまとめた図。TLS と静的ファイルの担当として AssumeSSL、SSL、Rack::Sendfile、Static。実行の管理とログとして Executor、Rack::Runtime、Rack::MethodOverride、RequestId、RemoteIp、SilenceRequest、Logger。例外の担当として ShowExceptions と DebugExceptions。状態とヘッダーの担当として Callbacks、Cookies、CookieStore、Flash、ContentSecurityPolicy::Middleware。応答の後処理として Rack::Head、ConditionalGet、ETag、TempfileReaper。最後にエンドポイントとしてルーティングの RouteSet がある。Flash は一覧には出るが、実際の呼び出しの連鎖には入らない"
@@ -312,11 +312,11 @@ function RailsStackFigure() {
   )
 }
 
-/* ---------- 図 6-6 reverse と inject による組み立て ---------- */
+/* ---------- 図 11-6 reverse と inject による組み立て ---------- */
 function BuildFigure() {
   return (
     <Svg
-      id="6-6"
+      id="11-6"
       w={740}
       h={300}
       label="ミドルウェアの配列が上から SSL、Logger、ETag の順で、エンドポイントが routes の場合の組み立て。配列を逆順にして、まず ETag.new(routes)、次に Logger.new(etag)、最後に SSL.new(logger) を作る。最後に作った SSL のインスタンスが Rails.application.app になり、SSL の @app が Logger、Logger の @app が ETag、ETag の @app が routes を指す入れ子の構造になる"
@@ -567,9 +567,7 @@ const ch06: Chapter = {
       body: (
         <>
           <p>
-            ブラウザーで記事のページの URL を開くと、ブラウザーはその URL のサーバーに接続し、「このパスのページを返してください」という内容を、決まった書き方の文字の並びで送ります。サーバーはページの HTML
-            などを同じように決まった書き方で送り返します。この書き方の取り決めを <Term en="Hypertext Transfer Protocol">HTTP</Term> と呼び、ブラウザーが送るものを要求（リクエスト）、サーバーが返すものを応答（レスポンス）と呼びます
-            <Ref n={17} />。
+            HTTP の要求と応答の読み方は <ChapterLink n={94} /> で扱います。ここでは HTTP/1.1 の実測を使い、Puma が受け取る要求と、Rails のミドルウェアが付けた応答ヘッダーを比べます。
           </p>
           <p>
             curl はコマンドラインから HTTP の要求を送るプログラムです。<code>-v</code> を付けると、送った要求を <code>{'>'}</code> で始まる行に、受け取った応答のヘッダーを <code>{'<'}</code>{' '}
@@ -655,48 +653,6 @@ $ curl -v -X POST http://127.0.0.1:3300/probe/echo/hello -d 'body=Hi'
             は受け取った値をそのまま JSON で返すように作った検証用のアクションで、応答の本文から、サーバーが本文の <code>body=Hi</code> を受け取ったことが分かります。
           </p>
           <p>
-            ステータスコードは3桁の数字で、最初の桁が種類を表します
-            <Ref n={17} />。
-          </p>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ステータスコード</th>
-                  <th>種類</th>
-                  <th>例</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1xx</td>
-                  <td>処理の途中経過の通知</td>
-                  <td>本書ではほとんど扱わない</td>
-                </tr>
-                <tr>
-                  <td>2xx</td>
-                  <td>成功</td>
-                  <td>200 OK：要求どおりに処理した</td>
-                </tr>
-                <tr>
-                  <td>3xx</td>
-                  <td>リダイレクトなど（別の URL を開き直させる）</td>
-                  <td>302 Found：location ヘッダーの URL へ移動させる。304 Not Modified：前に受け取った内容から変わっていない</td>
-                </tr>
-                <tr>
-                  <td>4xx</td>
-                  <td>要求の側の誤り</td>
-                  <td>404 Not Found：そのパスに対応するものが無い</td>
-                </tr>
-                <tr>
-                  <td>5xx</td>
-                  <td>サーバーの側の誤り</td>
-                  <td>500 Internal Server Error：処理の途中で例外が起きた</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p>
             デモで、ルートが無いパスと、例外を起こすように作った検証用のアクションを要求すると、それぞれ 404 と 500 が返りました（<code>{"-w '%{http_code}'"}</code> はステータスコードだけを表示させるオプションです）。
           </p>
           <Code
@@ -709,10 +665,10 @@ $ curl -s -o /dev/null -w '%{http_code}\\n' http://127.0.0.1:3300/probe/boom
 `}
           />
           <p>
-            要求も応答も1行目、ヘッダー、空行、本文の順に並んだ文字の並びです（図 6-1）。ネットワークからこの文字の並びを読み取り、応答の文字の並びを書き出すのは、Rails ではなく Web サーバーの Puma
+            要求も応答も1行目、ヘッダー、空行、本文の順に並んだ文字の並びです（図 11-1）。ネットワークからこの文字の並びを読み取り、応答の文字の並びを書き出すのは、Rails ではなく Web サーバーの Puma
             です。次の節ではその仕事を小さな Ruby のプログラムで確かめます。
           </p>
-          <Figure n="6-1" title="HTTP の要求と応答の形" caption="上の curl -v の出力から主な行を抜き出した図。">
+          <Figure n="11-1" title="HTTP の要求と応答の形" caption="上の curl -v の出力から主な行を抜き出した図。">
             <HttpMessageFigure />
           </Figure>
         </>
@@ -882,10 +838,10 @@ p wrapped.call({ method: "GET", path: "/articles/1" })
           </p>
           <p>
             表示の順を見ると、A の「→」、B の「→」、アプリ、B の「←」、A の「←」の順でした。外側の A が内側の B を呼び、B が app を呼ぶので、要求は外側から順に、応答は内側から順に処理されます（図
-            6-2）。Rails の x-request-id や x-runtime も、この形でコントローラーより外側に置かれた処理が付けています。アプリケーションの本体を内側に持ち、その前後で処理を行うオブジェクトを
+            11-2）。Rails の x-request-id や x-runtime も、この形でコントローラーより外側に置かれた処理が付けています。アプリケーションの本体を内側に持ち、その前後で処理を行うオブジェクトを
             <Term en="middleware">ミドルウェア</Term>と呼びます。
           </p>
-          <Figure n="6-2" title="前後に処理を挟んだときの呼び出しの順" caption="wrap.rb の実行結果をもとにした模式図。">
+          <Figure n="11-2" title="前後に処理を挟んだときの呼び出しの順" caption="wrap.rb の実行結果をもとにした模式図。">
             <WrapOrderFigure />
           </Figure>
           <p>
@@ -1124,7 +1080,7 @@ GET /hello?x=1
             Rack の仕様があるため、Web サーバーとアプリケーションは互いの実装を知らずに組み合わせられます。Puma の側は、通信の接続口であるソケットから HTTP リクエストを読んで解析し、env を作って{' '}
             <code>app.call(env)</code> を呼び、返ってきた配列を HTTP の応答として書き出します。Rails の側は、env を受け取って3要素の配列を返すことだけを担当します。
           </p>
-          <Figure n="6-3" title="Puma と Rack アプリケーションの分担" caption="模式図。HTTP の解析と書き出しは Puma が行い、Rails は Ruby のオブジェクトだけを扱う。">
+          <Figure n="11-3" title="Puma と Rack アプリケーションの分担" caption="模式図。HTTP の解析と書き出しは Puma が行い、Rails は Ruby のオブジェクトだけを扱う。">
             <ServerAppFigure />
           </Figure>
           <p>
@@ -1256,11 +1212,11 @@ GET /hello?x=1
             <code>x-elapsed-ms</code> は Timing が追加したヘッダー、<code>content-length</code> は Puma が本文の長さから付けたヘッダーです。<code>use</code> と <code>run</code> は{' '}
             <code>Rack::Builder</code> のメソッドで、<code>use Timing</code> は「<code>run</code> に渡したアプリケーションを <code>Timing.new</code> で包む」という意味になります。
           </p>
-          <Figure n="6-4" title="ミドルウェアを1つ挟んだときの呼び出し順" caption="図 6-3 の Rails.application の位置に、Timing とアプリ本体が入った状態。">
+          <Figure n="11-4" title="ミドルウェアを1つ挟んだときの呼び出し順" caption="図 11-3 の Rails.application の位置に、Timing とアプリ本体が入った状態。">
             <MiddlewareSeqFigure />
           </Figure>
           <p>
-            図 6-4 のように、<code>@app.call(env)</code> より前に書いた処理はリクエストが内側へ進むときに、後に書いた処理は応答が外側へ戻るときに実行されます。ミドルウェアが何段も重なると、リクエストは外側から順に、応答は内側から順に処理されます。
+            図 11-4 のように、<code>@app.call(env)</code> より前に書いた処理はリクエストが内側へ進むときに、後に書いた処理は応答が外側へ戻るときに実行されます。ミドルウェアが何段も重なると、リクエストは外側から順に、応答は内側から順に処理されます。
           </p>
           <p>
             内側を呼ばずに自分で配列を返すこともできます。認証に失敗したら 401 を返す、メンテナンス中なら 503 を返す、といった処理はこの形で書きます。その場合、内側のミドルウェアとアプリケーションは実行されません。
@@ -1416,19 +1372,18 @@ run Demo::Application.routes
           />
           <p>
             上にあるものほど外側にあり、リクエストを先に受け取ります。最後の <code>run</code> の行には、ミドルウェアを通ったリクエストを最後に受け取るアプリケーション（ここではエンドポイントと呼びます）を指定します。これは、ルーティング（要求のメソッドとパスから、どのコントローラーのどのアクションを呼ぶかを決める処理）を行う <code>RouteSet</code>{' '}
-            のインスタンスです。役割ごとにまとめると図 6-5 のようになります。各ミドルウェアの説明は Rails ガイドにもあります
+            のインスタンスです。役割ごとにまとめると図 11-5 のようになります。各ミドルウェアの説明は Rails ガイドにもあります
             <Ref n={3} />。
           </p>
           <Figure
-            n="6-5"
+            n="11-5"
             title="Rails のミドルウェアスタック（production）"
             caption="Rails 8.1.4.1 の新規アプリケーションを production 環境で実行した結果を、役割ごとにまとめた図。役割の分け方は本書によるもの。"
           >
             <RailsStackFigure />
           </Figure>
           <p>
-            一覧の <code>use</code> と <code>run</code> は、config.ru の <code>use</code> と <code>run</code> と同じ意味です。22個のうち、業務での調査や設定に関係するものを、何をするか、どの場面で関係するかと合わせて表にまとめます。表に無いものの働きは、図
-            6-5 の「主な働き」の列に書いたとおりです。
+            一覧の <code>use</code> と <code>run</code> は、config.ru の <code>use</code> と <code>run</code> と同じ意味です。22個のうち、業務での調査や設定に関係するものを、何をするか、どの場面で関係するかと合わせて表にまとめます。表に無いものの働きは、図 11-5 の「主な働き」の列に書いたとおりです。
           </p>
           <div className="table-wrap">
             <table>
@@ -1835,10 +1790,10 @@ run Demo::Application.routes
             </li>
           </ul>
           <p>
-            図 6-6 は、ミドルウェアが SSL・Logger・ETag の3つの場合に、<code>a</code> と <code>e</code> がどう変わるかを示しています。1回目は <code>a</code> が routes、<code>e</code> が ETag で、<code>ETag.new(routes)</code>{' '}
+            図 11-6 は、ミドルウェアが SSL・Logger・ETag の3つの場合に、<code>a</code> と <code>e</code> がどう変わるかを示しています。1回目は <code>a</code> が routes、<code>e</code> が ETag で、<code>ETag.new(routes)</code>{' '}
             を作ります。2回目は <code>a</code> がその ETag のインスタンス、<code>e</code> が Logger です。3回目に作った SSL のインスタンスが <code>build</code> の戻り値になり、<code>Rails.application.app</code> が返すオブジェクトになります。
           </p>
-          <Figure n="6-6" title="reverse と inject による組み立て" caption="模式図。ミドルウェアを3つに減らして描いている。実際の production 環境では、外側から AssumeSSL、SSL、Rack::Sendfile … と続く。">
+          <Figure n="11-6" title="reverse と inject による組み立て" caption="模式図。ミドルウェアを3つに減らして描いている。実際の production 環境では、外側から AssumeSSL、SSL、Rack::Sendfile … と続く。">
             <BuildFigure />
           </Figure>
           <p>

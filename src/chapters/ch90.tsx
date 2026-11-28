@@ -1,3 +1,4 @@
+import { principleSection } from './principle-judgment'
 import type { ReactNode } from 'react'
 import type { Chapter } from '../content/types'
 import { Callout, ChapterLink, Code, Figure, Ref, Term } from '../components/content'
@@ -6,11 +7,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 const GH72 = 'https://github.com/rails/rails/blob/v7.2.2.1'
 
-/* ---------- 図 71-1 注文一覧の API の構成と、SQL が増える箇所 ---------- */
+/* ---------- 図 88-1 注文一覧の API の構成と、SQL が増える箇所 ---------- */
 function SceneFigure() {
   return (
     <Svg
-      id="71-1"
+      id="88-1"
       w={780}
       h={410}
       label="管理画面のブラウザーが GET /admin/orders を送ると、Admin::OrdersController#index が注文を100件読み、1件ずつ OrderSerializer#as_json でハッシュを作り、render json: で返す。OrderSerializer は13行目で customer.name、14行目で line_items.map、15行目で item.product.name、最後に Order#total を呼ぶ。コントローラーは MySQL に1回だけ SQL を送るが、シリアライザーは注文1件ごとに customers を1回、line_items を1回、明細の行の数だけ products を、合計の SUM を1回送る。100件を返す1回の要求で SQL は689回になり、そのうち12回はクエリキャッシュから返る。開発者が遅いと推測したのは render json: の JSON の生成の部分だった"
@@ -75,7 +76,7 @@ function SceneFigure() {
   )
 }
 
-/* ---------- 図 71-3 計測の手順 ---------- */
+/* ---------- 図 88-3 計測の手順 ---------- */
 function StepsFigure() {
   const top: { x: number; title: string; sub: string }[] = [
     { x: 20, title: '① 症状を数にする', sub: 'どの要求が何 ms か・目標' },
@@ -85,7 +86,7 @@ function StepsFigure() {
   ]
   return (
     <Svg
-      id="71-3"
+      id="88-3"
       w={780}
       h={330}
       label="計測の手順を7つの箱で示す。上の段は左から、①症状を数にする（どの要求が何 ms かと目標）、②基準値を測る（本番の設定、暖機、50回）、③内訳を見る（SQL、Views、その他）、④仮説を確かめる（SQL のログの呼び出し元）。下の段は右から左へ、⑤1か所だけ直す（1回に1つの変更）、⑥同じ条件で測り直す（直す前のコードと交互に比べる）、目標に届いたかの判断。届かなければ③に戻り、届けば⑦テストで固定する（SQL の回数を確かめる spec）。下には、⑥で効果を測れなかった変更は戻すと書いている"
@@ -121,7 +122,7 @@ function StepsFigure() {
   )
 }
 
-/* ---------- 図 71-4 直す前の1回の要求の時間の内訳 ---------- */
+/* ---------- 図 88-4 直す前の1回の要求の時間の内訳 ---------- */
 const breakdownRows: { label: string; sub: string; sql: number; views: number; other: number }[] = [
   { label: 'v0 直す前', sub: '206ms', sql: 108.6, views: 0.7, other: 96.7 },
   { label: 'v1 JSON.generate', sub: '194ms', sql: 101.9, views: 0, other: 92.1 },
@@ -162,7 +163,7 @@ function BreakdownFigure() {
   }
   return (
     <Svg
-      id="71-4"
+      id="88-4"
       w={780}
       h={300}
       label="Completed の行の50回の中央値から作った横棒。直す前の v0 は全体206ms のうち、SQL（ActiveRecord）が108.6ms、Views が0.7ms、残りのその他（Ruby の処理など）が約96.7ms。Views には render json: の中の JSON の生成が入る。推測で直した v1 は全体194ms のうち、SQL が101.9ms、Views が0.0ms、その他が約92.1ms で、JSON.generate は render より前に動くので、その時間はその他に入る。下の枠は、JSON の生成だけを200回測った中央値で、Active Support の to_json が0.23ms、JSON.generate が0.22ms"
@@ -186,7 +187,7 @@ function BreakdownFigure() {
   )
 }
 
-/* ---------- 図 71-5 直す前と後の SQL の回数と応答時間 ---------- */
+/* ---------- 図 88-5 直す前と後の SQL の回数と応答時間 ---------- */
 type Kind = 'orders' | 'customers' | 'line_items' | 'products' | 'sum'
 const kindFill: Record<Kind, string> = {
   orders: 'var(--fig-bg)',
@@ -272,7 +273,7 @@ function BeforeAfterFigure() {
   }
   return (
     <Svg
-      id="71-5"
+      id="88-5"
       w={780}
       h={350}
       label="左は1回の要求で送る SQL の回数を、テーブルの種類ごとに積み上げた横棒。直す前の v0 は orders 1回、customers 100回、line_items 100回、products 388回、SUM 100回の合計689回。includes を足した v2 は orders、customers、line_items、products が1回ずつで、SUM の100回が残り合計104回。合計も Ruby で計算した v3 は4回。右は curl で測った応答時間の P50（塗りの棒）と P95（破線の棒）。v0 は P50 208.1ms、P95 265.1ms、v2 は P50 56.6ms、P95 98.6ms、v3 は P50 16.4ms、P95 43.0ms。P95 の目標の100ms に縦の破線を引いている"
@@ -293,11 +294,11 @@ function BeforeAfterFigure() {
   )
 }
 
-/* ---------- 図 71-6 計測を待つ変更と、待たずに直す変更 ---------- */
+/* ---------- 図 88-6 計測を待つ変更と、待たずに直す変更 ---------- */
 function OveruseFigure() {
   return (
     <Svg
-      id="71-6"
+      id="88-6"
       w={780}
       h={440}
       label="横軸は原因の確かさで、左は推測だけ、右はコードの形やテストの数で確か。縦軸は直したときに増えるもので、下はほとんど増えない、上はコード・挙動の違い・確かめる手間が増える。右下は計測を待たずに直す変更で、N+1 に includes を足す（v3、v6）、外部キーの索引、find_each。右上は計測で効果と目標を確かめてから直す変更で、キャッシュ、集計した値を持つ列や表、非同期の処理。左下は試して前後を測り、効果がなければ戻す小さな変更。左上は計測するまで直さない変更で、この章の JSON の生成の書き換え（日時の形式が変わった）、手書きの SQL。右下から左上への青い矢印と赤い文字は、v5 が原因の確かな N+1 を、計測するまで直さない変更として扱ったことを示す"
@@ -463,11 +464,11 @@ end
           <p>
             <code>render json:</code> にハッシュを渡すと、Rails はそのハッシュの <code>to_json</code> を呼んで JSON の文字列にし、応答の本文にします<Ref n={5} />。この <code>to_json</code> は Active Support が定義したもので、値ごとに <code>as_json</code> を呼びます。注文日時（ActiveSupport::TimeWithZone）は、as_json で <code>"2026-09-02T12:23:00.000+09:00"</code> の形（ISO 8601。秒の小数は3桁）になります<Ref n={7} />。
           </p>
-          <Figure n="71-1" title="注文一覧の API の構成と、SQL が増える箇所" caption="実線は呼び出しと SQL、破線は開発者の推測（概念上の要素）が指す箇所。赤い文字は、要求1回で送る SQL が増える箇所。">
+          <Figure n="88-1" title="注文一覧の API の構成と、SQL が増える箇所" caption="実線は呼び出しと SQL、破線は開発者の推測（概念上の要素）が指す箇所。赤い文字は、要求1回で送る SQL が増える箇所。">
             <SceneFigure />
           </Figure>
           <p>
-            図 71-1 は1回の要求で通る部品と、SQL を送る箇所を並べたものです。コントローラーに書かれている SQL は注文を読む1回だけですが、シリアライザーの中で関連（customer・line_items・product）をたどるたびに、Active Record が SQL を送ります。この段階では、開発者はまだこのことに気づいていません。
+            図 88-1 は1回の要求で通る部品と、SQL を送る箇所を並べたものです。コントローラーに書かれている SQL は注文を読む1回だけですが、シリアライザーの中で関連（customer・line_items・product）をたどるたびに、Active Record が SQL を送ります。この段階では、開発者はまだこのことに気づいていません。
           </p>
           <h3>推測で JSON の生成を直す</h3>
           <p>
@@ -559,7 +560,7 @@ A（v0）の P50 202.8ms、B（v1）の P50 198.8ms（50組）
           <p>
             その前の267ページには、入出力で時間が決まるのではないプログラムでは、実行時間の大部分がソースの約3%に集まるという経験が書かれています<Ref n={1} />。この章の API は、後で測ると時間の約半分が SQL の応答を待つ時間で、入出力で時間が決まる側のプログラムです。それでも、直感による推測は外れるという指摘は、そのまま当てはまりました。論文の要旨は、読みやすく正しいが効率の悪いかもしれないプログラムから始め、必要なときに体系的な変換で効率のよいプログラムにする方法を述べています<Ref n={1} />。
           </p>
-          <Figure n="71-2" title="推測で直すときと、計測してから直すときの違い" caption="数値はこの章のデモを本番の設定で動かして得たもの。">
+          <Figure n="88-2" title="推測で直すときと、計測してから直すときの違い" caption="数値はこの章のデモを本番の設定で動かして得たもの。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -595,7 +596,7 @@ A（v0）の P50 202.8ms、B（v1）の P50 198.8ms（50組）
             </div>
           </Figure>
           <p>
-            図 71-2 は前の節の進め方と、次の節の進め方を並べたものです。計測してから直す進め方では、コードを書き換える前に、基準値と内訳を測ります。
+            図 88-2 は前の節の進め方と、次の節の進め方を並べたものです。計測してから直す進め方では、コードを書き換える前に、基準値と内訳を測ります。
           </p>
           <h3>似た原則との違い</h3>
           <ul>
@@ -627,11 +628,11 @@ A（v0）の P50 202.8ms、B（v1）の P50 198.8ms（50組）
             <li>推測で入れた変更（v1）も、測ってから残すかを決める</li>
             <li>SQL の回数をテストで固定する</li>
           </ol>
-          <Figure n="71-3" title="計測の手順" caption="①〜⑦は本文の手順と対応する（手順1が①②、手順4が⑤⑥、手順6が⑦）。青い矢印は判断のあとに進む先。">
+          <Figure n="88-3" title="計測の手順" caption="①〜⑦は本文の手順と対応する（手順1が①②、手順4が⑤⑥、手順6が⑦）。青い矢印は判断のあとに進む先。">
             <StepsFigure />
           </Figure>
           <p>
-            図 71-3 のように、直したあとは必ず測り直し、目標に届くまで内訳を見る所に戻ります。1回に1か所だけ直すのは、2か所を同時に直すと、どちらの変更で速くなったのかを区別できないからです。
+            図 88-3 のように、直したあとは必ず測り直し、目標に届くまで内訳を見る所に戻ります。1回に1か所だけ直すのは、2か所を同時に直すと、どちらの変更で速くなったのかを区別できないからです。
           </p>
           <h3>手順1：症状を数にして、基準値を測る</h3>
           <p>
@@ -728,11 +729,11 @@ done > log/ab-$1-$2.txt
             </li>
             <li>残りの約 89ms（206 − 0.7 − 116.1）：コントローラーとシリアライザーの Ruby の処理です。SQL を組み立てる処理や、読んだ行からオブジェクトを作る処理もここに入ります。</li>
           </ul>
-          <Figure n="71-4" title="直す前の1回の要求の時間の内訳（DB・Ruby・ビュー）" caption="v0 と v1 の Completed の行の50回の中央値から作った。その他は全体から Views と ActiveRecord を引いた値。下の枠は script/json_bench.rb の結果。">
+          <Figure n="88-4" title="直す前の1回の要求の時間の内訳（DB・Ruby・ビュー）" caption="v0 と v1 の Completed の行の50回の中央値から作った。その他は全体から Views と ActiveRecord を引いた値。下の枠は script/json_bench.rb の結果。">
             <BreakdownFigure />
           </Figure>
           <p>
-            図 71-4 は50回の中央値で内訳を並べたものです。v0 の 206ms のうち、SQL が 108.6ms、その他（Ruby の処理など）が約 96.7ms で、JSON の生成が入る Views は 0.7ms でした。v1 の Views が 0.0ms なのは、<code>JSON.generate(payload)</code> が render の引数として render より前に動くので、その時間が「その他」に入るからです。
+            図 88-4 は50回の中央値で内訳を並べたものです。v0 の 206ms のうち、SQL が 108.6ms、その他（Ruby の処理など）が約 96.7ms で、JSON の生成が入る Views は 0.7ms でした。v1 の Views が 0.0ms なのは、<code>JSON.generate(payload)</code> が render の引数として render より前に動くので、その時間が「その他」に入るからです。
           </p>
           <p>JSON の生成だけの時間も同じデータで測りました。</p>
           <Code
@@ -873,11 +874,11 @@ A（v0）の P50 133.5ms、B（v3）の P50 9.6ms（50組）
           <p>
             SQL は4回（orders・customers・line_items・products を1回ずつ）になり、P50 は 16.4ms、P95 は 43.0ms で目標に届きました。交互に比べた結果でも、50組のすべてで v3 のほうが速く、差の中央値は 122.6ms でした（この回の v0 の P50 は 133.5ms で、手順1の 208.1ms より短く、ここでも回ごとのばらつきが出ています）。v3 の応答の本文は cmp で比べて v0 と1バイトも違いませんでした。
           </p>
-          <Figure n="71-5" title="直す前と後の SQL の回数と応答時間" caption="左は1回の要求で送る SQL を種類ごとに積み上げた横棒（v0 の products の388回にはクエリキャッシュの12回を含む）。右は script/measure.sh の P50（塗り）と P95（破線）。">
+          <Figure n="88-5" title="直す前と後の SQL の回数と応答時間" caption="左は1回の要求で送る SQL を種類ごとに積み上げた横棒（v0 の products の388回にはクエリキャッシュの12回を含む）。右は script/measure.sh の P50（塗り）と P95（破線）。">
             <BeforeAfterFigure />
           </Figure>
           <p>
-            図 71-5 のように、SQL の回数と応答時間は一緒に減りました。Completed の行の中央値で見ると、SQL の時間は 108.6ms から 4.0ms に、その他（Ruby の処理）は約 96.7ms から約 9.5ms（14 − 4.0 − 0.5）に減っています。N+1 のクエリは DB の待ち時間だけでなく、SQL を組み立てて結果からオブジェクトを作る Ruby の時間も、回数の分だけ増やしていました。デモでは DB が同じマシンにあり、SQL 1回あたりの時間は約 0.16ms でした。DB が別のサーバーにある環境では、SQL 1回ごとにネットワークの往復の時間が加わります。
+            図 88-5 のように、SQL の回数と応答時間は一緒に減りました。Completed の行の中央値で見ると、SQL の時間は 108.6ms から 4.0ms に、その他（Ruby の処理）は約 96.7ms から約 9.5ms（14 − 4.0 − 0.5）に減っています。N+1 のクエリは DB の待ち時間だけでなく、SQL を組み立てて結果からオブジェクトを作る Ruby の時間も、回数の分だけ増やしていました。デモでは DB が同じマシンにあり、SQL 1回あたりの時間は約 0.16ms でした。DB が別のサーバーにある環境では、SQL 1回ごとにネットワークの往復の時間が加わります。
           </p>
           <h3>手順5：推測で入れた変更も、測ってから決める</h3>
           <p>
@@ -1052,11 +1053,11 @@ v6 Completed の中央値: 全体 9ms  Views 0.3ms  ActiveRecord 2.7ms  SQL 5回
             v6 は includes に <code>:shipping_address</code> を足しただけです。テストは通り、SQL は5回、P50 は 9.8ms でした。
           </p>
           <h3>判断の目安</h3>
-          <Figure n="71-6" title="計測を待つ変更と、待たずに直す変更" caption="横軸は原因の確かさ、縦軸は直したときに増えるもの。青い矢印と赤い文字は右下の変更を左上の変更として扱った当てはめすぎ（v5）。">
+          <Figure n="88-6" title="計測を待つ変更と、待たずに直す変更" caption="横軸は原因の確かさ、縦軸は直したときに増えるもの。青い矢印と赤い文字は右下の変更を左上の変更として扱った当てはめすぎ（v5）。">
             <OveruseFigure />
           </Figure>
           <p>
-            図 71-6 は変更を「原因の確かさ」と「直したときに増えるもの」で分けたものです。Measure Before Optimizing が計測の前にしないように勧めるのは、原因が推測だけで、コードや挙動の違いが増える変更（左上。この章の v1）です。右下の変更まで計測を待たせると、v5 のように、測り終えるまで利用者が遅いほうを待ち、切り替えのコードも増えます。
+            図 88-6 は変更を「原因の確かさ」と「直したときに増えるもの」で分けたものです。Measure Before Optimizing が計測の前にしないように勧めるのは、原因が推測だけで、コードや挙動の違いが増える変更（左上。この章の v1）です。右下の変更まで計測を待たせると、v5 のように、測り終えるまで利用者が遅いほうを待ち、切り替えのコードも増えます。
           </p>
           <ul>
             <li>
@@ -1080,9 +1081,9 @@ v6 Completed の中央値: 全体 9ms  Views 0.3ms  ActiveRecord 2.7ms  SQL 5回
         <>
           <h3>Rails で使える計測の道具</h3>
           <p>
-            Rails には、時間と回数を測るための仕組みが標準で入っています。この章で使ったものと、本書のほかの章で詳しく扱ったものを図 71-7 にまとめました。
+            Rails には、時間と回数を測るための仕組みが標準で入っています。この章で使ったものと、本書のほかの章で詳しく扱ったものを図 88-7 にまとめました。
           </p>
-          <Figure n="71-7" title="Rails で使える計測の道具と、詳しい章" caption="「この章」の列はこの章のどの手順で使ったか。">
+          <Figure n="88-7" title="Rails で使える計測の道具と、詳しい章" caption="「この章」の列はこの章のどの手順で使ったか。">
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1166,7 +1167,7 @@ v6 Completed の中央値: 全体 9ms  Views 0.3ms  ActiveRecord 2.7ms  SQL 5回
                   </tr>
                   <tr>
                     <th scope="row">assert_queries_count</th>
-                    <td>ブロックの中で送った SQL の回数を、Minitest のテストで確かめる</td>
+                    <td>ブロック内で発行された SQL の回数をテストで確認する</td>
                     <td>RSpec では Notifications で数えた</td>
                     <td>なし</td>
                   </tr>
@@ -1175,7 +1176,7 @@ v6 Completed の中央値: 全体 9ms  Views 0.3ms  ActiveRecord 2.7ms  SQL 5回
             </div>
           </Figure>
           <p>
-            図 71-7 のうち、assert_queries_count は Rails 7.2.0 からアプリケーションで使えるようになったアサーションです<Ref n={17} />。Minitest の ActiveSupport::TestCase では <code>{'assert_queries_count(4) { get "/admin/orders" }'}</code> のように書けます。この章は RSpec なので、同じことを ActiveSupport::Notifications の購読で書きました。
+            図 88-7 の <code>assert_queries_count</code> は、Rails 7.2.0 からアプリケーションでも使えるようになったテスト用のメソッドです<Ref n={17} />。この章の RSpec では、<code>ActiveSupport::Notifications</code> の SQL イベントを購読して回数を確認しました。
           </p>
           <h3>性能のガイドとの関係</h3>
           <p>
@@ -1196,6 +1197,29 @@ v6 Completed の中央値: 全体 9ms  Views 0.3ms  ActiveRecord 2.7ms  SQL 5回
         </>
       ),
     },
+    principleSection({
+      lead: (
+        <>
+          計測の前にしないのは、原因が推測だけで、コードや挙動の違いが増える変更です。この章では Completed の行で時間の内訳を見て SQL のログで N+1 を確かめ、1か所ずつ直して測り直しました。原因が確かで、includes のように Rails の標準の機能で小さく直せる変更は、計測を待たずに直します。
+        </>
+      ),
+      benefit: {
+        text: <>推測で JSON の生成を書き換えた v1 は、組ごとの差の中央値が 4.4ms で、日時の形式が変わってテストが落ちた。計測で N+1 を見つけて直すと、SQL は689回から4回に、P50 は 208.1ms から 16.4ms になった。SQL の回数を確かめるテストで、件数を変えても4回のままであることを固定した。</>,
+        basis: <><ChapterLink n={90} section="scene" />、<ChapterLink n={90} section="apply" /></>,
+      },
+      cost: {
+        text: <>本番の設定で暖機し、2つのコードに交互に要求を送って比べる手間がかかる。同じ v0 でも P50 は 151.5ms から 313.1ms まで変わったので、1回の測定では判断できない。部分だけを測る小さなベンチマークは、全体の中での割合を示さない。</>,
+        basis: <><ChapterLink n={90} section="apply" />、<ChapterLink n={90} section="overuse" /></>,
+      },
+      alternative: {
+        text: <>N+1 の includes、索引、find_each のように原因が確かな変更は、計測を待たずに直す。配送先の先読みを環境変数で切り替えて本番で測った例では、測り終えるまで利用者が遅いほう（P95 97.5ms、先読みした場合は 20.8ms）を待ち、切り替えのコードと両方の設定のテストが増えた。</>,
+        basis: <ChapterLink n={90} section="overuse" />,
+      },
+      criterion: {
+        text: <>原因は計測やテストの数で確かめられているか、推測だけか。直したときに、コード・挙動の違い・古い値を返す可能性が増えるか。キャッシュのように効果がデータの量で変わる変更は、計測で確かめてから入れる。</>,
+        basis: <ChapterLink n={90} section="overuse" />,
+      },
+    }),
     {
       id: 'summary',
       title: 'まとめ',

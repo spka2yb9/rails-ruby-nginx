@@ -4,11 +4,11 @@ import { Arrow, Box, Svg, T } from '../components/diagram'
 
 const GH = 'https://github.com/rails/rails/blob/v8.1.4.1'
 
-/* ---------- 図 76-1 適用前と適用後の依存の向き ---------- */
+/* ---------- 図 93-1 適用前と適用後の依存の向き ---------- */
 function DependenciesFigure() {
   return (
     <Svg
-      id="76-1"
+      id="93-1"
       w={760}
       h={450}
       label="適用前は Product#price_label が Net::HTTP（為替 API）、ENV（API キー）、Time.current（現在時刻）を中で直接使っていて、テストで差し替えられない。適用後の PriceLabel は rates と clock を受け取り、usd_to_jpy に応答して ExchangeRate を返すという取り決めと、now に応答して現在時刻を返すという取り決めだけを使う。HttpRateSource と Time.zone がそれぞれの取り決めを満たす。為替 API と通信するのは HttpRateSource だけで、組み立てる場所の config/initializers/rate_source.rb が HttpRateSource を作って config.x に入れる"
@@ -74,7 +74,7 @@ function DependenciesFigure() {
   )
 }
 
-/* ---------- 図 76-2 価格を表示するときのシーケンス ---------- */
+/* ---------- 図 93-2 価格を表示するときのシーケンス ---------- */
 function SequenceFigure() {
   const xs = [80, 235, 395, 555, 705]
   const names = ['ProductsController', 'PriceLabel', 'HttpRateSource', '為替 API', 'Time.zone']
@@ -90,7 +90,7 @@ function SequenceFigure() {
   ]
   return (
     <Svg
-      id="76-2"
+      id="93-2"
       w={780}
       h={430}
       label="ProductsController が PriceLabel の render(1999) を呼ぶ。PriceLabel は HttpRateSource の usd_to_jpy を呼び、HttpRateSource は為替 API に GET を送ってレートと時点の JSON を受け取り、ExchangeRate に変換して返す。次に PriceLabel は Time.zone の now を呼んで現在時刻を受け取る。レートが1時間以内か確かめて円に換算し、古ければ StaleRateError を投げる。換算した表示用の文字列をコントローラーに返す"
@@ -121,7 +121,7 @@ function SequenceFigure() {
   )
 }
 
-/* ---------- 図 76-3 本番とテストの組み立て ---------- */
+/* ---------- 図 93-3 本番とテストの組み立て ---------- */
 function CompositionFigure() {
   const cols: {
     head: string
@@ -159,7 +159,7 @@ function CompositionFigure() {
   ]
   return (
     <Svg
-      id="76-3"
+      id="93-3"
       w={780}
       h={356}
       label="本番と開発では、config/initializers/rate_source.rb の to_prepare が HttpRateSource を作って config.x に入れ、PriceLabel は引数を省略して既定値で HttpRateSource と Time.zone を使う。HttpRateSource は為替 API と通信する。単体テストでは price_label_spec.rb が instance_double で作った HttpRateSource の代役と、now だけを返す時計の代役を引数で渡し、通信も実際の時刻も使わない。request spec では本番と同じ組み立てを使い、為替 API への通信を WebMock に登録した応答に、現在時刻を travel_to で置き換える。どの場合も PriceLabel のコードは同じ"
@@ -198,7 +198,7 @@ function CompositionFigure() {
   )
 }
 
-/* ---------- 図 76-4 テストダブルの種類 ---------- */
+/* ---------- 図 93-4 テストダブルの種類 ---------- */
 const doubleRows: [string, string[], string[], string[]][] = [
   ['Dummy（ダミー）', ['引数を埋めるために渡すだけ', '呼ばれない'], ['double("使われない")'], ['使っていない']],
   ['Stub（スタブ）', ['呼ばれたら決まった値を返す'], ['instance_double(HttpRateSource,', '  usd_to_jpy: rate)'], ['レートと時刻の代役']],
@@ -217,7 +217,7 @@ function TestDoublesFigure() {
   const rowH = 58
   return (
     <Svg
-      id="76-4"
+      id="93-4"
       w={780}
       h={340}
       label={`テストダブルの5つの種類。${doubleRows.map(([k, a, b, c]) => `${k}：${a.join('')}。RSpec では ${b.join('')}。この章の例は${c.join('・')}`).join('。')}`}
@@ -240,11 +240,11 @@ function TestDoublesFigure() {
   )
 }
 
-/* ---------- 図 76-5 Dependency Injection と Service Locator ---------- */
+/* ---------- 図 93-5 Dependency Injection と Service Locator ---------- */
 function ServiceLocatorFigure() {
   return (
     <Svg
-      id="76-5"
+      id="93-5"
       w={760}
       h={250}
       label="Dependency Injection では、組み立てる場所が依存先を作り、PriceLabel は initialize の引数（既定値）で受け取る。依存先は initialize の引数でわかり、parameters は rates・clock・max_age を返す。Service Locator では、LocatorPriceLabel が render の中から Rails.configuration.x に依存先を問い合わせる。依存先はメソッドの中を読まないとわからず、parameters は空の配列を返す"
@@ -308,7 +308,7 @@ const chapter: Chapter = {
       body: (
         <>
           <p>
-            この章では商品の外貨建ての価格に円の目安を添えて表示する処理を例に、Dependency Injection を扱います。<ChapterLink n={33} section="dependency-injection" />の「依存性注入：差し替える依存先を引数で受け取る」では、課金の依頼先と現在時刻を引数で受け取る Checkout を例に、書き方を短く紹介しました。この章ではその続きとして、依存先を作って渡すコードを Rails のどこに置くか、テストで渡す代役をどう選ぶか、travel_to や WebMock とどう使い分けるか、どんな使い方が誤用になるかを、動かしたコードで確かめます。
+            この章では商品の外貨建ての価格に円の目安を添えて表示する処理を例に、Dependency Injection を扱います。<ChapterLink n={33} section="dependency-injection" />では、課金の依頼先と現在時刻を引数で受け取る Checkout を例に、書き方を短く紹介しました。この章ではその続きとして、依存先を作って渡すコードを Rails のどこに置くか、テストで渡す代役をどう選ぶか、travel_to や WebMock とどう使い分けるか、どんな使い方が誤用になるかを、動かしたコードで確かめます。
           </p>
           <h3>そもそも何を表示するのか</h3>
           <p>
@@ -580,21 +580,21 @@ Finished in 1.44 seconds (files took 0.80385 seconds to load)
           </p>
           <h3>構造</h3>
           <p>
-            図 76-1 は適用前と適用後の依存の向きです。適用前の Product#price_label は、Net::HTTP・ENV・Time.current を中で直接使っています。適用後の PriceLabel が使うのは2つの取り決めだけで、為替 API を知っているのは HttpRateSource だけです。組み立てる場所が HttpRateSource を作り、PriceLabel は引数の既定値でそれを受け取ります。
+            図 93-1 は適用前と適用後の依存の向きです。適用前の Product#price_label は、Net::HTTP・ENV・Time.current を中で直接使っています。適用後の PriceLabel が使うのは2つの取り決めだけで、為替 API を知っているのは HttpRateSource だけです。組み立てる場所が HttpRateSource を作り、PriceLabel は引数の既定値でそれを受け取ります。
           </p>
-          <Figure n="76-1" title="適用前と適用後の依存の向き" caption="破線の箱は Ruby では宣言しない取り決め（応答するメソッド）。破線の矢印は、実装が取り決めを満たすことを表す。">
+          <Figure n="93-1" title="適用前と適用後の依存の向き" caption="破線の箱は Ruby では宣言しない取り決め（応答するメソッド）。破線の矢印は、実装が取り決めを満たすことを表す。">
             <DependenciesFigure />
           </Figure>
           <p>
-            図 76-2 は商品のページで円の目安を作るときの処理の流れです。PriceLabel は rates から ExchangeRate（レートと時点）を受け取り、clock から現在時刻を受け取って、レートが1時間以内かを確かめてから円に換算します。PriceLabel は、レートが為替 API から来たのか、テストの代役から来たのかを区別しません。
+            図 93-2 は商品のページで円の目安を作るときの処理の流れです。PriceLabel は rates から ExchangeRate（レートと時点）を受け取り、clock から現在時刻を受け取って、レートが1時間以内かを確かめてから円に換算します。PriceLabel は、レートが為替 API から来たのか、テストの代役から来たのかを区別しません。
           </p>
-          <Figure n="76-2" title="価格を表示するときのシーケンス" caption="破線の矢印は戻り値。">
+          <Figure n="93-2" title="価格を表示するときのシーケンス" caption="破線の矢印は戻り値。">
             <SequenceFigure />
           </Figure>
           <p>
-            図 76-3 は本番とテストでの組み立ての違いです。本番では、組み立てる場所が HttpRateSource を作り、PriceLabel は既定値でそれと Time.zone を使います。単体テストでは、テストのコードが代役を引数で渡します。request spec（HTTP のリクエストを送り、コントローラーからビューまでを通すテスト）では、本番と同じ組み立てを使い、外部への HTTP の通信と現在時刻だけを置き換えます。どの場合も PriceLabel のコードは同じです。
+            図 93-3 は本番とテストでの組み立ての違いです。本番では、組み立てる場所が HttpRateSource を作り、PriceLabel は既定値でそれと Time.zone を使います。単体テストでは、テストのコードが代役を引数で渡します。request spec（HTTP のリクエストを送り、コントローラーからビューまでを通すテスト）では、本番と同じ組み立てを使い、外部への HTTP の通信と現在時刻だけを置き換えます。どの場合も PriceLabel のコードは同じです。
           </p>
-          <Figure n="76-3" title="本番とテストの組み立て" caption="模式図。破線の箱は代役、または WebMock が返す応答。">
+          <Figure n="93-3" title="本番とテストの組み立て" caption="模式図。破線の箱は代役、または WebMock が返す応答。">
             <CompositionFigure />
           </Figure>
         </>
@@ -880,9 +880,9 @@ end
         <>
           <h3>5種類のテストダブル</h3>
           <p>
-            テストで依存先の代わりに渡すオブジェクトを<Term en="test double">テストダブル</Term>（テスト用の代役）と呼びます。Fowler は Gerard Meszaros の分類に従って、テストダブルを Dummy・Stub・Spy・Mock・Fake の5種類に分けています<Ref n={2} /><Ref n={4} />。図 76-4 は、それぞれの働きと、RSpec での書き方、この章のテストでの例をまとめたものです。
+            テストで依存先の代わりに渡すオブジェクトを<Term en="test double">テストダブル</Term>（テスト用の代役）と呼びます。Fowler は Gerard Meszaros の分類に従って、テストダブルを Dummy・Stub・Spy・Mock・Fake の5種類に分けています<Ref n={2} /><Ref n={4} />。図 93-4 は、それぞれの働きと、RSpec での書き方、この章のテストでの例をまとめたものです。
           </p>
-          <Figure n="76-4" title="テストダブルの種類" caption="Fowler の TestDouble の説明をもとに、RSpec の書き方とこの章の例を加えた。">
+          <Figure n="93-4" title="テストダブルの種類" caption="Fowler の TestDouble の説明をもとに、RSpec の書き方とこの章の例を加えた。">
             <TestDoublesFigure />
           </Figure>
           <p>
@@ -1017,7 +1017,7 @@ end
       body: (
         <>
           <h3>テストの層と差し替えるもの</h3>
-          <p>図 76-3 で示したとおり、この章では3つの層でテストを書き、層ごとに差し替えるものを変えます。</p>
+          <p>図 93-3 で示したとおり、この章では3つの層でテストを書き、層ごとに差し替えるものを変えます。</p>
           <div className="table-wrap">
             <table>
               <thead>
@@ -1301,11 +1301,11 @@ LocatorPriceLabel => []
           <p>
             PriceLabel が rates・clock・max_age を受け取ることは、引数からわかります。LocatorPriceLabel の引数は空で、為替 API と現在時刻を使うことはコードを読まないとわかりません。テストで代役を使うには、Rails.configuration.x.rate_source をテストの間だけ書き換えて元に戻す必要があり、戻し忘れると後のテストに影響します。
           </p>
-          <Figure n="76-5" title="Dependency Injection と Service Locator" caption="模式図。parameters は initialize の引数を rails runner で表示した結果。">
+          <Figure n="93-5" title="Dependency Injection と Service Locator" caption="模式図。parameters は initialize の引数を rails runner で表示した結果。">
             <ServiceLocatorFigure />
           </Figure>
           <p>
-            図 76-5 は2つの形を並べたものです。Fowler は、1つのアプリの中で使うクラスなら両者はほぼ同等で Service Locator がわずかに有利だとしつつ、複数のアプリで使うクラスなら DI の方がよいと述べています<Ref n={1} />。Seemann は、Service Locator はクラスの依存先を隠し、依存先の設定漏れのような誤りが、コンパイルの時点ではなく実行した時点で初めてわかるようになるとして、アンチパターンとしています<Ref n={6} />。
+            図 93-5 は2つの形を並べたものです。Fowler は、1つのアプリの中で使うクラスなら両者はほぼ同等で Service Locator がわずかに有利だとしつつ、複数のアプリで使うクラスなら DI の方がよいと述べています<Ref n={1} />。Seemann は、Service Locator はクラスの依存先を隠し、依存先の設定漏れのような誤りが、コンパイルの時点ではなく実行した時点で初めてわかるようになるとして、アンチパターンとしています<Ref n={6} />。
           </p>
           <p>
             この章の PriceLabel も、既定値の中で Rails.configuration.x を読んでいます。これは DI と Service Locator の中間の書き方です。依存先が initialize の引数として見え、テストでは引数で差し替えられるので、この章では採用しました。ただし、既定値の中で依存先を一覧から取り出していることに変わりはありません。Rails の外でも使うクラスや、依存先をすべて明示したいクラスでは、既定値を付けず、組み立てる場所から必ず渡します。
